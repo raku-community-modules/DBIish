@@ -8,6 +8,7 @@ A bird in the hand is worth two in the bush. As the github repo heading
 says, this is a subset of the Perl 5 DBI written in Perl 6.
 The people in #perl6 at irc.freenode.net talk about how the future DBI
 will be so much better, yada, yada but there is no code to use :(
+http://www.nntp.perl.org/group/perl.perl6.language/2005/07/msg22054.html
 
 The right way to do Perl 6 DBI involves NCI, PIR, sockets and so on. The
 job is hard and very time consuming. Factor in DBI enhancements and it's
@@ -24,7 +25,11 @@ command line client programs such as sqlite3, mysql and psql.
 Much Perl 5 code will migrate well to Perl 6 if modules are similar.
 This code helps the Perl 6 adopter keep as much as possible the same.
 
-=head1 LICENSE
+=head1 SEE ALSO
+L<doc:fakeDBI>
+fakeLWP
+
+=head1 LICENSE and COPYRIGHT
 No. Others do too much of that already. This code is to scratch the itch
 -Ofun and to hopefully be obsoleted ASAP.
 
