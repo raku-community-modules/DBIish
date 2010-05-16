@@ -1,37 +1,27 @@
 =begin pod
 
 =head1 NAME
-fakeDBI - a tiny subset of DBI in Perl 6
+FakeDBI - an interim database interface for Rakudo Perl 6
 
 =head1 DESCRIPTION
-A bird in the hand is worth two in the bush. As the github repo heading
-says, this is a subset of the Perl 5 DBI written in Perl 6.
-The people in #perl6 at irc.freenode.net talk about how the future DBI
-will be so much better, yada, yada but there is no code to use :(
+According to reports in perl6-language and #perl6, the DBI for Rakudo
+Perl 6 will use a Parrot based database driver interface (DBDI).  See
 http://www.nntp.perl.org/group/perl.perl6.language/2005/07/msg22054.html
 
-The right way to do Perl 6 DBI involves NCI, PIR, sockets and so on. The
-job is hard and very time consuming. Factor in DBI enhancements and it's
-obviously not going to be ready by Christmas :(
-
-Whoever really wants to access a database from Rakudo today is referred
-to the run() command. Well, this code uses the run() command :)
-
-=head1 DESIGN GOALS
-L<CRUD|http://en.wikipedia.org/wiki/Create,_read,_update_and_delete>
-operations on common SQL databases is enough. The run() command executes
-command line client programs such as sqlite3, mysql and psql.
-
-Much Perl 5 code will migrate well to Perl 6 if modules are similar.
-This code helps the Perl 6 adopter keep as much as possible the same.
+Experience with Perl 5 DBI and DBD's motivated changes in the
+architecture, so the new DBDI will be like Java's JDBC.  Because no code
+is available yet, this project wants to temporarily fill the gap, just
+copying the Perl 5 interface.
 
 =head1 SEE ALSO
-L<doc:fakeDBI>
-fakeLWP
+The more extensive L<doc:FakeDBI> docs.
+The Perl 5 L<doc:DBI> and L<doc:DBI::DBD>.
+
+This README is in Pod6 format, view it with an appropriate formatter if
+your system has one.
 
 =head1 LICENSE and COPYRIGHT
-No. Others do too much of that already. This code is to scratch the itch
--Ofun and to hopefully be obsoleted ASAP.
+Use these files at your risk and without warranty.  Give due credit if
+you do.  Written by Martin Berends.
 
 =end pod
-
