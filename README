@@ -4,21 +4,31 @@
 FakeDBI - an interim database interface for Rakudo Perl 6
 
 =head1 DESCRIPTION
-According to reports in perl6-language and #perl6, the DBI for Rakudo
-Perl 6 will use a Parrot based database driver interface (DBDI).  See
+The roadmap for DBI v2 L<http://search.cpan.org/~timb/DBI/Roadmap.pod>
+published in November 2004 laid out the plans for Perl 5 and 6.
+Specifically there is a Parrot DBDI project that will give the same DBD
+facilities to any Parrot based language.  See also
 http://www.nntp.perl.org/group/perl.perl6.language/2005/07/msg22054.html
 
-Experience with Perl 5 DBI and DBD's motivated changes in the
-architecture, so the new DBDI will be like Java's JDBC.  Because no code
-is available yet, this project wants to temporarily fill the gap, just
-copying the Perl 5 interface.
+Because no code is available yet, this project plans to temporarily fill
+the gap, by imitating the classic DBI interface.  Although this is not
+on the roadmap, let's say if it looks like a DBI, and it talks like a
+DBI, then it is a DBI.
+
+=head1 DBD CLASSES
+Whilst it is convenient, the FakeDBD drivers stay together with the
+FakeDBI files in a single project.  In future each FakeDBD may become a
+separate project, although this conflicts a bit with the idea of being
+"temporary".
 
 =head1 SEE ALSO
-The more extensive L<doc:FakeDBI> docs.
+The Perl 6 Pod in the L<doc:FakeDBI> module.
 The Perl 5 L<doc:DBI> and L<doc:DBI::DBD>.
 
-This README is in Pod6 format, view it with an appropriate formatter if
-your system has one.
+The documention of the FakeDBI and the FakeDBD modules, and also this
+README, is in the proposed Pod6 format, with the intention of increasing
+experience with its use.  View it with an appropriate formatter if your
+system has one.
 
 =head1 LICENSE and COPYRIGHT
 Use these files at your risk and without warranty.  Give due credit if

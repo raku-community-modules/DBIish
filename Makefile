@@ -10,6 +10,9 @@ TEST_F    = $(PERL_EXE) -MExtUtils::Command -e test_f
 LIBSYSTEM = $(shell $(PERL6_EXE) -e 'print @*INC[2]')
 LIBUSER   = $(shell $(PERL6_EXE) -e 'print @*INC[1]')
 
+# first (therefore default) target is FakeDBI.pir
+all: lib/FakeDBI.pir
+
 lib/FakeDBD.pir: lib/FakeDBD.pm6
 	$(PERL6_EXE) --target=pir --output=lib/FakeDBD.pir lib/FakeDBD.pm6
 

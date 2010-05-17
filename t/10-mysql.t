@@ -16,60 +16,39 @@
 
 use Test;
 
-plan 5;
+plan 20;
 
 use FakeDBI;
 
 # The file 'lib.pl' customizes the testing environment per DBD, but all
 # this test script currently needs is the variables listed here.
-my $hostname = 'localhost';
-my $port     = 3306;
-my $database = 'zavolaj';
+my $mdriver       = 'mysql';
+my $hostname      = 'localhost';
+my $port          = 3306;
+my $database      = 'zavolaj';
 my $test_user     = 'testuser';
 my $test_password = 'testpass';
-my $test_dsn = "FakeDBI:mysql:database=$database;host=$hostname;port=$port";
-my $table = 't1';
+my $test_dsn      = "FakeDBI:$mdriver" ~ ":database=$database;" ~
+                    "host=$hostname;port=$port";
+my $table         = 't1';
 
 #-----------------------------------------------------------------------
 # from perl5 DBD/mysql/t/00base.t
-##!perl -w
-##
-##   $Id: 00base.t 11244 2008-05-11 15:13:10Z capttofu $
-##
-##   This is the base test, tries to install the drivers. Should be
-##   executed as the very first test.
-##
-#
 #use Test::More tests => 6;
-#
-##
-##   Include lib.pl
-##
-#use vars qw($mdriver $table);
-#use lib 't', '.';
-#require 'lib.pl';
-#
 ## Base DBD Driver Test
 #BEGIN {
 #    use_ok('DBI') or BAIL_OUT "Unable to load DBI";
 #    use_ok('DBD::mysql') or BAIL_OUT "Unable to load DBD::mysql";
 #}
-#
 #$switch = DBI->internal;
 #cmp_ok ref $switch, 'eq', 'DBI::dr', 'Internal set';
-#
 ## This is a special case. install_driver should not normally be used.
 #$drh= DBI->install_driver($mdriver);
-#
 #ok $drh, 'Install driver';
-#
 #cmp_ok ref $drh, 'eq', 'DBI::dr', 'DBI::dr set';
-#
 #ok $drh->{Version}, "Version $drh->{Version}"; 
 #print "Driver version is ", $drh->{Version}, "\n";my $mdriver = 'mysql';
-#
-my $mdriver = 'mysql';
-my $drh = Mu;
+my $drh;
 $drh = FakeDBI.install_driver($mdriver);
 ok $drh, 'Install driver'; # test 1
 my $drh_version;
@@ -78,196 +57,198 @@ ok $drh_version > 0, "FakeDBD::mysql version $drh_version"; # test 2
 
 #-----------------------------------------------------------------------
 # from perl5 DBD/mysql/t/10connect.t
-##!perl -w
-## vim: ft=perl
-#
-#use Test::More ;
-#use DBI;
-#use DBI::Const::GetInfoType;
-#use strict;
-#use vars qw($mdriver);
-#$|= 1;
-#
-#use vars qw($test_dsn $test_user $test_password);
-#use lib 't', '.';
-#require 'lib.pl';
-#
-#my $dbh;
-#eval {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
-#                      { RaiseError => 1, PrintError => 1, AutoCommit => 0 });};
-#
-#if ($@) {
-#    plan skip_all => "ERROR: $DBI::errstr Can't continue test";
-#}
 #plan tests => 2; 
-#
 #ok defined $dbh, "Connected to database";
-#
-#ok $dbh->disconnect();##!perl -w
+#ok $dbh->disconnect();
 #
 my $dbh;
-#try {
-    $dbh = FakeDBI.connect( $test_dsn, $test_user, $test_password
-#        ,RaiseError => 1, PrintError => 1, AutoCommit => 0 
+try {
+    $dbh = FakeDBI.connect( $test_dsn, $test_user, $test_password,
+        RaiseError => 1, PrintError => 1, AutoCommit => 0 
     );
-#    CATCH { die "ERROR: {FakeDBI.errstr}. Can't continue test"; }
-#}
-ok defined $dbh, 'Connected to database'; # test 3
+#   CATCH { die "ERROR: {FakeDBI.errstr}. Can't continue test"; }
+}
+ok defined $dbh, "Connected to database"; # test 3
 my $result = $dbh.disconnect();
 ok $result, 'disconnect returned true'; # test 4
 
 #-----------------------------------------------------------------------
 # from perl5 DBD/mysql/t/20createdrop.t
+#plan tests => 4;
+#ok(defined $dbh, "Connected to database");
+#ok($dbh->do("DROP TABLE IF EXISTS $table"), "making slate clean");
+#ok($dbh->do("CREATE TABLE $table (id INT(4), name VARCHAR(64))"), "creating $table");
+#ok($dbh->do("DROP TABLE $table"), "dropping created $table");
+#$dbh->disconnect();
+
+try {
+    $dbh = FakeDBI.connect( $test_dsn, $test_user, $test_password,
+        RaiseError => 1, PrintError => 1, AutoCommit => 0 );
+#   CATCH { die "ERROR: {FakeDBI.errstr}. Can't continue test\n"; }
+}
+ok(defined $dbh, "Connected to database"); # test 5
+ok($dbh.do("DROP TABLE IF EXISTS $table"), "making slate clean"); # test 6
+ok($dbh.do("CREATE TABLE $table (id INT(4), name VARCHAR(64))"), "creating $table"); # test 7
+ok($dbh.do("DROP TABLE $table"), "dropping created $table"); # test 8
+
+#-----------------------------------------------------------------------
+# from perl5 DBD/mysql/t/25lockunlock.t
+#plan tests => 13;
+#my $create= <<EOT; 
+#CREATE TABLE $table ( 
+#    id int(4) NOT NULL default 0,
+#    name varchar(64) NOT NULL default ''
+#    )
+#EOT
+#ok $dbh->do("DROP TABLE IF EXISTS $table"), "drop table if exists $table";
+#ok $dbh->do($create), "create table $table";
+#ok $dbh->do("LOCK TABLES $table WRITE"), "lock table $table";
+#ok $dbh->do("INSERT INTO $table VALUES(1, 'Alligator Descartes')"), "Insert ";
+#ok $dbh->do("DELETE FROM $table WHERE id = 1"), "Delete"; 
+#my $sth;
+#eval {$sth= $dbh->prepare("SELECT * FROM $table WHERE id = 1")};
+#ok !$@, "Prepare of select";
+#ok defined($sth), "Prepare of select";
+#ok  $sth->execute , "Execute";
+#my ($row, $errstr);
+#$row = $sth->fetchrow_arrayref;
+#$errstr= $sth->errstr;
+#ok !defined($row), "Fetch should have failed";
+#ok !defined($errstr), "Fetch should have failed";
+#ok $dbh->do("UNLOCK TABLES"), "Unlock tables";
+#ok $dbh->do("DROP TABLE $table"), "Drop table $table";
+#ok $dbh->disconnect, "Disconnecting";
+my $create="
+CREATE TABLE $table ( 
+    id int(4) NOT NULL default 0,
+    name varchar(64) NOT NULL default ''
+)
+";
+ok $dbh.do("DROP TABLE IF EXISTS $table"), "drop table if exists $table"; # test 9
+ok $dbh.do($create), "create table $table";
+ok $dbh.do("LOCK TABLES $table WRITE"), "lock table $table";
+ok $dbh.do("INSERT INTO $table VALUES(1, 'Alligator Descartes')"), "Insert ";
+ok $dbh.do("DELETE FROM $table WHERE id = 1"), "Delete"; 
+my $sth;
+try {
+    $sth= $dbh.prepare("SELECT * FROM $table WHERE id = 1");
+}
+ok defined($sth), "Prepare of select";
+ok $sth.execute , "Execute";
+my ($row, $errstr);
+$row = $sth.fetchrow_arrayref;
+$errstr= $sth.errstr;
+ok !defined($row), "Fetch should have failed";
+ok !defined($errstr), "Fetch should have failed";
+ok $dbh.do("UNLOCK TABLES"), "Unlock tables";
+ok $dbh.do("DROP TABLE $table"), "Drop table $table";
+ok $dbh.disconnect, "Disconnecting";
+
+#-----------------------------------------------------------------------
+# from perl5 DBD/mysql/t/29warnings.t
+##!perl -w
+## vim: ft=perl
+#
+#use Test::More;
 #use DBI;
 #use DBI::Const::GetInfoType;
+#use lib '.', 't';
+#require 'lib.pl';
 #use strict;
 #$|= 1;
 #
 #use vars qw($table $test_dsn $test_user $test_password);
-#use lib 't', '.';
-#require 'lib.pl';
 #
 #my $dbh;
 #eval {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
-#                      { RaiseError => 1, PrintError => 1, AutoCommit => 0 });};
+#                      { RaiseError => 1, PrintError => 1, AutoCommit => 0});};
 #
 #if ($@) {
-#    plan skip_all => "ERROR: $DBI::errstr. Can't continue test";
+#    plan skip_all => "ERROR: $@. Can't continue test";
 #}
-#plan tests => 4;
+#plan tests => 4; 
 #
 #ok(defined $dbh, "Connected to database");
 #
-#ok($dbh->do("DROP TABLE IF EXISTS $table"), "making slate clean");
+#SKIP: {
+#  skip "Server doesn't report warnings", 3
+#    if $dbh->get_info($GetInfoType{SQL_DBMS_VER}) lt "4.1";
 #
-#ok($dbh->do("CREATE TABLE $table (id INT(4), name VARCHAR(64))"), "creating $table");
+#  my $sth;
+#  ok($sth= $dbh->prepare("DROP TABLE IF EXISTS no_such_table"));
+#  ok($sth->execute());
 #
-#ok($dbh->do("DROP TABLE $table"), "dropping created $table");
+#  is($sth->{mysql_warning_count}, 1);
+#};
 #
-#$dbh->disconnect();
-
-#try {
-    $dbh = FakeDBI.connect( $test_dsn, $test_user, $test_password #,
-#        RaiseError => 1, PrintError => 1, AutoCommit => 0
-         );
-#    CATCH { die "ERROR: {FakeDBI.errstr}. Can't continue test"; }
-#}
-ok( defined $dbh, "Connected to database"); # test 5
-#ok( $dbh.do("DROP TABLE IF EXISTS $table"), "making slate clean"); # test 6
-$dbh.disconnect;
-
-=begin pod
-
-#-----------------------------------------------------------------------
-# from perl5 DBD/mysql/t/25lockunlock.t
-# (missing - file seems to contain 30insertfetch
-
-#-----------------------------------------------------------------------
-# from perl5 DBD/mysql/t/29warnings.t
+#$dbh->disconnect;
 
 #-----------------------------------------------------------------------
 # from perl5 DBD/mysql/t/30insertfetch.t
-
-#!perl -w
+##   This is a simple insert/fetch test.
+##
+#plan tests => 13;
 #
-#   $Id: 30insertfetch.t 1228 2004-09-04 01:23:38Z capttofu $
+#my $create= <<EOT; 
+#CREATE TABLE $table ( 
+#    id int(4) NOT NULL default 0,
+#    name varchar(64) NOT NULL default ''
+#    )
+#EOT
 #
-#   This is a simple insert/fetch test.
-#
-use Test::More;
-use DBI ();
-use strict;
-use lib 't', '.';
-require 'lib.pl';
+#ok $dbh->do("DROP TABLE IF EXISTS $table"), "drop table if exists $table";
+#ok $dbh->do($create), "create table $table";
+#ok $dbh->do("LOCK TABLES $table WRITE"), "lock table $table";
+#ok $dbh->do("INSERT INTO $table VALUES(1, 'Alligator Descartes')"), "Insert ";
+#ok $dbh->do("DELETE FROM $table WHERE id = 1"), "Delete"; 
+#my $sth;
+#eval {$sth= $dbh->prepare("SELECT * FROM $table WHERE id = 1")};
+#ok !$@, "Prepare of select";
+#ok defined($sth), "Prepare of select";
+#ok  $sth->execute , "Execute";
+#my ($row, $errstr);
+#$errstr= '';
+#$row = $sth->fetchrow_arrayref;
+#$errstr= $sth->errstr;
+#ok !defined($row), "Fetch should have failed";
+#ok !defined($errstr), "Fetch should have failed";
+#ok $dbh->do("UNLOCK TABLES"), "Unlock tables";
+#ok $dbh->do("DROP TABLE $table"), "Drop table $table";
+#ok $dbh->disconnect, "Disconnecting";
 
-#
-#   Make -w happy
-#
-use vars qw($table $test_dsn $test_user $test_password);
 
-my $dbh;
-eval {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
-                      { RaiseError => 1, PrintError => 1, AutoCommit => 0 });};
-
-if ($@) {
-    plan skip_all => "Can't connect to database ERROR: $DBI::errstr. Can't continue test";
-}
-
-plan tests => 13;
-
-my $create= <<EOT; 
-CREATE TABLE $table ( 
-    id int(4) NOT NULL default 0,
-    name varchar(64) NOT NULL default ''
-    )
-EOT
-
-ok $dbh->do("DROP TABLE IF EXISTS $table"), "drop table if exists $table";
-
-ok $dbh->do($create), "create table $table";
-
-ok $dbh->do("LOCK TABLES $table WRITE"), "lock table $table";
-
-ok $dbh->do("INSERT INTO $table VALUES(1, 'Alligator Descartes')"), "Insert ";
-
-ok $dbh->do("DELETE FROM $table WHERE id = 1"), "Delete"; 
-
-my $sth;
-eval {$sth= $dbh->prepare("SELECT * FROM $table WHERE id = 1")};
-
-ok !$@, "Prepare of select";
-
-ok defined($sth), "Prepare of select";
-
-ok  $sth->execute , "Execute";
-
-my ($row, $errstr);
-$errstr= '';
-$row = $sth->fetchrow_arrayref;
-$errstr= $sth->errstr;
-ok !defined($row), "Fetch should have failed";
-ok !defined($errstr), "Fetch should have failed";
-
-ok $dbh->do("UNLOCK TABLES"), "Unlock tables";
-
-ok $dbh->do("DROP TABLE $table"), "Drop table $table";
-ok $dbh->disconnect, "Disconnecting";
 #-----------------------------------------------------------------------
-# from P5 DBD/mysql/t/30insertid.t
+# from perl5 DBD/mysql/t/30insertid.t
+#plan tests => 18; 
+#ok $dbh->do("DROP TABLE IF EXISTS $table");
+#my $create = <<EOT;
+#CREATE TABLE $table (
+#  id INT(3) PRIMARY KEY AUTO_INCREMENT NOT NULL,
+#  name VARCHAR(64))
+#EOT
+#ok $dbh->do($create), "create $table";
+#my $query= "INSERT INTO $table (name) VALUES (?)";
+#my $sth;
+#ok ($sth= $dbh->prepare($query));
+#ok defined $sth;
+#ok $sth->execute("Jochen");
+#is $dbh->{'mysql_insertid'}, 1, "insert id == $dbh->{mysql_insertid}";
+#ok $sth->execute("Patrick");
+#ok (my $sth2= $dbh->prepare("SELECT max(id) FROM $table"));
+#ok defined $sth2;
+#ok $sth2->execute();
+#my $max_id;
+#ok ($max_id= $sth2->fetch());
+#ok defined $max_id;
+#cmp_ok $sth->{'mysql_insertid'}, '==', $max_id->[0], "sth insert id $sth->{'mysql_insertid'} == max(id) $max_id->[0]  in $table";
+#cmp_ok $dbh->{'mysql_insertid'}, '==', $max_id->[0], "dbh insert id $dbh->{'mysql_insertid'} == max(id) $max_id->[0] in $table";
+#ok $sth->finish();
+#ok $sth2->finish();
+#ok $dbh->do("DROP TABLE $table");
+#ok $dbh->disconnect();
 
-use Test::More;
-use DBI;
-use DBI::Const::GetInfoType;
-use lib '.', 't';
-require 'lib.pl';
-use strict;
-$|= 1;
+=begin pod
 
-,use vars qw($table $test_dsn $test_user $test_password);
-
-my $dbh;
-eval {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
-                      { RaiseError => 1, PrintError => 1, AutoCommit => 0});};
-
-if ($@) {
-    plan skip_all => "ERROR: $@. Can't continue test";
-}
-plan tests => 4; 
-
-ok(defined $dbh, "Connected to database");
-
-SKIP: {
-  skip "Server doesn't report warnings", 3
-    if $dbh->get_info($GetInfoType{SQL_DBMS_VER}) lt "4.1";
-
-  my $sth;
-  ok($sth= $dbh->prepare("DROP TABLE IF EXISTS no_such_table"));
-  ok($sth->execute());
-
-  is($sth->{mysql_warning_count}, 1);
-};
-
-$dbh->disconnect;
 #-----------------------------------------------------------------------
 #!perl -w
 # vim: ft=perl
