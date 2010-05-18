@@ -60,6 +60,11 @@ sub mysql_init( OpaquePointer $mysql_client )
     is native('libmysqlclient')
     { ... }
 
+sub mysql_insert_id( OpaquePointer $mysql_client )
+    returns Int # WRONG: actually returns an unsigned long long
+    is native('libmysqlclient')
+    { ... }
+
 sub mysql_library_init( Int $argc, OpaquePointer $argv,
     OpaquePointer $group )
     returns Int
@@ -102,6 +107,11 @@ sub mysql_use_result( OpaquePointer $mysql_client )
     is native('libmysqlclient')
     { ... }
 
+sub mysql_warning_count( OpaquePointer $mysql_client )
+    returns Int
+    is native('libmysqlclient')
+    { ... }
+
 #--------------------------- 
 
 class FakeDBD::mysql::StatementHandle does FakeDBD::StatementHandle {
@@ -109,10 +119,24 @@ class FakeDBD::mysql::StatementHandle does FakeDBD::StatementHandle {
     has $!statement;
     has $!result_set;
     has $!row_count;
-    method execute(*@params) {
+    has $.mysql_warning_count is rw = 0;
+    method execute(*@params is copy) {
         # warn "in FakeDBD::mysql::StatementHandle.execute()";
-        mysql_query( $!mysql_client, $!statement );
-        return Bool::True;
+        my $statement = $!statement;
+        while @params.elems>0 and $statement.index('?')>=0 {
+            my $param = @params.pop;
+            $statement .= subst("?","'$param'");
+        }
+        # warn "in FakeDBD::mysql::StatementHandle.execute statement=$statement";
+        my $result = mysql_query( $!mysql_client, $statement );
+        $!errstr = Mu;
+        if $result > 0 {
+            my $errstr = mysql_error( $!mysql_client );
+            $!errstr = $errstr;
+#           $.mysql_warning_count = 1;
+            $.mysql_warning_count = mysql_warning_count( $!mysql_client );
+        }
+        return !defined $!errstr;
     }
     method fetchrow_arrayref() {
         my $row_data;
@@ -126,6 +150,7 @@ class FakeDBD::mysql::StatementHandle does FakeDBD::StatementHandle {
         return $row_data;
     }
     method finish() {
+        mysql_free_result($!result_set);
         $!result_set = Mu;
     }
 }
@@ -140,6 +165,10 @@ class FakeDBD::mysql::Connection does FakeDBD::Connection {
             statement    => $statement
         );
         return $statement_handle;
+    }
+    method mysql_insertid() {
+        mysql_insert_id($!mysql_client);
+        # but Parrot NCI cannot return an unsigned  long long :-(
     }
 }
 

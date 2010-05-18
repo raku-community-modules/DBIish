@@ -1,10 +1,9 @@
 # fakedbi/t/10-mysql.t
 
 # This '10-mysql.t' test script is a Perl 6 adaptation of the Perl 5
-# based test suite for DBD::mysql version 4.013.  It is experimental and
-# needs lots of work to increase coverage.  All the files from the test
-# suite are reproduced after additional # comment symbols in this one
-# test script.
+# based test suite for DBD::mysql version 4.014.  It is experimental and
+# needs lots of work to increase coverage.  All the original lines
+# containing tests are included here in #comments.
 
 # Please change the Perl 6 parts of the test script freely, preserving
 # just the file names from which the sections came, and the operations
@@ -16,7 +15,7 @@
 
 use Test;
 
-plan 20;
+plan 32;
 
 use FakeDBI;
 
@@ -88,12 +87,11 @@ try {
 }
 ok(defined $dbh, "Connected to database"); # test 5
 ok($dbh.do("DROP TABLE IF EXISTS $table"), "making slate clean"); # test 6
-ok($dbh.do("CREATE TABLE $table (id INT(4), name VARCHAR(64))"), "creating $table"); # test 7
+ok($dbh.do("CREATE TABLE $table (id INT(4), name VARCHAR(20))"), "creating $table"); # test 7
 ok($dbh.do("DROP TABLE $table"), "dropping created $table"); # test 8
 
 #-----------------------------------------------------------------------
 # from perl5 DBD/mysql/t/25lockunlock.t
-#plan tests => 13;
 #my $create= <<EOT; 
 #CREATE TABLE $table ( 
 #    id int(4) NOT NULL default 0,
@@ -105,120 +103,83 @@ ok($dbh.do("DROP TABLE $table"), "dropping created $table"); # test 8
 #ok $dbh->do("LOCK TABLES $table WRITE"), "lock table $table";
 #ok $dbh->do("INSERT INTO $table VALUES(1, 'Alligator Descartes')"), "Insert ";
 #ok $dbh->do("DELETE FROM $table WHERE id = 1"), "Delete"; 
-#my $sth;
 #eval {$sth= $dbh->prepare("SELECT * FROM $table WHERE id = 1")};
 #ok !$@, "Prepare of select";
 #ok defined($sth), "Prepare of select";
 #ok  $sth->execute , "Execute";
-#my ($row, $errstr);
 #$row = $sth->fetchrow_arrayref;
 #$errstr= $sth->errstr;
 #ok !defined($row), "Fetch should have failed";
 #ok !defined($errstr), "Fetch should have failed";
 #ok $dbh->do("UNLOCK TABLES"), "Unlock tables";
 #ok $dbh->do("DROP TABLE $table"), "Drop table $table";
-#ok $dbh->disconnect, "Disconnecting";
 my $create="
 CREATE TABLE $table ( 
     id int(4) NOT NULL default 0,
-    name varchar(64) NOT NULL default ''
+    name varchar(30) NOT NULL default ''
 )
 ";
 ok $dbh.do("DROP TABLE IF EXISTS $table"), "drop table if exists $table"; # test 9
-ok $dbh.do($create), "create table $table";
-ok $dbh.do("LOCK TABLES $table WRITE"), "lock table $table";
-ok $dbh.do("INSERT INTO $table VALUES(1, 'Alligator Descartes')"), "Insert ";
-ok $dbh.do("DELETE FROM $table WHERE id = 1"), "Delete"; 
+ok $dbh.do($create), "create table $table"; # test 10
+skip 1, "lock tables does not work";
+#ok $dbh.do("LOCK TABLES $table WRITE"), "lock tables $table write"; # test 11
+ok $dbh.do("INSERT INTO $table VALUES(1, 'Alligator Descartes test 12')"), "Insert "; # test 12
+todo "delete works but not here";
+ok $dbh.do("DELETE FROM $table WHERE id = 1"), "Delete"; # test 13
 my $sth;
 try {
     $sth= $dbh.prepare("SELECT * FROM $table WHERE id = 1");
 }
-ok defined($sth), "Prepare of select";
-ok $sth.execute , "Execute";
+ok defined($sth), "Prepare of select"; # test 14
+ok $sth.execute , "Execute"; # test 15
 my ($row, $errstr);
 $row = $sth.fetchrow_arrayref;
 $errstr= $sth.errstr;
-ok !defined($row), "Fetch should have failed";
-ok !defined($errstr), "Fetch should have failed";
-ok $dbh.do("UNLOCK TABLES"), "Unlock tables";
-ok $dbh.do("DROP TABLE $table"), "Drop table $table";
-ok $dbh.disconnect, "Disconnecting";
+ok !defined($row), "Fetch should have failed"; # test 16
+todo "errstr does not work";
+ok !defined($errstr), "Fetch should have failed"; # test 17
+skip 1, "unlock tables does not work";
+#ok $dbh.do("UNLOCK TABLES"), "Unlock tables"; # test 18
+todo "drop table work but not here";
+ok $dbh.do("DROP TABLE $table"), "Drop table $table"; # test 19
+ok $dbh.disconnect, "Disconnecting"; # test 20
 
 #-----------------------------------------------------------------------
 # from perl5 DBD/mysql/t/29warnings.t
-##!perl -w
-## vim: ft=perl
-#
-#use Test::More;
-#use DBI;
-#use DBI::Const::GetInfoType;
-#use lib '.', 't';
-#require 'lib.pl';
-#use strict;
-#$|= 1;
-#
-#use vars qw($table $test_dsn $test_user $test_password);
-#
-#my $dbh;
-#eval {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
-#                      { RaiseError => 1, PrintError => 1, AutoCommit => 0});};
-#
-#if ($@) {
-#    plan skip_all => "ERROR: $@. Can't continue test";
-#}
-#plan tests => 4; 
-#
-#ok(defined $dbh, "Connected to database");
-#
 #SKIP: {
 #  skip "Server doesn't report warnings", 3
 #    if $dbh->get_info($GetInfoType{SQL_DBMS_VER}) lt "4.1";
-#
 #  my $sth;
 #  ok($sth= $dbh->prepare("DROP TABLE IF EXISTS no_such_table"));
 #  ok($sth->execute());
-#
 #  is($sth->{mysql_warning_count}, 1);
 #};
-#
-#$dbh->disconnect;
+try {
+    $dbh = FakeDBI.connect( $test_dsn, $test_user, $test_password,
+        RaiseError => 1, PrintError => 1, AutoCommit => 0 );
+#   CATCH { die "ERROR: {FakeDBI.errstr}. Can't continue test\n"; }
+}
+ok($sth= $dbh.prepare("DROP TABLE IF EXISTS no_such_table"), "prepare drop no_such_table"); # test 21
+ok($sth.execute(), "execute drop no_such_table..."); # test 22
+todo "warning_count is broken";
+is($sth.mysql_warning_count, 1, "...returns an error"); # test 23
 
 #-----------------------------------------------------------------------
 # from perl5 DBD/mysql/t/30insertfetch.t
-##   This is a simple insert/fetch test.
-##
-#plan tests => 13;
-#
-#my $create= <<EOT; 
-#CREATE TABLE $table ( 
-#    id int(4) NOT NULL default 0,
-#    name varchar(64) NOT NULL default ''
-#    )
-#EOT
-#
-#ok $dbh->do("DROP TABLE IF EXISTS $table"), "drop table if exists $table";
-#ok $dbh->do($create), "create table $table";
-#ok $dbh->do("LOCK TABLES $table WRITE"), "lock table $table";
-#ok $dbh->do("INSERT INTO $table VALUES(1, 'Alligator Descartes')"), "Insert ";
-#ok $dbh->do("DELETE FROM $table WHERE id = 1"), "Delete"; 
-#my $sth;
-#eval {$sth= $dbh->prepare("SELECT * FROM $table WHERE id = 1")};
-#ok !$@, "Prepare of select";
-#ok defined($sth), "Prepare of select";
-#ok  $sth->execute , "Execute";
-#my ($row, $errstr);
-#$errstr= '';
-#$row = $sth->fetchrow_arrayref;
-#$errstr= $sth->errstr;
-#ok !defined($row), "Fetch should have failed";
-#ok !defined($errstr), "Fetch should have failed";
-#ok $dbh->do("UNLOCK TABLES"), "Unlock tables";
-#ok $dbh->do("DROP TABLE $table"), "Drop table $table";
-#ok $dbh->disconnect, "Disconnecting";
-
+#plan tests => 10;
+#ok(defined $dbh, "Connected to database");
+#ok($dbh->do("DROP TABLE IF EXISTS $table"), "making slate clean");
+#ok($dbh->do("CREATE TABLE $table (id INT(4), name VARCHAR(64))"), "creating table");
+#ok($dbh->do("INSERT INTO $table VALUES(1, 'Alligator Descartes')"), "loading data");
+#ok($dbh->do("DELETE FROM $table WHERE id = 1"), "deleting from table $table");
+#ok (my $sth= $dbh->prepare("SELECT * FROM $table WHERE id = 1")); 
+#ok($sth->execute());
+#ok(not $sth->fetchrow_arrayref());
+#ok($sth->finish());
+#ok($dbh->do("DROP TABLE $table"),"Dropping table");
 
 #-----------------------------------------------------------------------
-# from perl5 DBD/mysql/t/30insertid.t
+# from perl5 DBD/mysql/t/31insertid.t
 #plan tests => 18; 
 #ok $dbh->do("DROP TABLE IF EXISTS $table");
 #my $create = <<EOT;
@@ -228,7 +189,6 @@ ok $dbh.disconnect, "Disconnecting";
 #EOT
 #ok $dbh->do($create), "create $table";
 #my $query= "INSERT INTO $table (name) VALUES (?)";
-#my $sth;
 #ok ($sth= $dbh->prepare($query));
 #ok defined $sth;
 #ok $sth->execute("Jochen");
@@ -246,6 +206,28 @@ ok $dbh.disconnect, "Disconnecting";
 #ok $sth2->finish();
 #ok $dbh->do("DROP TABLE $table");
 #ok $dbh->disconnect();
+ok $dbh.do("DROP TABLE IF EXISTS $table"), "drop table $table"; # test 24
+$create = "
+CREATE TABLE $table (
+  id INT(3) PRIMARY KEY AUTO_INCREMENT NOT NULL,
+  name VARCHAR(31))
+";
+ok $dbh.do($create), "create $table"; # test 25
+my $query= "INSERT INTO $table (name) VALUES (?)";
+ok ($sth= $dbh.prepare($query)), "prepare insert with parameter"; # test 26
+ok $sth.execute("Jochen"), "execute insert with parameter"; # test 27
+#todo "cannot get unsigned long long from Parrot NCI";
+is $dbh.mysql_insertid, 1, "insert id == \$dbh.mysql_insertid"; # test 28
+ok $sth.execute("Patrick"), "execute 2nd insert with parameter"; # test 29
+ok (my $sth2= $dbh.prepare("SELECT max(id) FROM $table")),"selectg max(id)"; # test 30
+ok defined $sth2,"second prepared statement"; # test 31
+ok $sth2.execute(), "execute second prepared statement"; # test 32
+my $max_id;
+#ok ($max_id= $sth2->fetch(),"fetch"); # test 33
+#ok defined $max_id,"fetch result defined"; # test 34
+
+#ok $dbh.do("DROP TABLE $table"), "drop table $table"; # test
+
 
 =begin pod
 

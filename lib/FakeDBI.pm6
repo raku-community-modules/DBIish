@@ -1,19 +1,5 @@
 # FakeDBI.pm6
 
-#class FakeDBI::DatabaseHandle {
-#    has $!driver;
-#    has $.connection;
-#    method prepare( Str $statement ) {
-#        warn "in FakeDBI::DatabaseHandle.prepare()";
-#        my $statement_handle = FakeDBI::StatementHandle.bless(
-#            FakeDBI::StatementHandle.CREATE(),
-#            database_handle => self,
-#            statement => $statement
-#        );
-#        return $statement_handle;
-#    }
-#}
-
 class FakeDBI:auth<mberends>:ver<0.0.1> {
     method connect( $dsn, $username, $password ) {
         # warn "in FakeDBI.connect('$dsn')";
