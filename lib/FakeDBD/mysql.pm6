@@ -118,7 +118,7 @@ class FakeDBD::mysql::StatementHandle does FakeDBD::StatementHandle {
     has $!mysql_client;
     has $!statement;
     has $!result_set;
-    has $!row_count;
+    has $!field_count;
     has $.mysql_warning_count is rw = 0;
     method execute(*@params is copy) {
         # warn "in FakeDBD::mysql::StatementHandle.execute()";
@@ -128,26 +128,39 @@ class FakeDBD::mysql::StatementHandle does FakeDBD::StatementHandle {
             $statement .= subst("?","'$param'");
         }
         # warn "in FakeDBD::mysql::StatementHandle.execute statement=$statement";
-        my $result = mysql_query( $!mysql_client, $statement );
+        $!result_set = Mu;
+        my $status = mysql_query( $!mysql_client, $statement ); # 0 means OK
+        $.mysql_warning_count = mysql_warning_count( $!mysql_client );
         $!errstr = Mu;
-        if $result > 0 {
+        if $status != 0 {
             my $errstr = mysql_error( $!mysql_client );
             $!errstr = $errstr;
-#           $.mysql_warning_count = 1;
-            $.mysql_warning_count = mysql_warning_count( $!mysql_client );
         }
         return !defined $!errstr;
     }
     method fetchrow_arrayref() {
-        my $row_data;
+        my $row_arrayref;
         unless defined $!result_set {
             $!result_set  = mysql_use_result( $!mysql_client);
-            $!row_count = mysql_num_rows($!result_set);
+            $!field_count = mysql_field_count($!mysql_client);
         }
-        if $!row_count != 0 {
-            $row_data = [ mysql_fetch_row($!result_set) ];
+        if defined $!result_set {
+            # warn "fetching a row";
+            my $native_row = mysql_fetch_row($!result_set); # can return NULL
+            if $native_row {
+                my @row_array;
+                loop ( my $i=0; $i < $!field_count; $i++ ) {
+                    @row_array[$i] = $native_row[$i];
+                }
+                $row_arrayref = @row_array;
+            }
         }
-        return $row_data;
+        return $row_arrayref;
+    }
+    method fetch() { self.fetchrow_arrayref(); } # alias according to perldoc DBI
+    method mysql_insertid() {
+        mysql_insert_id($!mysql_client);
+        # but Parrot NCI cannot return an unsigned  long long :-(
     }
     method finish() {
         mysql_free_result($!result_set);

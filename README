@@ -21,6 +21,22 @@ FakeDBI files in a single project.  In future each FakeDBD may become a
 separate project, although this conflicts a bit with the idea of being
 "temporary".
 
+The first DBD is for MySQL, the next ones will probably be for SQLite,
+Postgres and FreeTDS.  Also nice to have would be a dummy driver for DBI
+testing, and drivers for CSV and perhaps just in-memory tables (saving
+as JSON, YAML, XML or whatever).
+
+=head1 TESTING
+The initial test file is a quick and dirty concatenation of all the
+scripts in the Perl 5 DBD::mysql test suite, translated to Perl 6.  It's
+horrible and inefficient code, but worth persisting with to ensure a
+decent coverage.  Only about 10% of the suite has been converted so far.
+
+In the medium term, the plan is to write a new test suite consisting of
+a general part that is common to all DBDs, and other parts specific to
+individual DBDs.  The tests will be written to demonstrate to potential
+users, which functions they can use.
+
 =head1 SEE ALSO
 The Perl 6 Pod in the L<doc:FakeDBI> module.
 The Perl 5 L<doc:DBI> and L<doc:DBI::DBD>.
