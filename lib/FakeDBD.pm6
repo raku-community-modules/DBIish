@@ -1,19 +1,66 @@
 # FakeDBD.pm6
 # Provide default methods for all database drivers
 
+=begin pod
+=head1 DESCRIPTION
+The FakeDBD module contains generic code that should be re-used by every
+database driver, and documentation guidelines for DBD implementation.
+
+It is also an experiment in distributing Pod fragments in and around the
+code.  Without syntax highlighting, it is very awkward to work with.  It
+shows that this style of file layout is unsuitable for general use.
+
+=head1 ROLES
+=head2 role FakeDBD::StatementHandle
+The Connection C<prepare> method returns a StatementHandle object that
+mainly provides the C<execute> and C<finish> methods.
+=end pod
+
 role FakeDBD::StatementHandle {
+
+=begin pod
+=head3 FakeDBD::StatementHandle members
+=head4 instance variables
+=head5 $!errstr
+The C<$!errstr> variable keeps an internal copy of the last error
+message retrieved from the database driver.  It is cleared (when?).
+=end pod
+
     has $!errstr;
+
+=begin pod
+=head5 $.PrintError
+The C<$.PrintError> variable is a read-write Bool.  True causes the
+text of any error messages received from the database driver to be sent
+immediately to the standard error output via warn().
+=end pod
+
+    has $.PrintError is rw = Bool::False;
+
+=begin pod
+=head4 methods
+=head5 errstr
+This is the accessor method for the last error string returned by the
+database driver.
+=end pod
+
     method errstr() {
         return defined $!errstr ?? $!errstr !! '';
     }
 }
 
+=begin pod
+=head2 role FakeDBD::Connection
+=end pod
+
 role FakeDBD::Connection {
+
     has $!errstr;
     method do( Str $statement, *@params ) {
         # warn "in FakeDBD::Connection.do('$statement')";
         my $sth = self.prepare($statement) or return fail();
-        $sth.execute(@params) or return fail();
+        $sth.execute(@params);
+#       $sth.execute(@params) or return fail();
     }
     method disconnect() {
         # warn "in FakeDBI::DatabaseHandle.disconnect()";
@@ -23,3 +70,8 @@ role FakeDBD::Connection {
         return $!errstr;
     }
 }
+
+=begin pod
+=head1 SEE ALSO
+The Perl 5 L<DBI::DBD>.
+=end pod

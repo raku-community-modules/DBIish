@@ -15,7 +15,7 @@
 
 use Test;
 
-plan 39;
+plan 44;
 
 use FakeDBI;
 
@@ -56,7 +56,7 @@ ok $drh_version > 0, "FakeDBD::mysql version $drh_version"; # test 2
 
 #-----------------------------------------------------------------------
 # from perl5 DBD/mysql/t/10connect.t
-#plan tests => 2; 
+#plan tests => 2;
 #ok defined $dbh, "Connected to database";
 #ok $dbh->disconnect();
 #
@@ -65,7 +65,7 @@ try {
     $dbh = FakeDBI.connect( $test_dsn, $test_user, $test_password,
         RaiseError => 1, PrintError => 1, AutoCommit => 0 
     );
-#   CATCH { die "ERROR: {FakeDBI.errstr}. Can't continue test"; }
+    CATCH { die "ERROR: {FakeDBI.errstr}. Can't continue test"; }
 }
 ok defined $dbh, "Connected to database"; # test 3
 my $result = $dbh.disconnect();
@@ -158,7 +158,7 @@ ok $dbh.disconnect, "Disconnecting"; # test 20
 try {
     $dbh = FakeDBI.connect( $test_dsn, $test_user, $test_password,
         RaiseError => 1, PrintError => 1, AutoCommit => 0 );
-    # CATCH { die "ERROR: {FakeDBI.errstr}. Can't continue test\n"; }
+    CATCH { die "ERROR: {FakeDBI.errstr}. Can't continue test\n"; }
 }
 ok($sth= $dbh.prepare("DROP TABLE IF EXISTS no_such_table"), "prepare drop no_such_table"); # test 21
 ok($sth.execute(), "execute drop no_such_table..."); # test 22
@@ -206,7 +206,7 @@ is($sth.mysql_warning_count, 1, "...returns an error"); # test 23
 #ok $sth2->finish();
 #ok $dbh->do("DROP TABLE $table");
 #ok $dbh->disconnect();
-ok $dbh.do("DROP TABLE IF EXISTS $table"), "drop table $table"; # test 24
+ok $dbh.do("DROP TABLE IF EXISTS $table"), "drop table if exists $table"; # test 24
 $create = "
 CREATE TABLE $table (
   id INT(3) PRIMARY KEY AUTO_INCREMENT NOT NULL,
@@ -216,7 +216,7 @@ ok $dbh.do($create), "create $table"; # test 25
 my $query= "INSERT INTO $table (name) VALUES (?)";
 ok ($sth= $dbh.prepare($query)), "prepare insert with parameter"; # test 26
 ok $sth.execute("Jochen"), "execute insert with parameter"; # test 27
-#todo "cannot get unsigned long long from Parrot NCI";
+diag "warning: id is only an int, cannot get unsigned long long from NCI";
 is $dbh.mysql_insertid, 1, "insert id == \$dbh.mysql_insertid"; # test 28
 ok $sth.execute("Patrick"), "execute 2nd insert with parameter"; # test 29
 ok (my $sth2= $dbh.prepare("SELECT max(id) FROM $table")),"selectg max(id)"; # test 30
@@ -232,6 +232,13 @@ skip 2, "finish segfaults in libmysql";
 #ok $sth2.finish(), "statement 2 finish"; # test 38
 todo "drop table works but not here";
 ok $dbh.do("DROP TABLE $table"),"drop table $table"; # test 39
+# Because the drop table might fail, disconnect and reconnect
+$dbh.disconnect();
+try {
+    $dbh = FakeDBI.connect( $test_dsn, $test_user, $test_password,
+        RaiseError => 1, PrintError => 1, AutoCommit => 0 );
+    CATCH { die "ERROR: {FakeDBI.errstr}. Can't continue test\n"; }
+}
 
 #-----------------------------------------------------------------------
 # from perl5 DBD/mysql/t/32insert_error.t
@@ -251,12 +258,31 @@ ok $dbh.do("DROP TABLE $table"),"drop table $table"; # test 39
 #ok $sth->execute(1, "Jocken");
 #$sth->{PrintError} = 0;
 #eval {$sth->execute(1, "Jochen")};
-#ok defined($@), 'fails with duplicate entry';
+#ok defined($@), 'fails with duplicate entry'; # $@ is last eval error message
 #$sth->{PrintError} = 1;
 #ok $sth->execute(2, "Jochen");
 #ok $sth->finish;
 #ok $dbh->do("DROP TABLE $table");
 #ok $dbh->disconnect();
+ok $dbh.do("DROP TABLE IF EXISTS $table"),"drop table if exists $table"; # test 40
+$create = "
+CREATE TABLE $table (
+    id INT(3) PRIMARY KEY NOT NULL,
+    name VARCHAR(32))
+";
+ok $dbh.do($create), "create $table"; # test 41
+$query = "INSERT INTO $table (id, name) VALUES (?,?)";
+ok ($sth = $dbh.prepare($query)),"prepare $query"; #  test 42
+ok $sth.execute(1, "Jocken"), "execute insert Jocken"; # test 43
+$sth.PrintError = 0;
+my $last_error_message;
+try {
+    $sth.execute(1, "Jochen"); # re-inserting the same key should fail
+    CATCH { $last_error_message = $sth.errstr; }
+}
+todo "execute does not yet throw exceptions";
+ok defined($last_error_message), 'fails with duplicate entry'; # test 44
+$sth.PrintError = 1;
 
 
 =begin pod

@@ -7,13 +7,13 @@ FakeDBI - an interim database interface for Rakudo Perl 6
 The roadmap for DBI v2 L<http://search.cpan.org/~timb/DBI/Roadmap.pod>
 published in November 2004 laid out the plans for Perl 5 and 6.
 Specifically there is a Parrot DBDI project that will give the same DBD
-facilities to any Parrot based language.  See also
+facilities to all Parrot based languages.  See also
 http://www.nntp.perl.org/group/perl.perl6.language/2005/07/msg22054.html
 
 Because no code is available yet, this project plans to temporarily fill
-the gap, by imitating the classic DBI interface.  Although this is not
-on the roadmap, let's say if it looks like a DBI, and it talks like a
-DBI, then it is a DBI.
+the gap, by imitating the classic Perl 5 DBI interface.  Although this
+is not on the DBI v2 roadmap, let's say if it looks like a DBI, and it
+talks like a DBI, then it is a DBI.
 
 =head1 DBD CLASSES
 Whilst it is convenient, the FakeDBD drivers stay together with the
@@ -30,12 +30,19 @@ as JSON, YAML, XML or whatever).
 The initial test file is a quick and dirty concatenation of all the
 scripts in the Perl 5 DBD::mysql test suite, translated to Perl 6.  It's
 horrible and inefficient code, but worth persisting with to ensure a
-decent coverage.  Only about 10% of the suite has been converted so far.
+decent coverage.  Only about 10% of the suite has been converted so far,
+with 43 tests, 35 passing, 6 todo and 2 skipped.
 
 In the medium term, the plan is to write a new test suite consisting of
 a general part that is common to all DBDs, and other parts specific to
 individual DBDs.  The tests will be written to demonstrate to potential
 users, which functions they can use.
+
+=head1 BUGS
+The FakeDBD::mysql::StatementHandle class has a C<finish()> method that
+does not work, because native functions that return void cannot be
+called.  Something gets popped off the native return stack, and soon
+after that KABOOM, Parrot segfaults.
 
 =head1 SEE ALSO
 The Perl 6 Pod in the L<doc:FakeDBI> module.

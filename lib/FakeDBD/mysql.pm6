@@ -45,10 +45,10 @@ sub mysql_field_count( OpaquePointer $mysql_client )
     is native('libmysqlclient')
     { ... }
 
-sub mysql_free_result( OpaquePointer $result_set )
-    returns OpaquePointer
-    is native('libmysqlclient')
-    { ... }
+#sub mysql_free_result( OpaquePointer $result_set )
+#   returns OpaquePointer # currently not working, should return void
+#   is native('libmysqlclient')
+#   { ... }
 
 sub mysql_get_client_info( OpaquePointer $mysql_client)
     returns Str
@@ -71,10 +71,10 @@ sub mysql_library_init( Int $argc, OpaquePointer $argv,
     is native('libmysqlclient')
     { ... }
 
-sub mysql_library_end()
-    returns OpaquePointer # currently not working, should be void
-    is native('libmysqlclient')
-    { ... }
+#sub mysql_library_end()
+#   returns OpaquePointer # currently not working, should return void
+#   is native('libmysqlclient')
+#   { ... }
 
 sub mysql_num_rows( OpaquePointer $result_set )
     returns Int
@@ -135,6 +135,7 @@ class FakeDBD::mysql::StatementHandle does FakeDBD::StatementHandle {
         if $status != 0 {
             my $errstr = mysql_error( $!mysql_client );
             $!errstr = $errstr;
+            # TODO die $!errstr; # throw an exception
         }
         return !defined $!errstr;
     }
@@ -160,7 +161,7 @@ class FakeDBD::mysql::StatementHandle does FakeDBD::StatementHandle {
     method fetch() { self.fetchrow_arrayref(); } # alias according to perldoc DBI
     method mysql_insertid() {
         mysql_insert_id($!mysql_client);
-        # but Parrot NCI cannot return an unsigned  long long :-(
+        # but Parrot NCI cannot return an unsigned long long :-(
     }
     method finish() {
         mysql_free_result($!result_set);
@@ -225,12 +226,19 @@ class FakeDBD::mysql:auth<mberends>:ver<0.0.1> {
 
 =begin pod
 
+=head1 DESCRIPTION
 # 'zavolaj' is a Native Call Interface for Rakudo/Parrot. 'FakeDBI' and
 # 'FakeDBD::mysql' are Perl 6 modules that use 'zavolaj' to use the
 # standard mysqlclient library.  There is a long term Parrot based
 # project to develop a new, comprehensive DBI architecture for Parrot
 # and Perl 6.  FakeDBI is not that, it is a naive rewrite of the
 # similarly named Perl 5 modules.  Hence the 'Fake' part of the name.
+
+=head1 CLASSES
+The FakeDBD::mysql module contains the same classes and methods as every
+database driver.  Therefore read the main documentation of usage in
+L<doc:FakeDBI> and internal architecture in L<doc:FakeDBD>.  Below are
+only notes about code unique to the FakeDBD::mysql implementation.
 
 =head1 SEE ALSO
 The MySQL 5.1 Reference Manual, C API.
