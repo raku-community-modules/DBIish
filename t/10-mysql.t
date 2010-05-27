@@ -1,5 +1,20 @@
 # fakedbi/t/10-mysql.t
 
+# Before running the tests, prepare the database with something like:
+
+#   $ mysql -u root -p
+#   CREATE DATABASE zavolaj;
+#   CREATE USER 'testuser'@'localhost' IDENTIFIED BY 'testpass';
+#   GRANT SELECT         ON   mysql.* TO 'testuser'@'localhost';
+#   GRANT CREATE         ON zavolaj.* TO 'testuser'@'localhost';
+#   GRANT DROP           ON zavolaj.* TO 'testuser'@'localhost';
+#   GRANT INSERT         ON zavolaj.* TO 'testuser'@'localhost';
+#   GRANT DELETE         ON zavolaj.* TO 'testuser'@'localhost';
+#   GRANT LOCK TABLES    ON zavolaj.* TO 'testuser'@'localhost';
+#   GRANT SELECT         ON zavolaj.* TO 'testuser'@'localhost';
+#   # or maybe otherwise
+#   GRANT ALL PRIVILEGES ON zavolaj.* TO 'testuser'@'localhost';
+
 # This '10-mysql.t' test script is a Perl 6 adaptation of the Perl 5
 # based test suite for DBD::mysql version 4.014.  It is experimental and
 # needs lots of work to increase coverage.  All the original lines
@@ -15,7 +30,7 @@
 
 use Test;
 
-plan 44;
+plan 43;
 
 use FakeDBI;
 
@@ -57,15 +72,20 @@ ok $drh_version > 0, "FakeDBD::mysql version $drh_version"; # test 2
 #-----------------------------------------------------------------------
 # from perl5 DBD/mysql/t/10connect.t
 #plan tests => 2;
+#eval {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
+#         { RaiseError => 1, PrintError => 1, AutoCommit => 0 });};
 #ok defined $dbh, "Connected to database";
 #ok $dbh->disconnect();
 #
 my $dbh;
 try {
     $dbh = FakeDBI.connect( $test_dsn, $test_user, $test_password,
-        RaiseError => 1, PrintError => 1, AutoCommit => 0 
+        RaiseError => 1, PrintError => 1, AutoCommit => 0
     );
-    CATCH { die "ERROR: {FakeDBI.errstr}. Can't continue test"; }
+#   CATCH {
+#       warn $!;
+#       die "ERROR: {FakeDBI.errstr}. Can't continue test";
+#   }
 }
 ok defined $dbh, "Connected to database"; # test 3
 my $result = $dbh.disconnect();
@@ -83,7 +103,7 @@ ok $result, 'disconnect returned true'; # test 4
 try {
     $dbh = FakeDBI.connect( $test_dsn, $test_user, $test_password,
         RaiseError => 1, PrintError => 1, AutoCommit => 0 );
-#   CATCH { die "ERROR: {FakeDBI.errstr}. Can't continue test\n"; }
+    CATCH { die "ERROR: {FakeDBI.errstr}. Can't continue test\n"; }
 }
 ok(defined $dbh, "Connected to database"); # test 5
 ok($dbh.do("DROP TABLE IF EXISTS $table"), "making slate clean"); # test 6
@@ -92,8 +112,8 @@ ok($dbh.do("DROP TABLE $table"), "dropping created $table"); # test 8
 
 #-----------------------------------------------------------------------
 # from perl5 DBD/mysql/t/25lockunlock.t
-#my $create= <<EOT; 
-#CREATE TABLE $table ( 
+#my $create= <<EOT;
+#CREATE TABLE $table (
 #    id int(4) NOT NULL default 0,
 #    name varchar(64) NOT NULL default ''
 #    )
@@ -114,17 +134,17 @@ ok($dbh.do("DROP TABLE $table"), "dropping created $table"); # test 8
 #ok $dbh->do("UNLOCK TABLES"), "Unlock tables";
 #ok $dbh->do("DROP TABLE $table"), "Drop table $table";
 my $create="
-CREATE TABLE $table ( 
+CREATE TABLE $table (
     id int(4) NOT NULL default 0,
     name varchar(30) NOT NULL default ''
 )
 ";
 ok $dbh.do("DROP TABLE IF EXISTS $table"), "drop table if exists $table"; # test 9
 ok $dbh.do($create), "create table $table"; # test 10
-todo "lock tables does not work";
+#todo "lock tables does not work";
 ok $dbh.do("LOCK TABLES $table WRITE"), "lock tables $table write"; # test 11
-ok $dbh.do("INSERT INTO $table VALUES(1, 'Alligator Descartes test 12')"), "Insert "; # test 12
-todo "delete works but not here";
+ok $dbh.do("INSERT INTO $table VALUES(1, 'Alligator Descartes test 12')"), "Insert"; # test 12
+#todo "delete works but not here";
 ok $dbh.do("DELETE FROM $table WHERE id = 1"), "Delete"; # test 13
 my $sth;
 try {
@@ -135,15 +155,10 @@ ok $sth.execute , "Execute"; # test 15
 my ($row, $errstr);
 $row = $sth.fetchrow_arrayref;
 $errstr= $sth.errstr;
-todo "select should return no rows";
 ok !defined($row), "Fetch should have failed"; # test 16
-todo "errstr does not work";
 ok !defined($errstr), "Fetch should have failed"; # test 17
-skip 1, "unlock tables does not work";
-#ok $dbh.do("UNLOCK TABLES"), "Unlock tables"; # test 18
-todo "drop table work but not here";
+ok $dbh.do("UNLOCK TABLES"), "Unlock tables"; # test 18
 ok $dbh.do("DROP TABLE $table"), "Drop table $table"; # test 19
-ok $dbh.disconnect, "Disconnecting"; # test 20
 
 #-----------------------------------------------------------------------
 # from perl5 DBD/mysql/t/29warnings.t
@@ -155,19 +170,18 @@ ok $dbh.disconnect, "Disconnecting"; # test 20
 #  ok($sth->execute());
 #  is($sth->{mysql_warning_count}, 1);
 #};
-try {
-    $dbh = FakeDBI.connect( $test_dsn, $test_user, $test_password,
-        RaiseError => 1, PrintError => 1, AutoCommit => 0 );
-    CATCH { die "ERROR: {FakeDBI.errstr}. Can't continue test\n"; }
-}
-ok($sth= $dbh.prepare("DROP TABLE IF EXISTS no_such_table"), "prepare drop no_such_table"); # test 21
-ok($sth.execute(), "execute drop no_such_table..."); # test 22
-is($sth.mysql_warning_count, 1, "...returns an error"); # test 23
+#try {
+#    $dbh = FakeDBI.connect( $test_dsn, $test_user, $test_password,
+#        RaiseError => 1, PrintError => 1, AutoCommit => 0 );
+#    CATCH { die "ERROR: {FakeDBI.errstr}. Can't continue test\n"; }
+#}
+ok($sth= $dbh.prepare("DROP TABLE IF EXISTS no_such_table"), "prepare drop no_such_table"); # test 20
+ok($sth.execute(), "execute drop no_such_table..."); # test 21
+is($sth.mysql_warning_count, 1, "...returns an error"); # test 22
 
 #-----------------------------------------------------------------------
 # from perl5 DBD/mysql/t/30insertfetch.t
 #plan tests => 10;
-#ok(defined $dbh, "Connected to database");
 #ok($dbh->do("DROP TABLE IF EXISTS $table"), "making slate clean");
 #ok($dbh->do("CREATE TABLE $table (id INT(4), name VARCHAR(64))"), "creating table");
 #ok($dbh->do("INSERT INTO $table VALUES(1, 'Alligator Descartes')"), "loading data");
@@ -206,32 +220,31 @@ is($sth.mysql_warning_count, 1, "...returns an error"); # test 23
 #ok $sth2->finish();
 #ok $dbh->do("DROP TABLE $table");
 #ok $dbh->disconnect();
-ok $dbh.do("DROP TABLE IF EXISTS $table"), "drop table if exists $table"; # test 24
+ok $dbh.do("DROP TABLE IF EXISTS $table"), "drop table if exists $table"; # test 23
 $create = "
 CREATE TABLE $table (
   id INT(3) PRIMARY KEY AUTO_INCREMENT NOT NULL,
   name VARCHAR(31))
 ";
-ok $dbh.do($create), "create $table"; # test 25
+ok $dbh.do($create), "create $table"; # test 24
 my $query= "INSERT INTO $table (name) VALUES (?)";
-ok ($sth= $dbh.prepare($query)), "prepare insert with parameter"; # test 26
-ok $sth.execute("Jochen"), "execute insert with parameter"; # test 27
-diag "warning: id is only an int, cannot get unsigned long long from NCI";
-is $dbh.mysql_insertid, 1, "insert id == \$dbh.mysql_insertid"; # test 28
-ok $sth.execute("Patrick"), "execute 2nd insert with parameter"; # test 29
-ok (my $sth2= $dbh.prepare("SELECT max(id) FROM $table")),"selectg max(id)"; # test 30
-ok defined $sth2,"second prepared statement"; # test 31
-ok $sth2.execute(), "execute second prepared statement"; # test 32
+ok ($sth= $dbh.prepare($query)), "prepare insert with parameter"; # test 25
+ok $sth.execute("Jochen"), "execute insert with parameter"; # test 26
+is $dbh.mysql_insertid, 1, "insert id == \$dbh.mysql_insertid (but only int, not long long)"; # test 27
+ok $sth.execute("Patrick"), "execute 2nd insert with parameter"; # test 28
+ok (my $sth2= $dbh.prepare("SELECT max(id) FROM $table")),"selectg max(id)"; # test 29
+ok defined $sth2,"second prepared statement"; # test 30
+ok $sth2.execute(), "execute second prepared statement"; # test 31
 my $max_id;
-ok ($max_id= $sth2.fetch()),"fetch"; # test 33
-ok defined $max_id,"fetch result defined"; # test 34
-ok $sth.mysql_insertid == $max_id[0], 'sth insert id $sth.mysql_insertid == max(id) $max_id[0] in '~$table; # test 35
-ok $dbh.mysql_insertid == $max_id[0], 'dbh insert id $dbh.mysql_insertid == max(id) $max_id[0] in '~$table; # test 36
-skip 2, "finish segfaults in libmysql";
-#ok $sth.finish(), "statement 1 finish"; #  test 37
-#ok $sth2.finish(), "statement 2 finish"; # test 38
+ok ($max_id= $sth2.fetch()),"fetch"; # test 32
+ok defined $max_id,"fetch result defined"; # test 33
+ok $sth.mysql_insertid == $max_id[0], 'sth insert id $sth.mysql_insertid == max(id) $max_id[0] in '~$table; # test 34
+ok $dbh.mysql_insertid == $max_id[0], 'dbh insert id $dbh.mysql_insertid == max(id) $max_id[0] in '~$table; # test 35
+#skip 2, "finish segfaults in libmysql";
+ok $sth.finish(), "statement 1 finish"; #  test 36
+ok $sth2.finish(), "statement 2 finish"; # test 37
 todo "drop table works but not here";
-ok $dbh.do("DROP TABLE $table"),"drop table $table"; # test 39
+ok $dbh.do("DROP TABLE $table"),"drop table $table"; # test 38
 # Because the drop table might fail, disconnect and reconnect
 $dbh.disconnect();
 try {
@@ -264,16 +277,16 @@ try {
 #ok $sth->finish;
 #ok $dbh->do("DROP TABLE $table");
 #ok $dbh->disconnect();
-ok $dbh.do("DROP TABLE IF EXISTS $table"),"drop table if exists $table"; # test 40
+ok $dbh.do("DROP TABLE IF EXISTS $table"),"drop table if exists $table"; # test 39
 $create = "
 CREATE TABLE $table (
     id INT(3) PRIMARY KEY NOT NULL,
     name VARCHAR(32))
 ";
-ok $dbh.do($create), "create $table"; # test 41
+ok $dbh.do($create), "create $table"; # test 40
 $query = "INSERT INTO $table (id, name) VALUES (?,?)";
-ok ($sth = $dbh.prepare($query)),"prepare $query"; #  test 42
-ok $sth.execute(1, "Jocken"), "execute insert Jocken"; # test 43
+ok ($sth = $dbh.prepare($query)),"prepare $query"; #  test 41
+ok $sth.execute(1, "Jocken"), "execute insert Jocken"; # test 42
 $sth.PrintError = 0;
 my $last_error_message;
 try {
@@ -281,218 +294,123 @@ try {
     CATCH { $last_error_message = $sth.errstr; }
 }
 todo "execute does not yet throw exceptions";
-ok defined($last_error_message), 'fails with duplicate entry'; # test 44
+ok defined($last_error_message), 'fails with duplicate entry'; # test 43
 $sth.PrintError = 1;
+
+
+#-----------------------------------------------------------------------
+# from perl5 DBD/mysql/t/35limit.t
+#plan tests => 111; 
+#ok($dbh->do("DROP TABLE IF EXISTS $table"), "making slate clean");
+#ok($dbh->do("CREATE TABLE $table (id INT(4), name VARCHAR(64))"), "creating table");
+#ok(($sth = $dbh->prepare("INSERT INTO $table VALUES (?,?)")));
+#print "PERL testing insertion of values from previous prepare of insert statement:\n";
+#for (my $i = 0 ; $i < 100; $i++) { 
+#  my @chars = grep !/[0O1Iil]/, 0..9, 'A'..'Z', 'a'..'z';
+#  my $random_chars = join '', map { $chars[rand @chars] } 0 .. 16;
+## save these values for later testing
+#  $testInsertVals->{$i} = $random_chars;
+#  ok(($rows = $sth->execute($i, $random_chars)));
+#}
+#print "PERL rows : " . $rows . "\n"; 
+#print "PERL testing prepare of select statement with LIMIT placeholders:\n";
+#ok($sth = $dbh->prepare("SELECT * FROM $table LIMIT ?, ?"));
+#print "PERL testing exec of bind vars for LIMIT\n";
+#ok($sth->execute(20, 50));
+#my ($row, $errstr, $array_ref);
+#ok( (defined($array_ref = $sth->fetchall_arrayref) &&
+#  (!defined($errstr = $sth->errstr) || $sth->errstr eq '')));
+#ok(@$array_ref == 50);
+#ok($sth->finish);
+#ok($dbh->do("DROP TABLE $table"));
 
 
 =begin pod
 #-----------------------------------------------------------------------
-# from perl5 DBD/mysql/t/35limit.t
-
-#!perl -w
-# vim: ft=perl
-
-use Test::More;
-use DBI;
-use DBI::Const::GetInfoType;
-use strict;
-$|= 1;
-
-my $rows = 0;
-my $sth;
-my $testInsertVals;
-use vars qw($table $test_dsn $test_user $test_password);
-use lib 't', '.';
-require 'lib.pl';
-
-my $dbh;
-eval {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
-                      { RaiseError => 1, PrintError => 1, AutoCommit => 0 });};
-if ($@) {
-    plan skip_all => "ERROR: $@. Can't continue test";
-}
-plan tests => 111; 
-
-ok(defined $dbh, "Connected to database");
-
-ok($dbh->do("DROP TABLE IF EXISTS $table"), "making slate clean");
-
-ok($dbh->do("CREATE TABLE $table (id INT(4), name VARCHAR(64))"), "creating table");
-
-ok(($sth = $dbh->prepare("INSERT INTO $table VALUES (?,?)")));
-
-print "PERL testing insertion of values from previous prepare of insert statement:\n";
-for (my $i = 0 ; $i < 100; $i++) { 
-  my @chars = grep !/[0O1Iil]/, 0..9, 'A'..'Z', 'a'..'z';
-  my $random_chars = join '', map { $chars[rand @chars] } 0 .. 16;
-# save these values for later testing
-  $testInsertVals->{$i} = $random_chars;
-  ok(($rows = $sth->execute($i, $random_chars)));
-}
-print "PERL rows : " . $rows . "\n"; 
-
-print "PERL testing prepare of select statement with LIMIT placeholders:\n";
-ok($sth = $dbh->prepare("SELECT * FROM $table LIMIT ?, ?"));
-
-print "PERL testing exec of bind vars for LIMIT\n";
-ok($sth->execute(20, 50));
-
-my ($row, $errstr, $array_ref);
-ok( (defined($array_ref = $sth->fetchall_arrayref) &&
-  (!defined($errstr = $sth->errstr) || $sth->errstr eq '')));
-
-ok(@$array_ref == 50);
-
-ok($sth->finish);
-
-ok($dbh->do("DROP TABLE $table"));
-
-ok($dbh->disconnect);
-#-----------------------------------------------------------------------
-#!perl -w
-# vim: ft=perl
-
-use strict;
-use Test::More;
-use DBI;
-use Carp qw(croak);
-use Data::Dumper;
-use lib 't', '.';
-require 'lib.pl';
-
-my ($row, $sth, $dbh);
-my ($table, $def, $rows, $errstr, $ret_ref);
-use vars qw($table $test_dsn $test_user $test_password);
-
-eval {$dbh = DBI->connect($test_dsn, $test_user, $test_password,
-    { RaiseError => 1, AutoCommit => 1});};
-
-if ($@) {
-    plan skip_all => 
-        "Can't connect to database ERROR: $DBI::errstr. Can't continue test";
-}
-plan tests => 49; 
-
-ok(defined $dbh, "Connected to database");
-
-ok($dbh->do("DROP TABLE IF EXISTS t1"), "Making slate clean");
-
-ok($dbh->do("CREATE TABLE t1 (id INT(4), name VARCHAR(64))"),
-  "Creating table");
-
-ok($sth = $dbh->prepare("SHOW TABLES LIKE 't1'"),
-  "Testing prepare show tables");
-
-ok($sth->execute(), "Executing 'show tables'");
-
-ok((defined($row= $sth->fetchrow_arrayref) &&
-  (!defined($errstr = $sth->errstr) || $sth->errstr eq '')),
-  "Testing if result set and no errors");
-
-ok($row->[0] eq 't1', "Checking if results equal to 't1' \n");
-
-ok($sth->finish, "Finishing up with statement handle");
-
-ok($dbh->do("INSERT INTO t1 VALUES (1,'1st first value')"),
-  "Inserting first row");
-
-ok($sth= $dbh->prepare("INSERT INTO t1 VALUES (2,'2nd second value')"),
-  "Preparing insert of second row");
-
-ok(($rows = $sth->execute()), "Inserting second row");
-
-ok($rows == 1, "One row should have been inserted");
-
-ok($sth->finish, "Finishing up with statement handle");
-
-ok($sth= $dbh->prepare("SELECT id, name FROM t1 WHERE id = 1"), 
-  "Testing prepare of query");
-
-ok($sth->execute(), "Testing execute of query");
-
-ok($ret_ref = $sth->fetchall_arrayref(),
-  "Testing fetchall_arrayref of executed query");
-
-ok($sth= $dbh->prepare("INSERT INTO t1 values (?, ?)"),
-  "Preparing insert, this time using placeholders");
-	
-my $testInsertVals = {};
-for (my $i = 0 ; $i < 10; $i++)
-{ 
-  my @chars = grep !/[0O1Iil]/, 0..9, 'A'..'Z', 'a'..'z';
-  my $random_chars= join '', map { $chars[rand @chars] } 0 .. 16;
-   # save these values for later testing
-  $testInsertVals->{$i}= $random_chars;
-  ok($rows= $sth->execute($i, $random_chars), "Testing insert row");
-  ok($rows= 1, "Should have inserted one row");
-}
-
-ok($sth->finish, "Testing closing of statement handle");
-
-ok($sth= $dbh->prepare("SELECT * FROM t1 WHERE id = ? OR id = ?"),
-  "Testing prepare of query with placeholders");
-
-ok($rows = $sth->execute(1,2),
-  "Testing execution with values id = 1 or id = 2");
-
-ok($ret_ref = $sth->fetchall_arrayref(),
-  "Testing fetchall_arrayref (should be four rows)");
-
-print "RETREF " . scalar @$ret_ref . "\n";
-ok(@{$ret_ref} == 4 , "\$ret_ref should contain four rows in result set");
-
-ok($sth= $dbh->prepare("DROP TABLE IF EXISTS t1"),
-  "Testing prepare of dropping table");
-
-ok($sth->execute(), "Executing drop table");
-
+# from perl5 DBD/mysql/t/35prepare.t
+#eval {$dbh = DBI->connect($test_dsn, $test_user, $test_password,
+#    { RaiseError => 1, AutoCommit => 1});};
+#
+#if ($@) {
+#    plan skip_all => 
+#        "Can't connect to database ERROR: $DBI::errstr. Can't continue test";
+#}
+#plan tests => 49; 
+#ok(defined $dbh, "Connected to database");
+#ok($dbh->do("DROP TABLE IF EXISTS t1"), "Making slate clean");
+#ok($dbh->do("CREATE TABLE t1 (id INT(4), name VARCHAR(64))"),
+#  "Creating table");
+#ok($sth = $dbh->prepare("SHOW TABLES LIKE 't1'"),
+#  "Testing prepare show tables");
+#ok($sth->execute(), "Executing 'show tables'");
+#ok((defined($row= $sth->fetchrow_arrayref) &&
+#  (!defined($errstr = $sth->errstr) || $sth->errstr eq '')),
+#  "Testing if result set and no errors");
+#ok($row->[0] eq 't1', "Checking if results equal to 't1' \n");
+#ok($sth->finish, "Finishing up with statement handle");
+#ok($dbh->do("INSERT INTO t1 VALUES (1,'1st first value')"),
+#  "Inserting first row");
+#ok($sth= $dbh->prepare("INSERT INTO t1 VALUES (2,'2nd second value')"),
+#  "Preparing insert of second row");
+#ok(($rows = $sth->execute()), "Inserting second row");
+#ok($rows == 1, "One row should have been inserted");
+#ok($sth->finish, "Finishing up with statement handle");
+#ok($sth= $dbh->prepare("SELECT id, name FROM t1 WHERE id = 1"), 
+#  "Testing prepare of query");
+#ok($sth->execute(), "Testing execute of query");
+#ok($ret_ref = $sth->fetchall_arrayref(),
+#  "Testing fetchall_arrayref of executed query");
+#ok($sth= $dbh->prepare("INSERT INTO t1 values (?, ?)"),
+#  "Preparing insert, this time using placeholders");
+#my $testInsertVals = {};
+#for (my $i = 0 ; $i < 10; $i++)
+#{ 
+#  my @chars = grep !/[0O1Iil]/, 0..9, 'A'..'Z', 'a'..'z';
+#  my $random_chars= join '', map { $chars[rand @chars] } 0 .. 16;
+#   # save these values for later testing
+#  $testInsertVals->{$i}= $random_chars;
+#  ok($rows= $sth->execute($i, $random_chars), "Testing insert row");
+#  ok($rows= 1, "Should have inserted one row");
+#}
+#
+#ok($sth->finish, "Testing closing of statement handle");
+#ok($sth= $dbh->prepare("SELECT * FROM t1 WHERE id = ? OR id = ?"),
+#  "Testing prepare of query with placeholders");
+#ok($rows = $sth->execute(1,2),
+#  "Testing execution with values id = 1 or id = 2");
+#ok($ret_ref = $sth->fetchall_arrayref(),
+#  "Testing fetchall_arrayref (should be four rows)");
+#print "RETREF " . scalar @$ret_ref . "\n";
+#ok(@{$ret_ref} == 4 , "\$ret_ref should contain four rows in result set");
+#ok($sth= $dbh->prepare("DROP TABLE IF EXISTS t1"),
+#  "Testing prepare of dropping table");
+#ok($sth->execute(), "Executing drop table");
 # Bug #20153: Fetching all data from a statement handle does not mark it 
 # as finished
-ok($sth= $dbh->prepare("SELECT 1"), "Prepare - Testing bug #20153");
-ok($sth->execute(), "Execute - Testing bug #20153");
-ok($sth->fetchrow_arrayref(), "Fetch - Testing bug #20153");
-ok(!($sth->fetchrow_arrayref()),"Not Fetch - Testing bug #20153");
+#ok($sth= $dbh->prepare("SELECT 1"), "Prepare - Testing bug #20153");
+#ok($sth->execute(), "Execute - Testing bug #20153");
+#ok($sth->fetchrow_arrayref(), "Fetch - Testing bug #20153");
+#ok(!($sth->fetchrow_arrayref()),"Not Fetch - Testing bug #20153");
+## Install a handler so that a warning about unfreed resources gets caught
+#$SIG{__WARN__} = sub { die @_ };
+#ok($dbh->disconnect(), "Testing disconnect");
 
-# Install a handler so that a warning about unfreed resources gets caught
-$SIG{__WARN__} = sub { die @_ };
 
-ok($dbh->disconnect(), "Testing disconnect");
 #-----------------------------------------------------------------------
-#!perl -w
-# vim: ft=perl
-
-#
-#   $Id: 40bindparam.t 6304 2006-05-17 21:23:10Z capttofu $ 
-#
-#   This is a skeleton test. For writing new tests, take this file
-#   and modify/extend it.
-#
-
-
-use Test::More;
-use DBI ();
-use vars qw($table $test_dsn $test_user $test_password);
-use lib 't', '.';
-require 'lib.pl';
-
-my $dbh;
-eval {$dbh = DBI->connect($test_dsn, $test_user, $test_password,
-  { RaiseError => 1, AutoCommit => 1}) or ServerError();};
-
-if ($@) {
-    plan skip_all => "ERROR: $DBI::errstr. Can't continue test";
-} 
-plan tests => 13;
-
-ok $dbh->do("DROP TABLE IF EXISTS $table"), "drop table $table";
-
-my $create= <<EOT; 
-CREATE TABLE $table (
-    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    num INT(3))
-EOT
-
-ok $dbh->do($create), "create table $table";
+# from perl5 DBD/mysql/t/40bindparam.t
+#eval {$dbh = DBI->connect($test_dsn, $test_user, $test_password,
+#  { RaiseError => 1, AutoCommit => 1}) or ServerError();};
+#if ($@) {
+#    plan skip_all => "ERROR: $DBI::errstr. Can't continue test";
+#} 
+#plan tests => 13;
+#ok $dbh->do("DROP TABLE IF EXISTS $table"), "drop table $table";
+#my $create= <<EOT; 
+#CREATE TABLE $table (
+#    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+#    num INT(3))
+#EOT
+#ok $dbh->do($create), "create table $table";
 
 ok $dbh->do("INSERT INTO $table VALUES(NULL, 1)"), "insert into $table (null, 1)";
 

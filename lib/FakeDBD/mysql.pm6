@@ -45,10 +45,9 @@ sub mysql_field_count( OpaquePointer $mysql_client )
     is native('libmysqlclient')
     { ... }
 
-#sub mysql_free_result( OpaquePointer $result_set )
-#   returns OpaquePointer # currently not working, should return void
-#   is native('libmysqlclient')
-#   { ... }
+sub mysql_free_result( OpaquePointer $result_set )
+    is native('libmysqlclient')
+    { ... }
 
 sub mysql_get_client_info( OpaquePointer $mysql_client)
     returns Str
@@ -71,10 +70,9 @@ sub mysql_library_init( Int $argc, OpaquePointer $argv,
     is native('libmysqlclient')
     { ... }
 
-#sub mysql_library_end()
-#   returns OpaquePointer # currently not working, should return void
-#   is native('libmysqlclient')
-#   { ... }
+sub mysql_library_end()
+    is native('libmysqlclient')
+    { ... }
 
 sub mysql_num_rows( OpaquePointer $result_set )
     returns Int
@@ -147,7 +145,10 @@ class FakeDBD::mysql::StatementHandle does FakeDBD::StatementHandle {
         }
         if defined $!result_set {
             # warn "fetching a row";
+            $!errstr = Mu;
             my $native_row = mysql_fetch_row($!result_set); # can return NULL
+            my $errstr = mysql_error( $!mysql_client );
+            if $errstr ne '' { $!errstr = $errstr; }
             if $native_row {
                 my @row_array;
                 loop ( my $i=0; $i < $!field_count; $i++ ) {
@@ -155,6 +156,9 @@ class FakeDBD::mysql::StatementHandle does FakeDBD::StatementHandle {
                 }
                 $row_arrayref = @row_array;
             }
+#           else {
+#               self.finish;
+#           }
         }
         return $row_arrayref;
     }
@@ -164,8 +168,11 @@ class FakeDBD::mysql::StatementHandle does FakeDBD::StatementHandle {
         # but Parrot NCI cannot return an unsigned long long :-(
     }
     method finish() {
-        mysql_free_result($!result_set);
-        $!result_set = Mu;
+        if defined( $!result_set ) {
+            mysql_free_result($!result_set);
+            $!result_set = Mu;
+        }
+        return Bool::True;
     }
 }
 

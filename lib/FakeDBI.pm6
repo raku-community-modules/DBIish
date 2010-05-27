@@ -2,7 +2,7 @@
 
 class FakeDBI:auth<mberends>:ver<0.0.1> {
     has $!errstr;
-    method connect( $dsn, $username, $password ) {
+    method connect( $dsn, $username, $password, :$RaiseError, :$PrintError, :$AutoCommit ) {
         # warn "in FakeDBI.connect('$dsn')";
         # Divide $dsn up into its separate fields.
         my ( $prefix, $drivername, $params ) = $dsn.split(':');

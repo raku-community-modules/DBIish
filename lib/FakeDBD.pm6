@@ -45,7 +45,8 @@ database driver.
 =end pod
 
     method errstr() {
-        return defined $!errstr ?? $!errstr !! '';
+        return $!errstr;
+#       return defined $!errstr ?? $!errstr !! '';
     }
 }
 
@@ -55,17 +56,44 @@ database driver.
 
 role FakeDBD::Connection {
 
+=begin pod
+=head3 FakeDBD::Connection members
+=head4 instance variables
+=head5 $!errstr
+The C<$!errstr> variable keeps an internal copy of the last error
+message retrieved from the database driver.  It is cleared (when?).
+=end pod
+
     has $!errstr;
+
+=begin pod
+=head4 methods
+=head5 do
+=end pod
+
     method do( Str $statement, *@params ) {
         # warn "in FakeDBD::Connection.do('$statement')";
         my $sth = self.prepare($statement) or return fail();
         $sth.execute(@params);
 #       $sth.execute(@params) or return fail();
     }
+
+=begin pod
+=head5 disconnect
+The C<disconnect> method 
+=end pod
+
     method disconnect() {
         # warn "in FakeDBI::DatabaseHandle.disconnect()";
         return Bool::True;
     }
+
+=begin pod
+=head5 errstr
+This is the accessor method for the last error string returned by a
+connection method.
+=end pod
+
     method errstr() {
         return $!errstr;
     }
