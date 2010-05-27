@@ -30,7 +30,7 @@
 
 use Test;
 
-plan 51;
+plan 69;
 
 use FakeDBI;
 
@@ -340,18 +340,9 @@ ok( (defined($array_ref = $sth.fetchall_arrayref) &&
 ok($array_ref.elems == 50,"limit 50 works"); # test 51
 
 
-=begin pod
 #-----------------------------------------------------------------------
 # from perl5 DBD/mysql/t/35prepare.t
-#eval {$dbh = DBI->connect($test_dsn, $test_user, $test_password,
-#    { RaiseError => 1, AutoCommit => 1});};
-#
-#if ($@) {
-#    plan skip_all => 
-#        "Can't connect to database ERROR: $DBI::errstr. Can't continue test";
-#}
 #plan tests => 49; 
-#ok(defined $dbh, "Connected to database");
 #ok($dbh->do("DROP TABLE IF EXISTS t1"), "Making slate clean");
 #ok($dbh->do("CREATE TABLE t1 (id INT(4), name VARCHAR(64))"),
 #  "Creating table");
@@ -387,7 +378,6 @@ ok($array_ref.elems == 50,"limit 50 works"); # test 51
 #  ok($rows= $sth->execute($i, $random_chars), "Testing insert row");
 #  ok($rows= 1, "Should have inserted one row");
 #}
-#
 #ok($sth->finish, "Testing closing of statement handle");
 #ok($sth= $dbh->prepare("SELECT * FROM t1 WHERE id = ? OR id = ?"),
 #  "Testing prepare of query with placeholders");
@@ -397,6 +387,7 @@ ok($array_ref.elems == 50,"limit 50 works"); # test 51
 #  "Testing fetchall_arrayref (should be four rows)");
 #print "RETREF " . scalar @$ret_ref . "\n";
 #ok(@{$ret_ref} == 4 , "\$ret_ref should contain four rows in result set");
+
 #ok($sth= $dbh->prepare("DROP TABLE IF EXISTS t1"),
 #  "Testing prepare of dropping table");
 #ok($sth->execute(), "Executing drop table");
@@ -409,8 +400,46 @@ ok($array_ref.elems == 50,"limit 50 works"); # test 51
 ## Install a handler so that a warning about unfreed resources gets caught
 #$SIG{__WARN__} = sub { die @_ };
 #ok($dbh->disconnect(), "Testing disconnect");
+ok($dbh.do("DROP TABLE IF EXISTS t1"), "35prepare.t Making slate clean"); # test 52
+ok($dbh.do("CREATE TABLE t1 (id INT(4), name VARCHAR(35))"), "Creating table"); # test 53
+ok($sth = $dbh.prepare("SHOW TABLES LIKE 't1'"),"prepare show tables"); # test 54
+ok($sth.execute(), "Executing 'show tables'"); # test 55
+ok((defined($row= $sth.fetchrow_arrayref) &&
+  (!defined($errstr = $sth.errstr) || $sth.errstr eq '')),
+  "Testing if result set and no errors"); # test 56
+ok($row[0] eq 't1', "Checking if results equal to 't1'"); # test 57
+ok($sth.finish, "Finishing up with statement handle"); # test 58
+ok($dbh.do("INSERT INTO t1 VALUES (1,'1st first value')"),"Inserting first row"); # test 59
+ok($sth= $dbh.prepare("INSERT INTO t1 VALUES (2,'2nd second value')"),"Preparing insert of second row"); # test 60
+my $rows;
+ok(($rows = $sth.execute()), "Inserting second row"); # test 61
+ok($rows == Bool::True, "One row should have been inserted"); # test 62
+ok($sth.finish, "Finishing up with statement handle"); # test 63
+ok($sth= $dbh.prepare("SELECT id, name FROM t1 WHERE id = 1"),"Testing prepare of query"); # test 64
+ok($sth.execute(), "Testing execute of query"); # test 65
+ok(my $ret_ref = $sth.fetchall_arrayref(),"Testing fetchall_arrayref of executed query"); # test 66
+ok($sth= $dbh.prepare("INSERT INTO t1 values (?, ?)"),"Preparing insert, this time using placeholders"); # test 67
+%testInsertVals = ();
+$all_ok = Bool::True;
+loop ($i = 0 ; $i < 10; $i++) {
+  my @chars = grep { /<-[0O1Iil]> / }, 0..9, 'A'..'Z', 'a'..'z';
+  my $random_chars= join '', map { @chars[@chars.elems.rand] }, 0 .. 16;
+  %testInsertVals{$i}= $random_chars; # save these values for later testing
+  unless $sth.execute($i, $random_chars) { $all_ok = Bool::False; }
+}
+ok($all_ok, "Should have inserted one row (10 times)"); # test 68
+ok($sth.finish, "Testing closing of statement handle"); # test 69
+#ok($sth= $dbh.prepare("SELECT * FROM t1 WHERE id = ? OR id = ?"),
+#  "Testing prepare of query with placeholders");
+#ok($rows = $sth.execute(1,2),
+#  "Testing execution with values id = 1 or id = 2");
+#ok($ret_ref = $sth.fetchall_arrayref(),
+#  "Testing fetchall_arrayref (should be four rows)");
+#print "RETREF " . scalar @$ret_ref . "\n";
+#ok(@{$ret_ref} == 4 , "\$ret_ref should contain four rows in result set");
 
 
+=begin pod
 #-----------------------------------------------------------------------
 # from perl5 DBD/mysql/t/40bindparam.t
 #eval {$dbh = DBI->connect($test_dsn, $test_user, $test_password,
