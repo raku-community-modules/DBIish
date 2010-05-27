@@ -125,8 +125,13 @@ class FakeDBD::mysql::StatementHandle does FakeDBD::StatementHandle {
         # warn "in FakeDBD::mysql::StatementHandle.execute()";
         my $statement = $!statement;
         while @params.elems>0 and $statement.index('?')>=0 {
-            my $param = @params.pop;
-            $statement .= subst("?","'$param'");
+            my $param = @params.shift;
+            if $param ~~ /<-[0..9]>/ {
+                $statement .= subst("?","'$param'"); # quote non numerics
+            }
+            else {
+                $statement .= subst("?",$param); # do not quote numbers
+            }
         }
         # warn "in FakeDBD::mysql::StatementHandle.execute statement=$statement";
         $!result_set = Mu;
@@ -158,13 +163,38 @@ class FakeDBD::mysql::StatementHandle does FakeDBD::StatementHandle {
                 }
                 $row_arrayref = @row_array;
             }
-#           else {
-#               self.finish;
-#           }
+            else { self.finish; }
         }
         return $row_arrayref;
     }
     method fetch() { self.fetchrow_arrayref(); } # alias according to perldoc DBI
+    method fetchall_arrayref() {
+        my $all_arrayref;
+        unless defined $!result_set {
+            $!result_set  = mysql_use_result( $!mysql_client);
+            $!field_count = mysql_field_count($!mysql_client);
+        }
+        if defined $!result_set {
+            $!errstr = Mu;
+            my @all_array;
+            while ! $!errstr && my $native_row = mysql_fetch_row($!result_set) { # can return NULL
+                my $row_arrayref;
+                my $errstr = mysql_error( $!mysql_client );
+                if $errstr ne '' { $!errstr = $errstr; }
+                if $native_row {
+                    my @row_array;
+                    loop ( my $i=0; $i < $!field_count; $i++ ) {
+                        @row_array[$i] = $native_row[$i];
+                    }
+                    $row_arrayref = @row_array;
+                    push @all_array, $row_arrayref;
+                }
+                else { self.finish; }
+            }
+            $all_arrayref = @all_array;
+        }
+        return $all_arrayref;
+    }
     method mysql_insertid() {
         mysql_insert_id($!mysql_client);
         # but Parrot NCI cannot return an unsigned long long :-(

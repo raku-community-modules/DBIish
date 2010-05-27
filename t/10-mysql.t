@@ -30,7 +30,7 @@
 
 use Test;
 
-plan 43;
+plan 51;
 
 use FakeDBI;
 
@@ -242,7 +242,6 @@ ok $sth.mysql_insertid == $max_id[0], 'sth insert id $sth.mysql_insertid == max(
 ok $dbh.mysql_insertid == $max_id[0], 'dbh insert id $dbh.mysql_insertid == max(id) $max_id[0] in '~$table; # test 35
 ok $sth.finish(), "statement 1 finish"; #  test 36
 ok $sth2.finish(), "statement 2 finish"; # test 37
-todo "drop table works but not here";
 ok $dbh.do("DROP TABLE $table"),"drop table $table"; # test 38
 # Because the drop table might fail, disconnect and reconnect
 $dbh.disconnect();
@@ -292,7 +291,6 @@ try {
     $sth.execute(1, "Jochen"); # re-inserting the same key should fail
     CATCH { $last_error_message = $sth.errstr; }
 }
-todo "execute does not yet throw exceptions";
 ok defined($last_error_message), 'fails with duplicate entry'; # test 43
 $sth.PrintError = 1;
 
@@ -322,6 +320,24 @@ $sth.PrintError = 1;
 #ok(@$array_ref == 50);
 #ok($sth->finish);
 #ok($dbh->do("DROP TABLE $table"));
+ok($dbh.do("DROP TABLE IF EXISTS $table"), "making slate clean"); # test 44
+ok($dbh.do("CREATE TABLE $table (id INT(4), name VARCHAR(35))"), "creating table"); # test 45
+ok(($sth = $dbh.prepare("INSERT INTO $table (id,name) VALUES (?,?)")),"prepare insert with 2 params"); # test 46
+my ( %testInsertVals, $all_ok );
+$all_ok = Bool::True;
+loop (my $i = 0 ; $i < 100; $i++) {
+  my @chars = grep { /<-[0O1Iil]>/ }, 0..9, 'A'..'Z', 'a'..'z';
+  my $random_chars = join '', map { @chars[@chars.elems.rand] }, 0 .. 16;
+  %testInsertVals{$i} = $random_chars; # save these values for later testing
+  unless $sth.execute($i, $random_chars) { $all_ok = Bool::False; }
+}
+ok( $all_ok,"insert 100 rows of random chars"); # test 47
+ok($sth = $dbh.prepare("SELECT * FROM $table LIMIT ?, ?"),"prepare of select statement with LIMIT placeholders:"); # test 48
+ok($sth.execute(20, 50),"exec of bind vars for LIMIT"); # test 49
+my ($array_ref);
+ok( (defined($array_ref = $sth.fetchall_arrayref) &&
+  (!defined($errstr = $sth.errstr) || $sth.errstr eq '')),"fetchall_arrayref"); # test 50
+ok($array_ref.elems == 50,"limit 50 works"); # test 51
 
 
 =begin pod
