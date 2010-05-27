@@ -2,13 +2,13 @@
 
 class FakeDBI:auth<mberends>:ver<0.0.1> {
     has $!errstr;
-    method connect( $dsn, $username, $password, :$RaiseError, :$PrintError, :$AutoCommit ) {
+    method connect( $dsn, $username, $password, :$RaiseError=0, :$PrintError=0, :$AutoCommit=1 ) {
         # warn "in FakeDBI.connect('$dsn')";
         # Divide $dsn up into its separate fields.
         my ( $prefix, $drivername, $params ) = $dsn.split(':');
         my $driver = self.install_driver( $drivername );
         # warn "calling FakeDBD::" ~ $drivername ~ ".connect($username,*,$params)";
-        my $connection = $driver.connect( $username, $password, $params );
+        my $connection = $driver.connect( $username, $password, $params, $RaiseError );
         return $connection;
     }
     method install_driver( $drivername ) {

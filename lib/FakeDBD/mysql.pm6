@@ -3,6 +3,8 @@
 use NativeCall;  # from project 'zavolaj'
 use FakeDBD;     # roles for drivers
 
+#module FakeDBD:auth<mberends>:ver<0.0.1>;
+
 #------------ mysql library functions in alphabetical order ------------
 
 sub mysql_affected_rows( OpaquePointer $mysql_client )
@@ -110,10 +112,11 @@ sub mysql_warning_count( OpaquePointer $mysql_client )
     is native('libmysqlclient')
     { ... }
 
-#--------------------------- 
+#-----------------------------------------------------------------------
 
 class FakeDBD::mysql::StatementHandle does FakeDBD::StatementHandle {
     has $!mysql_client;
+    has $!RaiseError;
     has $!statement;
     has $!result_set;
     has $!field_count;
@@ -131,9 +134,8 @@ class FakeDBD::mysql::StatementHandle does FakeDBD::StatementHandle {
         $.mysql_warning_count = mysql_warning_count( $!mysql_client );
         $!errstr = Mu;
         if $status != 0 {
-            my $errstr = mysql_error( $!mysql_client );
-            $!errstr = $errstr;
-            # TODO die $!errstr; # throw an exception
+            $!errstr = mysql_error( $!mysql_client );
+            if $!RaiseError { die $!errstr; }
         }
         return !defined $!errstr;
     }
@@ -178,12 +180,14 @@ class FakeDBD::mysql::StatementHandle does FakeDBD::StatementHandle {
 
 class FakeDBD::mysql::Connection does FakeDBD::Connection {
     has $!mysql_client;
+    has $!RaiseError;
     method prepare( Str $statement ) {
         # warn "in FakeDBD::mysql::Connection.prepare()";
         my $statement_handle = FakeDBD::mysql::StatementHandle.bless(
             FakeDBD::mysql::StatementHandle.CREATE(),
             mysql_client => $!mysql_client,
-            statement    => $statement
+            statement    => $statement,
+            RaiseError   => $!RaiseError
         );
         return $statement_handle;
     }
@@ -198,7 +202,7 @@ class FakeDBD::mysql:auth<mberends>:ver<0.0.1> {
     has $.Version = 0.01;
 
 #------------------ methods to be called from FakeDBI ------------------
-    method connect( Str $user, Str $password, Str $params ) {
+    method connect( Str $user, Str $password, Str $params, $RaiseError ) {
         # warn "in FakeDBD::mysql.connect('$user',*,'$params')";
         my ( $mysql_client, $mysql_error );
         unless defined $mysql_client {
@@ -222,7 +226,8 @@ class FakeDBD::mysql:auth<mberends>:ver<0.0.1> {
         if $error eq '' {
             $connection = FakeDBD::mysql::Connection.bless(
                 FakeDBD::mysql::Connection.CREATE(),
-                mysql_client => $mysql_client
+                mysql_client => $mysql_client,
+                RaiseError => $RaiseError
             );
         }
         return $connection;

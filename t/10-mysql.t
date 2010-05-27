@@ -240,7 +240,6 @@ ok ($max_id= $sth2.fetch()),"fetch"; # test 32
 ok defined $max_id,"fetch result defined"; # test 33
 ok $sth.mysql_insertid == $max_id[0], 'sth insert id $sth.mysql_insertid == max(id) $max_id[0] in '~$table; # test 34
 ok $dbh.mysql_insertid == $max_id[0], 'dbh insert id $dbh.mysql_insertid == max(id) $max_id[0] in '~$table; # test 35
-#skip 2, "finish segfaults in libmysql";
 ok $sth.finish(), "statement 1 finish"; #  test 36
 ok $sth2.finish(), "statement 2 finish"; # test 37
 todo "drop table works but not here";
