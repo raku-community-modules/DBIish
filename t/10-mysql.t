@@ -30,7 +30,7 @@
 
 use Test;
 
-plan 69;
+plan 86;
 
 use FakeDBI;
 
@@ -337,7 +337,7 @@ ok($sth.execute(20, 50),"exec of bind vars for LIMIT"); # test 49
 my ($array_ref);
 ok( (defined($array_ref = $sth.fetchall_arrayref) &&
   (!defined($errstr = $sth.errstr) || $sth.errstr eq '')),"fetchall_arrayref"); # test 50
-ok($array_ref.elems == 50,"limit 50 works"); # test 51
+is($array_ref.elems, 50,"limit 50 works"); # test 51
 
 
 #-----------------------------------------------------------------------
@@ -387,7 +387,6 @@ ok($array_ref.elems == 50,"limit 50 works"); # test 51
 #  "Testing fetchall_arrayref (should be four rows)");
 #print "RETREF " . scalar @$ret_ref . "\n";
 #ok(@{$ret_ref} == 4 , "\$ret_ref should contain four rows in result set");
-
 #ok($sth= $dbh->prepare("DROP TABLE IF EXISTS t1"),
 #  "Testing prepare of dropping table");
 #ok($sth->execute(), "Executing drop table");
@@ -407,13 +406,13 @@ ok($sth.execute(), "Executing 'show tables'"); # test 55
 ok((defined($row= $sth.fetchrow_arrayref) &&
   (!defined($errstr = $sth.errstr) || $sth.errstr eq '')),
   "Testing if result set and no errors"); # test 56
-ok($row[0] eq 't1', "Checking if results equal to 't1'"); # test 57
+is($row[0], 't1', "Checking if results equal to 't1'"); # test 57
 ok($sth.finish, "Finishing up with statement handle"); # test 58
 ok($dbh.do("INSERT INTO t1 VALUES (1,'1st first value')"),"Inserting first row"); # test 59
 ok($sth= $dbh.prepare("INSERT INTO t1 VALUES (2,'2nd second value')"),"Preparing insert of second row"); # test 60
 my $rows;
 ok(($rows = $sth.execute()), "Inserting second row"); # test 61
-ok($rows == Bool::True, "One row should have been inserted"); # test 62
+is($rows, Bool::True, "One row should have been inserted"); # test 62
 ok($sth.finish, "Finishing up with statement handle"); # test 63
 ok($sth= $dbh.prepare("SELECT id, name FROM t1 WHERE id = 1"),"Testing prepare of query"); # test 64
 ok($sth.execute(), "Testing execute of query"); # test 65
@@ -429,19 +428,108 @@ loop ($i = 0 ; $i < 10; $i++) {
 }
 ok($all_ok, "Should have inserted one row (10 times)"); # test 68
 ok($sth.finish, "Testing closing of statement handle"); # test 69
-#ok($sth= $dbh.prepare("SELECT * FROM t1 WHERE id = ? OR id = ?"),
-#  "Testing prepare of query with placeholders");
-#ok($rows = $sth.execute(1,2),
-#  "Testing execution with values id = 1 or id = 2");
-#ok($ret_ref = $sth.fetchall_arrayref(),
-#  "Testing fetchall_arrayref (should be four rows)");
-#print "RETREF " . scalar @$ret_ref . "\n";
-#ok(@{$ret_ref} == 4 , "\$ret_ref should contain four rows in result set");
+ok($sth= $dbh.prepare("SELECT * FROM t1 WHERE id = ? OR id = ?"),"Testing prepare of query with placeholders"); # test 70
+ok($rows = $sth.execute(1,2),"Testing execution with values id = 1 or id = 2"); # test 71
+ok($ret_ref = $sth.fetchall_arrayref(),"Testing fetchall_arrayref (should be four rows)"); # test 72
+is($ret_ref.elems, 4, "\$ret_ref should contain four rows in result set"); # test 73
+is($ret_ref[2][1], %testInsertVals{'1'}, "verify third row"); # test 74
+ok($sth= $dbh.prepare("DROP TABLE IF EXISTS t1"),"Testing prepare of dropping table"); # test 75
+ok($sth.execute(), "Executing drop table"); # test 76
+ok($sth= $dbh.prepare("SELECT 1"), "Prepare - Testing bug #20153"); # test 77
+ok($sth.execute(), "Execute - Testing bug #20153"); # test 78
+ok($sth.fetchrow_arrayref(), "Fetch - Testing bug #20153"); # test 79
+ok(!($sth.fetchrow_arrayref()),"Not Fetch - Testing bug #20153"); # test 80
 
-
-=begin pod
 #-----------------------------------------------------------------------
 # from perl5 DBD/mysql/t/40bindparam.t
+#plan tests => 41;
+#ok ($dbh->do("DROP TABLE IF EXISTS $table"));
+#my $create = <<EOT;
+#CREATE TABLE $table (
+#        id int(4) NOT NULL default 0,
+#        name varchar(64) default ''
+#        )
+#EOT
+#ok ($dbh->do($create));
+#ok ($sth = $dbh->prepare("INSERT INTO $table VALUES (?, ?)"));
+# Automatic type detection
+#my $numericVal = 1;
+#my $charVal = "Alligator Descartes";
+#ok ($sth->execute($numericVal, $charVal));
+# Does the driver remember the automatically detected type?
+#ok ($sth->execute("3", "Jochen Wiedmann"));
+#$numericVal = 2;
+#$charVal = "Tim Bunce";
+#ok ($sth->execute($numericVal, $charVal));
+# Now try the explicit type settings
+#ok ($sth->bind_param(1, " 4", SQL_INTEGER()));
+# umlaut equivelant is vowel followed by 'e'
+#ok ($sth->bind_param(2, 'Andreas Koenig'));
+#ok ($sth->execute);
+# Works undef -> NULL?
+#ok ($sth->bind_param(1, 5, SQL_INTEGER()));
+#ok ($sth->bind_param(2, undef));
+#ok ($sth->execute);
+#ok ($sth->bind_param(1, undef, SQL_INTEGER()));
+#ok ($sth->bind_param(2, undef));
+#ok ($sth->execute(-1, "abc"));
+#ok ($dbh->do("INSERT INTO $table VALUES (6, '?')"));
+#ok ($dbh->do('SET @old_sql_mode = @@sql_mode, @@sql_mode = \'\''));
+#ok ($dbh->do("INSERT INTO $table VALUES (7, \"?\")"));
+#ok ($dbh->do('SET @@sql_mode = @old_sql_mode'));
+#ok ($sth = $dbh->prepare("SELECT * FROM $table ORDER BY id"));
+#ok($sth->execute);
+#ok ($sth->bind_columns(undef, \$id, \$name));
+#$ref = $sth->fetch ; 
+#is $id,  -1, 'id set to -1'; 
+#cmp_ok $name, 'eq', 'abc', 'name eq abc'; 
+#$ref = $sth->fetch;
+#is $id, 1, 'id set to 1';
+#cmp_ok $name, 'eq', 'Alligator Descartes', '$name set to Alligator Descartes';
+#$ref = $sth->fetch;
+#is $id, 2, 'id set to 2';
+#cmp_ok $name, 'eq', 'Tim Bunce', '$name set to Tim Bunce';
+#$ref = $sth->fetch;
+#is $id, 3, 'id set to 3';
+#cmp_ok $name, 'eq', 'Jochen Wiedmann', '$name set to Jochen Wiedmann';
+#$ref = $sth->fetch;
+#is $id, 4, 'id set to 4';
+#cmp_ok $name, 'eq', 'Andreas Koenig', '$name set to Andreas Koenig';
+#$ref = $sth->fetch;
+#is $id, 5, 'id set to 5';
+#ok !defined($name), 'name not defined';
+#$ref = $sth->fetch;
+#is $id, 6, 'id set to 6';
+#cmp_ok $name, 'eq', '?', "\$name set to '?'";
+#$ref = $sth->fetch;
+#is $id, 7, '$id set to 7';
+#cmp_ok $name, 'eq', '?', "\$name set to '?'";
+#ok ($dbh->do("DROP TABLE $table"));
+#ok $sth->finish;
+#ok $dbh->disconnect;
+ok ($dbh.do("DROP TABLE IF EXISTS $table")),"drop table before 40bindparam.t"; # test 81
+$create = "
+CREATE TABLE $table (
+        id int(4) NOT NULL default 0,
+        name varchar(40) default ''
+        )
+";
+ok ($dbh.do($create)),"create table with defaults"; # test 82
+ok ($sth = $dbh.prepare("INSERT INTO $table VALUES (?, ?)")),"prepare parameterized insert"; # test 83
+my $numericVal = 1; # Automatic type detection
+my $charVal = "Alligator Descartes";
+ok ($sth.execute($numericVal, $charVal)),"execute insert with numeric and char"; # test 84
+# Does the driver remember the automatically detected type?
+ok ($sth.execute("3", "Jochen Wiedmann")),"insert with string for numeric field"; # test 85
+$numericVal = 2;
+$charVal = "Tim Bunce";
+ok ($sth.execute($numericVal, $charVal)),"insert with number for numeric"; # test 86
+# Now try the explicit type settings
+#ok ($sth.bind_param(1, " 4", SQL_INTEGER())),"bind_param SQL_INTEGER"; # test 87
+
+
+#-----------------------------------------------------------------------
+# from perl5 DBD/mysql/t/40bindparam2.t
 #eval {$dbh = DBI->connect($test_dsn, $test_user, $test_password,
 #  { RaiseError => 1, AutoCommit => 1}) or ServerError();};
 #if ($@) {
@@ -455,284 +543,97 @@ ok($sth.finish, "Testing closing of statement handle"); # test 69
 #    num INT(3))
 #EOT
 #ok $dbh->do($create), "create table $table";
+#ok $dbh->do("INSERT INTO $table VALUES(NULL, 1)"), "insert into $table (null, 1)";
+#my $rows;
+#ok ($rows= $dbh->selectall_arrayref("SELECT * FROM $table"));
+#is $rows->[0][1], 1, "\$rows->[0][1] == 1";
+#ok ($sth = $dbh->prepare("UPDATE $table SET num = ? WHERE id = ?"));
+#ok ($sth->bind_param(2, 1, SQL_INTEGER()));
+#ok ($sth->execute());
+#ok ($sth->finish());
+#ok ($rows = $dbh->selectall_arrayref("SELECT * FROM $table"));
+#ok !defined($rows->[0][1]);
+#ok ($dbh->do("DROP TABLE $table"));
+#ok ($dbh->disconnect());
 
-ok $dbh->do("INSERT INTO $table VALUES(NULL, 1)"), "insert into $table (null, 1)";
+#ok $dbh.do("DROP TABLE IF EXISTS $table"), "drop table $table"; # test 87
+#$create= "
+#CREATE TABLE $table (
+#    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+#    num INT(3))
+#";
+#ok $dbh.do($create), "create table $table"; # test 88
+#ok $dbh.do("INSERT INTO $table VALUES(NULL, 1)"), "insert into $table (null, 1)"; # test 89
 
-my $rows;
-ok ($rows= $dbh->selectall_arrayref("SELECT * FROM $table"));
 
-is $rows->[0][1], 1, "\$rows->[0][1] == 1";
-
-ok ($sth = $dbh->prepare("UPDATE $table SET num = ? WHERE id = ?"));
-
-ok ($sth->bind_param(2, 1, SQL_INTEGER()));
-  
-ok ($sth->execute());
-
-ok ($sth->finish());
-
-ok ($rows = $dbh->selectall_arrayref("SELECT * FROM $table"));
-
-ok !defined($rows->[0][1]);
-
-ok ($dbh->do("DROP TABLE $table"));
-
-ok ($dbh->disconnect());
 #-----------------------------------------------------------------------
-#!perl -w
-#
-#   $Id: 40bindparam.t 11650 2008-08-15 13:58:29Z capttofu $ 
-#
-
-
-use DBI ();
-use DBI::Const::GetInfoType;
-use Test::More;
-use lib 't', '.';
-require 'lib.pl';
-use vars qw($table $test_dsn $test_user $test_password);
-
-my $dbh;
-eval {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
-                      { RaiseError => 1, PrintError => 1, AutoCommit => 0 });};
-if ($@) {
-    plan skip_all => "ERROR: $DBI::errstr. Can't continue test";
-}
-if ($dbh->get_info($GetInfoType{SQL_DBMS_VER}) lt "4.1") {
-    plan skip_all => 
-        "SKIP TEST: You must have MySQL version 4.1 and greater for this test to run";
-}
-
-plan tests => 41;
-
-ok ($dbh->do("DROP TABLE IF EXISTS $table"));
-
-my $create = <<EOT;
-CREATE TABLE $table (
-        id int(4) NOT NULL default 0,
-        name varchar(64) default ''
-        )
-EOT
-
-ok ($dbh->do($create));
-
-ok ($sth = $dbh->prepare("INSERT INTO $table VALUES (?, ?)"));
-
-# Automatic type detection
-my $numericVal = 1;
-my $charVal = "Alligator Descartes";
-ok ($sth->execute($numericVal, $charVal));
-
-# Does the driver remember the automatically detected type?
-ok ($sth->execute("3", "Jochen Wiedmann"));
-
-$numericVal = 2;
-$charVal = "Tim Bunce";
-ok ($sth->execute($numericVal, $charVal));
-
-# Now try the explicit type settings
-ok ($sth->bind_param(1, " 4", SQL_INTEGER()));
-
-# umlaut equivelant is vowel followed by 'e'
-ok ($sth->bind_param(2, 'Andreas Koenig'));
-ok ($sth->execute);
-
-# Works undef -> NULL?
-ok ($sth->bind_param(1, 5, SQL_INTEGER()));
-
-ok ($sth->bind_param(2, undef));
-
-ok ($sth->execute);
-
-ok ($sth->bind_param(1, undef, SQL_INTEGER()));
-
-ok ($sth->bind_param(2, undef));
-
-ok ($sth->execute(-1, "abc"));
-
-ok ($dbh->do("INSERT INTO $table VALUES (6, '?')"));
-
-ok ($dbh->do('SET @old_sql_mode = @@sql_mode, @@sql_mode = \'\''));
-
-ok ($dbh->do("INSERT INTO $table VALUES (7, \"?\")"));
-
-ok ($dbh->do('SET @@sql_mode = @old_sql_mode'));
-
-ok ($sth = $dbh->prepare("SELECT * FROM $table ORDER BY id"));
-
-ok($sth->execute);
-
-ok ($sth->bind_columns(undef, \$id, \$name));
-
-$ref = $sth->fetch ; 
-
-is $id,  -1, 'id set to -1'; 
-
-cmp_ok $name, 'eq', 'abc', 'name eq abc'; 
-
-$ref = $sth->fetch;
-is $id, 1, 'id set to 1';
-cmp_ok $name, 'eq', 'Alligator Descartes', '$name set to Alligator Descartes';
-
-$ref = $sth->fetch;
-is $id, 2, 'id set to 2';
-cmp_ok $name, 'eq', 'Tim Bunce', '$name set to Tim Bunce';
-
-$ref = $sth->fetch;
-is $id, 3, 'id set to 3';
-cmp_ok $name, 'eq', 'Jochen Wiedmann', '$name set to Jochen Wiedmann';
-
-$ref = $sth->fetch;
-is $id, 4, 'id set to 4';
-cmp_ok $name, 'eq', 'Andreas Koenig', '$name set to Andreas Koenig';
-
-$ref = $sth->fetch;
-is $id, 5, 'id set to 5';
-ok !defined($name), 'name not defined';
-
-$ref = $sth->fetch;
-is $id, 6, 'id set to 6';
-cmp_ok $name, 'eq', '?', "\$name set to '?'";
-
-$ref = $sth->fetch;
-is $id, 7, '$id set to 7';
-cmp_ok $name, 'eq', '?', "\$name set to '?'";
-
-ok ($dbh->do("DROP TABLE $table"));
-
-ok $sth->finish;
-
-ok $dbh->disconnect;
-#-----------------------------------------------------------------------
-#!perl -w
-# vim: ft=perl
-#
-#   $Id: 40blobs.t 11650 2008-08-15 13:58:29Z capttofu $
-#
+# from perl5 DBD/mysql/t/40blobs.t
 #   This is a test for correct handling of BLOBS; namely $dbh->quote
 #   is expected to work correctly.
-#
-
-
-use DBI ();
-use DBI::Const::GetInfoType;
-use Test::More;
-use vars qw($table $test_dsn $test_user $test_password);
-use lib '.', 't';
-require 'lib.pl';
-
-sub ShowBlob($) {
-    my ($blob) = @_;
-    for ($i = 0;  $i < 8;  $i++) {
-        if (defined($blob)  &&  length($blob) > $i) {
-            $b = substr($blob, $i*32);
-        }
-        else {
-            $b = "";
-        }
-        printf("%08lx %s\n", $i*32, unpack("H64", $b));
-    }
-}
-
-my $dbh;
-my $charset= 'DEFAULT CHARSET=utf8'; 
-
-eval {$dbh = DBI->connect($test_dsn, $test_user, $test_password,
-  { RaiseError => 1, AutoCommit => 1}) or ServerError() ;};
-
-
-if ($@) {
-    plan skip_all => "ERROR: $DBI::errstr. Can't continue test";
-}
-
-plan tests => 14;
-
-if ($dbh->get_info($GetInfoType{SQL_DBMS_VER}) lt "4.1") {
-    $charset= '';
-}
-
-my $size= 128;
-
-ok $dbh->do("DROP TABLE IF EXISTS $table"), "Drop table if exists $table";
-
-my $create = <<EOT;
-CREATE TABLE $table (
-    id INT(3) NOT NULL DEFAULT 0,
-    name BLOB ) $charset 
-EOT
-
-ok ($dbh->do($create));
-
-my ($blob, $qblob) = "";
-my $b = "";
-for ($j = 0;  $j < 256;  $j++) {
-    $b .= chr($j);
-}
-for ($i = 0;  $i < $size;  $i++) {
-    $blob .= $b;
-}
-ok ($qblob = $dbh->quote($blob));
-
+#sub ShowBlob($) {
+#    my ($blob) = @_;
+#    for ($i = 0;  $i < 8;  $i++) {
+#        if (defined($blob)  &&  length($blob) > $i) {
+#            $b = substr($blob, $i*32);
+#        }
+#        else {
+#            $b = "";
+#        }
+#        printf("%08lx %s\n", $i*32, unpack("H64", $b));
+#    }
+#}
+#my $charset= 'DEFAULT CHARSET=utf8'; 
+#plan tests => 14;
+#if ($dbh->get_info($GetInfoType{SQL_DBMS_VER}) lt "4.1") {
+#    $charset= '';
+#}
+#my $size= 128;
+#ok $dbh->do("DROP TABLE IF EXISTS $table"), "Drop table if exists $table";
+#my $create = <<EOT;
+#CREATE TABLE $table (
+#    id INT(3) NOT NULL DEFAULT 0,
+#    name BLOB ) $charset 
+#EOT
+#ok ($dbh->do($create));
+#my ($blob, $qblob) = "";
+#my $b = "";
+#for ($j = 0;  $j < 256;  $j++) {
+#    $b .= chr($j);
+#}
+#for ($i = 0;  $i < $size;  $i++) {
+#    $blob .= $b;
+#}
+#ok ($qblob = $dbh->quote($blob));
 #   Insert a row into the test table.......
-my ($query);
-$query = "INSERT INTO $table VALUES(1, $qblob)";
-ok ($dbh->do($query));
-
+#my ($query);
+#$query = "INSERT INTO $table VALUES(1, $qblob)";
+#ok ($dbh->do($query));
 #   Now, try SELECT'ing the row out.
-ok ($sth = $dbh->prepare("SELECT * FROM $table WHERE id = 1"));
+#ok ($sth = $dbh->prepare("SELECT * FROM $table WHERE id = 1"));
+#ok ($sth->execute);
+#ok ($row = $sth->fetchrow_arrayref);
+#ok defined($row), "row returned defined";
+#is @$row, 2, "records from $table returned 2";
+#is $$row[0], 1, 'id set to 1';
+#cmp_ok byte_string($$row[1]), 'eq', byte_string($blob), 'blob set equal to blob returned';
+#ShowBlob($blob), ShowBlob(defined($$row[1]) ? $$row[1] : "");
+#ok ($sth->finish);
+#ok $dbh->do("DROP TABLE $table"), "Drop table $table";
+#ok $dbh->disconnect;
 
-ok ($sth->execute);
-
-ok ($row = $sth->fetchrow_arrayref);
-
-ok defined($row), "row returned defined";
-
-is @$row, 2, "records from $table returned 2";
-
-is $$row[0], 1, 'id set to 1';
-
-cmp_ok byte_string($$row[1]), 'eq', byte_string($blob), 'blob set equal to blob returned';
-
-ShowBlob($blob), ShowBlob(defined($$row[1]) ? $$row[1] : "");
-
-ok ($sth->finish);
-
-ok $dbh->do("DROP TABLE $table"), "Drop table $table";
-
-ok $dbh->disconnect;
+=begin pod
 #-----------------------------------------------------------------------
-#!perl -w
-# vim: ft=perl
-
-use Data::Dumper;
-use Test::More;
-use DBI;
-use DBI::Const::GetInfoType;
-use lib '.', 't';
-require 'lib.pl';
-use strict;
-$|= 1;
-
-use vars qw($table $test_dsn $test_user $test_password);
-
-my $dbh;
-eval {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
-                      { RaiseError            => 1,
-                        PrintError            => 1,
-                        AutoCommit            => 0,
-                        mysql_server_prepare  => 0 });};
-
-if ($@) {
-    plan skip_all => "ERROR: $DBI::errstr. Can't continue test";
-}
-plan tests => 77;
-
-ok(defined $dbh, "connecting");
-
-my $sth;
-
-my ($version)= $dbh->selectrow_array("SELECT version()")
-  or DbiError($dbh->err, $dbh->errstr);
+# from perl5 DBD/mysql/t/40catalog.t
+#eval {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
+#                      { RaiseError            => 1,
+#                        PrintError            => 1,
+#                        AutoCommit            => 0,
+#                        mysql_server_prepare  => 0 });};
+#plan tests => 77;
+#ok(defined $dbh, "connecting");
+#my $sth;
+#my ($version)= $dbh->selectrow_array("SELECT version()")
+#  or DbiError($dbh->err, $dbh->errstr);
 
 #
 # Bug #26604: foreign_key_info() implementation

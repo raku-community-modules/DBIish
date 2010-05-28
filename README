@@ -1,57 +1,59 @@
 =begin pod
 
 =head1 NAME
-FakeDBI - an interim database interface for Rakudo Perl 6
+FakeDBI - a simple database interface for Rakudo Perl 6
 
 =head1 DESCRIPTION
 The roadmap for DBI v2 L<http://search.cpan.org/~timb/DBI/Roadmap.pod>
-published in November 2004 laid out the plans for Perl 5 and 6.
+published in November 2004 laid out database plans for Perl 5 and 6.
 Specifically there is a Parrot DBDI project that will give the same DBD
 facilities to all Parrot based languages.  See also
 http://www.nntp.perl.org/group/perl.perl6.language/2005/07/msg22054.html
 
-Because no code is available yet, this project plans to temporarily fill
-the gap, by imitating the classic Perl 5 DBI interface.  Although this
-is not on the DBI v2 roadmap, let's say if it looks like a DBI, and it
-talks like a DBI, then it is a DBI.
+Because no code is available yet, FakeDBI plans to temporarily fill the
+gap, being a subset of the Perl 5 DBI v1 in Perl 6.  Although this not
+on the DBI v2 roadmap, let's say if it looks like a DBI, and it talks
+like a DBI, then it is a DBI.  The links above suggest that some of the
+development done here might even become part of the official DBI v2!
 
 =head1 DBD CLASSES
-Whilst it is convenient, the FakeDBD drivers stay together with the
-FakeDBI files in a single project.  In future each FakeDBD may become a
-separate project, although this conflicts a bit with the idea of being
-"temporary".
-
-The first DBD is for MySQL, the next ones will probably be for SQLite,
-Postgres and FreeTDS.  Also nice to have would be a dummy driver for DBI
-testing, and drivers for CSV and perhaps just in-memory tables (saving
-as JSON, YAML, XML or whatever).
+Until there is a benefit in doing it otherwise, the FakeDBD drivers stay
+and install together with the main FakeDBI.pm6 in a single project.  The
+first DBD is for MySQL, there will probably soon be SQLite, Postgres and
+FreeTDS.  An AnyData driver for memory or file formats such as YAML or
+XML is also planned.
 
 =head1 TESTING
-The initial test file is a quick and dirty concatenation of all the
-scripts in the Perl 5 DBD::mysql test suite, translated to Perl 6.  It's
-horrible and inefficient code, but worth persisting with to ensure a
-decent coverage.  Only about 10% of the suite has been converted so far,
-with 43 tests, 35 passing, 6 todo and 2 skipped.
+The initial test script is merely a concatenation of all the scripts in
+the Perl 5 DBD::mysql test suite, translated to Perl 6.  It's not
+efficient but indispensable to assess coverage of the existing DBI
+feature set.  Only about 15% of the suite has been converted so far,
+with 86 tests passing, 0 todo and 0 skipped.
 
-In the medium term, the plan is to write a new test suite consisting of
-a general part that is common to all DBDs, and other parts specific to
-individual DBDs.  The tests will be written to demonstrate to potential
-users, which functions they can use.
+The test suite will change to eliminate the current slowness and
+redundancy.  It will contain general tests as well as tests for
+particular databases.  The aim is to make the suite demonstrate portable
+and non portable operations.
+
+=head1 ROADMAP
+Add some DBDs.  Improve the test suite.  Attract more contributors.
+
+=head1 STATUS
+The MySQL driver performs CRUD operations.  Testing with production data
+is urgently needed.  Testers, please volunteer!
 
 =head1 BUGS
-The FakeDBD::mysql::StatementHandle class has a C<finish()> method that
-does not work, because native functions that return void cannot be
-called.  Something gets popped off the native return stack, and soon
-after that KABOOM, Parrot segfaults.
+Numbers with decimal points are passed to the database server as quoted
+strings, because of far-too-simple checking in execute().
 
 =head1 SEE ALSO
 The Perl 6 Pod in the L<doc:FakeDBI> module.
 The Perl 5 L<doc:DBI> and L<doc:DBI::DBD>.
 
-The documention of the FakeDBI and the FakeDBD modules, and also this
-README, is in the proposed Pod6 format, with the intention of increasing
-experience with its use.  View it with an appropriate formatter if your
-system has one.
+This README and the documention of the FakeDBI and the FakeDBD modules
+are in the proposed Pod6 format.  The reasons are that Perl 6 does not
+allow any other kind of Pod, and that Pod6 needs more examples.  View it
+with an appropriate formatter if your system has one.
 
 =head1 LICENSE and COPYRIGHT
 Use these files at your risk and without warranty.  Give due credit if
