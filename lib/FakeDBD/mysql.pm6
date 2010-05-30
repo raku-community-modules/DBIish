@@ -144,6 +144,33 @@ class FakeDBD::mysql::StatementHandle does FakeDBD::StatementHandle {
         }
         return !defined $!errstr;
     }
+
+    method fetchrow_array() {
+        my @row_array;
+
+        unless defined $!result_set {
+            $!result_set  = mysql_use_result( $!mysql_client);
+            $!field_count = mysql_field_count($!mysql_client);
+        }
+        if defined $!result_set {
+            # warn "fetching a row";
+            $!errstr = Mu;
+
+            my $native_row = mysql_fetch_row($!result_set); # can return NULL
+            my $errstr     = mysql_error( $!mysql_client );
+            
+            if $errstr ne '' { $!errstr = $errstr; }
+            
+            if $native_row {
+                loop ( my $i=0; $i < $!field_count; $i++ ) {
+                    @row_array.push($native_row[$i]);
+                }
+            }
+            else { self.finish; }
+        }
+        return @row_array;
+    }
+
     method fetchrow_arrayref() {
         my $row_arrayref;
         unless defined $!result_set {

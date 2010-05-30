@@ -403,10 +403,11 @@ ok($dbh.do("DROP TABLE IF EXISTS t1"), "35prepare.t Making slate clean"); # test
 ok($dbh.do("CREATE TABLE t1 (id INT(4), name VARCHAR(35))"), "Creating table"); # test 53
 ok($sth = $dbh.prepare("SHOW TABLES LIKE 't1'"),"prepare show tables"); # test 54
 ok($sth.execute(), "Executing 'show tables'"); # test 55
-ok((defined($row= $sth.fetchrow_arrayref) &&
+my @row;
+ok((defined(@row = $sth.fetchrow_array) &&
   (!defined($errstr = $sth.errstr) || $sth.errstr eq '')),
   "Testing if result set and no errors"); # test 56
-is($row[0], 't1', "Checking if results equal to 't1'"); # test 57
+is(@row[0], 't1', "Checking if results equal to 't1'"); # test 57
 ok($sth.finish, "Finishing up with statement handle"); # test 58
 ok($dbh.do("INSERT INTO t1 VALUES (1,'1st first value')"),"Inserting first row"); # test 59
 ok($sth= $dbh.prepare("INSERT INTO t1 VALUES (2,'2nd second value')"),"Preparing insert of second row"); # test 60
