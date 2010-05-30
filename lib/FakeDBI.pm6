@@ -24,8 +24,9 @@ class FakeDBI:auth<mberends>:ver<0.0.1> {
         }
         my $driver;
         given $drivername {
-            when 'mysql' { use FakeDBD::mysql; $driver = FakeDBD::mysql.new(); }
-            default      { die "driver name '$drivername' is not known"; }
+            when 'CSV'     { use FakeDBD::CSV;   $driver = FakeDBD::CSV.new(); }
+            when 'mysql'   { use FakeDBD::mysql; $driver = FakeDBD::mysql.new(); }
+            default        { die "driver name '$drivername' is not known"; }
         }
         return $driver;
     }
@@ -99,12 +100,19 @@ class FakeDBI:auth<mberends>:ver<0.0.1> {
 The (Perl 5) synopsis above only lists the major methods and parameters.
 
 =head1 DESCRIPTION
-The name C<FakeDBI> has several meanings.  In lowercase it indicates the
-github project that 
+The name C<FakeDBI> has two meanings.  In lowercase it indicates the
+github project being used for development.  In mixed case it is the
+module name and class name that database client applications should use.
 
-=head1 FakeDBI CLASSES
+=head1 FakeDBI CLASSES and ROLES
 
 =head2 FakeDBI
+The C<FakeDBI> class exists mainly to provide the F<connect> method,
+which acts as a constructor for database connections.
+
+=head2 FakeDBD
+The C<FakeDBD> role should only be used with 'does' to provide standard
+members for FakeDBD classes.
 
 =head1 SEE ALSO
 L<http://dbi.perl.org>
