@@ -74,7 +74,7 @@ class FakeDBI:auth<mberends>:ver<0.0.1> {
  # TODO: $rc = $sth.bind_col($col_num, \$col_variable);
  # TODO: $rc = $sth.bind_columns(@list_of_refs_to_vars_to_bind);
 
- # TODO: @row_ary  = $sth.fetchrow_array;
+ @row_ary  = $sth.fetchrow_array;
  $ary_ref  = $sth.fetchrow_arrayref;
  # TODO: $hash_ref = $sth.fetchrow_hashref;
 
@@ -83,7 +83,7 @@ class FakeDBI:auth<mberends>:ver<0.0.1> {
 
  # TODO: $hash_ref = $sth.fetchall_hashref( $key_field );
 
- # TODO: $rv  = $sth.rows;
+ $rv  = $sth.rows;
 
  # TODO: $rc  = $dbh.begin_work;
  # TODO: $rc  = $dbh.commit;

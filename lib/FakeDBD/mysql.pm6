@@ -119,6 +119,7 @@ class FakeDBD::mysql::StatementHandle does FakeDBD::StatementHandle {
     has $!RaiseError;
     has $!statement;
     has $!result_set;
+    has $!affected_rows;
     has $!field_count;
     has $.mysql_warning_count is rw = 0;
     method execute(*@params is copy) {
@@ -144,6 +145,22 @@ class FakeDBD::mysql::StatementHandle does FakeDBD::StatementHandle {
         }
         return !defined $!errstr;
     }
+    
+    # do() and execute() return the number of affected rows directly or:
+    # rows() is called on the statement handle $sth.
+    method rows() {
+        unless defined $!affected_rows {
+            $!errstr = Mu;
+            $!affected_rows = mysql_affected_rows($!mysql_client);
+            my $errstr      = mysql_error( $!mysql_client );
+
+            if $errstr ne '' { $!errstr = $errstr; }
+        }
+        
+        if defined $!affected_rows {
+            return $!affected_rows;
+        } 
+    }
 
     method fetchrow_array() {
         my @row_array;
@@ -152,6 +169,7 @@ class FakeDBD::mysql::StatementHandle does FakeDBD::StatementHandle {
             $!result_set  = mysql_use_result( $!mysql_client);
             $!field_count = mysql_field_count($!mysql_client);
         }
+
         if defined $!result_set {
             # warn "fetching a row";
             $!errstr = Mu;
