@@ -28,7 +28,7 @@ sub mysql_error( OpaquePointer $mysql_client)
     { ... }
 
 sub mysql_fetch_field( OpaquePointer $result_set )
-    returns OpaquePointer
+    returns Positional of Str
     is native('libmysqlclient')
     { ... }
 
@@ -240,6 +240,41 @@ class FakeDBD::mysql::StatementHandle does FakeDBD::StatementHandle {
         }
         return $all_arrayref;
     }
+
+    method fetchrow_hashref () {
+        my $row_hashref;
+        my %row_hash;
+
+        unless defined $!result_set {
+            $!result_set  = mysql_use_result($!mysql_client);
+            $!field_count = mysql_field_count($!mysql_client);
+        }
+
+        if defined $!result_set {
+            $!errstr = Mu;
+            my $native_row = mysql_fetch_row($!result_set); # can return NULL
+            my $errstr     = mysql_error( $!mysql_client );
+
+            if $errstr ne '' { $!errstr = $errstr; }
+            
+            if $native_row {
+                loop ( my $i=0; $i < $!field_count; $i++ ) {
+                    my $field_info  = mysql_fetch_field($!result_set);
+
+                    my $column_value = $native_row[$i];
+                    my $column_name  = $field_info[0];
+
+                    %row_hash{$column_name} = $column_value;
+                }
+            } else {
+                self.finish;
+            }
+
+            $row_hashref = %row_hash;
+        }
+        return $row_hashref;
+    }
+
     method mysql_insertid() {
         mysql_insert_id($!mysql_client);
         # but Parrot NCI cannot return an unsigned long long :-(

@@ -24,7 +24,7 @@ class FakeDBI:auth<mberends>:ver<0.0.1> {
         }
         my $driver;
         given $drivername {
-            when 'CSV'     { use FakeDBD::CSV;   $driver = FakeDBD::CSV.new(); }
+            #when 'CSV'     { use FakeDBD::CSV;   $driver = FakeDBD::CSV.new(); }
             when 'mysql'   { use FakeDBD::mysql; $driver = FakeDBD::mysql.new(); }
             default        { die "driver name '$drivername' is not known"; }
         }
@@ -76,7 +76,7 @@ class FakeDBI:auth<mberends>:ver<0.0.1> {
 
  @row_ary  = $sth.fetchrow_array;
  $ary_ref  = $sth.fetchrow_arrayref;
- # TODO: $hash_ref = $sth.fetchrow_hashref;
+ $hash_ref = $sth.fetchrow_hashref;
 
  # TODO: $ary_ref  = $sth.fetchall_arrayref;
  # TODO: $ary_ref  = $sth.fetchall_arrayref( $slice, $max_rows );
