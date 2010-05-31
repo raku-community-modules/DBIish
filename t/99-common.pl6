@@ -5,16 +5,8 @@
 #use Test;     # "use" dies in a runtime eval
 #use FakeDBI;
 
-#my $program_name = $*PROGRAM_NAME;
-#diag "program $program_name";
-diag "program $*PROGRAM_NAME";
-#$program_name ~~ / \d+ '-' (.+?) '-' common /;
-if $*PROGRAM_NAME ~~ / <digit>+ '-' (.+?) '-' common / {
-    my $name = ~$0;
-    diag "name = $name";
-}
 diag "Testing FakeDBD::$mdriver";
-plan 4;
+plan 9;
 
 # Verify that the driver loads before attempting a connect
 my $drh = FakeDBI.install_driver($mdriver);
@@ -26,6 +18,26 @@ ok $drh_version > 0, "FakeDBD::$mdriver version $drh_version"; # test 2
 # Connect to the data source
 my $dbh = FakeDBI.connect( $test_dsn, $test_user, $test_password );
 ok $dbh, "connect to $test_dsn"; # test 3
+
+# Drop a table of the same name so that the following create can work
+my $rc = $dbh.do("DROP TABLE nom");
+isnt $rc, Bool::True, "do: drop table gave an expected error"; # test 4
+
+# Use 'do' to create a table
+$rc = $dbh.do( "
+    CREATE TABLE nom (
+        name char(4),
+        description char(30),
+        quantity int,
+        price numeric(5,2)
+    )
+");
+is $rc, Bool::True, "do: create table nom"; # test 5
+skip 1, "err after successful create should be 0";
+#is $dbh.err, 0, "err after successful create should be 0"; # test 6
+is $dbh.errstr, Any, "errstr after successful create should be Any"; # test 7
+
+ok $dbh.do("DROP TABLE nom"), "final cleanup";
 
 ok $dbh.disconnect, "disconnect";
 
