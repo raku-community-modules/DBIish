@@ -19,7 +19,7 @@ grammar FakeDBD::CSV::SQL {
     token column_type {:i int|char|numeric}
 }
 
-class FakeDBD::CSV::SQL_Actions {
+class FakeDBD::CSV::SQL::actions {
     method create_table(Match $m) { print "doing CREATE TABLE ";
         say ~$m<table_name> }
     method drop_table(Match $m) { print "doing DROP TABLE ";
@@ -36,7 +36,7 @@ class FakeDBD::CSV::StatementHandle does FakeDBD::StatementHandle {
     method execute(*@params is copy) {
         #say "executing: $!sql_command";
         my $result = FakeDBD::CSV::SQL.parse( $!sql_command,
-                        :actions( FakeDBD::CSV::SQL_Actions ) );
+                        :actions( FakeDBD::CSV::SQL::actions ) );
         return Bool::True;
     }
 }
@@ -68,8 +68,6 @@ class FakeDBD::CSV:auth<mberends>:ver<0.0.1> {
         return $connection;
     }
 }
-
-#warn "module FakeDBD::CSV.pm has loaded";
 
 =begin pod
 

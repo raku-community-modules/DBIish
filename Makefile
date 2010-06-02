@@ -26,7 +26,8 @@ lib/FakeDBI.pir: lib/FakeDBI.pm6 lib/FakeDBD/CSV.pir lib/FakeDBD/mysql.pir
 	export PERL6LIB=lib; $(PERL6_EXE) --target=pir --output=lib/FakeDBI.pir lib/FakeDBI.pm6
 
 test: lib/FakeDBI.pir lib/FakeDBD/CSV.pir lib/FakeDBD/mysql.pir
-	export PERL6LIB=lib; prove --exec $(PERL6_EXE) t/05-CSV.t
+	@#export PERL6LIB=lib; prove --exec $(PERL6_EXE) t/20-CSV-common.t
+	export PERL6LIB=lib; prove --exec $(PERL6_EXE) t/25-mysql-common.t
 	export PERL6LIB=lib; prove --exec $(PERL6_EXE) t/10-mysql.t
 
 # standard install is to the shared system wide directory
