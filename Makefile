@@ -16,13 +16,17 @@ all: lib/FakeDBI.pir
 lib/FakeDBD.pir: lib/FakeDBD.pm6
 	$(PERL6_EXE) --target=pir --output=lib/FakeDBD.pir lib/FakeDBD.pm6
 
+lib/FakeDBD/CSV.pir: lib/FakeDBD/CSV.pm6 lib/FakeDBD.pir
+	export PERL6LIB=lib; $(PERL6_EXE) --target=pir --output=lib/FakeDBD/CSV.pir lib/FakeDBD/CSV.pm6
+
 lib/FakeDBD/mysql.pir: lib/FakeDBD/mysql.pm6 lib/FakeDBD.pir
 	export PERL6LIB=lib; $(PERL6_EXE) --target=pir --output=lib/FakeDBD/mysql.pir lib/FakeDBD/mysql.pm6
 
-lib/FakeDBI.pir: lib/FakeDBI.pm6 lib/FakeDBD/mysql.pir
+lib/FakeDBI.pir: lib/FakeDBI.pm6 lib/FakeDBD/CSV.pir lib/FakeDBD/mysql.pir
 	export PERL6LIB=lib; $(PERL6_EXE) --target=pir --output=lib/FakeDBI.pir lib/FakeDBI.pm6
 
-test: lib/FakeDBI.pir lib/FakeDBD/mysql.pir
+test: lib/FakeDBI.pir lib/FakeDBD/CSV.pir lib/FakeDBD/mysql.pir
+	export PERL6LIB=lib; prove --exec $(PERL6_EXE) t/05-CSV.t
 	export PERL6LIB=lib; prove --exec $(PERL6_EXE) t/10-mysql.t
 
 # standard install is to the shared system wide directory
@@ -31,6 +35,7 @@ install: lib/FakeDBI.pir lib/FakeDBD.pir lib/FakeDBD/mysql.pir
 	@$(CP) lib/FakeDBI.pm6 lib/FakeDBI.pir $(LIBSYSTEM)
 	@$(CP) lib/FakeDBD.pm6 lib/FakeDBD.pir $(LIBSYSTEM)
 	@$(MKPATH) $(LIBSYSTEM)/FakeDBD
+	@$(CP) lib/FakeDBD/CSV.pm6 lib/FakeDBD/CSV.pir $(LIBSYSTEM)/FakeDBD
 	@$(CP) lib/FakeDBD/mysql.pm6 lib/FakeDBD/mysql.pir $(LIBSYSTEM)/FakeDBD
 
 # if user has no permission to install globally, try a personal directory 
@@ -39,6 +44,7 @@ install-user: lib/FakeDBI.pir lib/FakeDBD.pir lib/FakeDBD/mysql.pir
 	@$(CP) lib/FakeDBI.pm6 lib/FakeDBI.pir $(LIBUSER)
 	@$(CP) lib/FakeDBD.pm6 lib/FakeDBD.pir $(LIBUSER)
 	@$(MKPATH) $(LIBUSER)/FakeDBD
+	@$(CP) lib/FakeDBD/CSV.pm6 lib/FakeDBD/CSV.pir $(LIBUSER)/FakeDBD
 	@$(CP) lib/FakeDBD/mysql.pm6 lib/FakeDBD/mysql.pir $(LIBUSER)/FakeDBD
 
 # Uninstall from the shared system wide directory.
@@ -49,6 +55,10 @@ uninstall:
 	@$(RM_F)   $(LIBSYSTEM)/FakeDBD.pm6
 	@$(TEST_F) $(LIBSYSTEM)/FakeDBI.pir
 	@$(RM_F)   $(LIBSYSTEM)/FakeDBD.pir
+	@$(TEST_F) $(LIBSYSTEM)/FakeDBD/CSV.pm6
+	@$(RM_F)   $(LIBSYSTEM)/FakeDBD/CSV.pm6
+	@$(TEST_F) $(LIBSYSTEM)/FakeDBD/CSV.pir
+	@$(RM_F)   $(LIBSYSTEM)/FakeDBD/CSV.pir
 	@$(TEST_F) $(LIBSYSTEM)/FakeDBD/mysql.pm6
 	@$(RM_F)   $(LIBSYSTEM)/FakeDBD/mysql.pm6
 	@$(TEST_F) $(LIBSYSTEM)/FakeDBD/mysql.pir
@@ -62,6 +72,10 @@ uninstall-user:
 	@$(RM_F)   $(LIBUSER)/FakeDBI.pm6
 	@$(TEST_F) $(LIBUSER)/FakeDBI.pir
 	@$(RM_F)   $(LIBUSER)/FakeDBI.pir
+	@$(TEST_F) $(LIBUSER)/FakeDBD/CSV.pm6
+	@$(RM_F)   $(LIBUSER)/FakeDBD/CSV.pm6
+	@$(TEST_F) $(LIBUSER)/FakeDBD/CSV.pir
+	@$(RM_F)   $(LIBUSER)/FakeDBD/CSV.pir
 	@$(TEST_F) $(LIBUSER)/FakeDBD/mysql.pm6
 	@$(RM_F)   $(LIBUSER)/FakeDBD/mysql.pm6
 	@$(TEST_F) $(LIBUSER)/FakeDBD/mysql.pir

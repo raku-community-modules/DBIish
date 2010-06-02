@@ -19,12 +19,14 @@ ok $drh_version > 0, "FakeDBD::$mdriver version $drh_version"; # test 2
 my $dbh = FakeDBI.connect( $test_dsn, $test_user, $test_password );
 ok $dbh, "connect to $test_dsn"; # test 3
 
-# Drop a table of the same name so that the following create can work
-my $rc = $dbh.do("DROP TABLE nom");
+# Test .prepare() and .execute() a few times while setting things up.
+# Drop a table of the same name so that the following create can work.
+my $sth = $dbh.prepare("DROP TABLE nom");
+my $rc = $sth.execute();
 isnt $rc, Bool::True, "do: drop table gave an expected error"; # test 4
 
-# Use 'do' to create a table
-$rc = $dbh.do( "
+# Create a table
+$sth = $dbh.prepare( "
     CREATE TABLE nom (
         name char(4),
         description char(30),
@@ -32,6 +34,7 @@ $rc = $dbh.do( "
         price numeric(5,2)
     )
 ");
+$rc = $sth.execute();
 is $rc, Bool::True, "do: create table nom"; # test 5
 skip 1, "err after successful create should be 0";
 #is $dbh.err, 0, "err after successful create should be 0"; # test 6
