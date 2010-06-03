@@ -23,7 +23,7 @@ ok $dbh, "connect to $test_dsn"; # test 3
 # Drop a table of the same name so that the following create can work.
 my $sth = $dbh.prepare("DROP TABLE nom");
 my $rc = $sth.execute();
-isnt $rc, Bool::True, "do: drop table gave an expected error " ~
+isnt $rc, Bool::True, "drop table gave an expected error " ~
     "(did a previous test not clean up?)"; # test 4
 
 # Create a table
@@ -37,8 +37,10 @@ $sth = $dbh.prepare( "
 ");
 $rc = $sth.execute();
 is $rc, Bool::True, "do: create table nom"; # test 5
-skip 1, "err after successful create should be 0";
-#is $dbh.err, 0, "err after successful create should be 0"; # test 6
+if 'err' eq any($dbh.^methods) {
+    is $dbh.err, 0, 'err after successful create should be 0'; # test 6
+}
+else { skip 1, 'err after successful create should be 0' }
 is $dbh.errstr, Any, "errstr after successful create should be Any"; # test 7
 
 # Insert rows using the various method calls
@@ -46,8 +48,10 @@ ok $dbh.do( "
     INSERT nom (name, description, quantity, price)
     VALUES ( 'BUBH', 'Hot beef burrito', 1, 4.95 )
 "), "insert without parameters called from do"; # test 8
-skip 1, "rows NYI";
-#is $dbh.rows, 1, "simple insert should report 1 row affected"; # test 9
+if 'rows' eq any($dbh.^methods) {
+    is $dbh.rows, 1, "simple insert should report 1 row affected"; # test 9
+}
+else { skip 1, '$dbh.rows not implemented' }
 ok $sth = $dbh.prepare( "
     INSERT nom (name, description, quantity, price)
     VALUES ( ?, ?, ?, ? )
@@ -56,10 +60,13 @@ ok $sth.execute('TAFM', 'Mild fish taco', 1, 4.85 ) &&
    $sth.execute('BEOM', 'Medium size orange juice', 2, 1.20 ),
    "execute twice with parameters"; # test 11
 is $sth.rows, 1, "each insert with parameters also reports 1 row affected"; # test 12
-skip 2, '$sth.bind_param_array() and $sth.execute_array() NYI';
-#ok $sth.bind_param_array( 1, [ 'BEOM', 'Medium size orange juice', 2, 1.20 ] ),
-#    "bind_param_array"; # test 13
-#ok $sth.execute_array(  { ArrayTupleStatus => \my @tuple_status } ); # test 14
+if 'bind_param_array' eq any($sth.^methods) {
+    my @tuple_status;
+    ok $sth.bind_param_array( 1, [ 'BEOM', 'Medium size orange juice', 2, 1.20 ] ),
+       "bind_param_array"; # test 13
+    ok $sth.execute_array(  { ArrayTupleStatus => \@tuple_status } ); # test 14
+}
+else { skip 2, '$sth.bind_param_array() and $sth.execute_array() not implemented' }
 
 # Update some rows
 
@@ -71,6 +78,7 @@ ok $sth = $dbh.prepare( "
     FROM nom 
 "), "prepare a select command without parameters"; # test 15
 ok $sth.execute(), "execute a prepared select statement without parameters"; # test 16
+if 'fetchall_arrayref' eq any($sth.^methods) {
 my $arrayref = $sth.fetchall_arrayref();
 is $arrayref.elems, 3, "fetchall_arrayref returns 3 rows"; # test 17
 is $arrayref, [ # TODO: numeric columns return as numeric, not string
@@ -78,9 +86,14 @@ is $arrayref, [ # TODO: numeric columns return as numeric, not string
     [ 'TAFM', 'Mild fish taco', '1', '4.85', '4.85' ],
     [ 'BEOM', 'Medium size orange juice', '2', '1.20', '2.40' ] ],
     "selected data matches what was written"; # test 18
-skip 1, "fetchall_hashref NYI";
-#my $hashref = $sth.fetchall_hashref();
-#ok $hashref ~~ { }; # test 19
+}
+else { skip 2, 'fetchall_arrayref not implemented' }
+
+if 'fetchall_hashref' eq any($sth.^methods) {
+    my $hashref = $sth.fetchall_hashref();
+    ok $hashref ~~ { }; # test 19
+}
+else { skip 1, 'fetchall_hashref not implemented' }
 
 # Drop the table when finished, and disconnect
 ok $dbh.do("DROP TABLE nom"), "final cleanup";

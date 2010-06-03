@@ -20,10 +20,16 @@ grammar FakeDBD::CSV::SQL {
 }
 
 class FakeDBD::CSV::SQL::actions {
-    method create_table(Match $m) { print "doing CREATE TABLE ";
-        say ~$m<table_name> }
-    method drop_table(Match $m) { print "doing DROP TABLE ";
-        say ~$m<table_name> }
+    method create_table(Match $m) {
+        print "doing CREATE TABLE ";
+        my $table_name = ~$m<table_name>;
+        say $table_name;
+    }
+    method drop_table(Match $m) {
+        print "doing DROP TABLE ";
+        my $table_name = ~$m<table_name>;
+        say $table_name;
+    }
     method insert(Match $m) { say "doing INSERT" }
     method update(Match $m) { say "doing UPDATE" }
     method delete(Match $m) { say "doing DELETE" }
@@ -35,9 +41,16 @@ class FakeDBD::CSV::StatementHandle does FakeDBD::StatementHandle {
     has $!sql_command;
     method execute(*@params is copy) {
         #say "executing: $!sql_command";
-        my $result = FakeDBD::CSV::SQL.parse( $!sql_command,
+        my Match $sql_match = FakeDBD::CSV::SQL.parse( $!sql_command,
                         :actions( FakeDBD::CSV::SQL::actions ) );
+        say "execute " ~ $sql_match.perl;
         return Bool::True;
+    }
+    method rows() {
+        return 0;
+    }
+    method fetchall_arrayref() {
+        return [];
     }
 }
 
