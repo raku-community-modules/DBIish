@@ -120,6 +120,7 @@ class FakeDBD::mysql::StatementHandle does FakeDBD::StatementHandle {
     has $!statement;
     has $!result_set;
     has $!affected_rows;
+    has @!column_names;
     has $!field_count;
     has $.mysql_warning_count is rw = 0;
     method execute(*@params is copy) {
@@ -252,17 +253,23 @@ class FakeDBD::mysql::StatementHandle does FakeDBD::StatementHandle {
 
         if defined $!result_set {
             $!errstr = Mu;
-            my $native_row = mysql_fetch_row($!result_set); # can return NULL
-            my $errstr     = mysql_error( $!mysql_client );
-
+            my $errstr = mysql_error( $!mysql_client );
             if $errstr ne '' { $!errstr = $errstr; }
-            
-            if $native_row {
+
+            my $native_row = mysql_fetch_row($!result_set); # can return NULL
+
+            unless @!column_names {    
                 loop ( my $i=0; $i < $!field_count; $i++ ) {
                     my $field_info  = mysql_fetch_field($!result_set);
+                    my $column_name = $field_info[0];
+                    @!column_names.push($column_name);    
+                }
+            }
 
+            if $native_row && @!column_names {
+                loop ( my $i=0; $i < $!field_count; $i++ ) {
                     my $column_value = $native_row[$i];
-                    my $column_name  = $field_info[0];
+                    my $column_name  = @!column_names[$i];
 
                     %row_hash{$column_name} = $column_value;
                 }
@@ -279,10 +286,12 @@ class FakeDBD::mysql::StatementHandle does FakeDBD::StatementHandle {
         mysql_insert_id($!mysql_client);
         # but Parrot NCI cannot return an unsigned long long :-(
     }
+
     method finish() {
         if defined( $!result_set ) {
             mysql_free_result($!result_set);
-            $!result_set = Mu;
+            $!result_set   = Mu;
+            @!column_names = Mu;
         }
         return Bool::True;
     }
