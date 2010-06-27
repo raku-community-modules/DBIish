@@ -27,6 +27,7 @@ class FakeDBI:auth<mberends>:ver<0.0.1> {
         given $drivername {
             when 'CSV'     { eval 'use FakeDBD::CSV;   $driver = FakeDBD::CSV.new()' }
             when 'mysql'   { eval 'use FakeDBD::mysql; $driver = FakeDBD::mysql.new()' }
+            when 'Pg'      { eval 'use FakeDBD::Pg;    $driver = FakeDBD::Pg.new()' }
             default        { die "driver name '$drivername' is not known"; }
         }
         return $driver;

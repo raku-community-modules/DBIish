@@ -22,32 +22,37 @@ lib/FakeDBD/CSV.pir: lib/FakeDBD/CSV.pm6 lib/FakeDBD.pir
 lib/FakeDBD/mysql.pir: lib/FakeDBD/mysql.pm6 lib/FakeDBD.pir
 	export PERL6LIB=lib; $(PERL6_EXE) --target=pir --output=lib/FakeDBD/mysql.pir lib/FakeDBD/mysql.pm6
 
-lib/FakeDBI.pir: lib/FakeDBI.pm6 lib/FakeDBD/CSV.pir lib/FakeDBD/mysql.pir
+lib/FakeDBD/Pg.pir: lib/FakeDBD/Pg.pm6 lib/FakeDBD.pir
+	export PERL6LIB=lib; $(PERL6_EXE) --target=pir --output=lib/FakeDBD/Pg.pir lib/FakeDBD/Pg.pm6
+
+lib/FakeDBI.pir: lib/FakeDBI.pm6 lib/FakeDBD/CSV.pir lib/FakeDBD/mysql.pir lib/FakeDBD/Pg.pir
 	export PERL6LIB=lib; $(PERL6_EXE) --target=pir --output=lib/FakeDBI.pir lib/FakeDBI.pm6
 
-test: lib/FakeDBI.pir lib/FakeDBD/CSV.pir lib/FakeDBD/mysql.pir
+test: lib/FakeDBI.pir lib/FakeDBD/CSV.pir lib/FakeDBD/mysql.pir lib/FakeDBD/Pg.pir
 	@#export PERL6LIB=lib; prove --exec $(PERL6_EXE) t/10-mysql.t
 	@#export PERL6LIB=lib; prove --exec $(PERL6_EXE) t/20-CSV-common.t
 	@#export PERL6LIB=lib; prove --exec $(PERL6_EXE) t/25-mysql-common.t
 	export PERL6LIB=lib; prove --exec $(PERL6_EXE) t/
 
 # standard install is to the shared system wide directory
-install: lib/FakeDBI.pir lib/FakeDBD.pir lib/FakeDBD/mysql.pir
+install: lib/FakeDBI.pir lib/FakeDBD.pir lib/FakeDBD/mysql.pir lib/FakeDBD/Pg.pir
 	@echo "--> $(LIBSYSTEM)"
 	@$(CP) lib/FakeDBI.pm6 lib/FakeDBI.pir $(LIBSYSTEM)
 	@$(CP) lib/FakeDBD.pm6 lib/FakeDBD.pir $(LIBSYSTEM)
 	@$(MKPATH) $(LIBSYSTEM)/FakeDBD
 	@$(CP) lib/FakeDBD/CSV.pm6 lib/FakeDBD/CSV.pir $(LIBSYSTEM)/FakeDBD
 	@$(CP) lib/FakeDBD/mysql.pm6 lib/FakeDBD/mysql.pir $(LIBSYSTEM)/FakeDBD
+	@$(CP) lib/FakeDBD/Pg.pm6 lib/FakeDBD/Pg.pir $(LIBSYSTEM)/FakeDBD
 
 # if user has no permission to install globally, try a personal directory 
-install-user: lib/FakeDBI.pir lib/FakeDBD.pir lib/FakeDBD/mysql.pir
+install-user: lib/FakeDBI.pir lib/FakeDBD.pir lib/FakeDBD/mysql.pir lib/FakeDBD/Pg.pir
 	@echo "--> $(LIBUSER)"
 	@$(CP) lib/FakeDBI.pm6 lib/FakeDBI.pir $(LIBUSER)
 	@$(CP) lib/FakeDBD.pm6 lib/FakeDBD.pir $(LIBUSER)
 	@$(MKPATH) $(LIBUSER)/FakeDBD
 	@$(CP) lib/FakeDBD/CSV.pm6 lib/FakeDBD/CSV.pir $(LIBUSER)/FakeDBD
 	@$(CP) lib/FakeDBD/mysql.pm6 lib/FakeDBD/mysql.pir $(LIBUSER)/FakeDBD
+	@$(CP) lib/FakeDBD/Pg.pm6 lib/FakeDBD/Pg.pir $(LIBUSER)/FakeDBD
 
 # Uninstall from the shared system wide directory.
 # This might leave an empty FakeDBD subdirectory behind.
@@ -65,6 +70,10 @@ uninstall:
 	@$(RM_F)   $(LIBSYSTEM)/FakeDBD/mysql.pm6
 	@$(TEST_F) $(LIBSYSTEM)/FakeDBD/mysql.pir
 	@$(RM_F)   $(LIBSYSTEM)/FakeDBD/mysql.pir
+	@$(TEST_F) $(LIBSYSTEM)/FakeDBD/Pg.pm6
+	@$(RM_F)   $(LIBSYSTEM)/FakeDBD/Pg.pm6
+	@$(TEST_F) $(LIBSYSTEM)/FakeDBD/Pg.pir
+	@$(RM_F)   $(LIBSYSTEM)/FakeDBD/Pg.pir
 
 # Uninstall from the user's own Perl 6 directory.
 # This might leave an empty FakeDBD subdirectory behind.
@@ -82,6 +91,10 @@ uninstall-user:
 	@$(RM_F)   $(LIBUSER)/FakeDBD/mysql.pm6
 	@$(TEST_F) $(LIBUSER)/FakeDBD/mysql.pir
 	@$(RM_F)   $(LIBUSER)/FakeDBD/mysql.pir
+	@$(TEST_F) $(LIBUSER)/FakeDBD/Pg.pm6
+	@$(RM_F)   $(LIBUSER)/FakeDBD/Pg.pm6
+	@$(TEST_F) $(LIBUSER)/FakeDBD/Pg.pir
+	@$(RM_F)   $(LIBUSER)/FakeDBD/Pg.pir
 
 clean:
 	@# delete compiled files
