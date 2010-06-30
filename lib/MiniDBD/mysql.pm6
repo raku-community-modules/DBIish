@@ -1,9 +1,9 @@
-# FakeDBD::mysql.pm6
+# MiniDBD::mysql.pm6
 
 use NativeCall;  # from project 'zavolaj'
-use FakeDBD;     # roles for drivers
+use MiniDBD;     # roles for drivers
 
-#module FakeDBD:auth<mberends>:ver<0.0.1>;
+#module MiniDBD:auth<mberends>:ver<0.0.1>;
 
 #------------ mysql library functions in alphabetical order ------------
 
@@ -114,7 +114,7 @@ sub mysql_warning_count( OpaquePointer $mysql_client )
 
 #-----------------------------------------------------------------------
 
-class FakeDBD::mysql::StatementHandle does FakeDBD::StatementHandle {
+class MiniDBD::mysql::StatementHandle does MiniDBD::StatementHandle {
     has $!mysql_client;
     has $!RaiseError;
     has $!statement;
@@ -124,7 +124,7 @@ class FakeDBD::mysql::StatementHandle does FakeDBD::StatementHandle {
     has $!field_count;
     has $.mysql_warning_count is rw = 0;
     method execute(*@params is copy) {
-        # warn "in FakeDBD::mysql::StatementHandle.execute()";
+        # warn "in MiniDBD::mysql::StatementHandle.execute()";
         my $statement = $!statement;
         while @params.elems>0 and $statement.index('?')>=0 {
             my $param = @params.shift;
@@ -135,7 +135,7 @@ class FakeDBD::mysql::StatementHandle does FakeDBD::StatementHandle {
                 $statement .= subst("?",$param); # do not quote numbers
             }
         }
-        # warn "in FakeDBD::mysql::StatementHandle.execute statement=$statement";
+        # warn "in MiniDBD::mysql::StatementHandle.execute statement=$statement";
         $!result_set = Mu;
         my $status = mysql_query( $!mysql_client, $statement ); # 0 means OK
         $.mysql_warning_count = mysql_warning_count( $!mysql_client );
@@ -297,13 +297,13 @@ class FakeDBD::mysql::StatementHandle does FakeDBD::StatementHandle {
     }
 }
 
-class FakeDBD::mysql::Connection does FakeDBD::Connection {
+class MiniDBD::mysql::Connection does MiniDBD::Connection {
     has $!mysql_client;
     has $!RaiseError;
     method prepare( Str $statement ) {
-        # warn "in FakeDBD::mysql::Connection.prepare()";
-        my $statement_handle = FakeDBD::mysql::StatementHandle.bless(
-            FakeDBD::mysql::StatementHandle.CREATE(),
+        # warn "in MiniDBD::mysql::Connection.prepare()";
+        my $statement_handle = MiniDBD::mysql::StatementHandle.bless(
+            MiniDBD::mysql::StatementHandle.CREATE(),
             mysql_client => $!mysql_client,
             statement    => $statement,
             RaiseError   => $!RaiseError
@@ -316,13 +316,13 @@ class FakeDBD::mysql::Connection does FakeDBD::Connection {
     }
 }
 
-class FakeDBD::mysql:auth<mberends>:ver<0.0.1> {
+class MiniDBD::mysql:auth<mberends>:ver<0.0.1> {
 
     has $.Version = 0.01;
 
-#------------------ methods to be called from FakeDBI ------------------
+#------------------ methods to be called from MiniDBI ------------------
     method connect( Str $user, Str $password, Str $params, $RaiseError ) {
-        # warn "in FakeDBD::mysql.connect('$user',*,'$params')";
+        # warn "in MiniDBD::mysql.connect('$user',*,'$params')";
         my ( $mysql_client, $mysql_error );
         unless defined $mysql_client {
             $mysql_client = mysql_init( pir::null__P() );
@@ -343,8 +343,8 @@ class FakeDBD::mysql:auth<mberends>:ver<0.0.1> {
         my $error = mysql_error( $mysql_client );
         my $connection;
         if $error eq '' {
-            $connection = FakeDBD::mysql::Connection.bless(
-                FakeDBD::mysql::Connection.CREATE(),
+            $connection = MiniDBD::mysql::Connection.bless(
+                MiniDBD::mysql::Connection.CREATE(),
                 mysql_client => $mysql_client,
                 RaiseError => $RaiseError
             );
@@ -353,23 +353,23 @@ class FakeDBD::mysql:auth<mberends>:ver<0.0.1> {
     }
 }
 
-# warn "module FakeDBD::mysql.pm has loaded";
+# warn "module MiniDBD::mysql.pm has loaded";
 
 =begin pod
 
 =head1 DESCRIPTION
-# 'zavolaj' is a Native Call Interface for Rakudo/Parrot. 'FakeDBI' and
-# 'FakeDBD::mysql' are Perl 6 modules that use 'zavolaj' to use the
+# 'zavolaj' is a Native Call Interface for Rakudo/Parrot. 'MiniDBI' and
+# 'MiniDBD::mysql' are Perl 6 modules that use 'zavolaj' to use the
 # standard mysqlclient library.  There is a long term Parrot based
 # project to develop a new, comprehensive DBI architecture for Parrot
-# and Perl 6.  FakeDBI is not that, it is a naive rewrite of the
-# similarly named Perl 5 modules.  Hence the 'Fake' part of the name.
+# and Perl 6.  MiniDBI is not that, it is a naive rewrite of the
+# similarly named Perl 5 modules.  Hence the 'Mini' part of the name.
 
 =head1 CLASSES
-The FakeDBD::mysql module contains the same classes and methods as every
+The MiniDBD::mysql module contains the same classes and methods as every
 database driver.  Therefore read the main documentation of usage in
-L<doc:FakeDBI> and internal architecture in L<doc:FakeDBD>.  Below are
-only notes about code unique to the FakeDBD::mysql implementation.
+L<doc:MiniDBI> and internal architecture in L<doc:MiniDBD>.  Below are
+only notes about code unique to the MiniDBD::mysql implementation.
 
 =head1 SEE ALSO
 The MySQL 5.1 Reference Manual, C API.

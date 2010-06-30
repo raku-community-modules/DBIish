@@ -1,4 +1,4 @@
-# fakedbi/t/10-mysql.t
+# MiniDBI/t/10-mysql.t
 
 # Before running the tests, prepare the database with something like:
 
@@ -32,7 +32,7 @@ use Test;
 
 plan 86;
 
-use FakeDBI;
+use MiniDBI;
 
 # The file 'lib.pl' customizes the testing environment per DBD, but all
 # this test script currently needs is the variables listed here.
@@ -42,7 +42,7 @@ my $port          = 3306;
 my $database      = 'zavolaj';
 my $test_user     = 'testuser';
 my $test_password = 'testpass';
-my $test_dsn      = "FakeDBI:$mdriver" ~ ":database=$database;" ~
+my $test_dsn      = "MiniDBI:$mdriver" ~ ":database=$database;" ~
                     "host=$hostname;port=$port";
 my $table         = 't1';
 
@@ -63,11 +63,11 @@ my $table         = 't1';
 #ok $drh->{Version}, "Version $drh->{Version}"; 
 #print "Driver version is ", $drh->{Version}, "\n";my $mdriver = 'mysql';
 my $drh;
-$drh = FakeDBI.install_driver($mdriver);
+$drh = MiniDBI.install_driver($mdriver);
 ok $drh, 'Install driver'; # test 1
 my $drh_version;
 $drh_version = $drh.Version;
-ok $drh_version > 0, "FakeDBD::mysql version $drh_version"; # test 2
+ok $drh_version > 0, "MiniDBD::mysql version $drh_version"; # test 2
 
 #-----------------------------------------------------------------------
 # from perl5 DBD/mysql/t/10connect.t
@@ -79,12 +79,12 @@ ok $drh_version > 0, "FakeDBD::mysql version $drh_version"; # test 2
 #
 my $dbh;
 try {
-    $dbh = FakeDBI.connect( $test_dsn, $test_user, $test_password,
+    $dbh = MiniDBI.connect( $test_dsn, $test_user, $test_password,
         RaiseError => 1, PrintError => 1, AutoCommit => 0
     );
 #   CATCH {
 #       warn $!;
-#       die "ERROR: {FakeDBI.errstr}. Can't continue test";
+#       die "ERROR: {MiniDBI.errstr}. Can't continue test";
 #   }
 }
 ok defined $dbh, "Connected to database"; # test 3
@@ -101,9 +101,9 @@ ok $result, 'disconnect returned true'; # test 4
 #$dbh->disconnect();
 
 try {
-    $dbh = FakeDBI.connect( $test_dsn, $test_user, $test_password,
+    $dbh = MiniDBI.connect( $test_dsn, $test_user, $test_password,
         RaiseError => 1, PrintError => 1, AutoCommit => 0 );
-    CATCH { die "ERROR: {FakeDBI.errstr}. Can't continue test\n"; }
+    CATCH { die "ERROR: {MiniDBI.errstr}. Can't continue test\n"; }
 }
 ok(defined $dbh, "Connected to database"); # test 5
 ok($dbh.do("DROP TABLE IF EXISTS $table"), "making slate clean"); # test 6
@@ -171,9 +171,9 @@ ok $dbh.do("DROP TABLE $table"), "Drop table $table"; # test 19
 #  is($sth->{mysql_warning_count}, 1);
 #};
 #try {
-#    $dbh = FakeDBI.connect( $test_dsn, $test_user, $test_password,
+#    $dbh = MiniDBI.connect( $test_dsn, $test_user, $test_password,
 #        RaiseError => 1, PrintError => 1, AutoCommit => 0 );
-#    CATCH { die "ERROR: {FakeDBI.errstr}. Can't continue test\n"; }
+#    CATCH { die "ERROR: {MiniDBI.errstr}. Can't continue test\n"; }
 #}
 ok($sth= $dbh.prepare("DROP TABLE IF EXISTS no_such_table"), "prepare drop no_such_table"); # test 20
 ok($sth.execute(), "execute drop no_such_table..."); # test 21
@@ -246,9 +246,9 @@ ok $dbh.do("DROP TABLE $table"),"drop table $table"; # test 38
 # Because the drop table might fail, disconnect and reconnect
 $dbh.disconnect();
 try {
-    $dbh = FakeDBI.connect( $test_dsn, $test_user, $test_password,
+    $dbh = MiniDBI.connect( $test_dsn, $test_user, $test_password,
         RaiseError => 1, PrintError => 1, AutoCommit => 0 );
-    CATCH { die "ERROR: {FakeDBI.errstr}. Can't continue test\n"; }
+    CATCH { die "ERROR: {MiniDBI.errstr}. Can't continue test\n"; }
 }
 
 #-----------------------------------------------------------------------

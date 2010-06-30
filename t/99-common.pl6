@@ -1,21 +1,21 @@
-# fakedbi/t/99-common.pl6
+# MiniDBI/t/99-common.pl6
 # This script is intended to be included as the common SQL tests in
 # scripts for specific DBDs such as CSV or mysql.
 
 #use Test;     # "use" dies in a runtime eval
-#use FakeDBI;
-diag "Testing FakeDBD::$mdriver";
+#use MiniDBI;
+diag "Testing MiniDBD::$mdriver";
 plan 32;
 
 # Verify that the driver loads before attempting a connect
-my $drh = FakeDBI.install_driver($mdriver);
+my $drh = MiniDBI.install_driver($mdriver);
 ok $drh, 'Install driver'; # test 1
 my $drh_version;
 $drh_version = $drh.Version;
-ok $drh_version > 0, "FakeDBD::$mdriver version $drh_version"; # test 2
+ok $drh_version > 0, "MiniDBD::$mdriver version $drh_version"; # test 2
 
 # Connect to the data sourcequantity*price AS amount FROM nom
-my $dbh = FakeDBI.connect( $test_dsn, $test_user, $test_password );
+my $dbh = MiniDBI.connect( $test_dsn, $test_user, $test_password );
 ok $dbh, "connect to $test_dsn"; # test 3
 
 # Test .prepare() and .execute() a few times while setting things up.

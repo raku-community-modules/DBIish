@@ -1,32 +1,32 @@
-# FakeDBI.pm6
+# MiniDBI.pm6
 
-class FakeDBI:auth<mberends>:ver<0.0.1> {
+class MiniDBI:auth<mberends>:ver<0.1.0> {
     has $!err;
     has $!errstr;
     method connect( $dsn, $username, $password, :$RaiseError=0, :$PrintError=0, :$AutoCommit=1 ) {
-        # warn "in FakeDBI.connect('$dsn')";
+        # warn "in MiniDBI.connect('$dsn')";
         # Divide $dsn up into its separate fields.
         my ( $prefix, $drivername, $params ) = $dsn.split(':');
         my $driver = self.install_driver( $drivername );
-        # warn "calling FakeDBD::" ~ $drivername ~ ".connect($username,*,$params)";
+        # warn "calling MiniDBD::" ~ $drivername ~ ".connect($username,*,$params)";
         my $connection = $driver.connect( $username, $password, $params, $RaiseError );
         return $connection;
     }
     method install_driver( $drivername ) {
-        # warn "in FakeDBI.install_driver('$drivername')";
+        # warn "in MiniDBI.install_driver('$drivername')";
         my $result;
         # the need($n, {} ) argument would be a hash of named argements,
         # but it dies with: get_pmc_keyed() not implemented in class ''
-        #         Perl6::Module::Loader.need( "FakeDBD::$drivername", {} );
-        $result = Perl6::Module::Loader.need( "FakeDBD::$drivername" );
+        #         Perl6::Module::Loader.need( "MiniDBD::$drivername", {} );
+        $result = Perl6::Module::Loader.need( "MiniDBD::$drivername" );
         unless $result {
-            warn "install_driver cannot load FakeDBD::$drivername in $*PROGRAM_NAME";
+            warn "install_driver cannot load MiniDBD::$drivername in $*PROGRAM_NAME";
             exit( 1 ); # instead of dying with an unnecessary stack trace
         }
         my $driver;
         given $drivername {
-            when 'CSV'     { eval 'use FakeDBD::CSV;   $driver = FakeDBD::CSV.new()' }
-            when 'mysql'   { eval 'use FakeDBD::mysql; $driver = FakeDBD::mysql.new()' }
+            when 'CSV'     { eval 'use MiniDBD::CSV;   $driver = MiniDBD::CSV.new()' }
+            when 'mysql'   { eval 'use MiniDBD::mysql; $driver = MiniDBD::mysql.new()' }
             default        { die "driver name '$drivername' is not known"; }
         }
         return $driver;
@@ -107,12 +107,12 @@ our sub SQL_INTERVAL_MINUTE_TO_SECOND { 113 }
 =begin pod
 =head1 SYNOPSIS
  # the list is from Perl 5 DBI, uncommented is working here
- use FakeDBI;
+ use MiniDBI;
  # TODO: @driver_names = DBI.available_drivers;
  # TODO: %drivers      = DBI.installed_drivers;
  # TODO: @data_sources = DBI.data_sources($driver_name, \%attr);
 
- $dbh = FakeDBI.connect($data_source, $username, $auth, \%attr);
+ $dbh = MiniDBI.connect($data_source, $username, $auth, \%attr);
 
  $rv  = $dbh.do($statement);
  # TODO: $rv  = $dbh.do($statement, \%attr);
@@ -168,19 +168,19 @@ our sub SQL_INTERVAL_MINUTE_TO_SECOND { 113 }
 The (Perl 5) synopsis above only lists the major methods and parameters.
 
 =head1 DESCRIPTION
-The name C<FakeDBI> has two meanings.  In lowercase it indicates the
+The name C<MiniDBI> has two meanings.  In lowercase it indicates the
 github project being used for development.  In mixed case it is the
 module name and class name that database client applications should use.
 
-=head1 FakeDBI CLASSES and ROLES
+=head1 MiniDBI CLASSES and ROLES
 
-=head2 FakeDBI
-The C<FakeDBI> class exists mainly to provide the F<connect> method,
+=head2 MiniDBI
+The C<MiniDBI> class exists mainly to provide the F<connect> method,
 which acts as a constructor for database connections.
 
-=head2 FakeDBD
-The C<FakeDBD> role should only be used with 'does' to provide standard
-members for FakeDBD classes.
+=head2 MiniDBD
+The C<MiniDBD> role should only be used with 'does' to provide standard
+members for MiniDBD classes.
 
 =head1 SEE ALSO
 L<http://dbi.perl.org>

@@ -1,7 +1,7 @@
-# fakedbi/t/10-mysql-common.t
+# MiniDBI/t/10-mysql-common.t
 
 use Test;
-use FakeDBI;
+use MiniDBI;
 
 # Define the only database specific values used by the common tests.
 my ( $mdriver, $test_dsn, $test_user, $test_password );
@@ -12,7 +12,7 @@ my ( $mdriver, $test_dsn, $test_user, $test_password );
     my $database   = 'zavolaj';
     # Set up the common variables with the MySQL specific values
     $mdriver       = 'mysql';
-    $test_dsn      = "FakeDBI:$mdriver" ~ ":database=$database;"
+    $test_dsn      = "MiniDBI:$mdriver" ~ ":database=$database;"
                      ~ "host=$hostname;port=$port";
     $test_user     = 'testuser';
     $test_password = 'testpass';

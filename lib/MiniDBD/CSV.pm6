@@ -1,8 +1,8 @@
-# FakeDBD/CSV.pm6
+# MiniDBD/CSV.pm6
 
-use FakeDBD;
+use MiniDBD;
 
-grammar FakeDBD::CSV::SQL {
+grammar MiniDBD::CSV::SQL {
     # note: token means regex :ratchet, rule means token :sigspace
     regex TOP { ^ [ <create_table> | <drop_table> | <insert> | <update>
                 | <delete> | <select> ] }
@@ -19,7 +19,7 @@ grammar FakeDBD::CSV::SQL {
     token column_type {:i int|char|numeric}
 }
 
-class FakeDBD::CSV::SQL::actions {
+class MiniDBD::CSV::SQL::actions {
     method create_table(Match $m) {
         print "doing CREATE TABLE ";
         my $table_name = ~$m<table_name>;
@@ -36,13 +36,13 @@ class FakeDBD::CSV::SQL::actions {
     method select(Match $m) { say "doing SELECT" }
 }
 
-class FakeDBD::CSV::StatementHandle does FakeDBD::StatementHandle {
+class MiniDBD::CSV::StatementHandle does MiniDBD::StatementHandle {
     has $!RaiseError;
     has $!sql_command;
     method execute(*@params is copy) {
         #say "executing: $!sql_command";
-        my Match $sql_match = FakeDBD::CSV::SQL.parse( $!sql_command,
-                        :actions( FakeDBD::CSV::SQL::actions ) );
+        my Match $sql_match = MiniDBD::CSV::SQL.parse( $!sql_command,
+                        :actions( MiniDBD::CSV::SQL::actions ) );
         say "execute " ~ $sql_match.perl;
         return Bool::True;
     }
@@ -54,12 +54,12 @@ class FakeDBD::CSV::StatementHandle does FakeDBD::StatementHandle {
     }
 }
 
-class FakeDBD::CSV::Connection does FakeDBD::Connection {
+class MiniDBD::CSV::Connection does MiniDBD::Connection {
     has $!RaiseError;
     method prepare( Str $sql_command ) {
         my $statement_handle;
-        $statement_handle = FakeDBD::CSV::StatementHandle.bless(
-            FakeDBD::CSV::StatementHandle.CREATE(),
+        $statement_handle = MiniDBD::CSV::StatementHandle.bless(
+            MiniDBD::CSV::StatementHandle.CREATE(),
             RaiseError => $!RaiseError,
             sql_command => $sql_command
         );
@@ -67,15 +67,15 @@ class FakeDBD::CSV::Connection does FakeDBD::Connection {
     }
 }
 
-class FakeDBD::CSV:auth<mberends>:ver<0.0.1> {
+class MiniDBD::CSV:auth<mberends>:ver<0.0.1> {
 
     has $.Version = 0.01;
 
     method connect( Str $user, Str $password, Str $params, $RaiseError ) {
-        #warn "in FakeDBD::CSV.connect('$user',*,'$params')";
+        #warn "in MiniDBD::CSV.connect('$user',*,'$params')";
         my $connection;
-        $connection = FakeDBD::CSV::Connection.bless(
-            FakeDBD::CSV::Connection.CREATE(),
+        $connection = MiniDBD::CSV::Connection.bless(
+            MiniDBD::CSV::Connection.CREATE(),
             RaiseError => $RaiseError
         );
         return $connection;
