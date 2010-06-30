@@ -17,7 +17,7 @@ sub PQresultStatus (OpaquePointer $result)
     is native('libpq')
     { ... }
 
-sub PQresultErrorMessage (OpaquePointer $conn)
+sub PQresultErrorMessage (OpaquePointer $result)
     returns Str
     is native('libpq')
     { ... }
@@ -77,6 +77,7 @@ class FakeDBD::Pg::StatementHandle does FakeDBD::StatementHandle {
     has $!pg_conn;
     has $!RaiseError;
     has $!statement;
+    has $!dbh;
     has $!result;
     has $!affected_rows;
     has @!column_names;
@@ -84,8 +85,13 @@ class FakeDBD::Pg::StatementHandle does FakeDBD::StatementHandle {
     has $!field_count;
     has $!current_row;
     method execute(*@params is copy) {
-        # warn "in FakeDBD::Pg::StatementHandle.execute()";
         my $statement = $!statement;
+
+        if (!$!dbh.AutoCommit and !$!dbh.in_transaction) {
+            PQexec($!pg_conn, "BEGIN");
+            $!dbh.in_transaction = 1;
+        }
+
         $!current_row = 0;
         while @params.elems and $statement.index('?') >= 0 {
             my $param = @params.shift;
@@ -96,16 +102,17 @@ class FakeDBD::Pg::StatementHandle does FakeDBD::StatementHandle {
                 $statement .= subst("?",$param); # do not quote numbers
             }
         }
-        # warn "in FakeDBD::Pg::StatementHandle.execute statement=$statement";
         $!result = PQexec($!pg_conn, $statement); # 0 means OK
         $!row_count = PQntuples($!result);
         my $status = PQresultStatus($!result);
         $!errstr = Mu;
         if $status != PGRES_EMPTY_QUERY() | PGRES_COMMAND_OK() | PGRES_TUPLES_OK() | PGRES_COPY_OUT() | PGRES_COPY_IN() {
-            $!errstr = PQresultErrorMessage ($!pg_conn);
+            $!errstr = PQresultErrorMessage ($!result);
             if $!RaiseError { die $!errstr; }
         }
-        return !defined $!errstr;
+
+        my $rows = self.rows;
+        return ($rows == 0) ?? "0E0" !! $rows;
     }
 
     # do() and execute() return the number of affected rows directly or:
@@ -115,7 +122,7 @@ class FakeDBD::Pg::StatementHandle does FakeDBD::StatementHandle {
             $!errstr = Mu;
             $!affected_rows = PQcmdTuples($!result);
 
-            my $errstr = PQresultErrorMessage ($!pg_conn);
+            my $errstr = PQresultErrorMessage ($!result);
             if $errstr ne '' {
                 $!errstr = $errstr;
                 if $!RaiseError { die $!errstr; }
@@ -138,7 +145,6 @@ class FakeDBD::Pg::StatementHandle does FakeDBD::StatementHandle {
         }
 
         if defined $!result {
-            # warn "fetching a row";
             $!errstr = Mu;
 
             for ^$!field_count {
@@ -146,7 +152,7 @@ class FakeDBD::Pg::StatementHandle does FakeDBD::StatementHandle {
             }
             $!current_row++;
 
-            my $errstr = PQresultErrorMessage ($!pg_conn);
+            my $errstr = PQresultErrorMessage ($!result);
             if $errstr ne '' {
                 $!errstr = $errstr;
                 if $!RaiseError { die $!errstr; }
@@ -167,23 +173,19 @@ class FakeDBD::Pg::StatementHandle does FakeDBD::StatementHandle {
             $!field_count = PQnfields($!result);
         }
         if defined $!result {
-            # warn "fetching a row";
             $!errstr = Mu;
-            my @dataz;
-            for ^$!field_count {
-                @dataz.push(PQgetvalue($!result, $!current_row, $_));
-            }
-            $!current_row++;
 
-            my $errstr = PQresultErrorMessage ($!pg_conn);
+            my @row = self!get_row();
+
+            my $errstr = PQresultErrorMessage ($!result);
             if $errstr ne '' {
                 $!errstr = $errstr;
                 if $!RaiseError { die $!errstr; }
                 return;
             }
 
-            if @dataz {
-                $row_arrayref = @dataz;
+            if @row {
+                $row_arrayref = @row;
             }
             else { self.finish; }
         }
@@ -202,21 +204,17 @@ class FakeDBD::Pg::StatementHandle does FakeDBD::StatementHandle {
             $!errstr = Mu;
             my @all_array;
             for ^$!row_count {
-                my @dataz;
-                for ^$!field_count {
-                    @dataz.push(PQgetvalue($!result, $!current_row, $_));
-                }
-                $!current_row++;
+                my @row = self!get_row();
 
-                my $errstr = PQresultErrorMessage ($!pg_conn);
+                my $errstr = PQresultErrorMessage ($!result);
                 if $errstr ne '' {
                     $!errstr = $errstr;
                     if $!RaiseError { die $!errstr; }
                     return;
                 }
 
-                if @dataz {
-                    my $row_arrayref = @dataz;
+                if @row {
+                    my $row_arrayref = @row;
                     push @all_array, $row_arrayref;
                 }
                 else { self.finish; }
@@ -238,18 +236,14 @@ class FakeDBD::Pg::StatementHandle does FakeDBD::StatementHandle {
 
         if defined $!result {
             $!errstr = Mu;
-            my $errstr = PQresultErrorMessage ($!pg_conn);
+            my $errstr = PQresultErrorMessage ($!result);
             if $errstr ne '' {
                 $!errstr = $errstr;
                 if $!RaiseError { die $!errstr; }
                 return;
             }
 
-            my @dataz;
-            for ^$!field_count {
-                @dataz.push(PQgetvalue($!result, $!current_row, $_));
-            }
-            $!current_row++;
+            my @row = self!get_row();
 
             unless @!column_names {
                 for ^$!field_count {
@@ -258,8 +252,8 @@ class FakeDBD::Pg::StatementHandle does FakeDBD::StatementHandle {
                 }
             }
 
-            if @dataz && @!column_names {
-                for @dataz Z @!column_names -> $column_value, $column_name {
+            if @row && @!column_names {
+                for @row Z @!column_names -> $column_value, $column_name {
                     %row_hash{$column_name} = $column_value;
                 }
             } else {
@@ -271,6 +265,19 @@ class FakeDBD::Pg::StatementHandle does FakeDBD::StatementHandle {
         return $row_hashref;
     }
 
+    method fetchall_hashref(Str $key) {
+        my %results;
+
+        return if $!current_row >= $!row_count;
+
+        while my $row = self.fetchrow_hashref {
+            %results{$row{$key}} = $row;
+        }
+
+        my $results_ref = %results;
+        return $results_ref;
+    }
+
     method finish() {
         if defined($!result) {
             PQclear($!result);
@@ -279,20 +286,95 @@ class FakeDBD::Pg::StatementHandle does FakeDBD::StatementHandle {
         }
         return Bool::True;
     }
+
+    method !get_row {
+        my @data;
+        for ^$!field_count {
+            @data.push(PQgetvalue($!result, $!current_row, $_));
+        }
+        $!current_row++;
+
+        return @data;
+    }
 }
 
 class FakeDBD::Pg::Connection does FakeDBD::Connection {
     has $!pg_conn;
     has $!RaiseError;
-    method prepare( Str $statement ) {
-        # warn "in FakeDBD::Pg::Connection.prepare()";
+    has $.AutoCommit is rw = 1;
+    has $.in_transaction is rw;
+
+    method prepare(Str $statement, $attr?) {
         my $statement_handle = FakeDBD::Pg::StatementHandle.bless(
             FakeDBD::Pg::StatementHandle.CREATE(),
             pg_conn    => $!pg_conn,
             statement  => $statement,
-            RaiseError => $!RaiseError
+            RaiseError => $!RaiseError,
+            dbh        => self,
         );
         return $statement_handle;
+    }
+
+    method do(Str $statement, $attr?, *@bind is copy) {
+        my $sth = self.prepare($statement);
+        $sth.execute(@bind);
+        my $rows = $sth.rows;
+        return ($rows == 0) ?? "0E0" !! $rows;
+    }
+
+    method selectrow_arrayref(Str $statement, $attr?, *@bind is copy) {
+        my $sth = self.prepare($statement, $attr);
+        $sth.execute(@bind);
+        return $sth.fetchrow_arrayref;
+    }
+
+    method selectrow_hashref(Str $statement, $attr?, *@bind is copy) {
+        my $sth = self.prepare($statement, $attr);
+        $sth.execute(@bind);
+        return $sth.fetchrow_hashref;
+    }
+
+    method selectall_arrayref(Str $statement, $attr?, *@bind is copy) {
+        my $sth = self.prepare($statement, $attr);
+        $sth.execute(@bind);
+        return $sth.fetchall_arrayref;
+    }
+
+    method selectall_hashref(Str $statement, Str $key, $attr?, *@bind is copy) {
+        my $sth = self.prepare($statement, $attr);
+        $sth.execute(@bind);
+        return $sth.fetchall_hashref($key);
+    }
+
+    method selectcol_arrayref(Str $statement, $attr?, *@bind is copy) {
+        my @results;
+
+        my $sth = self.prepare($statement, $attr);
+        $sth.execute(@bind);
+        while (my $row = $sth.fetchrow_arrayref) {
+            @results.push($row[0]);
+        }
+
+        my $aref = @results;
+        return $aref;
+    }
+
+    method commit {
+        if $!AutoCommit {
+            warn "Commit ineffective while AutoCommit is on";
+            return;
+        };
+        PQexec($!pg_conn, "COMMIT");
+        $.in_transaction = 0;
+    }
+
+    method rollback {
+        if $!AutoCommit {
+            warn "Rollback ineffective while AutoCommit is on";
+            return;
+        };
+        PQexec($!pg_conn, "ROLLBACK");
+        $.in_transaction = 0;
     }
 }
 
@@ -302,7 +384,6 @@ class FakeDBD::Pg:auth<mberends>:ver<0.0.1> {
 
 #------------------ methods to be called from FakeDBI ------------------
     method connect( Str $user, Str $password, Str $params, $RaiseError ) {
-        # warn "in FakeDBD::Pg.connect('$user',*,'$params')";
         my @params = $params.split(';');
         my %params;
         for @params -> $p {
@@ -310,9 +391,8 @@ class FakeDBD::Pg:auth<mberends>:ver<0.0.1> {
             %params{$key} = $value;
         }
         my $host     = %params<host>     // 'localhost';
-        my $port     = %params<port>     // 0;
-        my $database = %params<database> // 'postgres';
-        # real_connect() returns either the same client pointer or null
+        my $port     = %params<port>     // 5432;
+        my $database = %params<dbname>   // 'postgres';
         my $conninfo = "host=$host port=$port dbname=$database user=$user password=$password";
         my $pg_conn = PQconnectdb($conninfo);
         my $status = PQstatus($pg_conn);
@@ -327,8 +407,6 @@ class FakeDBD::Pg:auth<mberends>:ver<0.0.1> {
         return $connection;
     }
 }
-
-# warn "module FakeDBD::Pg.pm has loaded";
 
 =begin pod
 
