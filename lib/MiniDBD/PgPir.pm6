@@ -35,6 +35,8 @@ class MiniDBD::PgPir::Connection does MiniDBD::Connection {
 
 class MiniDBD::PgPir:auth<moritz> {
 
+    has $.Version = 0.01;
+
     sub pg_escape($x) {
         q[']
             ~ $x.subst(rx/\\|\'/, -> $m { '\\' ~ $m }, :g)
@@ -44,12 +46,14 @@ class MiniDBD::PgPir:auth<moritz> {
     method connect(Str $user, Str $password, Str $params, $RaiseError) {
         my $pg  = pir::new__pS('Pg');
 
-        my %params = $params.split(';').map({ .split(rx{\s*\=\s*}, 2)}).flat;
+        my %params = $params.split(';').map({ .split(regex {\s*\=\s*}, 2)}).flat;
 
 
         my %opt =
             user     => pg_escape($user),
             password => pg_escape($password),
+#            user     => $user,
+#            password => $password,
             %params;
         %opt<application_name> //= 'Perl6MiniDBD';
 
@@ -57,7 +61,9 @@ class MiniDBD::PgPir:auth<moritz> {
 
         # nearly scary how concise this is in Perl 6 :-)
         my $connection_string = %opt.fmt('%s=%s', ';');
+        say "Connection string: $connection_string";
         my $con = $pg.connectdb($connection_string);
+        say "con: $con";
     }
 
     method finish() {

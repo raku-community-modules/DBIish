@@ -27,6 +27,7 @@ class MiniDBI:auth<mberends>:ver<0.1.0> {
         given $drivername {
             when 'CSV'     { eval 'use MiniDBD::CSV;   $driver = MiniDBD::CSV.new()' }
             when 'mysql'   { eval 'use MiniDBD::mysql; $driver = MiniDBD::mysql.new()' }
+            when 'PgPir'   { eval 'use MiniDBD::PgPir; $driver = MiniDBD::PgPir.new()' }
             default        { die "driver name '$drivername' is not known"; }
         }
         return $driver;
