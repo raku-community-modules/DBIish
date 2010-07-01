@@ -1,12 +1,12 @@
 pir::load_bytecode("Pg.pir");
 
-class FakeDBD::PgPir::StatementHandle does FakeDBD::StatementHandle {
+class MiniDBD::PgPir::StatementHandle does MiniDBD::StatementHandle {
     has $!name;
     has $!RaiseError;
 
 }
 
-class FakeDBD::PgPir::Connection does FakeDBD::Connection {
+class MiniDBD::PgPir::Connection does MiniDBD::Connection {
     has $!pg_conn;
     has $!statement_name = 'a';
     has $!RaiseError;
@@ -32,7 +32,7 @@ class FakeDBD::PgPir::Connection does FakeDBD::Connection {
 
 }
 
-class FakeDBD::PgPir:auth<moritz> {
+class MiniDBD::PgPir:auth<moritz> {
 
     sub pg_escape($x) {
         q[']
@@ -47,10 +47,10 @@ class FakeDBD::PgPir:auth<moritz> {
 
 
         my %opt =
-            user => pg_escape($user),
+            user     => pg_escape($user),
             password => pg_escape($password),
             %params;
-        %opt<application_name> //= 'Perl6FakeDBD';
+        %opt<application_name> //= 'Perl6MiniDBD';
 
         say "Options: %opt.perl()";
 
