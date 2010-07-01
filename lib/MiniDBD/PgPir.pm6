@@ -1,3 +1,4 @@
+use MiniDBD;
 pir::load_bytecode("Pg.pir");
 
 class MiniDBD::PgPir::StatementHandle does MiniDBD::StatementHandle {
