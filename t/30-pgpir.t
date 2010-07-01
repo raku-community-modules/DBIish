@@ -2,7 +2,7 @@ use v6;
 use Test;
 plan *;
 
-use FakeDBI;
+use MiniDBI;
 
 my $mdriver  = 'PgPir';
 my $host     = 'localhost';
@@ -13,11 +13,11 @@ my $password = 'Cho5thae';
 
 my $test_dsn = "FakeDBI:{$mdriver}:dbname=$database;host=$host;port=$port";
 
-my $drh = FakeDBI.install_driver($mdriver);
+my $drh = MiniDBI.install_driver($mdriver);
 ok $drh, 'Install driver';
 
 my $dbh;
-lives_ok { $dbh = FakeDBI.connect($test_dsn, $user, $password,
+lives_ok { $dbh = MiniDBI.connect($test_dsn, $user, $password,
         RaiseError => 1, PrintError => 1, AutoCommit => 1) },
     'Connecting lives';
 
