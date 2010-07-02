@@ -22,16 +22,16 @@ lib/MiniDBD/CSV.pir: lib/MiniDBD/CSV.pm6 lib/MiniDBD.pir
 lib/MiniDBD/mysql.pir: lib/MiniDBD/mysql.pm6 lib/MiniDBD.pir
 	export PERL6LIB=lib; $(PERL6_EXE) --target=pir --output=lib/MiniDBD/mysql.pir lib/MiniDBD/mysql.pm6
 
-lib/FakeDBD/Pg.pir: lib/FakeDBD/Pg.pm6 lib/MiniDBD.pir
-	export PERL6LIB=lib; $(PERL6_EXE) --target=pir --output=lib/FakeDBD/Pg.pir lib/FakeDBD/Pg.pm6
+lib/MiniDBD/Pg.pir: lib/MiniDBD/Pg.pm6 lib/MiniDBD.pir
+	export PERL6LIB=lib; $(PERL6_EXE) --target=pir --output=lib/MiniDBD/Pg.pir lib/MiniDBD/Pg.pm6
 
 lib/MiniDBD/PgPir.pir: lib/MiniDBD/PgPir.pm6 lib/MiniDBD.pir
 	export PERL6LIB=lib; $(PERL6_EXE) --target=pir --output=lib/MiniDBD/PgPir.pir lib/MiniDBD/PgPir.pm6
 
-lib/MiniDBI.pir: lib/MiniDBI.pm6 lib/MiniDBD/CSV.pir lib/MiniDBD/mysql.pir lib/MiniDBD/PgPir.pir lib/FakeDBD/Pg.pir
+lib/MiniDBI.pir: lib/MiniDBI.pm6 lib/MiniDBD/CSV.pir lib/MiniDBD/mysql.pir lib/MiniDBD/PgPir.pir lib/MiniDBD/Pg.pir
 	export PERL6LIB=lib; $(PERL6_EXE) --target=pir --output=lib/MiniDBI.pir lib/MiniDBI.pm6
 
-test: lib/MiniDBI.pir lib/MiniDBD/CSV.pir lib/MiniDBD/mysql.pir lib/MiniDBD/PgPir.pir lib/FakeDBD/Pg.pir
+test: lib/MiniDBI.pir lib/MiniDBD/CSV.pir lib/MiniDBD/mysql.pir lib/MiniDBD/PgPir.pir lib/MiniDBD/Pg.pir
 	@#export PERL6LIB=lib; prove --exec $(PERL6_EXE) t/10-mysql.t
 	@#export PERL6LIB=lib; prove --exec $(PERL6_EXE) t/20-CSV-common.t
 	@#export PERL6LIB=lib; prove --exec $(PERL6_EXE) t/25-mysql-common.t
@@ -39,7 +39,7 @@ test: lib/MiniDBI.pir lib/MiniDBD/CSV.pir lib/MiniDBD/mysql.pir lib/MiniDBD/PgPi
 	export PERL6LIB=lib; prove --exec $(PERL6_EXE) t/
 
 # standard install is to the shared system wide directory
-install: lib/MiniDBI.pir lib/MiniDBD.pir lib/MiniDBD/mysql.pir lib/MiniDBD/PgPir.pir lib/FakeDBD/Pg.pir
+install: lib/MiniDBI.pir lib/MiniDBD.pir lib/MiniDBD/mysql.pir lib/MiniDBD/PgPir.pir lib/MiniDBD/Pg.pir
 	@echo "--> $(LIBSYSTEM)"
 	@$(CP) lib/MiniDBI.pm6 lib/MiniDBI.pir $(LIBSYSTEM)
 	@$(CP) lib/MiniDBD.pm6 lib/MiniDBD.pir $(LIBSYSTEM)
@@ -47,10 +47,10 @@ install: lib/MiniDBI.pir lib/MiniDBD.pir lib/MiniDBD/mysql.pir lib/MiniDBD/PgPir
 	@$(CP) lib/MiniDBD/CSV.pm6 lib/MiniDBD/CSV.pir $(LIBSYSTEM)/MiniDBD
 	@$(CP) lib/MiniDBD/mysql.pm6 lib/MiniDBD/mysql.pir $(LIBSYSTEM)/MiniDBD
 	@$(CP) lib/MiniDBD/PgPir.pm6 lib/MiniDBD/PgPir.pir $(LIBSYSTEM)/MiniDBD
-	@$(CP) lib/FakeDBD/Pg.pm6 lib/FakeDBD/Pg.pir $(LIBSYSTEM)/FakeDBD
+	@$(CP) lib/MiniDBD/Pg.pm6 lib/MiniDBD/Pg.pir $(LIBSYSTEM)/MiniDBD
 
 # if user has no permission to install globally, try a personal directory 
-install-user: lib/MiniDBI.pir lib/MiniDBD.pir lib/MiniDBD/mysql.pir lib/MiniDBD/PgPir.pir lib/FakeDBD/Pg.pir
+install-user: lib/MiniDBI.pir lib/MiniDBD.pir lib/MiniDBD/mysql.pir lib/MiniDBD/PgPir.pir lib/MiniDBD/Pg.pir
 	@echo "--> $(LIBUSER)"
 	@$(CP) lib/MiniDBI.pm6 lib/MiniDBI.pir $(LIBUSER)
 	@$(CP) lib/MiniDBD.pm6 lib/MiniDBD.pir $(LIBUSER)
@@ -58,7 +58,7 @@ install-user: lib/MiniDBI.pir lib/MiniDBD.pir lib/MiniDBD/mysql.pir lib/MiniDBD/
 	@$(CP) lib/MiniDBD/CSV.pm6 lib/MiniDBD/CSV.pir $(LIBUSER)/MiniDBD
 	@$(CP) lib/MiniDBD/mysql.pm6 lib/MiniDBD/mysql.pir $(LIBUSER)/MiniDBD
 	@$(CP) lib/MiniDBD/PgPir.pm6 lib/MiniDBD/PgPir.pir $(LIBUSER)/MiniDBD
-	@$(CP) lib/FakeDBD/Pg.pm6 lib/FakeDBD/Pg.pir $(LIBUSER)/FakeDBD
+	@$(CP) lib/MiniDBD/Pg.pm6 lib/MiniDBD/Pg.pir $(LIBUSER)/MiniDBD
 
 # Uninstall from the shared system wide directory.
 # This might leave an empty MiniDBD subdirectory behind.
@@ -80,10 +80,10 @@ uninstall:
 	@$(RM_F)   $(LIBSYSTEM)/MiniDBD/PgPir.pm6
 	@$(TEST_F) $(LIBSYSTEM)/MiniDBD/PgPir.pir
 	@$(RM_F)   $(LIBSYSTEM)/MiniDBD/PgPir.pir
-	@$(TEST_F) $(LIBSYSTEM)/FakeDBD/Pg.pm6
-	@$(RM_F)   $(LIBSYSTEM)/FakeDBD/Pg.pm6
-	@$(TEST_F) $(LIBSYSTEM)/FakeDBD/Pg.pir
-	@$(RM_F)   $(LIBSYSTEM)/FakeDBD/Pg.pir
+	@$(TEST_F) $(LIBSYSTEM)/MiniDBD/Pg.pm6
+	@$(RM_F)   $(LIBSYSTEM)/MiniDBD/Pg.pm6
+	@$(TEST_F) $(LIBSYSTEM)/MiniDBD/Pg.pir
+	@$(RM_F)   $(LIBSYSTEM)/MiniDBD/Pg.pir
 
 # Uninstall from the user's own Perl 6 directory.
 # This might leave an empty MiniDBD subdirectory behind.
@@ -105,10 +105,10 @@ uninstall-user:
 	@$(RM_F)   $(LIBUSER)/MiniDBD/PgPir.pm6
 	@$(TEST_F) $(LIBUSER)/MiniDBD/PgPir.pir
 	@$(RM_F)   $(LIBUSER)/MiniDBD/PgPir.pir
-	@$(TEST_F) $(LIBUSER)/FakeDBD/Pg.pm6
-	@$(RM_F)   $(LIBUSER)/FakeDBD/Pg.pm6
-	@$(TEST_F) $(LIBUSER)/FakeDBD/Pg.pir
-	@$(RM_F)   $(LIBUSER)/FakeDBD/Pg.pir
+	@$(TEST_F) $(LIBUSER)/MiniDBD/Pg.pm6
+	@$(RM_F)   $(LIBUSER)/MiniDBD/Pg.pm6
+	@$(TEST_F) $(LIBUSER)/MiniDBD/Pg.pir
+	@$(RM_F)   $(LIBUSER)/MiniDBD/Pg.pir
 
 clean:
 	@# delete compiled files

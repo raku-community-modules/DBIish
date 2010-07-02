@@ -1,9 +1,9 @@
-# FakeDBD::Pg.pm6
+# MiniDBD::Pg.pm6
 
 use NativeCall;  # from project 'zavolaj'
-use FakeDBD;     # roles for drivers
+use MiniDBD;     # roles for drivers
 
-#module FakeDBD:auth<mberends>:ver<0.0.1>;
+#module MiniDBD:auth<mberends>:ver<0.0.1>;
 
 #------------ Pg library functions in alphabetical order ------------
 
@@ -73,7 +73,7 @@ sub PGRES_COPY_IN     { 4 }
 
 #-----------------------------------------------------------------------
 
-class FakeDBD::Pg::StatementHandle does FakeDBD::StatementHandle {
+class MiniDBD::Pg::StatementHandle does MiniDBD::StatementHandle {
     has $!pg_conn;
     has $!RaiseError;
     has $!statement;
@@ -298,15 +298,15 @@ class FakeDBD::Pg::StatementHandle does FakeDBD::StatementHandle {
     }
 }
 
-class FakeDBD::Pg::Connection does FakeDBD::Connection {
+class MiniDBD::Pg::Connection does MiniDBD::Connection {
     has $!pg_conn;
     has $!RaiseError;
     has $.AutoCommit is rw = 1;
     has $.in_transaction is rw;
 
     method prepare(Str $statement, $attr?) {
-        my $statement_handle = FakeDBD::Pg::StatementHandle.bless(
-            FakeDBD::Pg::StatementHandle.CREATE(),
+        my $statement_handle = MiniDBD::Pg::StatementHandle.bless(
+            MiniDBD::Pg::StatementHandle.CREATE(),
             pg_conn    => $!pg_conn,
             statement  => $statement,
             RaiseError => $!RaiseError,
@@ -378,11 +378,11 @@ class FakeDBD::Pg::Connection does FakeDBD::Connection {
     }
 }
 
-class FakeDBD::Pg:auth<mberends>:ver<0.0.1> {
+class MiniDBD::Pg:auth<mberends>:ver<0.0.1> {
 
     has $.Version = 0.01;
 
-#------------------ methods to be called from FakeDBI ------------------
+#------------------ methods to be called from MiniDBI ------------------
     method connect( Str $user, Str $password, Str $params, $RaiseError ) {
         my @params = $params.split(';');
         my %params;
@@ -398,8 +398,8 @@ class FakeDBD::Pg:auth<mberends>:ver<0.0.1> {
         my $status = PQstatus($pg_conn);
         my $connection;
         if $status eq CONNECTION_OK() {
-            $connection = FakeDBD::Pg::Connection.bless(
-                FakeDBD::Pg::Connection.CREATE(),
+            $connection = MiniDBD::Pg::Connection.bless(
+                MiniDBD::Pg::Connection.CREATE(),
                 pg_conn     => $pg_conn,
                 RaiseError  => $RaiseError
             );
@@ -411,18 +411,18 @@ class FakeDBD::Pg:auth<mberends>:ver<0.0.1> {
 =begin pod
 
 =head1 DESCRIPTION
-# 'zavolaj' is a Native Call Interface for Rakudo/Parrot. 'FakeDBI' and
-# 'FakeDBD::Pg' are Perl 6 modules that use 'zavolaj' to use the
+# 'zavolaj' is a Native Call Interface for Rakudo/Parrot. 'MiniDBI' and
+# 'MiniDBD::Pg' are Perl 6 modules that use 'zavolaj' to use the
 # standard libpq library.  There is a long term Parrot based
 # project to develop a new, comprehensive DBI architecture for Parrot
-# and Perl 6.  FakeDBI is not that, it is a naive rewrite of the
-# similarly named Perl 5 modules.  Hence the 'Fake' part of the name.
+# and Perl 6.  MiniDBI is not that, it is a naive rewrite of the
+# similarly named Perl 5 modules.  Hence the 'Mini' part of the name.
 
 =head1 CLASSES
-The FakeDBD::Pg module contains the same classes and methods as every
+The MiniDBD::Pg module contains the same classes and methods as every
 database driver.  Therefore read the main documentation of usage in
-L<doc:FakeDBI> and internal architecture in L<doc:FakeDBD>.  Below are
-only notes about code unique to the FakeDBD::Pg implementation.
+L<doc:MiniDBI> and internal architecture in L<doc:MiniDBD>.  Below are
+only notes about code unique to the MiniDBD::Pg implementation.
 
 =head1 SEE ALSO
 The Postgres 8.4 Documentation, C Library.
