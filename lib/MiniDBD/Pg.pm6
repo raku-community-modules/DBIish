@@ -17,6 +17,11 @@ sub PQresultStatus (OpaquePointer $result)
     is native('libpq')
     { ... }
 
+sub PQerrorMessage (OpaquePointer $conn)
+    returns Str
+    is native('libpq')
+    { ... }
+
 sub PQresultErrorMessage (OpaquePointer $result)
     returns Str
     is native('libpq')
@@ -84,6 +89,7 @@ class MiniDBD::Pg::StatementHandle does MiniDBD::StatementHandle {
     has $!row_count;
     has $!field_count;
     has $!current_row;
+
     method execute(*@params is copy) {
         my $statement = $!statement;
 
@@ -403,6 +409,10 @@ class MiniDBD::Pg:auth<mberends>:ver<0.0.1> {
                 pg_conn     => $pg_conn,
                 RaiseError  => $RaiseError
             );
+        }
+        else {
+            $!errstr = PQerrorMessage($pg_conn);
+            if $RaiseError { die $!errstr; }
         }
         return $connection;
     }
