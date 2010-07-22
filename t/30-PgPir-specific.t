@@ -12,7 +12,7 @@ my $user     = 'testuser';
 my $password = 'testpass';
 # my $password = 'Cho5thae';
 
-my $test_dsn = "FakeDBI:{$mdriver}:dbname=$database;host=$host;port=$port";
+my $test_dsn = "MiniDBI:{$mdriver}:dbname=$database;host=$host;port=$port";
 
 my $drh = MiniDBI.install_driver($mdriver);
 ok $drh, 'Install driver';
