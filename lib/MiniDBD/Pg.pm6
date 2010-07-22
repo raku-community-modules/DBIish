@@ -387,6 +387,7 @@ class MiniDBD::Pg::Connection does MiniDBD::Connection {
 class MiniDBD::Pg:auth<mberends>:ver<0.0.1> {
 
     has $.Version = 0.01;
+    has $!errstr;
 
 #------------------ methods to be called from MiniDBI ------------------
     method connect( Str $user, Str $password, Str $params, $RaiseError ) {
