@@ -144,9 +144,11 @@ class MiniDBD::mysql::StatementHandle does MiniDBD::StatementHandle {
             $!errstr = mysql_error( $!mysql_client );
             if $!RaiseError { die $!errstr; }
         }
-        return !defined $!errstr;
+
+        my $rows = self.rows;
+        return ($rows == 0) ?? "0E0" !! $rows;
     }
-    
+
     # do() and execute() return the number of affected rows directly or:
     # rows() is called on the statement handle $sth.
     method rows() {
