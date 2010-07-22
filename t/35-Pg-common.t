@@ -18,6 +18,12 @@ my ( $mdriver, $test_dsn, $test_user, $test_password );
     $test_password = 'testpass';
 }
 
+my $dbh;
+my $post_connect_cb = {
+    my $dbh = @_.shift;
+    $dbh.do('SET client_min_messages = warning');
+};
+
 # Detect and report possible errors from eval of the common test script
 warn $! if "ok 99-common.pl6" ne eval slurp 't/99-common.pl6';
 

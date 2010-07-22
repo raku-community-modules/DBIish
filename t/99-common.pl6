@@ -18,6 +18,8 @@ ok $drh_version > 0, "MiniDBD::$mdriver version $drh_version"; # test 2
 my $dbh = MiniDBI.connect( $test_dsn, $test_user, $test_password, :RaiseError<1> );
 ok $dbh, "connect to $test_dsn"; # test 3
 
+eval '$post_connect_cb.($dbh)';
+
 # Test .prepare() and .execute() a few times while setting things up.
 # Drop a table of the same name so that the following create can work.
 my $sth = $dbh.prepare("DROP TABLE IF EXISTS nom");
