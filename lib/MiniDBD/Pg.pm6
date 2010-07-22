@@ -48,7 +48,7 @@ sub PQntuples (OpaquePointer $result)
     { ... }
 
 sub PQcmdTuples (OpaquePointer $result)
-    returns Int
+    returns Str
     is native('libpq')
     { ... }
 
@@ -137,7 +137,7 @@ class MiniDBD::Pg::StatementHandle does MiniDBD::StatementHandle {
         }
 
         if defined $!affected_rows {
-            return $!affected_rows;
+            return +$!affected_rows;
         }
     }
 
