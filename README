@@ -4,17 +4,12 @@
 MiniDBI - a simple database interface for Rakudo Perl 6
 
 =head1 DESCRIPTION
-The roadmap for DBI v2 L<http://search.cpan.org/~timb/DBI/Roadmap.pod>
-published in November 2004 laid out database plans for Perl 5 and 6.
-Specifically there is a Parrot DBDI project that will give the same DBD
-facilities to all Parrot based languages.  See also
-http://www.nntp.perl.org/group/perl.perl6.language/2005/07/msg22054.html
+The MiniDBI project provides a simple database interface for Perl 6.
 
-Because no code is available yet, MiniDBI plans to temporarily fill the
-gap, being a subset of the Perl 5 DBI v1 in Perl 6.  Although this not
-on the DBI v2 roadmap, let's say if it looks like a DBI, and it talks
-like a DBI, then it is a DBI.  The links above suggest that some of the
-development done here might even become part of the official DBI v2!
+It's not a port of the Perl 5 DBI and does not intend to become one.
+It is, however, a simple and useful database interface for Perl 6 that works
+now. It looks like a DBI, and it talks like a DBI (although it only offers
+a subset of the functionality).
 
 =head1 DBD CLASSES
 Until there is a benefit in doing it otherwise, the MiniDBD drivers stay
@@ -37,6 +32,11 @@ and non portable operations.
 
 =head1 ROADMAP
 Add some DBDs.  Improve the test suite.  Attract more contributors.
+
+We'll add a driver for the DBDI project (L<http://github.com/timbunce/DBDI>)
+once it has sufficient functionality. Then the existing drivers would be
+migrated to become DBDI drivers. Once DBDI and driver functionality has reached
+a suitable level a full port of DBI can be built over DBDI.
 
 =head1 STATUS
 The MySQL driver performs CRUD operations.  Testing with production data
