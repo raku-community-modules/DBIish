@@ -67,7 +67,8 @@ class MiniDBD::PgPir:auth<moritz> {
     }
 
     method finish() {
-        $!pg_conn.finish() if $.Bool;
+        # TODO
+#        $!pg_conn.finish() if $.Bool;
     }
 }
 

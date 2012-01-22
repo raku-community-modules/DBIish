@@ -111,10 +111,10 @@ class MiniDBD::Pg::StatementHandle does MiniDBD::StatementHandle {
         $!result = PQexec($!pg_conn, $statement); # 0 means OK
         $!row_count = PQntuples($!result);
         my $status = PQresultStatus($!result);
-        $!errstr = Mu;
+        self!errstr = Mu;
         if $status != PGRES_EMPTY_QUERY() | PGRES_COMMAND_OK() | PGRES_TUPLES_OK() | PGRES_COPY_OUT() | PGRES_COPY_IN() {
-            $!errstr = PQresultErrorMessage ($!result);
-            if $!RaiseError { die $!errstr; }
+            self!errstr = PQresultErrorMessage ($!result);
+            if $!RaiseError { die self!errstr; }
         }
 
         my $rows = self.rows;
@@ -125,13 +125,13 @@ class MiniDBD::Pg::StatementHandle does MiniDBD::StatementHandle {
     # rows() is called on the statement handle $sth.
     method rows() {
         unless defined $!affected_rows {
-            $!errstr = Mu;
+            self!errstr = Mu;
             $!affected_rows = PQcmdTuples($!result);
 
             my $errstr = PQresultErrorMessage ($!result);
             if $errstr ne '' {
-                $!errstr = $errstr;
-                if $!RaiseError { die $!errstr; }
+                self!errstr = $errstr;
+                if $!RaiseError { die self!errstr; }
                 return -1;
             }
         }
@@ -151,7 +151,7 @@ class MiniDBD::Pg::StatementHandle does MiniDBD::StatementHandle {
         }
 
         if defined $!result {
-            $!errstr = Mu;
+            self!errstr = Mu;
 
             for ^$!field_count {
                 @row_array.push(PQgetvalue($!result, $!current_row, $_));
@@ -160,8 +160,8 @@ class MiniDBD::Pg::StatementHandle does MiniDBD::StatementHandle {
 
             my $errstr = PQresultErrorMessage ($!result);
             if $errstr ne '' {
-                $!errstr = $errstr;
-                if $!RaiseError { die $!errstr; }
+                self!errstr = $errstr;
+                if $!RaiseError { die self!errstr; }
                 return;
             }
 
@@ -179,14 +179,14 @@ class MiniDBD::Pg::StatementHandle does MiniDBD::StatementHandle {
             $!field_count = PQnfields($!result);
         }
         if defined $!result {
-            $!errstr = Mu;
+            self!errstr = Mu;
 
             my @row = self!get_row();
 
             my $errstr = PQresultErrorMessage ($!result);
             if $errstr ne '' {
-                $!errstr = $errstr;
-                if $!RaiseError { die $!errstr; }
+                self!errstr = $errstr;
+                if $!RaiseError { die $errstr; }
                 return;
             }
 
@@ -207,15 +207,15 @@ class MiniDBD::Pg::StatementHandle does MiniDBD::StatementHandle {
             $!field_count = PQnfields($!result);
         }
         if defined $!result {
-            $!errstr = Mu;
+            self!errstr = Mu;
             my @all_array;
             for ^$!row_count {
                 my @row = self!get_row();
 
                 my $errstr = PQresultErrorMessage ($!result);
                 if $errstr ne '' {
-                    $!errstr = $errstr;
-                    if $!RaiseError { die $!errstr; }
+                    self!errstr = $errstr;
+                    if $!RaiseError { die $errstr; }
                     return;
                 }
 
@@ -241,11 +241,11 @@ class MiniDBD::Pg::StatementHandle does MiniDBD::StatementHandle {
         }
 
         if defined $!result {
-            $!errstr = Mu;
+            self!errstr = Mu;
             my $errstr = PQresultErrorMessage ($!result);
             if $errstr ne '' {
-                $!errstr = $errstr;
-                if $!RaiseError { die $!errstr; }
+                self!errstr = $errstr;
+                if $!RaiseError { die $errstr; }
                 return;
             }
 
@@ -388,6 +388,7 @@ class MiniDBD::Pg:auth<mberends>:ver<0.0.1> {
 
     has $.Version = 0.01;
     has $!errstr;
+    method !errstr() is rw { $!errstr }
 
 #------------------ methods to be called from MiniDBI ------------------
     method connect( Str $user, Str $password, Str $params, $RaiseError ) {
