@@ -13,16 +13,6 @@ class MiniDBI:auth<mberends>:ver<0.1.0> {
         return $connection;
     }
     method install_driver( $drivername ) {
-        # warn "in MiniDBI.install_driver('$drivername')";
-        my $result;
-        # the need($n, {} ) argument would be a hash of named argements,
-        # but it dies with: get_pmc_keyed() not implemented in class ''
-        #         Perl6::Module::Loader.need( "MiniDBD::$drivername", {} );
-        $result = Perl6::Module::Loader.need( "MiniDBD::$drivername" );
-        unless $result {
-            warn "install_driver cannot load MiniDBD::$drivername in $*PROGRAM_NAME";
-            exit( 1 ); # instead of dying with an unnecessary stack trace
-        }
         my $driver;
         given $drivername {
             when 'CSV'     { eval 'use MiniDBD::CSV;   $driver = MiniDBD::CSV.new()' }
