@@ -123,6 +123,9 @@ class MiniDBD::mysql::StatementHandle does MiniDBD::StatementHandle {
     has @!column_names;
     has $!field_count;
     has $.mysql_warning_count is rw = 0;
+    
+    submethod BUILD(:$!mysql_client, :$!statement, :$!RaiseError) { }
+    
     method execute(*@params is copy) {
         # warn "in MiniDBD::mysql::StatementHandle.execute()";
         my $statement = $!statement;
@@ -302,10 +305,10 @@ class MiniDBD::mysql::StatementHandle does MiniDBD::StatementHandle {
 class MiniDBD::mysql::Connection does MiniDBD::Connection {
     has $!mysql_client;
     has $!RaiseError;
+    submethod BUILD(:$!mysql_client, :$!RaiseError) { }
     method prepare( Str $statement ) {
         # warn "in MiniDBD::mysql::Connection.prepare()";
-        my $statement_handle = MiniDBD::mysql::StatementHandle.bless(
-            MiniDBD::mysql::StatementHandle.CREATE(),
+        my $statement_handle = MiniDBD::mysql::StatementHandle.new(
             mysql_client => $!mysql_client,
             statement    => $statement,
             RaiseError   => $!RaiseError
@@ -327,7 +330,7 @@ class MiniDBD::mysql:auth<mberends>:ver<0.0.1> {
         # warn "in MiniDBD::mysql.connect('$user',*,'$params')";
         my ( $mysql_client, $mysql_error );
         unless defined $mysql_client {
-            $mysql_client = mysql_init( pir::null__P() );
+            $mysql_client = mysql_init( OpaquePointer );
             $mysql_error  = mysql_error( $mysql_client );
         }
         my @params = $params.split(';');
@@ -341,12 +344,11 @@ class MiniDBD::mysql:auth<mberends>:ver<0.0.1> {
         my $database = %params<database> // 'mysql';
         # real_connect() returns either the same client pointer or null
         my $result   = mysql_real_connect( $mysql_client, $host,
-            $user, $password, $database, $port, pir::null__P(), 0 );
+            $user, $password, $database, $port, OpaquePointer, 0 );
         my $error = mysql_error( $mysql_client );
         my $connection;
         if $error eq '' {
-            $connection = MiniDBD::mysql::Connection.bless(
-                MiniDBD::mysql::Connection.CREATE(),
+            $connection = MiniDBD::mysql::Connection.new(
                 mysql_client => $mysql_client,
                 RaiseError => $RaiseError
             );
