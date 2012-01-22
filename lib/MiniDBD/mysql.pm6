@@ -10,107 +10,107 @@ use MiniDBD;     # roles for drivers
 sub mysql_affected_rows( OpaquePointer $mysql_client )
     returns Int
     is native('libmysqlclient')
-    { ... }
+    { * }
 
 sub mysql_close( OpaquePointer $mysql_client )
     returns OpaquePointer
     is native('libmysqlclient')
-    { ... }
+    { * }
 
 sub mysql_data_seek( OpaquePointer $result_set, Int $row_number )
     returns OpaquePointer
     is native('libmysqlclient')
-    { ... }
+    { * }
 
 sub mysql_error( OpaquePointer $mysql_client)
     returns Str
     is native('libmysqlclient')
-    { ... }
+    { * }
 
 sub mysql_fetch_field( OpaquePointer $result_set )
-    returns Positional of Str
+    returns CArray[Str]
     is native('libmysqlclient')
-    { ... }
+    { * }
 
 sub mysql_fetch_lengths( OpaquePointer $result_set )
-    returns Positional of Int
+    returns CArray[Int]
     is native('libmysqlclient')
-    { ... }
+    { * }
 
 sub mysql_fetch_row( OpaquePointer $result_set )
-    returns Positional of Str
+    returns CArray[Str]
     is native('libmysqlclient')
-    { ... }
+    { * }
 
 sub mysql_field_count( OpaquePointer $mysql_client )
     returns Int
     is native('libmysqlclient')
-    { ... }
+    { * }
 
 sub mysql_free_result( OpaquePointer $result_set )
     is native('libmysqlclient')
-    { ... }
+    { * }
 
 sub mysql_get_client_info( OpaquePointer $mysql_client)
     returns Str
     is native('libmysqlclient')
-    { ... }
+    { * }
 
 sub mysql_init( OpaquePointer $mysql_client )
     returns OpaquePointer
     is native('libmysqlclient')
-    { ... }
+    { * }
 
 sub mysql_insert_id( OpaquePointer $mysql_client )
     returns Int # WRONG: actually returns an unsigned long long
     is native('libmysqlclient')
-    { ... }
+    { * }
 
 sub mysql_library_init( Int $argc, OpaquePointer $argv,
     OpaquePointer $group )
     returns Int
     is native('libmysqlclient')
-    { ... }
+    { * }
 
 sub mysql_library_end()
     is native('libmysqlclient')
-    { ... }
+    { * }
 
 sub mysql_num_rows( OpaquePointer $result_set )
     returns Int
     is native('libmysqlclient')
-    { ... }
+    { * }
 
 sub mysql_query( OpaquePointer $mysql_client, Str $sql_command )
     returns Int
     is native('libmysqlclient')
-    { ... }
+    { * }
 
 sub mysql_real_connect( OpaquePointer $mysql_client, Str $host, Str $user,
     Str $password, Str $database, Int $port, Str $socket, Int $flag )
     returns OpaquePointer
     is native('libmysqlclient')
-    { ... }
+    { * }
 
 sub mysql_stat( OpaquePointer $mysql_client)
     returns Str
     is native('libmysqlclient')
-    { ... }
+    { * }
 
 sub mysql_store_result( OpaquePointer $mysql_client )
     returns OpaquePointer
     is native('libmysqlclient')
-    { ... }
+    { * }
 
 sub mysql_use_result( OpaquePointer $mysql_client )
     returns OpaquePointer
     is native('libmysqlclient')
-    { ... }
+    { * }
 
 sub mysql_warning_count( OpaquePointer $mysql_client )
     returns Int
     is native('libmysqlclient')
-    { ... }
+    { * }
 
 #-----------------------------------------------------------------------
 
