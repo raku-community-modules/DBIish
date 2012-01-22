@@ -139,10 +139,10 @@ class MiniDBD::mysql::StatementHandle does MiniDBD::StatementHandle {
         $!result_set = Mu;
         my $status = mysql_query( $!mysql_client, $statement ); # 0 means OK
         $.mysql_warning_count = mysql_warning_count( $!mysql_client );
-        $!errstr = Mu;
+        self!errstr = Mu;
         if $status != 0 {
-            $!errstr = mysql_error( $!mysql_client );
-            if $!RaiseError { die $!errstr; }
+            self!errstr = mysql_error( $!mysql_client );
+            if $!RaiseError { die self!errstr; }
         }
 
         my $rows = self.rows;
@@ -153,11 +153,11 @@ class MiniDBD::mysql::StatementHandle does MiniDBD::StatementHandle {
     # rows() is called on the statement handle $sth.
     method rows() {
         unless defined $!affected_rows {
-            $!errstr = Mu;
+            self!errstr = Mu;
             $!affected_rows = mysql_affected_rows($!mysql_client);
             my $errstr      = mysql_error( $!mysql_client );
 
-            if $errstr ne '' { $!errstr = $errstr; }
+            if $errstr ne '' { self!errstr = $errstr; }
         }
         
         if defined $!affected_rows {
@@ -175,12 +175,12 @@ class MiniDBD::mysql::StatementHandle does MiniDBD::StatementHandle {
 
         if defined $!result_set {
             # warn "fetching a row";
-            $!errstr = Mu;
+            self!errstr = Mu;
 
             my $native_row = mysql_fetch_row($!result_set); # can return NULL
             my $errstr     = mysql_error( $!mysql_client );
             
-            if $errstr ne '' { $!errstr = $errstr; }
+            if $errstr ne '' { self!errstr = $errstr; }
             
             if $native_row {
                 loop ( my $i=0; $i < $!field_count; $i++ ) {
@@ -200,10 +200,10 @@ class MiniDBD::mysql::StatementHandle does MiniDBD::StatementHandle {
         }
         if defined $!result_set {
             # warn "fetching a row";
-            $!errstr = Mu;
+            self!errstr = Mu;
             my $native_row = mysql_fetch_row($!result_set); # can return NULL
             my $errstr = mysql_error( $!mysql_client );
-            if $errstr ne '' { $!errstr = $errstr; }
+            if $errstr ne '' { self!errstr = $errstr; }
             if $native_row {
                 my @row_array;
                 loop ( my $i=0; $i < $!field_count; $i++ ) {
@@ -223,12 +223,12 @@ class MiniDBD::mysql::StatementHandle does MiniDBD::StatementHandle {
             $!field_count = mysql_field_count($!mysql_client);
         }
         if defined $!result_set {
-            $!errstr = Mu;
+            self!errstr = Mu;
             my @all_array;
-            while ! $!errstr && my $native_row = mysql_fetch_row($!result_set) { # can return NULL
+            while ! self!errstr && my $native_row = mysql_fetch_row($!result_set) { # can return NULL
                 my $row_arrayref;
                 my $errstr = mysql_error( $!mysql_client );
-                if $errstr ne '' { $!errstr = $errstr; }
+                if $errstr ne '' { self!errstr = $errstr; }
                 if $native_row {
                     my @row_array;
                     loop ( my $i=0; $i < $!field_count; $i++ ) {
@@ -254,9 +254,9 @@ class MiniDBD::mysql::StatementHandle does MiniDBD::StatementHandle {
         }
 
         if defined $!result_set {
-            $!errstr = Mu;
+            self!errstr = Mu;
             my $errstr = mysql_error( $!mysql_client );
-            if $errstr ne '' { $!errstr = $errstr; }
+            if $errstr ne '' { self!errstr = $errstr; }
 
             my $native_row = mysql_fetch_row($!result_set); # can return NULL
 
