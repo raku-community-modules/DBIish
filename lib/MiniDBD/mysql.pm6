@@ -87,7 +87,7 @@ sub mysql_query( OpaquePointer $mysql_client, Str $sql_command )
     { * }
 
 sub mysql_real_connect( OpaquePointer $mysql_client, Str $host, Str $user,
-    Str $password, Str $database, Int $port, Str $socket, Int $flag )
+    Str $password, Str $database, int32 $port, Str $socket, Int $flag )
     returns OpaquePointer
     is native('libmysqlclient')
     { * }
@@ -142,10 +142,10 @@ class MiniDBD::mysql::StatementHandle does MiniDBD::StatementHandle {
         $!result_set = Mu;
         my $status = mysql_query( $!mysql_client, $statement ); # 0 means OK
         $.mysql_warning_count = mysql_warning_count( $!mysql_client );
-        self!errstr = Mu;
+        self!set_errstr(Str);
         if $status != 0 {
-            self!errstr = mysql_error( $!mysql_client );
-            if $!RaiseError { die self!errstr; }
+            self!set_errstr(mysql_error( $!mysql_client ));
+            if $!RaiseError { die self.errstr; }
         }
 
         my $rows = self.rows;
@@ -156,11 +156,11 @@ class MiniDBD::mysql::StatementHandle does MiniDBD::StatementHandle {
     # rows() is called on the statement handle $sth.
     method rows() {
         unless defined $!affected_rows {
-            self!errstr = Mu;
+            self!set_errstr(Str);
             $!affected_rows = mysql_affected_rows($!mysql_client);
             my $errstr      = mysql_error( $!mysql_client );
 
-            if $errstr ne '' { self!errstr = $errstr; }
+            if $errstr ne '' { self!set_errstr($errstr); }
         }
         
         if defined $!affected_rows {
@@ -178,12 +178,12 @@ class MiniDBD::mysql::StatementHandle does MiniDBD::StatementHandle {
 
         if defined $!result_set {
             # warn "fetching a row";
-            self!errstr = Mu;
+            self!set_errstr(Str);
 
             my $native_row = mysql_fetch_row($!result_set); # can return NULL
             my $errstr     = mysql_error( $!mysql_client );
             
-            if $errstr ne '' { self!errstr = $errstr; }
+            if $errstr ne '' { self!set_errstr($errstr); }
             
             if $native_row {
                 loop ( my $i=0; $i < $!field_count; $i++ ) {
@@ -203,10 +203,10 @@ class MiniDBD::mysql::StatementHandle does MiniDBD::StatementHandle {
         }
         if defined $!result_set {
             # warn "fetching a row";
-            self!errstr = Mu;
+            self!set_errstr(Str);
             my $native_row = mysql_fetch_row($!result_set); # can return NULL
             my $errstr = mysql_error( $!mysql_client );
-            if $errstr ne '' { self!errstr = $errstr; }
+            if $errstr ne '' { self!set_errstr($errstr); }
             if $native_row {
                 my @row_array;
                 loop ( my $i=0; $i < $!field_count; $i++ ) {
@@ -226,12 +226,12 @@ class MiniDBD::mysql::StatementHandle does MiniDBD::StatementHandle {
             $!field_count = mysql_field_count($!mysql_client);
         }
         if defined $!result_set {
-            self!errstr = Mu;
+            self!set_errstr(Str);
             my @all_array;
-            while ! self!errstr && my $native_row = mysql_fetch_row($!result_set) { # can return NULL
+            while ! self.errstr && my $native_row = mysql_fetch_row($!result_set) { # can return NULL
                 my $row_arrayref;
                 my $errstr = mysql_error( $!mysql_client );
-                if $errstr ne '' { self!errstr = $errstr; }
+                if $errstr ne '' { self!set_errstr($errstr); }
                 if $native_row {
                     my @row_array;
                     loop ( my $i=0; $i < $!field_count; $i++ ) {
@@ -257,9 +257,9 @@ class MiniDBD::mysql::StatementHandle does MiniDBD::StatementHandle {
         }
 
         if defined $!result_set {
-            self!errstr = Mu;
+            self!set_errstr(Str);
             my $errstr = mysql_error( $!mysql_client );
-            if $errstr ne '' { self!errstr = $errstr; }
+            if $errstr ne '' { self!set_errstr($errstr); }
 
             my $native_row = mysql_fetch_row($!result_set); # can return NULL
 
@@ -352,6 +352,9 @@ class MiniDBD::mysql:auth<mberends>:ver<0.0.1> {
                 mysql_client => $mysql_client,
                 RaiseError => $RaiseError
             );
+        }
+        else {
+            die "DBD::mysql connection failed: $error";
         }
         return $connection;
     }

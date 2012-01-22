@@ -27,7 +27,7 @@ message retrieved from the database driver.  It is cleared (when?).
 =end pod
 
     has $!errstr;
-    method !errstr() is rw { $!errstr }
+    method !set_errstr($err) { $!errstr = $err }
 
 =begin pod
 =head5 $.PrintError
@@ -66,7 +66,7 @@ message retrieved from the database driver.  It is cleared (when?).
 =end pod
 
     has $!errstr;
-    method !errstr() is rw { $!errstr }
+    method !set_errstr($err) { $!errstr = $err }
 
 =begin pod
 =head4 methods
