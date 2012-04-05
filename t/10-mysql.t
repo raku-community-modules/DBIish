@@ -77,17 +77,11 @@ ok $drh_version > 0, "MiniDBD::mysql version $drh_version"; # test 2
 #ok defined $dbh, "Connected to database";
 #ok $dbh->disconnect();
 #
-my $dbh;
-try {
-    $dbh = MiniDBI.connect( $test_dsn, $test_user, $test_password,
+my $dbh = try MiniDBI.connect( $test_dsn, $test_user, $test_password,
         RaiseError => 1, PrintError => 1, AutoCommit => 0
-    );
-#   CATCH {
-#       warn $!;
-#       die "ERROR: {MiniDBI.errstr}. Can't continue test";
-#   }
-}
-ok defined $dbh, "Connected to database"; # test 3
+);
+die "ERROR: {MiniDBI.errstr}. Can't continue test" if $!;
+ok $dbh.defined, "Connected to database"; # test 3
 my $result = $dbh.disconnect();
 ok $result, 'disconnect returned true'; # test 4
 
@@ -105,7 +99,7 @@ try {
         RaiseError => 1, PrintError => 1, AutoCommit => 0 );
     CATCH { die "ERROR: {MiniDBI.errstr}. Can't continue test\n"; }
 }
-ok(defined $dbh, "Connected to database"); # test 5
+ok($dbh.defined, "Connected to database"); # test 5
 ok($dbh.do("DROP TABLE IF EXISTS $table"), "making slate clean"); # test 6
 ok($dbh.do("CREATE TABLE $table (id INT(4), name VARCHAR(20))"), "creating $table"); # test 7
 ok($dbh.do("DROP TABLE $table"), "dropping created $table"); # test 8
@@ -233,11 +227,11 @@ ok $sth.execute("Jochen"), "execute insert with parameter"; # test 26
 is $dbh.mysql_insertid, 1, "insert id == \$dbh.mysql_insertid (but only int, not long long)"; # test 27
 ok $sth.execute("Patrick"), "execute 2nd insert with parameter"; # test 28
 ok (my $sth2= $dbh.prepare("SELECT max(id) FROM $table")),"selectg max(id)"; # test 29
-ok defined $sth2,"second prepared statement"; # test 30
+ok $sth2.defined,"second prepared statement"; # test 30
 ok $sth2.execute(), "execute second prepared statement"; # test 31
 my $max_id;
 ok ($max_id= $sth2.fetch()),"fetch"; # test 32
-ok defined $max_id,"fetch result defined"; # test 33
+ok $max_id.defined,"fetch result defined"; # test 33
 ok $sth.mysql_insertid == $max_id[0], 'sth insert id $sth.mysql_insertid == max(id) $max_id[0] in '~$table; # test 34
 ok $dbh.mysql_insertid == $max_id[0], 'dbh insert id $dbh.mysql_insertid == max(id) $max_id[0] in '~$table; # test 35
 ok $sth.finish(), "statement 1 finish"; #  test 36
