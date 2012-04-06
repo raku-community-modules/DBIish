@@ -340,7 +340,7 @@ class MiniDBD::mysql:auth<mberends>:ver<0.0.1> {
             %params{$key} = $value;
         }
         my $host     = %params<host>     // 'localhost';
-        my $port     = %params<port>     // 0;
+        my $port     = (%params<port>     // 0).Int;
         my $database = %params<database> // 'mysql';
         # real_connect() returns either the same client pointer or null
         my $result   = mysql_real_connect( $mysql_client, $host,
