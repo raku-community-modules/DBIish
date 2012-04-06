@@ -28,6 +28,7 @@ message retrieved from the database driver.  It is cleared (when?).
 
     has $!errstr;
     method !set_errstr($err) { $!errstr = $err }
+    method !errstr() is rw { $!errstr }
 
 =begin pod
 =head5 $.PrintError

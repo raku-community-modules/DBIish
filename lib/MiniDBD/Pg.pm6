@@ -90,16 +90,17 @@ class MiniDBD::Pg::StatementHandle does MiniDBD::StatementHandle {
     has $!field_count;
     has $!current_row;
 
+    submethod BUILD(:$!statement, :$!pg_conn, :$!RaiseError) { }
     method execute(*@params is copy) {
         my $statement = $!statement;
 
-        if (!$!dbh.AutoCommit and !$!dbh.in_transaction) {
-            PQexec($!pg_conn, "BEGIN");
-            $!dbh.in_transaction = 1;
-        }
+#        if (!$!dbh.AutoCommit and !$!dbh.in_transaction) {
+#            PQexec($!pg_conn, "BEGIN");
+#            $!dbh.in_transaction = 1;
+#        }
 
         $!current_row = 0;
-        while @params.elems and $statement.index('?') >= 0 {
+        while @params.elems and $statement.index('?').defined {
             my $param = @params.shift;
             if $param ~~ /<-[0..9]>/ {
                 $statement .= subst("?","'$param'"); # quote non numerics
@@ -111,10 +112,12 @@ class MiniDBD::Pg::StatementHandle does MiniDBD::StatementHandle {
         $!result = PQexec($!pg_conn, $statement); # 0 means OK
         $!row_count = PQntuples($!result);
         my $status = PQresultStatus($!result);
-        self!errstr = Mu;
         if $status != PGRES_EMPTY_QUERY() | PGRES_COMMAND_OK() | PGRES_TUPLES_OK() | PGRES_COPY_OUT() | PGRES_COPY_IN() {
-            self!errstr = PQresultErrorMessage ($!result);
+            self!set_errstr(PQresultErrorMessage($!result));
             if $!RaiseError { die self!errstr; }
+        }
+        else {
+            self!set_errstr(Any);
         }
 
         my $rows = self.rows;
@@ -125,14 +128,16 @@ class MiniDBD::Pg::StatementHandle does MiniDBD::StatementHandle {
     # rows() is called on the statement handle $sth.
     method rows() {
         unless defined $!affected_rows {
-            self!errstr = Mu;
             $!affected_rows = PQcmdTuples($!result);
 
             my $errstr = PQresultErrorMessage ($!result);
-            if $errstr ne '' {
-                self!errstr = $errstr;
+            if $errstr.chars {
+                self!set_errstr($errstr);
                 if $!RaiseError { die self!errstr; }
                 return -1;
+            }
+            else {
+                self!set_errstr(Any);
             }
         }
 
@@ -151,7 +156,7 @@ class MiniDBD::Pg::StatementHandle does MiniDBD::StatementHandle {
         }
 
         if defined $!result {
-            self!errstr = Mu;
+            self!errstr = Any;
 
             for ^$!field_count {
                 @row_array.push(PQgetvalue($!result, $!current_row, $_));
@@ -179,7 +184,7 @@ class MiniDBD::Pg::StatementHandle does MiniDBD::StatementHandle {
             $!field_count = PQnfields($!result);
         }
         if defined $!result {
-            self!errstr = Mu;
+            self!set_errstr(Any);
 
             my @row = self!get_row();
 
@@ -207,7 +212,7 @@ class MiniDBD::Pg::StatementHandle does MiniDBD::StatementHandle {
             $!field_count = PQnfields($!result);
         }
         if defined $!result {
-            self!errstr = Mu;
+            self!set_errstr(Any);
             my @all_array;
             for ^$!row_count {
                 my @row = self!get_row();
@@ -241,7 +246,7 @@ class MiniDBD::Pg::StatementHandle does MiniDBD::StatementHandle {
         }
 
         if defined $!result {
-            self!errstr = Mu;
+            self!set_errstr(Any);
             my $errstr = PQresultErrorMessage ($!result);
             if $errstr ne '' {
                 self!errstr = $errstr;
@@ -287,8 +292,8 @@ class MiniDBD::Pg::StatementHandle does MiniDBD::StatementHandle {
     method finish() {
         if defined($!result) {
             PQclear($!result);
-            $!result       = Mu;
-            @!column_names = Mu;
+            $!result       = Any;
+            @!column_names = ();
         }
         return Bool::True;
     }
@@ -313,9 +318,9 @@ class MiniDBD::Pg::Connection does MiniDBD::Connection {
     method prepare(Str $statement, $attr?) {
         my $statement_handle = MiniDBD::Pg::StatementHandle.bless(
             MiniDBD::Pg::StatementHandle.CREATE(),
-            pg_conn    => $!pg_conn,
-            statement  => $statement,
-            RaiseError => $!RaiseError,
+            :$!pg_conn,
+            :$statement,
+            :$!RaiseError,
             dbh        => self,
         );
         return $statement_handle;

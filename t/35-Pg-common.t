@@ -11,7 +11,7 @@ my ( $*mdriver, $*test_dsn, $*test_user, $*test_password );
     my $port       = 5432;
     my $database   = 'zavolaj';
     # Set up the common variables with the Postgres specific values
-    $mdriver       = 'Pg';
+    $*mdriver       = 'Pg';
     $*test_dsn      = "MiniDBI:$*mdriver" ~ ":dbname=$database;"
                      ~ "host=$hostname;port=$port";
     $*test_user     = 'testuser';
