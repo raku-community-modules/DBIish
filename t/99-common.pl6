@@ -4,21 +4,21 @@
 
 #use Test;     # "use" dies in a runtime eval
 #use MiniDBI;
-diag "Testing MiniDBD::$mdriver";
+diag "Testing MiniDBD::$*mdriver";
 plan 32;
 
 # Verify that the driver loads before attempting a connect
-my $drh = MiniDBI.install_driver($mdriver);
+my $drh = MiniDBI.install_driver($*mdriver);
 ok $drh, 'Install driver'; # test 1
 my $drh_version;
 $drh_version = $drh.Version;
-ok $drh_version > 0, "MiniDBD::$mdriver version $drh_version"; # test 2
+ok $drh_version > 0, "MiniDBD::$*mdriver version $drh_version"; # test 2
 
 # Connect to the data sourcequantity*price AS amount FROM nom
-my $dbh = MiniDBI.connect( $test_dsn, $test_user, $test_password, :RaiseError<1> );
-ok $dbh, "connect to $test_dsn"; # test 3
+my $dbh = MiniDBI.connect( $*test_dsn, $*test_user, $*test_password, :RaiseError<1> );
+ok $dbh, "connect to $*test_dsn"; # test 3
 
-eval '$post_connect_cb.($dbh)';
+try eval '$*post_connect_cb.($dbh)';
 
 # Test .prepare() and .execute() a few times while setting things up.
 # Drop a table of the same name so that the following create can work.
@@ -38,10 +38,10 @@ $sth = $dbh.prepare( "
 ");
 $rc = $sth.execute();
 is $rc, '0E0', "do: create table nom"; # test 5
-if 'err' eq any($dbh.^methods) {
+if $dbh.^can('err') {
     is $dbh.err, 0, 'err after successful create should be 0'; # test 6
 }
-else { skip 1, 'err after successful create should be 0' }
+else { skip 'err after successful create should be 0', 1 }
 is $dbh.errstr, Any, "errstr after successful create should be Any"; # test 7
 
 # Insert rows using the various method calls
@@ -50,10 +50,10 @@ ok $dbh.do( "
     VALUES ( 'BUBH', 'Hot beef burrito', 1, 4.95 )
 "), "insert without parameters called from do"; # test 8
 
-if 'rows' eq any($dbh.^methods) {
+if $dbh.^can('rows') {
     is $dbh.rows, 1, "simple insert should report 1 row affected"; # test 9
 }
-else { skip 1, '$dbh.rows not implemented' }
+else { skip '$dbh.rows not implemented', 1 }
 
 ok $sth = $dbh.prepare( "
     INSERT INTO nom (name, description, quantity, price)
@@ -65,13 +65,13 @@ ok $sth.execute('TAFM', 'Mild fish taco', 1, 4.85 ) &&
    "execute twice with parameters"; # test 11
 is $sth.rows, 1, "each insert with parameters also reports 1 row affected"; # test 12
 
-if 'bind_param_array' eq any($sth.^methods) {
+if $sth.^can('bind_param_array') {
     my @tuple_status;
     ok $sth.bind_param_array( 1, [ 'BEOM', 'Medium size orange juice', 2, 1.20 ] ),
        "bind_param_array"; # test 13
     ok $sth.execute_array(  { ArrayTupleStatus => \@tuple_status } ); # test 14
 }
-else { skip 2, '$sth.bind_param_array() and $sth.execute_array() not implemented' }
+else { skip '$sth.bind_param_array() and $sth.execute_array() not implemented', 2 }
 
 # Update some rows
 

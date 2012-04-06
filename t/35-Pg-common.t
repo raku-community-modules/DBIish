@@ -4,7 +4,7 @@ use Test;
 use MiniDBI;
 
 # Define the only database specific values used by the common tests.
-my ( $mdriver, $test_dsn, $test_user, $test_password );
+my ( $*mdriver, $*test_dsn, $*test_user, $*test_password );
 {
     # Define values that are relevant only to Postgres
     my $hostname   = 'localhost';
@@ -12,10 +12,10 @@ my ( $mdriver, $test_dsn, $test_user, $test_password );
     my $database   = 'zavolaj';
     # Set up the common variables with the Postgres specific values
     $mdriver       = 'Pg';
-    $test_dsn      = "MiniDBI:$mdriver" ~ ":dbname=$database;"
+    $*test_dsn      = "MiniDBI:$*mdriver" ~ ":dbname=$database;"
                      ~ "host=$hostname;port=$port";
-    $test_user     = 'testuser';
-    $test_password = 'testpass';
+    $*test_user     = 'testuser';
+    $*test_password = 'testpass';
 }
 
 my $dbh;
