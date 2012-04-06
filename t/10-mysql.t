@@ -30,7 +30,7 @@
 
 use Test;
 
-plan 86;
+plan 87;
 
 use MiniDBI;
 
@@ -77,10 +77,10 @@ ok $drh_version > 0, "MiniDBD::mysql version $drh_version"; # test 2
 #ok defined $dbh, "Connected to database";
 #ok $dbh->disconnect();
 #
-my $dbh = try MiniDBI.connect( $test_dsn, $test_user, $test_password,
+my $dbh = MiniDBI.connect( $test_dsn, $test_user, $test_password,
         RaiseError => 1, PrintError => 1, AutoCommit => 0
 );
-die "ERROR: {MiniDBI.errstr}. Can't continue test" if $!;
+# die "ERROR: {MiniDBI.errstr}. Can't continue test" if $!.defined;
 ok $dbh.defined, "Connected to database"; # test 3
 my $result = $dbh.disconnect();
 ok $result, 'disconnect returned true'; # test 4
@@ -280,12 +280,8 @@ $query = "INSERT INTO $table (id, name) VALUES (?,?)";
 ok ($sth = $dbh.prepare($query)),"prepare $query"; #  test 41
 ok $sth.execute(1, "Jocken"), "execute insert Jocken"; # test 42
 $sth.PrintError = 0;
-my $last_error_message;
-try {
-    $sth.execute(1, "Jochen"); # re-inserting the same key should fail
-    CATCH { $last_error_message = $sth.errstr; }
-}
-ok defined($last_error_message), 'fails with duplicate entry'; # test 43
+dies_ok { $sth.execute(1, 'Jochen') }, 'fails with duplicate entry'; # test 43
+ok $sth.errstr.defined, '... and got an error in $sth.errstr';       # test 44
 $sth.PrintError = 1;
 
 
@@ -314,9 +310,9 @@ $sth.PrintError = 1;
 #ok(@$array_ref == 50);
 #ok($sth->finish);
 #ok($dbh->do("DROP TABLE $table"));
-ok($dbh.do("DROP TABLE IF EXISTS $table"), "making slate clean"); # test 44
-ok($dbh.do("CREATE TABLE $table (id INT(4), name VARCHAR(35))"), "creating table"); # test 45
-ok(($sth = $dbh.prepare("INSERT INTO $table (id,name) VALUES (?,?)")),"prepare insert with 2 params"); # test 46
+ok($dbh.do("DROP TABLE IF EXISTS $table"), "making slate clean"); # test 45
+ok($dbh.do("CREATE TABLE $table (id INT(4), name VARCHAR(35))"), "creating table"); # test 46
+ok(($sth = $dbh.prepare("INSERT INTO $table (id,name) VALUES (?,?)")),"prepare insert with 2 params"); # test 47
 my ( %testInsertVals, $all_ok );
 $all_ok = Bool::True;
 loop (my $i = 0 ; $i < 100; $i++) {
@@ -325,13 +321,13 @@ loop (my $i = 0 ; $i < 100; $i++) {
   %testInsertVals{$i} = $random_chars; # save these values for later testing
   unless $sth.execute($i, $random_chars) { $all_ok = Bool::False; }
 }
-ok( $all_ok,"insert 100 rows of random chars"); # test 47
-ok($sth = $dbh.prepare("SELECT * FROM $table LIMIT ?, ?"),"prepare of select statement with LIMIT placeholders:"); # test 48
-ok($sth.execute(20, 50),"exec of bind vars for LIMIT"); # test 49
+ok( $all_ok,"insert 100 rows of random chars"); # test 48
+ok($sth = $dbh.prepare("SELECT * FROM $table LIMIT ?, ?"),"prepare of select statement with LIMIT placeholders:"); # test 49
+ok($sth.execute(20, 50),"exec of bind vars for LIMIT"); # test 50
 my ($array_ref);
 ok( (defined($array_ref = $sth.fetchall_arrayref) &&
-  (!defined($errstr = $sth.errstr) || $sth.errstr eq '')),"fetchall_arrayref"); # test 50
-is($array_ref.elems, 50,"limit 50 works"); # test 51
+  (!defined($errstr = $sth.errstr) || $sth.errstr eq '')),"fetchall_arrayref"); # test 51
+is($array_ref.elems, 50,"limit 50 works"); # test 52
 
 
 #-----------------------------------------------------------------------
@@ -393,26 +389,26 @@ is($array_ref.elems, 50,"limit 50 works"); # test 51
 ## Install a handler so that a warning about unfreed resources gets caught
 #$SIG{__WARN__} = sub { die @_ };
 #ok($dbh->disconnect(), "Testing disconnect");
-ok($dbh.do("DROP TABLE IF EXISTS t1"), "35prepare.t Making slate clean"); # test 52
-ok($dbh.do("CREATE TABLE t1 (id INT(4), name VARCHAR(35))"), "Creating table"); # test 53
-ok($sth = $dbh.prepare("SHOW TABLES LIKE 't1'"),"prepare show tables"); # test 54
-ok($sth.execute(), "Executing 'show tables'"); # test 55
+ok($dbh.do("DROP TABLE IF EXISTS t1"), "35prepare.t Making slate clean"); # test 53
+ok($dbh.do("CREATE TABLE t1 (id INT(4), name VARCHAR(35))"), "Creating table"); # test 54
+ok($sth = $dbh.prepare("SHOW TABLES LIKE 't1'"),"prepare show tables"); # test 55
+ok($sth.execute(), "Executing 'show tables'"); # test 56
 my @row;
 ok((defined(@row = $sth.fetchrow_array) &&
   (!defined($errstr = $sth.errstr) || $sth.errstr eq '')),
-  "Testing if result set and no errors"); # test 56
-is(@row[0], 't1', "Checking if results equal to 't1'"); # test 57
-ok($sth.finish, "Finishing up with statement handle"); # test 58
-ok($dbh.do("INSERT INTO t1 VALUES (1,'1st first value')"),"Inserting first row"); # test 59
-ok($sth= $dbh.prepare("INSERT INTO t1 VALUES (2,'2nd second value')"),"Preparing insert of second row"); # test 60
+  "Testing if result set and no errors"); # test 57
+is(@row[0], 't1', "Checking if results equal to 't1'"); # test 58
+ok($sth.finish, "Finishing up with statement handle"); # test 59
+ok($dbh.do("INSERT INTO t1 VALUES (1,'1st first value')"),"Inserting first row"); # test 60
+ok($sth= $dbh.prepare("INSERT INTO t1 VALUES (2,'2nd second value')"),"Preparing insert of second row"); # test 61
 my $rows;
-ok(($rows = $sth.execute()), "Inserting second row"); # test 61
-is($rows, Bool::True, "One row should have been inserted"); # test 62
-ok($sth.finish, "Finishing up with statement handle"); # test 63
-ok($sth= $dbh.prepare("SELECT id, name FROM t1 WHERE id = 1"),"Testing prepare of query"); # test 64
-ok($sth.execute(), "Testing execute of query"); # test 65
-ok(my $ret_ref = $sth.fetchall_arrayref(),"Testing fetchall_arrayref of executed query"); # test 66
-ok($sth= $dbh.prepare("INSERT INTO t1 values (?, ?)"),"Preparing insert, this time using placeholders"); # test 67
+ok(($rows = $sth.execute()), "Inserting second row"); # test 62
+is($rows, 1, "One row should have been inserted"); # test 63
+ok($sth.finish, "Finishing up with statement handle"); # test 64
+ok($sth= $dbh.prepare("SELECT id, name FROM t1 WHERE id = 1"),"Testing prepare of query"); # test 65
+ok($sth.execute(), "Testing execute of query"); # test 66
+ok(my $ret_ref = $sth.fetchall_arrayref(),"Testing fetchall_arrayref of executed query"); # test 67
+ok($sth= $dbh.prepare("INSERT INTO t1 values (?, ?)"),"Preparing insert, this time using placeholders"); # test 68
 %testInsertVals = ();
 $all_ok = Bool::True;
 loop ($i = 0 ; $i < 10; $i++) {
@@ -421,19 +417,19 @@ loop ($i = 0 ; $i < 10; $i++) {
   %testInsertVals{$i}= $random_chars; # save these values for later testing
   unless $sth.execute($i, $random_chars) { $all_ok = Bool::False; }
 }
-ok($all_ok, "Should have inserted one row (10 times)"); # test 68
-ok($sth.finish, "Testing closing of statement handle"); # test 69
-ok($sth= $dbh.prepare("SELECT * FROM t1 WHERE id = ? OR id = ?"),"Testing prepare of query with placeholders"); # test 70
-ok($rows = $sth.execute(1,2),"Testing execution with values id = 1 or id = 2"); # test 71
-ok($ret_ref = $sth.fetchall_arrayref(),"Testing fetchall_arrayref (should be four rows)"); # test 72
-is($ret_ref.elems, 4, "\$ret_ref should contain four rows in result set"); # test 73
-is($ret_ref[2][1], %testInsertVals{'1'}, "verify third row"); # test 74
-ok($sth= $dbh.prepare("DROP TABLE IF EXISTS t1"),"Testing prepare of dropping table"); # test 75
-ok($sth.execute(), "Executing drop table"); # test 76
-ok($sth= $dbh.prepare("SELECT 1"), "Prepare - Testing bug #20153"); # test 77
-ok($sth.execute(), "Execute - Testing bug #20153"); # test 78
-ok($sth.fetchrow_arrayref(), "Fetch - Testing bug #20153"); # test 79
-ok(!($sth.fetchrow_arrayref()),"Not Fetch - Testing bug #20153"); # test 80
+ok($all_ok, "Should have inserted one row (10 times)"); # test 69
+ok($sth.finish, "Testing closing of statement handle"); # test 70
+ok($sth= $dbh.prepare("SELECT * FROM t1 WHERE id = ? OR id = ?"),"Testing prepare of query with placeholders"); # test 71
+ok($rows = $sth.execute(1,2),"Testing execution with values id = 1 or id = 2"); # test 72
+ok($ret_ref = $sth.fetchall_arrayref(),"Testing fetchall_arrayref (should be four rows)"); # test 73
+is($ret_ref.elems, 4, "\$ret_ref should contain four rows in result set"); # test 74
+is($ret_ref[2][1], %testInsertVals{'1'}, "verify third row"); # test 75
+ok($sth= $dbh.prepare("DROP TABLE IF EXISTS t1"),"Testing prepare of dropping table"); # test 76
+ok($sth.execute(), "Executing drop table"); # test 77
+ok($sth= $dbh.prepare("SELECT 1"), "Prepare - Testing bug #20153"); # test 78
+ok($sth.execute(), "Execute - Testing bug #20153"); # test 79
+ok($sth.fetchrow_arrayref(), "Fetch - Testing bug #20153"); # test 80
+ok(!($sth.fetchrow_arrayref()),"Not Fetch - Testing bug #20153"); # test 81
 
 #-----------------------------------------------------------------------
 # from perl5 DBD/mysql/t/40bindparam.t
@@ -502,25 +498,25 @@ ok(!($sth.fetchrow_arrayref()),"Not Fetch - Testing bug #20153"); # test 80
 #ok ($dbh->do("DROP TABLE $table"));
 #ok $sth->finish;
 #ok $dbh->disconnect;
-ok ($dbh.do("DROP TABLE IF EXISTS $table")),"drop table before 40bindparam.t"; # test 81
+ok ($dbh.do("DROP TABLE IF EXISTS $table")),"drop table before 40bindparam.t"; # test 82
 $create = "
 CREATE TABLE $table (
         id int(4) NOT NULL default 0,
         name varchar(40) default ''
         )
 ";
-ok ($dbh.do($create)),"create table with defaults"; # test 82
-ok ($sth = $dbh.prepare("INSERT INTO $table VALUES (?, ?)")),"prepare parameterized insert"; # test 83
+ok ($dbh.do($create)),"create table with defaults"; # test 83
+ok ($sth = $dbh.prepare("INSERT INTO $table VALUES (?, ?)")),"prepare parameterized insert"; # test 84
 my $numericVal = 1; # Automatic type detection
 my $charVal = "Alligator Descartes";
-ok ($sth.execute($numericVal, $charVal)),"execute insert with numeric and char"; # test 84
+ok ($sth.execute($numericVal, $charVal)),"execute insert with numeric and char"; # test 85
 # Does the driver remember the automatically detected type?
-ok ($sth.execute("3", "Jochen Wiedmann")),"insert with string for numeric field"; # test 85
+ok ($sth.execute("3", "Jochen Wiedmann")),"insert with string for numeric field"; # test 86
 $numericVal = 2;
 $charVal = "Tim Bunce";
-ok ($sth.execute($numericVal, $charVal)),"insert with number for numeric"; # test 86
+ok ($sth.execute($numericVal, $charVal)),"insert with number for numeric"; # test 87
 # Now try the explicit type settings
-#ok ($sth.bind_param(1, " 4", SQL_INTEGER())),"bind_param SQL_INTEGER"; # test 87
+#ok ($sth.bind_param(1, " 4", SQL_INTEGER())),"bind_param SQL_INTEGER"; # test 88
 
 
 #-----------------------------------------------------------------------
