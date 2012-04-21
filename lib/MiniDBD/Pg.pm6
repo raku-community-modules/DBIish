@@ -142,24 +142,19 @@ class MiniDBD::Pg::StatementHandle does MiniDBD::StatementHandle {
 
     }
     method execute(*@params is copy) {
-        my $statement = $!statement;
-
-#        if (!$!dbh.AutoCommit and !$!dbh.in_transaction) {
-#            PQexec($!pg_conn, "BEGIN");
-#            $!dbh.in_transaction = 1;
-#        }
-
         $!current_row = 0;
-        while @params.elems and $statement.index('?').defined {
-            my $param = @params.shift;
-            if $param ~~ Real {
-                $statement .= subst("?",$param); # do not quote numbers
-            }
-            else {
-                $statement .= subst("?","'$param'"); # quote non numerics
-            }
+        my @param_values := CArray[Str].new;
+        for @params.kv -> $k, $v {
+            @param_values[$k] = $v.Str;
         }
-        $!result = PQexec($!pg_conn, $statement); # 0 means OK
+
+        $!result = PQexecPrepared($!pg_conn, $!statement_name, @params.elems,
+                @param_values,
+                OpaquePointer, # ParamLengths, NULL pointer == all text
+                OpaquePointer, # ParamFormats, NULL pointer == all text
+                0,             # Resultformat, 0 == text
+        );
+
         my $status = PQresultStatus($!result);
         if $status != PGRES_EMPTY_QUERY | PGRES_COMMAND_OK | PGRES_TUPLES_OK | PGRES_COPY_OUT | PGRES_COPY_IN {
             self!set_errstr(PQresultErrorMessage($!result));
