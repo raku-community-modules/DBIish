@@ -117,6 +117,15 @@ class MiniDBD::Pg::StatementHandle does MiniDBD::StatementHandle {
     has $!field_count;
     has $!current_row;
 
+    method !handle-errors {
+        my $status = PQresultStatus($!result);
+        if $status != PGRES_EMPTY_QUERY | PGRES_COMMAND_OK | PGRES_TUPLES_OK | PGRES_COPY_OUT | PGRES_COPY_IN {
+            self!set_errstr(PQresultErrorMessage($!result));
+            if $!RaiseError { die self!errstr; }
+        }
+        self!set_errstr(Any);
+    }
+
     method !munge_statement {
         my $count = 0;
         my $munged = $!statement.subst(:g, '?', { '$' ~ ++$count});
@@ -135,11 +144,8 @@ class MiniDBD::Pg::StatementHandle does MiniDBD::StatementHandle {
                 $nparams,
                 OpaquePointer
         );
-        my $status = PQresultStatus($!result);
-        if $status != PGRES_EMPTY_QUERY | PGRES_COMMAND_OK | PGRES_TUPLES_OK | PGRES_COPY_OUT | PGRES_COPY_IN {
-            die 'OH NOEZ, died with ' ~ PQresultErrorMessage($!result);
-        }
-
+        self!handle-errors;
+        True;
     }
     method execute(*@params is copy) {
         $!current_row = 0;
@@ -155,12 +161,7 @@ class MiniDBD::Pg::StatementHandle does MiniDBD::StatementHandle {
                 0,             # Resultformat, 0 == text
         );
 
-        my $status = PQresultStatus($!result);
-        if $status != PGRES_EMPTY_QUERY | PGRES_COMMAND_OK | PGRES_TUPLES_OK | PGRES_COPY_OUT | PGRES_COPY_IN {
-            self!set_errstr(PQresultErrorMessage($!result));
-            if $!RaiseError { die self!errstr; }
-        }
-        self!set_errstr(Any);
+        self!handle-errors;
         $!row_count = PQntuples($!result);
 
         my $rows = self.rows;
@@ -173,15 +174,7 @@ class MiniDBD::Pg::StatementHandle does MiniDBD::StatementHandle {
         unless defined $!affected_rows {
             $!affected_rows = PQcmdTuples($!result);
 
-            my $errstr = PQresultErrorMessage ($!result);
-            if $errstr.chars {
-                self!set_errstr($errstr);
-                if $!RaiseError { die self!errstr; }
-                return -1;
-            }
-            else {
-                self!set_errstr(Any);
-            }
+            self!handle-errors;
         }
 
         if defined $!affected_rows {
@@ -204,13 +197,7 @@ class MiniDBD::Pg::StatementHandle does MiniDBD::StatementHandle {
                 @row_array.push(PQgetvalue($!result, $!current_row, $_));
             }
             $!current_row++;
-
-            my $errstr = PQresultErrorMessage ($!result);
-            if $errstr ne '' {
-                self!errstr = $errstr;
-                if $!RaiseError { die self!errstr; }
-                return;
-            }
+            self!handle-errors;
 
             if ! @row_array { self.finish; }
         }
