@@ -109,10 +109,7 @@ class MiniDBD::Pg::StatementHandle does MiniDBD::StatementHandle {
                 $statement .= subst("?","'$param'"); # quote non numerics
             }
         }
-        note "Statement: $statement";
-        note "pg_conn: $!pg_conn.perl()";
         $!result = PQexec($!pg_conn, $statement); # 0 means OK
-        die 'PQexec returned a Null pointer';
         my $status = PQresultStatus($!result);
         if $status != PGRES_EMPTY_QUERY | PGRES_COMMAND_OK | PGRES_TUPLES_OK | PGRES_COPY_OUT | PGRES_COPY_IN {
             self!set_errstr(PQresultErrorMessage($!result));
@@ -120,7 +117,6 @@ class MiniDBD::Pg::StatementHandle does MiniDBD::StatementHandle {
         }
         self!set_errstr(Any);
         $!row_count = PQntuples($!result);
-        note "DEBUG in execute: row_count $!row_count";
 
         my $rows = self.rows;
         return ($rows == 0) ?? "0E0" !! $rows;
@@ -184,7 +180,6 @@ class MiniDBD::Pg::StatementHandle does MiniDBD::StatementHandle {
         unless defined $!field_count {
             $!field_count = PQnfields($!result);
         }
-        die "field_count: $!field_count";
         if defined $!result {
             self!set_errstr(Any);
 
@@ -207,15 +202,11 @@ class MiniDBD::Pg::StatementHandle does MiniDBD::StatementHandle {
     method fetch() { self.fetchrow_arrayref(); } # alias according to perldoc DBI
     method fetchall_arrayref() {
         my $all_arrayref;
-        note 'DEBUG fetchall_arrayref';
-
-        note "current_row: $!current_row;   row_count: $!row_count";
         return if $!current_row >= $!row_count;
 
         unless defined $!field_count {
             $!field_count = PQnfields($!result);
         }
-        say "DEBUG field_count: $!field_count";
         if defined $!result {
             self!set_errstr(Any);
             my @all_array;
