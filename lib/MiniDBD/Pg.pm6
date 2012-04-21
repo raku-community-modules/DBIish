@@ -67,22 +67,22 @@ sub PQclear (OpaquePointer $result)
     { ... }
 
 
-sub CONNECTION_OK     { 0 }
-sub CONNECTION_BAD    { 1 }
+constant CONNECTION_OK     = 0;
+constant CONNECTION_BAD    = 1;
 
-sub PGRES_EMPTY_QUERY { 0 }
-sub PGRES_COMMAND_OK  { 1 }
-sub PGRES_TUPLES_OK   { 2 }
-sub PGRES_COPY_OUT    { 3 }
-sub PGRES_COPY_IN     { 4 }
+constant PGRES_EMPTY_QUERY = 0;
+constant PGRES_COMMAND_OK  = 1;
+constant PGRES_TUPLES_OK   = 2;
+constant PGRES_COPY_OUT    = 3;
+constant PGRES_COPY_IN     = 4;
 
 #-----------------------------------------------------------------------
 
 class MiniDBD::Pg::StatementHandle does MiniDBD::StatementHandle {
     has $!pg_conn;
-    has $!RaiseError;
+    has $.RaiseError;
     has $!statement;
-    has $!dbh;
+    has $.dbh;
     has $!result;
     has $!affected_rows;
     has @!column_names;
@@ -90,7 +90,7 @@ class MiniDBD::Pg::StatementHandle does MiniDBD::StatementHandle {
     has $!field_count;
     has $!current_row;
 
-    submethod BUILD(:$!statement, :$!pg_conn, :$!RaiseError) { }
+    submethod BUILD(:$!statement, :$!pg_conn) { }
     method execute(*@params is copy) {
         my $statement = $!statement;
 
@@ -114,7 +114,7 @@ class MiniDBD::Pg::StatementHandle does MiniDBD::StatementHandle {
         $!result = PQexec($!pg_conn, $statement); # 0 means OK
         die 'PQexec returned a Null pointer';
         my $status = PQresultStatus($!result);
-        if $status != PGRES_EMPTY_QUERY() | PGRES_COMMAND_OK() | PGRES_TUPLES_OK() | PGRES_COPY_OUT() | PGRES_COPY_IN() {
+        if $status != PGRES_EMPTY_QUERY | PGRES_COMMAND_OK | PGRES_TUPLES_OK | PGRES_COPY_OUT | PGRES_COPY_IN {
             self!set_errstr(PQresultErrorMessage($!result));
             if $!RaiseError { die self!errstr; }
         }
@@ -416,11 +416,10 @@ class MiniDBD::Pg:auth<mberends>:ver<0.0.1> {
         my $pg_conn = PQconnectdb($conninfo);
         my $status = PQstatus($pg_conn);
         my $connection;
-        if $status eq CONNECTION_OK() {
-            $connection = MiniDBD::Pg::Connection.bless(
-                MiniDBD::Pg::Connection.CREATE(),
-                pg_conn     => $pg_conn,
-                RaiseError  => $RaiseError
+        if $status eq CONNECTION_OK {
+            $connection = MiniDBD::Pg::Connection.bless(*,
+                :$pg_conn,
+                :$RaiseError,
             );
         }
         else {
