@@ -107,6 +107,7 @@ constant PGRES_COPY_IN     = 4;
 class MiniDBD::Pg::StatementHandle does MiniDBD::StatementHandle {
     has $!pg_conn;
     has $.RaiseError;
+    has Str $!statement_name;
     has $!statement;
     has $.dbh;
     has $!result;
@@ -116,7 +117,30 @@ class MiniDBD::Pg::StatementHandle does MiniDBD::StatementHandle {
     has $!field_count;
     has $!current_row;
 
-    submethod BUILD(:$!statement, :$!pg_conn) { }
+    method !munge_statement {
+        my $count = 0;
+        my $munged = $!statement.subst(:g, '?', { '$' ~ ++$count});
+        return ($munged, $count);
+    }
+
+    submethod BUILD(:$!statement, :$!pg_conn) {
+        state $statement_postfix = 0;
+        $!statement_name = join '_', 'pg', $*PID, $statement_postfix++;
+        my ($munged, $nparams) = self!munge_statement;
+
+        $!result = PQprepare(
+                $!pg_conn,
+                $!statement_name,
+                $munged,
+                $nparams,
+                OpaquePointer
+        );
+        my $status = PQresultStatus($!result);
+        if $status != PGRES_EMPTY_QUERY | PGRES_COMMAND_OK | PGRES_TUPLES_OK | PGRES_COPY_OUT | PGRES_COPY_IN {
+            die 'OH NOEZ, died with ' ~ PQresultErrorMessage($!result);
+        }
+
+    }
     method execute(*@params is copy) {
         my $statement = $!statement;
 
