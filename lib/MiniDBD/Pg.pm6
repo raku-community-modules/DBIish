@@ -327,7 +327,7 @@ class MiniDBD::Pg::Connection does MiniDBD::Connection {
             :$!pg_conn,
             :$statement,
             :$!RaiseError,
-            dbh        => self,
+            :dbh(self),
         );
         return $statement_handle;
     }
