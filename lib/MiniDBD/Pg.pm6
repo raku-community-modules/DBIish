@@ -12,6 +12,32 @@ sub PQexec (OpaquePointer $conn, Str $statement)
     is native('libpq')
     { ... }
 
+sub PQprepare (OpaquePointer $conn, Str $statement_name, Str $query, Int $n_params, OpaquePointer $paramTypes)
+    returns OpaquePointer
+    is native('libpq')
+    { ... }
+
+# PGresult *PQexecPrepared(PGconn *conn,
+#                          const char *stmtName,
+#                          int nParams,
+#                          const char * const *paramValues,
+#                          const int *paramLengths,
+#                          const int *paramFormats,
+#                          int resultFormat);
+# 
+sub PQexecPrepared(
+        OpaquePointer $conn,
+        Str $statement_name,
+        Int $n_params,
+        CArray[Str] $param_values,
+        CArray[int] $param_length,
+        CArray[int] $param_formats,
+        Int $resultFormat
+    )
+    returns OpaquePointer
+    is native('libpq')
+    { ... }
+
 sub PQresultStatus (OpaquePointer $result)
     returns Int
     is native('libpq')
