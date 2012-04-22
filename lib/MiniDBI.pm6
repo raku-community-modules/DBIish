@@ -19,6 +19,7 @@ class MiniDBI:auth<mberends>:ver<0.1.0> {
             when 'mysql'   { eval 'use MiniDBD::mysql; $driver = MiniDBD::mysql.new()' }
             when 'PgPir'   { eval 'use MiniDBD::PgPir; $driver = MiniDBD::PgPir.new()' }
             when 'Pg'      { eval 'use MiniDBD::Pg;    $driver = MiniDBD::Pg.new()' }
+            when 'SQLite'  { eval 'use MiniDBD::SQLite;$driver = MiniDBD::SQLite.new()' }
             default        { die "driver name '$drivername' is not known"; }
         }
         return $driver;
