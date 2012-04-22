@@ -12,6 +12,32 @@ sub PQexec (OpaquePointer $conn, Str $statement)
     is native('libpq')
     { ... }
 
+sub PQprepare (OpaquePointer $conn, Str $statement_name, Str $query, Int $n_params, OpaquePointer $paramTypes)
+    returns OpaquePointer
+    is native('libpq')
+    { ... }
+
+# PGresult *PQexecPrepared(PGconn *conn,
+#                          const char *stmtName,
+#                          int nParams,
+#                          const char * const *paramValues,
+#                          const int *paramLengths,
+#                          const int *paramFormats,
+#                          int resultFormat);
+# 
+sub PQexecPrepared(
+        OpaquePointer $conn,
+        Str $statement_name,
+        Int $n_params,
+        CArray[Str] $param_values,
+        CArray[int] $param_length,
+        CArray[int] $param_formats,
+        Int $resultFormat
+    )
+    returns OpaquePointer
+    is native('libpq')
+    { ... }
+
 sub PQresultStatus (OpaquePointer $result)
     returns Int
     is native('libpq')
@@ -81,6 +107,7 @@ constant PGRES_COPY_IN     = 4;
 class MiniDBD::Pg::StatementHandle does MiniDBD::StatementHandle {
     has $!pg_conn;
     has $.RaiseError;
+    has Str $!statement_name;
     has $!statement;
     has $.dbh;
     has $!result;
@@ -90,32 +117,51 @@ class MiniDBD::Pg::StatementHandle does MiniDBD::StatementHandle {
     has $!field_count;
     has $!current_row;
 
-    submethod BUILD(:$!statement, :$!pg_conn) { }
-    method execute(*@params is copy) {
-        my $statement = $!statement;
-
-#        if (!$!dbh.AutoCommit and !$!dbh.in_transaction) {
-#            PQexec($!pg_conn, "BEGIN");
-#            $!dbh.in_transaction = 1;
-#        }
-
-        $!current_row = 0;
-        while @params.elems and $statement.index('?').defined {
-            my $param = @params.shift;
-            if $param ~~ Real {
-                $statement .= subst("?",$param); # do not quote numbers
-            }
-            else {
-                $statement .= subst("?","'$param'"); # quote non numerics
-            }
-        }
-        $!result = PQexec($!pg_conn, $statement); # 0 means OK
+    method !handle-errors {
         my $status = PQresultStatus($!result);
         if $status != PGRES_EMPTY_QUERY | PGRES_COMMAND_OK | PGRES_TUPLES_OK | PGRES_COPY_OUT | PGRES_COPY_IN {
             self!set_errstr(PQresultErrorMessage($!result));
             if $!RaiseError { die self!errstr; }
         }
         self!set_errstr(Any);
+    }
+
+    method !munge_statement {
+        my $count = 0;
+        my $munged = $!statement.subst(:g, '?', { '$' ~ ++$count});
+        return ($munged, $count);
+    }
+
+    submethod BUILD(:$!statement, :$!pg_conn) {
+        state $statement_postfix = 0;
+        $!statement_name = join '_', 'pg', $*PID, $statement_postfix++;
+        my ($munged, $nparams) = self!munge_statement;
+
+        $!result = PQprepare(
+                $!pg_conn,
+                $!statement_name,
+                $munged,
+                $nparams,
+                OpaquePointer
+        );
+        self!handle-errors;
+        True;
+    }
+    method execute(*@params is copy) {
+        $!current_row = 0;
+        my @param_values := CArray[Str].new;
+        for @params.kv -> $k, $v {
+            @param_values[$k] = $v.Str;
+        }
+
+        $!result = PQexecPrepared($!pg_conn, $!statement_name, @params.elems,
+                @param_values,
+                OpaquePointer, # ParamLengths, NULL pointer == all text
+                OpaquePointer, # ParamFormats, NULL pointer == all text
+                0,             # Resultformat, 0 == text
+        );
+
+        self!handle-errors;
         $!row_count = PQntuples($!result);
 
         my $rows = self.rows;
@@ -128,15 +174,7 @@ class MiniDBD::Pg::StatementHandle does MiniDBD::StatementHandle {
         unless defined $!affected_rows {
             $!affected_rows = PQcmdTuples($!result);
 
-            my $errstr = PQresultErrorMessage ($!result);
-            if $errstr.chars {
-                self!set_errstr($errstr);
-                if $!RaiseError { die self!errstr; }
-                return -1;
-            }
-            else {
-                self!set_errstr(Any);
-            }
+            self!handle-errors;
         }
 
         if defined $!affected_rows {
@@ -159,13 +197,7 @@ class MiniDBD::Pg::StatementHandle does MiniDBD::StatementHandle {
                 @row_array.push(PQgetvalue($!result, $!current_row, $_));
             }
             $!current_row++;
-
-            my $errstr = PQresultErrorMessage ($!result);
-            if $errstr ne '' {
-                self!errstr = $errstr;
-                if $!RaiseError { die self!errstr; }
-                return;
-            }
+            self!handle-errors;
 
             if ! @row_array { self.finish; }
         }
