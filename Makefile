@@ -25,16 +25,13 @@ lib/MiniDBD/mysql.pir: lib/MiniDBD/mysql.pm6 lib/MiniDBD.pir
 lib/MiniDBD/Pg.pir: lib/MiniDBD/Pg.pm6 lib/MiniDBD.pir
 	export PERL6LIB=lib; $(PERL6_EXE) --target=pir --output=lib/MiniDBD/Pg.pir lib/MiniDBD/Pg.pm6
 
-lib/MiniDBD/PgPir.pir: lib/MiniDBD/PgPir.pm6 lib/MiniDBD.pir
-	export PERL6LIB=lib; $(PERL6_EXE) --target=pir --output=lib/MiniDBD/PgPir.pir lib/MiniDBD/PgPir.pm6
-
 lib/MiniDBD/SQLite.pir: lib/MiniDBD/SQLite.pm6 lib/MiniDBD.pir
 	export PERL6LIB=lib; $(PERL6_EXE) --target=pir --output=lib/MiniDBD/SQLite.pir lib/MiniDBD/SQLite.pm6
 
-lib/MiniDBI.pir: lib/MiniDBI.pm6 lib/MiniDBD/CSV.pir lib/MiniDBD/mysql.pir lib/MiniDBD/PgPir.pir lib/MiniDBD/Pg.pir lib/MiniDBD/SQLite.pir
+lib/MiniDBI.pir: lib/MiniDBI.pm6 lib/MiniDBD/CSV.pir lib/MiniDBD/mysql.pir lib/MiniDBD/Pg.pir lib/MiniDBD/SQLite.pir
 	export PERL6LIB=lib; $(PERL6_EXE) --target=pir --output=lib/MiniDBI.pir lib/MiniDBI.pm6
 
-test: lib/MiniDBI.pir lib/MiniDBD/CSV.pir lib/MiniDBD/mysql.pir lib/MiniDBD/PgPir.pir lib/MiniDBD/Pg.pir lib/MiniDBD/SQLite.pir
+test: lib/MiniDBI.pir lib/MiniDBD/CSV.pir lib/MiniDBD/mysql.pir lib/MiniDBD/Pg.pir lib/MiniDBD/SQLite.pir
 	@#export PERL6LIB=lib; prove --exec $(PERL6_EXE) t/10-mysql.t
 	@#export PERL6LIB=lib; prove --exec $(PERL6_EXE) t/20-CSV-common.t
 	@#export PERL6LIB=lib; prove --exec $(PERL6_EXE) t/25-mysql-common.t
@@ -42,26 +39,24 @@ test: lib/MiniDBI.pir lib/MiniDBD/CSV.pir lib/MiniDBD/mysql.pir lib/MiniDBD/PgPi
 	export PERL6LIB=lib; prove --exec $(PERL6_EXE) t/
 
 # standard install is to the shared system wide directory
-install: lib/MiniDBI.pir lib/MiniDBD.pir lib/MiniDBD/mysql.pir lib/MiniDBD/PgPir.pir lib/MiniDBD/Pg.pir lib/MiniDBD/SQLite.pir
+install: lib/MiniDBI.pir lib/MiniDBD.pir lib/MiniDBD/mysql.pir lib/MiniDBD/Pg.pir lib/MiniDBD/SQLite.pir
 	@echo "--> $(LIBSYSTEM)"
 	@$(CP) lib/MiniDBI.pm6 lib/MiniDBI.pir $(LIBSYSTEM)
 	@$(CP) lib/MiniDBD.pm6 lib/MiniDBD.pir $(LIBSYSTEM)
 	@$(MKPATH) $(LIBSYSTEM)/MiniDBD
 	@$(CP) lib/MiniDBD/CSV.pm6 lib/MiniDBD/CSV.pir $(LIBSYSTEM)/MiniDBD
 	@$(CP) lib/MiniDBD/mysql.pm6 lib/MiniDBD/mysql.pir $(LIBSYSTEM)/MiniDBD
-	@$(CP) lib/MiniDBD/PgPir.pm6 lib/MiniDBD/PgPir.pir $(LIBSYSTEM)/MiniDBD
 	@$(CP) lib/MiniDBD/Pg.pm6 lib/MiniDBD/Pg.pir $(LIBSYSTEM)/MiniDBD
 	@$(CP) lib/MiniDBD/SQLite.pm6 lib/MiniDBD/SQLite.pir $(LIBSYSTEM)/MiniDBD
 
 # if user has no permission to install globally, try a personal directory 
-install-user: lib/MiniDBI.pir lib/MiniDBD.pir lib/MiniDBD/mysql.pir lib/MiniDBD/PgPir.pir lib/MiniDBD/Pg.pir lib/MiniDBD/SQLite.pir
+install-user: lib/MiniDBI.pir lib/MiniDBD.pir lib/MiniDBD/mysql.pir lib/MiniDBD/Pg.pir lib/MiniDBD/SQLite.pir
 	@echo "--> $(LIBUSER)"
 	@$(CP) lib/MiniDBI.pm6 lib/MiniDBI.pir $(LIBUSER)
 	@$(CP) lib/MiniDBD.pm6 lib/MiniDBD.pir $(LIBUSER)
 	@$(MKPATH) $(LIBUSER)/MiniDBD
 	@$(CP) lib/MiniDBD/CSV.pm6 lib/MiniDBD/CSV.pir $(LIBUSER)/MiniDBD
 	@$(CP) lib/MiniDBD/mysql.pm6 lib/MiniDBD/mysql.pir $(LIBUSER)/MiniDBD
-	@$(CP) lib/MiniDBD/PgPir.pm6 lib/MiniDBD/PgPir.pir $(LIBUSER)/MiniDBD
 	@$(CP) lib/MiniDBD/Pg.pm6 lib/MiniDBD/Pg.pir $(LIBUSER)/MiniDBD
 	@$(CP) lib/MiniDBD/SQLite.pm6 lib/MiniDBD/SQLite.pir $(LIBUSER)/MiniDBD
 
@@ -81,10 +76,6 @@ uninstall:
 	@$(RM_F)   $(LIBSYSTEM)/MiniDBD/mysql.pm6
 	@$(TEST_F) $(LIBSYSTEM)/MiniDBD/mysql.pir
 	@$(RM_F)   $(LIBSYSTEM)/MiniDBD/mysql.pir
-	@$(TEST_F) $(LIBSYSTEM)/MiniDBD/PgPir.pm6
-	@$(RM_F)   $(LIBSYSTEM)/MiniDBD/PgPir.pm6
-	@$(TEST_F) $(LIBSYSTEM)/MiniDBD/PgPir.pir
-	@$(RM_F)   $(LIBSYSTEM)/MiniDBD/PgPir.pir
 	@$(TEST_F) $(LIBSYSTEM)/MiniDBD/Pg.pm6
 	@$(RM_F)   $(LIBSYSTEM)/MiniDBD/Pg.pm6
 	@$(TEST_F) $(LIBSYSTEM)/MiniDBD/Pg.pir
@@ -110,10 +101,6 @@ uninstall-user:
 	@$(RM_F)   $(LIBUSER)/MiniDBD/mysql.pm6
 	@$(TEST_F) $(LIBUSER)/MiniDBD/mysql.pir
 	@$(RM_F)   $(LIBUSER)/MiniDBD/mysql.pir
-	@$(TEST_F) $(LIBUSER)/MiniDBD/PgPir.pm6
-	@$(RM_F)   $(LIBUSER)/MiniDBD/PgPir.pm6
-	@$(TEST_F) $(LIBUSER)/MiniDBD/PgPir.pir
-	@$(RM_F)   $(LIBUSER)/MiniDBD/PgPir.pir
 	@$(TEST_F) $(LIBUSER)/MiniDBD/Pg.pm6
 	@$(RM_F)   $(LIBUSER)/MiniDBD/Pg.pm6
 	@$(TEST_F) $(LIBUSER)/MiniDBD/Pg.pir
