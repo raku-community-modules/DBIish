@@ -112,6 +112,16 @@ sub mysql_warning_count( OpaquePointer $mysql_client )
     is native('libmysqlclient')
     { * }
 
+sub mysql_stmt_init( OpaquePointer $mysql_client )
+    returns OpaquePointer
+    is native('libmysqlclient')
+    { * }
+
+sub mysql_stmt_prepare( OpaquePointer $mysql_stmt, Str, Int $length )
+    returns OpaquePointer
+    is native('libmysqlclient')
+    { * }
+
 #-----------------------------------------------------------------------
 
 class DBDish::mysql::StatementHandle does DBDish::StatementHandle {
