@@ -70,3 +70,5 @@ multi sub sqlite3_bind($stmt, Int $n, Any:U)     { sqlite3_bind_null($stmt, $n) 
 multi sub sqlite3_bind($stmt, Int $n, Str:D $d)  { sqlite3_bind_text($stmt, $n, $d, -1,  OpaquePointer) }
 
 sub sqlite3_reset(OpaquePointer) returns Int is native('sqlite3') { ... }
+sub sqlite3_column_text(OpaquePointer, Int) returns Str is native('sqlite3') { ... }
+sub sqlite3_finalze(OpaquePointer) returns Int is native('sqlite3') { ... }
