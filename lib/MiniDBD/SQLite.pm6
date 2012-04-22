@@ -34,7 +34,7 @@ enum SQLITE (
 );
 
 
-sub sqlite_open(Str $filename, CArray[OpaquePointer] $handle)
+sub sqlite3_open(Str $filename, CArray[OpaquePointer] $handle)
     returns Int
     is native('sqlite3')
     { ... }
@@ -72,3 +72,157 @@ multi sub sqlite3_bind($stmt, Int $n, Str:D $d)  { sqlite3_bind_text($stmt, $n, 
 sub sqlite3_reset(OpaquePointer) returns Int is native('sqlite3') { ... }
 sub sqlite3_column_text(OpaquePointer, Int) returns Str is native('sqlite3') { ... }
 sub sqlite3_finalze(OpaquePointer) returns Int is native('sqlite3') { ... }
+sub sqlite3_column_count(OpaquePointer) returns Int is native('sqlite3') { ... }
+
+
+class MiniDBD::SQLite::StatementHandle does MiniDBD::StatementHandle {
+    has $!conn;
+    has $.statement;
+    has $!statement_handle;
+    has $.RaiseError;
+    has $.dbh;
+    has $!row_status;
+
+    method handle-error($status) {
+        return if $status == SQLITE_OK;
+        my $errstr = SQLITE($status);
+        self!set_errstr($errstr);
+        die $errstr if $.RaiseError;
+    }
+
+    submethod BUILD() {
+        my @stmt := CArray[OpaquePointer].new;
+        @stmt[0]  = OpaquePointer;
+        my $status = sqlite3_prepare_v2(
+                $!conn,
+                $!statement,
+                -1,
+                @stmt,
+                OpaquePointer,
+        );
+        $!statement_handle = @stmt[0];
+        self!handle-error($status);
+    }
+
+    method execute(*@params) {
+        sqlite3_reset($!statement_handle) if $!statement_handle.defined;
+        for @params.kv -> $idx, $v {
+            self!handle-error(sqlite3_bind($!statement_handle, $idx + 1, $v));
+        }
+        $!row_status = sqlite3_step($!statement_handle);
+    }
+
+    method fetchrow_array {
+        my @row;
+        return @row if $!row_status == SQLITE_DONE;
+        for ^sqlite3_column_count($!statement_handle) {
+            @row.push: sqlite3_column_text($!statement_handle);
+        }
+        $!row_status = sqlite3_step($!statement_handle);
+        @row;
+    }
+    method fetchrow_arrayref {
+        self.fetchrow_array.item;
+    }
+    method fetch() { self.fetchrow_arrayref }
+    method fetchall_arrayref {
+        [ eager { self.fetchrow_arrayref } ...^ [] ]
+    }
+
+    method finish() {
+        sqlite3_finalze($!statement_handle) if $!statement_handle.defined;
+        $!row_status = SQLITE_DONE;
+        True;
+    }
+}
+
+class MiniDBD::SQLite::Connection does MiniDBD::Connection {
+    has $.RaiseError;
+    has $!conn;
+    method BUILD(:$!conn) { }
+    method prepare(Str $statement, $attr?) {
+        MiniDBD::SQLite::StatementHandle.bless(*,
+            :$!conn,
+            :$statement,
+            :$!RaiseError,
+            :dbh(self),
+        );
+    }
+    method do(Str $statement, $attr?, *@bind is copy) {
+        my $sth = self.prepare($statement);
+        $sth.execute(@bind);
+        my $rows = $sth.rows;
+        return ($rows == 0) ?? "0E0" !! $rows;
+    }
+
+    method selectrow_arrayref(Str $statement, $attr?, *@bind is copy) {
+        my $sth = self.prepare($statement, $attr);
+        $sth.execute(@bind);
+        return $sth.fetchrow_arrayref;
+    }
+
+    method selectrow_hashref(Str $statement, $attr?, *@bind is copy) {
+        my $sth = self.prepare($statement, $attr);
+        $sth.execute(@bind);
+        return $sth.fetchrow_hashref;
+    }
+
+    method selectall_arrayref(Str $statement, $attr?, *@bind is copy) {
+        my $sth = self.prepare($statement, $attr);
+        $sth.execute(@bind);
+        return $sth.fetchall_arrayref;
+    }
+
+    method selectall_hashref(Str $statement, Str $key, $attr?, *@bind is copy) {
+        my $sth = self.prepare($statement, $attr);
+        $sth.execute(@bind);
+        return $sth.fetchall_hashref($key);
+    }
+
+    method selectcol_arrayref(Str $statement, $attr?, *@bind is copy) {
+        my @results;
+
+        my $sth = self.prepare($statement, $attr);
+        $sth.execute(@bind);
+        while (my $row = $sth.fetchrow_arrayref) {
+            @results.push($row[0]);
+        }
+
+        my $aref = @results;
+        return $aref;
+    }
+}
+
+class MiniDBD::SQLite:auth<mberends>:ver<0.0.1> {
+    has $.Version = 0.01;
+    has $.errstr;
+    method !errstr() is rw { $!errstr }
+    method connect($, $, Str $params, $RaiseError) {
+        my @params = $params.split(';');
+        my %params;
+        for @params -> $p {
+            my ( $key, $value ) = $p.split('=');
+            %params{$key} = $value;
+        }
+        my $dbname = %params<dbname> // %params<database>;
+        die 'No "dbname" or "database" given' unless defined $dbname;
+
+        my @conn := CArray[OpaquePointer].new;
+        @conn[0]  = OpaquePointer;
+        my $status = sqlite3_open($dbname, @conn);
+        if $status == SQLITE_OK {
+            return MiniDBD::SQLite.Connection.bless(*,
+                    :conn(@conn[0]),
+                    :$RaiseError,
+            );
+        }
+        else {
+            $!errstr = SQLITE($status);
+            die $!errstr if $RaiseError;
+        }
+    }
+}
+
+
+
+# vim: ft=perl6
