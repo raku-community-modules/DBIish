@@ -156,7 +156,7 @@ class MiniDBD::SQLite::Connection does MiniDBD::Connection {
         my $sth = self.prepare($statement);
         $sth.execute(@bind);
         # TODO: return actual number of rows
-        return 0e0;
+        return 1;
     }
 
     method selectrow_arrayref(Str $statement, $attr?, *@bind is copy) {

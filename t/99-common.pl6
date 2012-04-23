@@ -131,7 +131,7 @@ ok $sth = $dbh.prepare("INSERT INTO nom (name, description, quantity, price)
                          'insert new value for fetchrow_arrayref test'; #test 25
 
 ok $sth.execute(), 'new insert statement executed'; #test 26
-is $sth.rows, 1, "insert reports 1 row affected"; # test 27
+is $sth.?rows, 1, "insert reports 1 row affected"; # test 27
 
 ok $sth = $dbh.prepare("SELECT * FROM nom WHERE quantity='5';"),
 'prepare new select for fetchrow_arrayref test'; #test 28
