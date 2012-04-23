@@ -197,13 +197,7 @@ class MiniDBD::SQLite:auth<mberends>:ver<0.0.1> {
     has $.Version = 0.01;
     has $.errstr;
     method !errstr() is rw { $!errstr }
-    method connect($, $, Str $params, $RaiseError) {
-        my @params = $params.split(';');
-        my %params;
-        for @params -> $p {
-            my ( $key, $value ) = $p.split('=');
-            %params{$key} = $value;
-        }
+    method connect(:$RaiseError, *%params) {
         my $dbname = %params<dbname> // %params<database>;
         die 'No "dbname" or "database" given' unless defined $dbname;
 
