@@ -126,7 +126,11 @@ class MiniDBD::SQLite::StatementHandle does MiniDBD::StatementHandle {
     }
     method fetch() { self.fetchrow_arrayref }
     method fetchall_arrayref {
-        [ eager { self.fetchrow_arrayref } ...^ [] ]
+        my @rows;
+        while self.fetchrow_arrayref -> $r {
+            @rows.push: $r;
+        }
+        @rows.item;
     }
 
     method finish() {
@@ -151,8 +155,8 @@ class MiniDBD::SQLite::Connection does MiniDBD::Connection {
     method do(Str $statement, $attr?, *@bind is copy) {
         my $sth = self.prepare($statement);
         $sth.execute(@bind);
-        my $rows = $sth.rows;
-        return ($rows == 0) ?? "0E0" !! $rows;
+        # TODO: return actual number of rows
+        return 0e0;
     }
 
     method selectrow_arrayref(Str $statement, $attr?, *@bind is copy) {

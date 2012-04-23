@@ -63,7 +63,11 @@ ok $sth = $dbh.prepare( "
 ok $sth.execute('TAFM', 'Mild fish taco', 1, 4.85 ) &&
    $sth.execute('BEOM', 'Medium size orange juice', 2, 1.20 ),
    "execute twice with parameters"; # test 11
-is $sth.rows, 1, "each insert with parameters also reports 1 row affected"; # test 12
+if $dbh.^can('rows') {
+    is $sth.rows, 1, "each insert with parameters also reports 1 row affected"; # test 12
+}
+else { skip '$dbh.rows not implemented', 1 }
+
 
 if $sth.^can('bind_param_array') {
     my @tuple_status;
@@ -105,7 +109,7 @@ if 'fetchrow_hashref' eq any ($sth.^methods) {
     is $hashref, { 'name' => 'TAFM', 'description' => 'Mild fish taco', 'quantity'
     => 1, 'price' => '4.85' }, 'selected data matches test hashref'; #test 22
 }
-else { skip 2, 'fetchrow_hashref not implemented' }
+else { skip 'fetchrow_hashref not implemented', 2 }
 
 # TODO: weird sth behavior workaround! Any sth concerning call at this point
 # will return empty or (properly) fail if something is called on that
