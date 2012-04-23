@@ -36,7 +36,7 @@ enum SQLITE (
 
 sub sqlite3_open(Str $filename, CArray[OpaquePointer] $handle)
     returns Int
-    is native('sqlite3')
+    is native('libsqlite3')
     { ... }
 
 
@@ -48,19 +48,19 @@ sub sqlite3_prepare_v2 (
         CArray[OpaquePointer] $pz_tail
     )
     returns Int
-    is native('sqlite3')
+    is native('libsqlite3')
     { ... }
 
 sub sqlite3_step(OpaquePointer $statement_handle)
     returns Int
-    is native('sqlite3')
+    is native('libsqlite3')
     { ... }
 
-sub sqlite3_bind_blob(OpaquePointer $stmt, int, OpaquePointer, Int, OpaquePointer) returns Int is native('sqlite3') { ... };
-sub sqlite3_bind_double(OpaquePointer $stmt, Int, Num) returns Int is native('sqlite3') { ... };
-sub sqlite3_bind_int(OpaquePointer $stmt, Int, Int) returns Int is native('sqlite3') { ... };
-sub sqlite3_bind_null(OpaquePointer $stmt, Int) returns Int is native('sqlite3') { ... };
-sub sqlite3_bind_text(OpaquePointer $stmt, Int, Str, Int, OpaquePointer) returns Int is native('sqlite3') { ... };
+sub sqlite3_bind_blob(OpaquePointer $stmt, int, OpaquePointer, Int, OpaquePointer) returns Int is native('libsqlite3') { ... };
+sub sqlite3_bind_double(OpaquePointer $stmt, Int, Num) returns Int is native('libsqlite3') { ... };
+sub sqlite3_bind_int(OpaquePointer $stmt, Int, Int) returns Int is native('libsqlite3') { ... };
+sub sqlite3_bind_null(OpaquePointer $stmt, Int) returns Int is native('libsqlite3') { ... };
+sub sqlite3_bind_text(OpaquePointer $stmt, Int, Str, Int, OpaquePointer) returns Int is native('libsqlite3') { ... };
 
 proto sub sqlite3_bind($, $, $) {*}
 multi sub sqlite3_bind($stmt, Int $n, Buf:D $b)  { sqlite3_bind_blob($stmt, $n, $b, $b.bytes, OpaquePointer) }
@@ -69,10 +69,10 @@ multi sub sqlite3_bind($stmt, Int $n, Int:D $i)  { sqlite3_bind_int($stmt, $n, $
 multi sub sqlite3_bind($stmt, Int $n, Any:U)     { sqlite3_bind_null($stmt, $n) }
 multi sub sqlite3_bind($stmt, Int $n, Str:D $d)  { sqlite3_bind_text($stmt, $n, $d, -1,  OpaquePointer) }
 
-sub sqlite3_reset(OpaquePointer) returns Int is native('sqlite3') { ... }
-sub sqlite3_column_text(OpaquePointer, Int) returns Str is native('sqlite3') { ... }
-sub sqlite3_finalze(OpaquePointer) returns Int is native('sqlite3') { ... }
-sub sqlite3_column_count(OpaquePointer) returns Int is native('sqlite3') { ... }
+sub sqlite3_reset(OpaquePointer) returns Int is native('libsqlite3') { ... }
+sub sqlite3_column_text(OpaquePointer, Int) returns Str is native('libsqlite3') { ... }
+sub sqlite3_finalze(OpaquePointer) returns Int is native('libsqlite3') { ... }
+sub sqlite3_column_count(OpaquePointer) returns Int is native('libsqlite3') { ... }
 
 
 class MiniDBD::SQLite::StatementHandle does MiniDBD::StatementHandle {
@@ -83,7 +83,7 @@ class MiniDBD::SQLite::StatementHandle does MiniDBD::StatementHandle {
     has $.dbh;
     has $!row_status;
 
-    method handle-error($status) {
+    method !handle-error($status) {
         return if $status == SQLITE_OK;
         my $errstr = SQLITE($status);
         self!set_errstr($errstr);
@@ -205,7 +205,7 @@ class MiniDBD::SQLite:auth<mberends>:ver<0.0.1> {
         @conn[0]  = OpaquePointer;
         my $status = sqlite3_open($dbname, @conn);
         if $status == SQLITE_OK {
-            return MiniDBD::SQLite.Connection.bless(*,
+            return MiniDBD::SQLite::Connection.bless(*,
                     :conn(@conn[0]),
                     :$RaiseError,
             );
