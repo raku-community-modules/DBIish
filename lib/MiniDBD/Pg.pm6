@@ -425,16 +425,12 @@ class MiniDBD::Pg:auth<mberends>:ver<0.0.1> {
     method !errstr() is rw { $!errstr }
 
 #------------------ methods to be called from MiniDBI ------------------
-    method connect( Str $user, Str $password, Str $params, $RaiseError ) {
-        my @params = $params.split(';');
-        my %params;
-        for @params -> $p {
-            my ( $key, $value ) = $p.split('=');
-            %params{$key} = $value;
-        }
+    method connect(*%params) {
         my $host     = %params<host>     // 'localhost';
         my $port     = %params<port>     // 5432;
-        my $database = %params<dbname>   // 'postgres';
+        my $database = %params<dbname>   // %params<database> // 'postgres';
+        my $user     = %params<user>     // die 'Missing <user> config';
+        my $password = %params<password> // die 'Missing <password> config';
         my $conninfo = "host=$host port=$port dbname=$database user=$user password=$password";
         my $pg_conn = PQconnectdb($conninfo);
         my $status = PQstatus($pg_conn);
@@ -442,12 +438,12 @@ class MiniDBD::Pg:auth<mberends>:ver<0.0.1> {
         if $status eq CONNECTION_OK {
             $connection = MiniDBD::Pg::Connection.bless(*,
                 :$pg_conn,
-                :$RaiseError,
+                :RaiseError(%params<RaiseError>),
             );
         }
         else {
             $!errstr = PQerrorMessage($pg_conn);
-            if $RaiseError { die $!errstr; }
+            if %params<RaiseError> { die $!errstr; }
         }
         return $connection;
     }
