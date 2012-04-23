@@ -15,8 +15,8 @@ $drh_version = $drh.Version;
 ok $drh_version > 0, "MiniDBD::$*mdriver version $drh_version"; # test 2
 
 # Connect to the data sourcequantity*price AS amount FROM nom
-my $dbh = MiniDBI.connect( $*test_dsn, $*test_user, $*test_password, :RaiseError<1> );
-ok $dbh, "connect to $*test_dsn"; # test 3
+my $dbh = MiniDBI.connect( $*mdriver, |%*opts, :RaiseError<1> );
+ok $dbh, "connect to %*opts<database>"; # test 3
 
 try eval '$*post_connect_cb.($dbh)';
 

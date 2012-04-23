@@ -326,18 +326,12 @@ class MiniDBD::mysql:auth<mberends>:ver<0.0.1> {
     has $.Version = 0.01;
 
 #------------------ methods to be called from MiniDBI ------------------
-    method connect( Str $user, Str $password, Str $params, $RaiseError ) {
+    method connect(Str :$user, Str :$password, :$RaiseError, *%params ) {
         # warn "in MiniDBD::mysql.connect('$user',*,'$params')";
         my ( $mysql_client, $mysql_error );
         unless defined $mysql_client {
             $mysql_client = mysql_init( OpaquePointer );
             $mysql_error  = mysql_error( $mysql_client );
-        }
-        my @params = $params.split(';');
-        my %params;
-        for @params -> $p {
-            my ( $key, $value ) = $p.split('=');
-            %params{$key} = $value;
         }
         my $host     = %params<host>     // 'localhost';
         my $port     = (%params<port>     // 0).Int;

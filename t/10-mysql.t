@@ -37,13 +37,11 @@ use MiniDBI;
 # The file 'lib.pl' customizes the testing environment per DBD, but all
 # this test script currently needs is the variables listed here.
 my $mdriver       = 'mysql';
-my $hostname      = 'localhost';
+my $host          = 'localhost';
 my $port          = 3306;
 my $database      = 'zavolaj';
 my $test_user     = 'testuser';
 my $test_password = 'testpass';
-my $test_dsn      = "MiniDBI:$mdriver" ~ ":database=$database;" ~
-                    "host=$hostname;port=$port";
 my $table         = 't1';
 
 #-----------------------------------------------------------------------
@@ -77,7 +75,8 @@ ok $drh_version > 0, "MiniDBD::mysql version $drh_version"; # test 2
 #ok defined $dbh, "Connected to database";
 #ok $dbh->disconnect();
 #
-my $dbh = MiniDBI.connect( $test_dsn, $test_user, $test_password,
+my $dbh = MiniDBI.connect($mdriver, :user($test_user), :password($test_password),
+        :$host, :$port, :$database,
         RaiseError => 1, PrintError => 1, AutoCommit => 0
 );
 # die "ERROR: {MiniDBI.errstr}. Can't continue test" if $!.defined;
@@ -95,7 +94,7 @@ ok $result, 'disconnect returned true'; # test 4
 #$dbh->disconnect();
 
 try {
-    $dbh = MiniDBI.connect( $test_dsn, $test_user, $test_password,
+    $dbh = MiniDBI.connect( $mdriver, :user($test_user), :password($test_password), :$host, :$port,
         RaiseError => 1, PrintError => 1, AutoCommit => 0 );
     CATCH { die "ERROR: {MiniDBI.errstr}. Can't continue test\n"; }
 }
@@ -240,7 +239,7 @@ ok $dbh.do("DROP TABLE $table"),"drop table $table"; # test 38
 # Because the drop table might fail, disconnect and reconnect
 $dbh.disconnect();
 try {
-    $dbh = MiniDBI.connect( $test_dsn, $test_user, $test_password,
+    $dbh = MiniDBI.connect( $mdriver, :user($test_user), :password($test_password), :$host, :$port,
         RaiseError => 1, PrintError => 1, AutoCommit => 0 );
     CATCH { die "ERROR: {MiniDBI.errstr}. Can't continue test\n"; }
 }

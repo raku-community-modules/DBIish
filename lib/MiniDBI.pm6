@@ -3,13 +3,10 @@
 class MiniDBI:auth<mberends>:ver<0.1.0> {
     has $!err;
     has $!errstr;
-    method connect( $dsn, $username, $password, :$RaiseError=0, :$PrintError=0, :$AutoCommit=1 ) {
-        # warn "in MiniDBI.connect('$dsn')";
-        # Divide $dsn up into its separate fields.
-        my ( $prefix, $drivername, $params ) = $dsn.split(':');
-        my $driver = self.install_driver( $drivername );
+    method connect($driver, :$RaiseError=1, :$PrintError=0, :$AutoCommit=1, *%opts ) {
+        my $d = self.install_driver( $driver );
         # warn "calling MiniDBD::" ~ $drivername ~ ".connect($username,*,$params)";
-        my $connection = $driver.connect( $username, $password, $params, $RaiseError );
+        my $connection = $d.connect(:$RaiseError, :$PrintError, :$AutoCommit, |%opts );
         return $connection;
     }
     method install_driver( $drivername ) {
@@ -17,7 +14,6 @@ class MiniDBI:auth<mberends>:ver<0.1.0> {
         given $drivername {
             when 'CSV'     { eval 'use MiniDBD::CSV;   $driver = MiniDBD::CSV.new()' }
             when 'mysql'   { eval 'use MiniDBD::mysql; $driver = MiniDBD::mysql.new()' }
-            when 'PgPir'   { eval 'use MiniDBD::PgPir; $driver = MiniDBD::PgPir.new()' }
             when 'Pg'      { eval 'use MiniDBD::Pg;    $driver = MiniDBD::Pg.new()' }
             when 'SQLite'  { eval 'use MiniDBD::SQLite;$driver = MiniDBD::SQLite.new()' }
             default        { die "driver name '$drivername' is not known"; }
@@ -105,7 +101,7 @@ our sub SQL_INTERVAL_MINUTE_TO_SECOND { 113 }
  # TODO: %drivers      = DBI.installed_drivers;
  # TODO: @data_sources = DBI.data_sources($driver_name, \%attr);
 
- $dbh = MiniDBI.connect($data_source, $username, $auth, \%attr);
+ $dbh = MiniDBI.connect($driver, :$username, :$password, |%options);
 
  $rv  = $dbh.do($statement);
  # TODO: $rv  = $dbh.do($statement, \%attr);
