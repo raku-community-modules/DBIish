@@ -71,12 +71,11 @@ class MiniDBD::CSV:auth<mberends>:ver<0.0.1> {
 
     has $.Version = 0.01;
 
-    method connect( Str $user, Str $password, Str $params, $RaiseError ) {
+    method connect(:$RaiseError ) {
         #warn "in MiniDBD::CSV.connect('$user',*,'$params')";
-        my $connection;
-        $connection = MiniDBD::CSV::Connection.bless(
+        my $connection = MiniDBD::CSV::Connection.bless(
             MiniDBD::CSV::Connection.CREATE(),
-            RaiseError => $RaiseError
+            :$RaiseError
         );
         return $connection;
     }
