@@ -3,7 +3,7 @@
 class MiniDBI:auth<mberends>:ver<0.1.0> {
     has $!err;
     has $!errstr;
-    method connect($driver, :$RaiseError=1, :$PrintError=0, :$AutoCommit=1, *%opts ) {
+    method connect($driver, :$RaiseError=0, :$PrintError=0, :$AutoCommit=1, *%opts ) {
         my $d = self.install_driver( $driver );
         # warn "calling MiniDBD::" ~ $drivername ~ ".connect($username,*,$params)";
         my $connection = $d.connect(:$RaiseError, :$PrintError, :$AutoCommit, |%opts );
