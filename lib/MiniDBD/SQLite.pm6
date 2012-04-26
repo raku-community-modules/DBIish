@@ -124,9 +124,10 @@ class MiniDBD::SQLite::StatementHandle does MiniDBD::StatementHandle {
         my @row;
         return @row if $!row_status == SQLITE_DONE;
         for ^sqlite3_column_count($!statement_handle) {
-            @row.push: sqlite3_column_text($!statement_handle);
+            @row.push: sqlite3_column_text($!statement_handle, $_);
         }
         $!row_status = sqlite3_step($!statement_handle);
+
         @row;
     }
     method fetchrow_arrayref {
