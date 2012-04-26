@@ -62,6 +62,8 @@ sub sqlite3_bind_int(OpaquePointer $stmt, Int, Int) returns Int is native('libsq
 sub sqlite3_bind_null(OpaquePointer $stmt, Int) returns Int is native('libsqlite3') { ... };
 sub sqlite3_bind_text(OpaquePointer $stmt, Int, Str, Int, OpaquePointer) returns Int is native('libsqlite3') { ... };
 
+sub sqlite3_changes(OpaquePointer $handle) returns Int is native('libsqlite3') { ... };
+
 proto sub sqlite3_bind($, $, $) {*}
 multi sub sqlite3_bind($stmt, Int $n, Buf:D $b)  { sqlite3_bind_blob($stmt, $n, $b, $b.bytes, OpaquePointer) }
 multi sub sqlite3_bind($stmt, Int $n, Real:D $d) { sqlite3_bind_double($stmt, $n, $d.Num) }
@@ -90,15 +92,17 @@ class MiniDBD::SQLite::StatementHandle does MiniDBD::StatementHandle {
         die $errstr if $.RaiseError;
     }
 
-    submethod BUILD() {
+    submethod BUILD(:$!conn) {
         my @stmt := CArray[OpaquePointer].new;
         @stmt[0]  = OpaquePointer;
+        my @unused := CArray[OpaquePointer].new;
+        @unused[0]  = OpaquePointer;
         my $status = sqlite3_prepare_v2(
                 $!conn,
                 $!statement,
                 -1,
                 @stmt,
-                OpaquePointer,
+                @unused,
         );
         $!statement_handle = @stmt[0];
         self!handle-error($status);
@@ -110,6 +114,12 @@ class MiniDBD::SQLite::StatementHandle does MiniDBD::StatementHandle {
             self!handle-error(sqlite3_bind($!statement_handle, $idx + 1, $v));
         }
         $!row_status = sqlite3_step($!statement_handle);
+        self.rows;
+    }
+
+    method rows() {
+        die 'Cannot determine rows of closed connection' unless $!conn.DEFINITE;
+        sqlite3_changes($!conn);
     }
 
     method fetchrow_array {
@@ -156,7 +166,12 @@ class MiniDBD::SQLite::Connection does MiniDBD::Connection {
         my $sth = self.prepare($statement);
         $sth.execute(@bind);
         # TODO: return actual number of rows
-        return 1;
+        self.rows;
+    }
+
+    method rows() {
+        die 'Cannot determine rows of closed connection' unless $!conn.DEFINITE;
+        sqlite3_changes($!conn);
     }
 
     method selectrow_arrayref(Str $statement, $attr?, *@bind is copy) {
