@@ -92,7 +92,7 @@ class MiniDBD::SQLite::StatementHandle does MiniDBD::StatementHandle {
         die $errstr if $.RaiseError;
     }
 
-    submethod BUILD(:$!conn) {
+    submethod BUILD(:$!conn, :$!statement) {
         my @stmt := CArray[OpaquePointer].new;
         @stmt[0]  = OpaquePointer;
         my $status = sqlite3_prepare_v2(
@@ -117,23 +117,25 @@ class MiniDBD::SQLite::StatementHandle does MiniDBD::StatementHandle {
 
     method rows() {
         die 'Cannot determine rows of closed connection' unless $!conn.DEFINITE;
-        sqlite3_changes($!conn);
+        my $rows = sqlite3_changes($!conn);
+        $rows == 0 ?? '0E0' !! $rows;
     }
 
     method fetchrow_array {
         my @row;
         return @row if $!row_status == SQLITE_DONE;
         for ^sqlite3_column_count($!statement_handle) {
-            @row.push: sqlite3_column_text($!statement_handle);
+            @row.push: sqlite3_column_text($!statement_handle, $_);
         }
         $!row_status = sqlite3_step($!statement_handle);
+
         @row;
     }
     method fetchrow_arrayref {
         self.fetchrow_array.item;
     }
     method fetch() { self.fetchrow_arrayref }
-    method fetchall_arrayref {
+    method _fetchall_arrayref {
         my @rows;
         while self.fetchrow_arrayref -> $r {
             @rows.push: $r;
@@ -169,7 +171,8 @@ class MiniDBD::SQLite::Connection does MiniDBD::Connection {
 
     method rows() {
         die 'Cannot determine rows of closed connection' unless $!conn.DEFINITE;
-        sqlite3_changes($!conn);
+        my $rows = sqlite3_changes($!conn);
+        $rows == 0 ?? '0E0' !! $rows;
     }
 
     method selectrow_arrayref(Str $statement, $attr?, *@bind is copy) {

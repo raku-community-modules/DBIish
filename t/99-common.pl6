@@ -98,7 +98,7 @@ if 'fetchall_arrayref' eq any($sth.^methods) {
         [ 'BEOM', 'Medium size orange juice', '2', '1.20', '2.40' ] ],
     "selected data matches what was written"; # test 18
 }
-else { skip 2, 'fetchall_arrayref not implemented' }
+else { skip 'fetchall_arrayref not implemented', 2 }
 
 ok $sth = $dbh.prepare("SELECT * FROM nom WHERE name='TAFM';"),
 'prepare new select for fetchrow_hashref test'; #test 19
@@ -120,7 +120,7 @@ if 'fetchrow_arrayref' eq any ($sth.^methods) {
     #is $arrayref, [ 'TAFM', 'Mild fish taco', '1', '4.85' ],
     #'selected data matches test data'; #test 23
 }
-else { skip 2, 'fetchrow_arrayref not implemented' }
+else { skip 'fetchrow_arrayref not implemented', 2 }
 
 #TODO: I made piña colada (+U00F1) at first to test unicode. It gets properly
 # inserted and selected, but a comparison within arrayref fails.
@@ -143,7 +143,7 @@ if 'fetchrow_arrayref' eq any ($sth.^methods) {
     is $arrayref, [ 'PICO', 'Delish pina colada', '5', '7.90' ],
     'selected data matches test data of fetchrow_arrayref'; #test 32
 }
-else { skip 2, 'fetchrow_arrayref not implemented' }
+else { skip 'fetchrow_arrayref not implemented', 2 }
 
 # TODO: weird sth/dbh behavior workaround again. 
 if 'fetchrow_arrayref' eq any ($sth.^methods) {
