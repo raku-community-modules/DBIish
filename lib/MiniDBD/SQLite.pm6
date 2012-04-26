@@ -117,7 +117,8 @@ class MiniDBD::SQLite::StatementHandle does MiniDBD::StatementHandle {
 
     method rows() {
         die 'Cannot determine rows of closed connection' unless $!conn.DEFINITE;
-        sqlite3_changes($!conn);
+        my $rows = sqlite3_changes($!conn);
+        $rows == 0 ?? '0E0' !! $rows;
     }
 
     method fetchrow_array {
@@ -170,7 +171,8 @@ class MiniDBD::SQLite::Connection does MiniDBD::Connection {
 
     method rows() {
         die 'Cannot determine rows of closed connection' unless $!conn.DEFINITE;
-        sqlite3_changes($!conn);
+        my $rows = sqlite3_changes($!conn);
+        $rows == 0 ?? '0E0' !! $rows;
     }
 
     method selectrow_arrayref(Str $statement, $attr?, *@bind is copy) {
