@@ -92,7 +92,7 @@ class MiniDBD::SQLite::StatementHandle does MiniDBD::StatementHandle {
         die $errstr if $.RaiseError;
     }
 
-    submethod BUILD(:$!conn) {
+    submethod BUILD(:$!conn, :$!statement) {
         my @stmt := CArray[OpaquePointer].new;
         @stmt[0]  = OpaquePointer;
         my $status = sqlite3_prepare_v2(
