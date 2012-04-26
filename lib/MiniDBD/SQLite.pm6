@@ -135,7 +135,7 @@ class MiniDBD::SQLite::StatementHandle does MiniDBD::StatementHandle {
         self.fetchrow_array.item;
     }
     method fetch() { self.fetchrow_arrayref }
-    method fetchall_arrayref {
+    method _fetchall_arrayref {
         my @rows;
         while self.fetchrow_arrayref -> $r {
             @rows.push: $r;
