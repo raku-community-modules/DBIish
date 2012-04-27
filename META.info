@@ -1,7 +1,7 @@
 {
     "name"          : "DBIish",
     "version"       : "*",
-    "description"   : "a subset of Perl 5 DBI ported to Perl 6 to use while experts build the Real Deal",
+    "description"   : "Database connectivity for Perl 6",
     "depends"       : ["NativeCall"],
-    "source-url"    : "git://github.com/mberends/DBIish.git"
+    "source-url"    : "git://github.com/perl6/DBIish.git"
 }
