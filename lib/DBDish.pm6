@@ -40,7 +40,7 @@ role DBDish::ErrorHandling {
         note $!errstr if self.PrintError;
         die  $!errstr if self.RaiseError;
     }
-    method !reset-errstr() { $!errstr = '' };
+    method !reset_errstr() { $!errstr = '' };
 }
 
 =begin pod

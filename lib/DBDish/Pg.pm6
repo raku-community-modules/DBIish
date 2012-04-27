@@ -225,7 +225,7 @@ class DBDish::Pg::StatementHandle does DBDish::StatementHandle {
     method fetch() { self.fetchrow_arrayref(); } # alias according to perldoc DBI
     method fetchall_arrayref() {
         my @res;
-        while self.fetcharrow_arrayref -> $a {
+        while self.fetchrow_arrayref -> $a {
             @res.push: $a;
         }
         @res.item
@@ -389,6 +389,7 @@ class DBDish::Pg::Connection does DBDish::Connection {
 
     method disconnect() {
         PQfinish($!pg_conn);
+        True;
     }
 }
 
