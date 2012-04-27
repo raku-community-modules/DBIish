@@ -11,74 +11,67 @@ code.  Without syntax highlighting, it is very awkward to work with.  It
 shows that this style of file layout is unsuitable for general use.
 
 =head1 ROLES
+
+=head2 role DBDish::ErrorHandling
+
+A role that handles the errors from connection handles and statement handles
+
+=head3 Attributes
+=head4 C<PrintError is rw>
+Errors are printed to the standard error handle if this is True
+=head4 C<RaisErrors is rw = True>
+Errors raise exceptions if this is True
+=head3 Methods
+=head4 errstr
+Returns the string representation of the last error
+=head4 !set_errstr
+Private method that sets the error string, and prints and/or raises an
+exception, depending on the C<$.PrintError> and C<$.RaiseError> flags.
+=head4 !reset_errstr
+Resets the error string to the empty string.
+=end pod
+
+role DBDish::ErrorHandling {
+    has Bool $.PrintError is rw = False;
+    has Bool $.RaiseError is rw = True;
+    has $.errstr;
+    method !set_errstr($err) is hidden_from_backtrace {
+        $!errstr = $err;
+        note $!errstr if self.PrintError;
+        die  $!errstr if self.RaiseError;
+    }
+    method !reset-errstr() { $!errstr = '' };
+}
+
+=begin pod
 =head2 role DBDish::StatementHandle
 The Connection C<prepare> method returns a StatementHandle object that
-mainly provides the C<execute> and C<finish> methods.
+mainly provides the C<execute> and C<finish> methods. It also has all the methods from C<DBDish::ErrorHandling>.
 =end pod
 
-role DBDish::StatementHandle {
-
-=begin pod
-=head3 DBDish::StatementHandle members
-=head4 instance variables
-=head5 $!errstr
-The C<$!errstr> variable keeps an internal copy of the last error
-message retrieved from the database driver.  It is cleared (when?).
-=end pod
-
-    has $!errstr;
-    method !set_errstr($err) { $!errstr = $err }
-    method !errstr() is rw { $!errstr }
-
-=begin pod
-=head5 $.PrintError
-The C<$.PrintError> variable is a read-write Bool.  True causes the
-text of any error messages received from the database driver to be sent
-immediately to the standard error output via warn().
-=end pod
-
-    has $.PrintError is rw = Bool::False;
-
-=begin pod
-=head4 methods
-=head5 errstr
-This is the accessor method for the last error string returned by the
-database driver.
-=end pod
-
-    method errstr() {
-        return $!errstr;
-#       return defined $!errstr ?? $!errstr !! '';
-    }
+role DBDish::StatementHandle does DBDish::ErrorHandling {
+    method finish() { ... }
+    method execute(*@) { ... }
 }
 
 =begin pod
 =head2 role DBDish::Connection
+
+Does the C<DBDish::ErrorHandling> role.
+
 =end pod
 
-role DBDish::Connection {
+role DBDish::Connection does DBDish::ErrorHandling {
 
 =begin pod
-=head3 DBDish::Connection members
 =head4 instance variables
-=head5 $!errstr
-The C<$!errstr> variable keeps an internal copy of the last error
-message retrieved from the database driver.  It is cleared (when?).
-=end pod
-
-    has $!errstr;
-    method !set_errstr($err) { $!errstr = $err }
-
-=begin pod
 =head4 methods
 =head5 do
 =end pod
 
     method do( Str $statement, *@params ) {
-        # warn "in DBDish::Connection.do('$statement')";
         my $sth = self.prepare($statement) or return fail();
         $sth.execute(@params);
-#       $sth.execute(@params) or return fail();
     }
 
 =begin pod
@@ -87,18 +80,7 @@ The C<disconnect> method
 =end pod
 
     method disconnect() {
-        # warn "in DBIish::DatabaseHandle.disconnect()";
-        return Bool::True;
-    }
-
-=begin pod
-=head5 errstr
-This is the accessor method for the last error string returned by a
-connection method.
-=end pod
-
-    method errstr() {
-        return $!errstr;
+        ...
     }
 }
 

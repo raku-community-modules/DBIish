@@ -81,7 +81,6 @@ class DBDish::SQLite::StatementHandle does DBDish::StatementHandle {
     has $!conn;
     has $.statement;
     has $!statement_handle;
-    has $.RaiseError;
     has $.dbh;
     has Int $!row_status;
 
@@ -89,7 +88,6 @@ class DBDish::SQLite::StatementHandle does DBDish::StatementHandle {
         return if $status == SQLITE_OK;
         my $errstr = SQLITE($status);
         self!set_errstr($errstr);
-        die $errstr if $.RaiseError;
     }
 
     submethod BUILD(:$!conn, :$!statement) {
@@ -154,14 +152,13 @@ class DBDish::SQLite::StatementHandle does DBDish::StatementHandle {
 }
 
 class DBDish::SQLite::Connection does DBDish::Connection {
-    has $.RaiseError;
     has $!conn;
     method BUILD(:$!conn) { }
     method prepare(Str $statement, $attr?) {
         DBDish::SQLite::StatementHandle.bless(*,
             :$!conn,
             :$statement,
-            :$!RaiseError,
+            :$.RaiseError,
             :dbh(self),
         );
     }
@@ -214,6 +211,7 @@ class DBDish::SQLite::Connection does DBDish::Connection {
         my $aref = @results;
         return $aref;
     }
+    method disconnect() { die 'disconnect NYI' }
 }
 
 class DBDish::SQLite:auth<mberends>:ver<0.0.1> {

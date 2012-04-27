@@ -84,6 +84,9 @@ sub PQclear (OpaquePointer $result)
     is native('libpq')
     { ... }
 
+sub PQfinish(OpaquePointer) 
+    is native('libpq')
+    { ... }
 
 constant CONNECTION_OK     = 0;
 constant CONNECTION_BAD    = 1;
@@ -98,7 +101,6 @@ constant PGRES_COPY_IN     = 4;
 
 class DBDish::Pg::StatementHandle does DBDish::StatementHandle {
     has $!pg_conn;
-    has $.RaiseError;
     has Str $!statement_name;
     has $!statement;
     has $.dbh;
@@ -113,7 +115,6 @@ class DBDish::Pg::StatementHandle does DBDish::StatementHandle {
         my $status = PQresultStatus($!result);
         if $status != PGRES_EMPTY_QUERY | PGRES_COMMAND_OK | PGRES_TUPLES_OK | PGRES_COPY_OUT | PGRES_COPY_IN {
             self!set_errstr(PQresultErrorMessage($!result));
-            if $!RaiseError { die self!errstr; }
         }
         self!set_errstr(Any);
     }
@@ -205,15 +206,13 @@ class DBDish::Pg::StatementHandle does DBDish::StatementHandle {
             $!field_count = PQnfields($!result);
         }
         if defined $!result {
-            self!set_errstr(Any);
+            self!reset_errstr;
 
             my @row = self!get_row();
 
             my $errstr = PQresultErrorMessage ($!result);
             if $errstr ne '' {
-                self!errstr = $errstr;
-                if $!RaiseError { die $errstr; }
-                return;
+                self!set_errstr($errstr);
             }
 
             if @row {
@@ -225,34 +224,11 @@ class DBDish::Pg::StatementHandle does DBDish::StatementHandle {
     }
     method fetch() { self.fetchrow_arrayref(); } # alias according to perldoc DBI
     method fetchall_arrayref() {
-        my $all_arrayref;
-        return if $!current_row >= $!row_count;
-
-        unless defined $!field_count {
-            $!field_count = PQnfields($!result);
+        my @res;
+        while self.fetcharrow_arrayref -> $a {
+            @res.push: $a;
         }
-        if defined $!result {
-            self!set_errstr(Any);
-            my @all_array;
-            for ^$!row_count {
-                my @row = self!get_row();
-
-                my $errstr = PQresultErrorMessage ($!result);
-                if $errstr ne '' {
-                    self!errstr = $errstr;
-                    if $!RaiseError { die $errstr; }
-                    return;
-                }
-
-                if @row {
-                    my $row_arrayref = @row;
-                    push @all_array, $row_arrayref;
-                }
-                else { self.finish; }
-            }
-            $all_arrayref = @all_array;
-        }
-        return $all_arrayref;
+        @res.item
     }
 
     method fetchrow_hashref () {
@@ -266,11 +242,10 @@ class DBDish::Pg::StatementHandle does DBDish::StatementHandle {
         }
 
         if defined $!result {
-            self!set_errstr(Any);
+            self!reset_errstr;
             my $errstr = PQresultErrorMessage ($!result);
             if $errstr ne '' {
-                self!errstr = $errstr;
-                if $!RaiseError { die $errstr; }
+                self!set_errstr($errstr);
                 return;
             }
 
@@ -331,7 +306,6 @@ class DBDish::Pg::StatementHandle does DBDish::StatementHandle {
 
 class DBDish::Pg::Connection does DBDish::Connection {
     has $!pg_conn;
-    has $.RaiseError;
     has $.AutoCommit is rw = 1;
     has $.in_transaction is rw;
     method BUILD(:$!pg_conn) { }
@@ -341,7 +315,7 @@ class DBDish::Pg::Connection does DBDish::Connection {
             DBDish::Pg::StatementHandle.CREATE(),
             :$!pg_conn,
             :$statement,
-            :$!RaiseError,
+            :$.RaiseError,
             :dbh(self),
         );
         return $statement_handle;
@@ -411,6 +385,10 @@ class DBDish::Pg::Connection does DBDish::Connection {
 
     method ping {
         PQstatus($!pg_conn) == CONNECTION_OK
+    }
+
+    method disconnect() {
+        PQfinish($!pg_conn);
     }
 }
 

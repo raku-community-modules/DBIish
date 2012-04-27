@@ -116,7 +116,6 @@ sub mysql_warning_count( OpaquePointer $mysql_client )
 
 class DBDish::mysql::StatementHandle does DBDish::StatementHandle {
     has $!mysql_client;
-    has $!RaiseError;
     has $!statement;
     has $!result_set;
     has $!affected_rows;
@@ -124,7 +123,7 @@ class DBDish::mysql::StatementHandle does DBDish::StatementHandle {
     has $!field_count;
     has $.mysql_warning_count is rw = 0;
     
-    submethod BUILD(:$!mysql_client, :$!statement, :$!RaiseError) { }
+    submethod BUILD(:$!mysql_client, :$!statement) { }
     
     method execute(*@params is copy) {
         # warn "in DBDish::mysql::StatementHandle.execute()";
@@ -145,7 +144,6 @@ class DBDish::mysql::StatementHandle does DBDish::StatementHandle {
         self!set_errstr(Str);
         if $status != 0 {
             self!set_errstr(mysql_error( $!mysql_client ));
-            if $!RaiseError { die self.errstr; }
         }
 
         my $rows = self.rows;
@@ -304,20 +302,23 @@ class DBDish::mysql::StatementHandle does DBDish::StatementHandle {
 
 class DBDish::mysql::Connection does DBDish::Connection {
     has $!mysql_client;
-    has $!RaiseError;
-    submethod BUILD(:$!mysql_client, :$!RaiseError) { }
+    submethod BUILD(:$!mysql_client) { }
     method prepare( Str $statement ) {
         # warn "in DBDish::mysql::Connection.prepare()";
         my $statement_handle = DBDish::mysql::StatementHandle.new(
             mysql_client => $!mysql_client,
             statement    => $statement,
-            RaiseError   => $!RaiseError
+            RaiseError   => $.RaiseError
         );
         return $statement_handle;
     }
     method mysql_insertid() {
         mysql_insert_id($!mysql_client);
         # but Parrot NCI cannot return an unsigned  long long :-(
+    }
+
+    method disconnect() {
+        die 'disconnect is NYI';
     }
 }
 
