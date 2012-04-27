@@ -73,7 +73,7 @@ multi sub sqlite3_bind($stmt, Int $n, Str:D $d)  { sqlite3_bind_text($stmt, $n, 
 
 sub sqlite3_reset(OpaquePointer) returns Int is native('libsqlite3') { ... }
 sub sqlite3_column_text(OpaquePointer, Int) returns Str is native('libsqlite3') { ... }
-sub sqlite3_finalze(OpaquePointer) returns Int is native('libsqlite3') { ... }
+sub sqlite3_finalize(OpaquePointer) returns Int is native('libsqlite3') { ... }
 sub sqlite3_column_count(OpaquePointer) returns Int is native('libsqlite3') { ... }
 
 
@@ -83,7 +83,7 @@ class MiniDBD::SQLite::StatementHandle does MiniDBD::StatementHandle {
     has $!statement_handle;
     has $.RaiseError;
     has $.dbh;
-    has $!row_status;
+    has Int $!row_status;
 
     method !handle-error($status) {
         return if $status == SQLITE_OK;
@@ -123,8 +123,11 @@ class MiniDBD::SQLite::StatementHandle does MiniDBD::StatementHandle {
 
     method fetchrow_array {
         my @row;
+        die 'fetchrow_array without prior execute' unless $!row_status.defined;
         return @row if $!row_status == SQLITE_DONE;
-        for ^sqlite3_column_count($!statement_handle) {
+        my Int $count = sqlite3_column_count($!statement_handle);
+        note "Column count: $count";
+        for ^$count {
             @row.push: sqlite3_column_text($!statement_handle, $_);
         }
         $!row_status = sqlite3_step($!statement_handle);
@@ -135,7 +138,7 @@ class MiniDBD::SQLite::StatementHandle does MiniDBD::StatementHandle {
         self.fetchrow_array.item;
     }
     method fetch() { self.fetchrow_arrayref }
-    method _fetchall_arrayref {
+    method fetchall_arrayref {
         my @rows;
         while self.fetchrow_arrayref -> $r {
             @rows.push: $r;
@@ -144,8 +147,8 @@ class MiniDBD::SQLite::StatementHandle does MiniDBD::StatementHandle {
     }
 
     method finish() {
-        sqlite3_finalze($!statement_handle) if $!statement_handle.defined;
-        $!row_status = SQLITE_DONE;
+        sqlite3_finalize($!statement_handle) if $!statement_handle.defined;
+        $!row_status = Int;;
         True;
     }
 }
