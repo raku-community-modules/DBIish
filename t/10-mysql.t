@@ -100,7 +100,7 @@ try {
 }
 ok($dbh.defined, "Connected to database"); # test 5
 lives_ok({$dbh.do("DROP TABLE IF EXISTS $table")}, "making slate clean"); # test 6
-ok($dbh.do("CREATE TABLE $table (id INT(4), name VARCHAR(20))"), "creating $table"); # test 7
+lives_ok({$dbh.do("CREATE TABLE $table (id INT(4), name VARCHAR(20))")}, "creating $table"); # test 7
 lives_ok({$dbh.do("DROP TABLE $table")}, "dropping created $table"); # test 8
 
 #-----------------------------------------------------------------------
@@ -132,13 +132,13 @@ CREATE TABLE $table (
     name varchar(30) NOT NULL default ''
 )
 ";
-ok $dbh.do("DROP TABLE IF EXISTS $table"), "drop table if exists $table"; # test 9
-ok $dbh.do($create), "create table $table"; # test 10
+lives_ok { $dbh.do("DROP TABLE IF EXISTS $table") }, "drop table if exists $table"; # test 9
+lives_ok { $dbh.do($create) }, "create table $table"; # test 10
 #todo "lock tables does not work";
 ok $dbh.do("LOCK TABLES $table WRITE"), "lock tables $table write"; # test 11
 ok $dbh.do("INSERT INTO $table VALUES(1, 'Alligator Descartes test 12')"), "Insert"; # test 12
 #todo "delete works but not here";
-ok $dbh.do("DELETE FROM $table WHERE id = 1"), "Delete"; # test 13
+lives_ok {$dbh.do("DELETE FROM $table WHERE id = 1") }, "Delete"; # test 13
 my $sth;
 try {
     $sth= $dbh.prepare("SELECT * FROM $table WHERE id = 1");
