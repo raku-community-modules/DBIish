@@ -54,6 +54,12 @@ role DBDish::StatementHandle does DBDish::ErrorHandling {
     method fetchrow() { ... }
     method execute(*@) { ... }
 
+    method fetchrow-hash() {
+        hash self.column_names Z=> self.fetchrow;
+    }
+
+    method fetchrow_hashref { $.fetchrow-hash }
+
     method allrows {
         gather while self.fetchrow -> @row {
             take @row.item;

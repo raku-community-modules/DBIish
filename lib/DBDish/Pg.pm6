@@ -197,44 +197,14 @@ class DBDish::Pg::StatementHandle does DBDish::StatementHandle {
         return @row_array;
     }
 
-    method fetchrow_hashref () {
-        my $row_hashref;
-        my %row_hash;
-
-        return if $!current_row >= $!row_count;
-
-        unless defined $!field_count {
-            $!field_count = PQnfields($!result);
+    method column_names {
+        $!field_count = PQnfields($!result);
+        unless @!column_names {
+            for ^$!field_count {
+                my $column_name = PQfname($!result, $_);
+                @!column_names.push($column_name);
+            }
         }
-
-        if defined $!result {
-            self!reset_errstr;
-            my $errstr = PQresultErrorMessage ($!result);
-            if $errstr ne '' {
-                self!set_errstr($errstr);
-                return;
-            }
-
-            my @row = self!get_row();
-
-            unless @!column_names {
-                for ^$!field_count {
-                    my $column_name = PQfname($!result, $_);
-                    @!column_names.push($column_name);
-                }
-            }
-
-            if @row && @!column_names {
-                for @row Z @!column_names -> $column_value, $column_name {
-                    %row_hash{$column_name} = $column_value;
-                }
-            } else {
-                self.finish;
-            }
-
-            $row_hashref = %row_hash;
-        }
-        return $row_hashref;
     }
 
     method fetchall_hashref(Str $key) {
