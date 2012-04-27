@@ -42,7 +42,7 @@ if $dbh.^can('err') {
     is $dbh.err, 0, 'err after successful create should be 0'; # test 6
 }
 else { skip 'err after successful create should be 0', 1 }
-is $dbh.errstr, Any, "errstr after successful create should be Any"; # test 7
+nok $dbh.errstr, "errstr after successful create should be false"; # test 7
 
 # Insert rows using the various method calls
 ok $dbh.do( "
