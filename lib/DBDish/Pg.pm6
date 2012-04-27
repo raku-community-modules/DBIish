@@ -1,9 +1,9 @@
-# MiniDBD::Pg.pm6
+# DBDish::Pg.pm6
 
 use NativeCall;  # from project 'zavolaj'
-use MiniDBD;     # roles for drivers
+use DBDish;     # roles for drivers
 
-#module MiniDBD:auth<mberends>:ver<0.0.1>;
+#module DBDish:auth<mberends>:ver<0.0.1>;
 
 #------------ Pg library functions in alphabetical order ------------
 
@@ -17,14 +17,6 @@ sub PQprepare (OpaquePointer $conn, Str $statement_name, Str $query, Int $n_para
     is native('libpq')
     { ... }
 
-# PGresult *PQexecPrepared(PGconn *conn,
-#                          const char *stmtName,
-#                          int nParams,
-#                          const char * const *paramValues,
-#                          const int *paramLengths,
-#                          const int *paramFormats,
-#                          int resultFormat);
-# 
 sub PQexecPrepared(
         OpaquePointer $conn,
         Str $statement_name,
@@ -104,7 +96,7 @@ constant PGRES_COPY_IN     = 4;
 
 #-----------------------------------------------------------------------
 
-class MiniDBD::Pg::StatementHandle does MiniDBD::StatementHandle {
+class DBDish::Pg::StatementHandle does DBDish::StatementHandle {
     has $!pg_conn;
     has $.RaiseError;
     has Str $!statement_name;
@@ -337,7 +329,7 @@ class MiniDBD::Pg::StatementHandle does MiniDBD::StatementHandle {
     }
 }
 
-class MiniDBD::Pg::Connection does MiniDBD::Connection {
+class DBDish::Pg::Connection does DBDish::Connection {
     has $!pg_conn;
     has $.RaiseError;
     has $.AutoCommit is rw = 1;
@@ -345,8 +337,8 @@ class MiniDBD::Pg::Connection does MiniDBD::Connection {
     method BUILD(:$!pg_conn) { }
 
     method prepare(Str $statement, $attr?) {
-        my $statement_handle = MiniDBD::Pg::StatementHandle.bless(
-            MiniDBD::Pg::StatementHandle.CREATE(),
+        my $statement_handle = DBDish::Pg::StatementHandle.bless(
+            DBDish::Pg::StatementHandle.CREATE(),
             :$!pg_conn,
             :$statement,
             :$!RaiseError,
@@ -416,38 +408,38 @@ class MiniDBD::Pg::Connection does MiniDBD::Connection {
         PQexec($!pg_conn, "ROLLBACK");
         $.in_transaction = 0;
     }
+
+    method ping {
+        PQstatus($!pg_conn) == CONNECTION_OK
+    }
 }
 
-class MiniDBD::Pg:auth<mberends>:ver<0.0.1> {
+class DBDish::Pg:auth<mberends>:ver<0.0.1> {
 
     has $.Version = 0.01;
     has $!errstr;
     method !errstr() is rw { $!errstr }
 
-#------------------ methods to be called from MiniDBI ------------------
-    method connect( Str $user, Str $password, Str $params, $RaiseError ) {
-        my @params = $params.split(';');
-        my %params;
-        for @params -> $p {
-            my ( $key, $value ) = $p.split('=');
-            %params{$key} = $value;
-        }
+#------------------ methods to be called from DBIish ------------------
+    method connect(*%params) {
         my $host     = %params<host>     // 'localhost';
         my $port     = %params<port>     // 5432;
-        my $database = %params<dbname>   // 'postgres';
+        my $database = %params<dbname>   // %params<database> // 'postgres';
+        my $user     = %params<user>     // die 'Missing <user> config';
+        my $password = %params<password> // die 'Missing <password> config';
         my $conninfo = "host=$host port=$port dbname=$database user=$user password=$password";
         my $pg_conn = PQconnectdb($conninfo);
         my $status = PQstatus($pg_conn);
         my $connection;
         if $status eq CONNECTION_OK {
-            $connection = MiniDBD::Pg::Connection.bless(*,
+            $connection = DBDish::Pg::Connection.bless(*,
                 :$pg_conn,
-                :$RaiseError,
+                :RaiseError(%params<RaiseError>),
             );
         }
         else {
             $!errstr = PQerrorMessage($pg_conn);
-            if $RaiseError { die $!errstr; }
+            if %params<RaiseError> { die $!errstr; }
         }
         return $connection;
     }
@@ -456,18 +448,18 @@ class MiniDBD::Pg:auth<mberends>:ver<0.0.1> {
 =begin pod
 
 =head1 DESCRIPTION
-# 'zavolaj' is a Native Call Interface for Rakudo/Parrot. 'MiniDBI' and
-# 'MiniDBD::Pg' are Perl 6 modules that use 'zavolaj' to use the
+# 'zavolaj' is a Native Call Interface for Rakudo/Parrot. 'DBIish' and
+# 'DBDish::Pg' are Perl 6 modules that use 'zavolaj' to use the
 # standard libpq library.  There is a long term Parrot based
 # project to develop a new, comprehensive DBI architecture for Parrot
-# and Perl 6.  MiniDBI is not that, it is a naive rewrite of the
+# and Perl 6.  DBIish is not that, it is a naive rewrite of the
 # similarly named Perl 5 modules.  Hence the 'Mini' part of the name.
 
 =head1 CLASSES
-The MiniDBD::Pg module contains the same classes and methods as every
+The DBDish::Pg module contains the same classes and methods as every
 database driver.  Therefore read the main documentation of usage in
-L<doc:MiniDBI> and internal architecture in L<doc:MiniDBD>.  Below are
-only notes about code unique to the MiniDBD::Pg implementation.
+L<doc:DBIish> and internal architecture in L<doc:DBDish>.  Below are
+only notes about code unique to the DBDish::Pg implementation.
 
 =head1 SEE ALSO
 The Postgres 8.4 Documentation, C Library.

@@ -1,5 +1,5 @@
 use NativeCall;
-use MiniDBD;
+use DBDish;
 
 enum SQLITE (
     SQLITE_OK        =>    0 , #  Successful result
@@ -62,6 +62,8 @@ sub sqlite3_bind_int(OpaquePointer $stmt, Int, Int) returns Int is native('libsq
 sub sqlite3_bind_null(OpaquePointer $stmt, Int) returns Int is native('libsqlite3') { ... };
 sub sqlite3_bind_text(OpaquePointer $stmt, Int, Str, Int, OpaquePointer) returns Int is native('libsqlite3') { ... };
 
+sub sqlite3_changes(OpaquePointer $handle) returns Int is native('libsqlite3') { ... };
+
 proto sub sqlite3_bind($, $, $) {*}
 multi sub sqlite3_bind($stmt, Int $n, Buf:D $b)  { sqlite3_bind_blob($stmt, $n, $b, $b.bytes, OpaquePointer) }
 multi sub sqlite3_bind($stmt, Int $n, Real:D $d) { sqlite3_bind_double($stmt, $n, $d.Num) }
@@ -71,17 +73,17 @@ multi sub sqlite3_bind($stmt, Int $n, Str:D $d)  { sqlite3_bind_text($stmt, $n, 
 
 sub sqlite3_reset(OpaquePointer) returns Int is native('libsqlite3') { ... }
 sub sqlite3_column_text(OpaquePointer, Int) returns Str is native('libsqlite3') { ... }
-sub sqlite3_finalze(OpaquePointer) returns Int is native('libsqlite3') { ... }
+sub sqlite3_finalize(OpaquePointer) returns Int is native('libsqlite3') { ... }
 sub sqlite3_column_count(OpaquePointer) returns Int is native('libsqlite3') { ... }
 
 
-class MiniDBD::SQLite::StatementHandle does MiniDBD::StatementHandle {
+class DBDish::SQLite::StatementHandle does DBDish::StatementHandle {
     has $!conn;
     has $.statement;
     has $!statement_handle;
     has $.RaiseError;
     has $.dbh;
-    has $!row_status;
+    has Int $!row_status;
 
     method !handle-error($status) {
         return if $status == SQLITE_OK;
@@ -90,7 +92,7 @@ class MiniDBD::SQLite::StatementHandle does MiniDBD::StatementHandle {
         die $errstr if $.RaiseError;
     }
 
-    submethod BUILD() {
+    submethod BUILD(:$!conn, :$!statement) {
         my @stmt := CArray[OpaquePointer].new;
         @stmt[0]  = OpaquePointer;
         my $status = sqlite3_prepare_v2(
@@ -98,7 +100,7 @@ class MiniDBD::SQLite::StatementHandle does MiniDBD::StatementHandle {
                 $!statement,
                 -1,
                 @stmt,
-                OpaquePointer,
+                CArray[OpaquePointer]
         );
         $!statement_handle = @stmt[0];
         self!handle-error($status);
@@ -110,15 +112,26 @@ class MiniDBD::SQLite::StatementHandle does MiniDBD::StatementHandle {
             self!handle-error(sqlite3_bind($!statement_handle, $idx + 1, $v));
         }
         $!row_status = sqlite3_step($!statement_handle);
+        self.rows;
+    }
+
+    method rows() {
+        die 'Cannot determine rows of closed connection' unless $!conn.DEFINITE;
+        my $rows = sqlite3_changes($!conn);
+        $rows == 0 ?? '0E0' !! $rows;
     }
 
     method fetchrow_array {
         my @row;
+        die 'fetchrow_array without prior execute' unless $!row_status.defined;
         return @row if $!row_status == SQLITE_DONE;
-        for ^sqlite3_column_count($!statement_handle) {
-            @row.push: sqlite3_column_text($!statement_handle);
+        my Int $count = sqlite3_column_count($!statement_handle);
+        note "Column count: $count";
+        for ^$count {
+            @row.push: sqlite3_column_text($!statement_handle, $_);
         }
         $!row_status = sqlite3_step($!statement_handle);
+
         @row;
     }
     method fetchrow_arrayref {
@@ -126,22 +139,26 @@ class MiniDBD::SQLite::StatementHandle does MiniDBD::StatementHandle {
     }
     method fetch() { self.fetchrow_arrayref }
     method fetchall_arrayref {
-        [ eager { self.fetchrow_arrayref } ...^ [] ]
+        my @rows;
+        while self.fetchrow_arrayref -> $r {
+            @rows.push: $r;
+        }
+        @rows.item;
     }
 
     method finish() {
-        sqlite3_finalze($!statement_handle) if $!statement_handle.defined;
-        $!row_status = SQLITE_DONE;
+        sqlite3_finalize($!statement_handle) if $!statement_handle.defined;
+        $!row_status = Int;;
         True;
     }
 }
 
-class MiniDBD::SQLite::Connection does MiniDBD::Connection {
+class DBDish::SQLite::Connection does DBDish::Connection {
     has $.RaiseError;
     has $!conn;
     method BUILD(:$!conn) { }
     method prepare(Str $statement, $attr?) {
-        MiniDBD::SQLite::StatementHandle.bless(*,
+        DBDish::SQLite::StatementHandle.bless(*,
             :$!conn,
             :$statement,
             :$!RaiseError,
@@ -151,8 +168,14 @@ class MiniDBD::SQLite::Connection does MiniDBD::Connection {
     method do(Str $statement, $attr?, *@bind is copy) {
         my $sth = self.prepare($statement);
         $sth.execute(@bind);
-        my $rows = $sth.rows;
-        return ($rows == 0) ?? "0E0" !! $rows;
+        # TODO: return actual number of rows
+        self.rows;
+    }
+
+    method rows() {
+        die 'Cannot determine rows of closed connection' unless $!conn.DEFINITE;
+        my $rows = sqlite3_changes($!conn);
+        $rows == 0 ?? '0E0' !! $rows;
     }
 
     method selectrow_arrayref(Str $statement, $attr?, *@bind is copy) {
@@ -193,17 +216,11 @@ class MiniDBD::SQLite::Connection does MiniDBD::Connection {
     }
 }
 
-class MiniDBD::SQLite:auth<mberends>:ver<0.0.1> {
+class DBDish::SQLite:auth<mberends>:ver<0.0.1> {
     has $.Version = 0.01;
     has $.errstr;
     method !errstr() is rw { $!errstr }
-    method connect($, $, Str $params, $RaiseError) {
-        my @params = $params.split(';');
-        my %params;
-        for @params -> $p {
-            my ( $key, $value ) = $p.split('=');
-            %params{$key} = $value;
-        }
+    method connect(:$RaiseError, *%params) {
         my $dbname = %params<dbname> // %params<database>;
         die 'No "dbname" or "database" given' unless defined $dbname;
 
@@ -211,7 +228,7 @@ class MiniDBD::SQLite:auth<mberends>:ver<0.0.1> {
         @conn[0]  = OpaquePointer;
         my $status = sqlite3_open($dbname, @conn);
         if $status == SQLITE_OK {
-            return MiniDBD::SQLite::Connection.bless(*,
+            return DBDish::SQLite::Connection.bless(*,
                     :conn(@conn[0]),
                     :$RaiseError,
             );

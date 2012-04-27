@@ -1,9 +1,9 @@
-# MiniDBD::mysql.pm6
+# DBDish::mysql.pm6
 
 use NativeCall;  # from project 'zavolaj'
-use MiniDBD;     # roles for drivers
+use DBDish;     # roles for drivers
 
-#module MiniDBD:auth<mberends>:ver<0.0.1>;
+#module DBDish:auth<mberends>:ver<0.0.1>;
 
 #------------ mysql library functions in alphabetical order ------------
 
@@ -114,7 +114,7 @@ sub mysql_warning_count( OpaquePointer $mysql_client )
 
 #-----------------------------------------------------------------------
 
-class MiniDBD::mysql::StatementHandle does MiniDBD::StatementHandle {
+class DBDish::mysql::StatementHandle does DBDish::StatementHandle {
     has $!mysql_client;
     has $!RaiseError;
     has $!statement;
@@ -127,7 +127,7 @@ class MiniDBD::mysql::StatementHandle does MiniDBD::StatementHandle {
     submethod BUILD(:$!mysql_client, :$!statement, :$!RaiseError) { }
     
     method execute(*@params is copy) {
-        # warn "in MiniDBD::mysql::StatementHandle.execute()";
+        # warn "in DBDish::mysql::StatementHandle.execute()";
         my $statement = $!statement;
         while @params.elems>0 and $statement.index('?')>=0 {
             my $param = @params.shift;
@@ -138,7 +138,7 @@ class MiniDBD::mysql::StatementHandle does MiniDBD::StatementHandle {
                 $statement .= subst("?",$param); # do not quote numbers
             }
         }
-        # warn "in MiniDBD::mysql::StatementHandle.execute statement=$statement";
+        # warn "in DBDish::mysql::StatementHandle.execute statement=$statement";
         $!result_set = Mu;
         my $status = mysql_query( $!mysql_client, $statement ); # 0 means OK
         $.mysql_warning_count = mysql_warning_count( $!mysql_client );
@@ -302,13 +302,13 @@ class MiniDBD::mysql::StatementHandle does MiniDBD::StatementHandle {
     }
 }
 
-class MiniDBD::mysql::Connection does MiniDBD::Connection {
+class DBDish::mysql::Connection does DBDish::Connection {
     has $!mysql_client;
     has $!RaiseError;
     submethod BUILD(:$!mysql_client, :$!RaiseError) { }
     method prepare( Str $statement ) {
-        # warn "in MiniDBD::mysql::Connection.prepare()";
-        my $statement_handle = MiniDBD::mysql::StatementHandle.new(
+        # warn "in DBDish::mysql::Connection.prepare()";
+        my $statement_handle = DBDish::mysql::StatementHandle.new(
             mysql_client => $!mysql_client,
             statement    => $statement,
             RaiseError   => $!RaiseError
@@ -321,23 +321,17 @@ class MiniDBD::mysql::Connection does MiniDBD::Connection {
     }
 }
 
-class MiniDBD::mysql:auth<mberends>:ver<0.0.1> {
+class DBDish::mysql:auth<mberends>:ver<0.0.1> {
 
     has $.Version = 0.01;
 
-#------------------ methods to be called from MiniDBI ------------------
-    method connect( Str $user, Str $password, Str $params, $RaiseError ) {
-        # warn "in MiniDBD::mysql.connect('$user',*,'$params')";
+#------------------ methods to be called from DBIish ------------------
+    method connect(Str :$user, Str :$password, :$RaiseError, *%params ) {
+        # warn "in DBDish::mysql.connect('$user',*,'$params')";
         my ( $mysql_client, $mysql_error );
         unless defined $mysql_client {
             $mysql_client = mysql_init( OpaquePointer );
             $mysql_error  = mysql_error( $mysql_client );
-        }
-        my @params = $params.split(';');
-        my %params;
-        for @params -> $p {
-            my ( $key, $value ) = $p.split('=');
-            %params{$key} = $value;
         }
         my $host     = %params<host>     // 'localhost';
         my $port     = (%params<port>     // 0).Int;
@@ -348,7 +342,7 @@ class MiniDBD::mysql:auth<mberends>:ver<0.0.1> {
         my $error = mysql_error( $mysql_client );
         my $connection;
         if $error eq '' {
-            $connection = MiniDBD::mysql::Connection.new(
+            $connection = DBDish::mysql::Connection.new(
                 mysql_client => $mysql_client,
                 RaiseError => $RaiseError
             );
@@ -360,23 +354,23 @@ class MiniDBD::mysql:auth<mberends>:ver<0.0.1> {
     }
 }
 
-# warn "module MiniDBD::mysql.pm has loaded";
+# warn "module DBDish::mysql.pm has loaded";
 
 =begin pod
 
 =head1 DESCRIPTION
-# 'zavolaj' is a Native Call Interface for Rakudo/Parrot. 'MiniDBI' and
-# 'MiniDBD::mysql' are Perl 6 modules that use 'zavolaj' to use the
+# 'zavolaj' is a Native Call Interface for Rakudo/Parrot. 'DBIish' and
+# 'DBDish::mysql' are Perl 6 modules that use 'zavolaj' to use the
 # standard mysqlclient library.  There is a long term Parrot based
 # project to develop a new, comprehensive DBI architecture for Parrot
-# and Perl 6.  MiniDBI is not that, it is a naive rewrite of the
+# and Perl 6.  DBIish is not that, it is a naive rewrite of the
 # similarly named Perl 5 modules.  Hence the 'Mini' part of the name.
 
 =head1 CLASSES
-The MiniDBD::mysql module contains the same classes and methods as every
+The DBDish::mysql module contains the same classes and methods as every
 database driver.  Therefore read the main documentation of usage in
-L<doc:MiniDBI> and internal architecture in L<doc:MiniDBD>.  Below are
-only notes about code unique to the MiniDBD::mysql implementation.
+L<doc:DBIish> and internal architecture in L<doc:DBDish>.  Below are
+only notes about code unique to the DBDish::mysql implementation.
 
 =head1 SEE ALSO
 The MySQL 5.1 Reference Manual, C API.

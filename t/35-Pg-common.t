@@ -1,24 +1,17 @@
-# MiniDBI/t/35-Pg-common.t
+# DBIish/t/35-Pg-common.t
 use v6;
 use Test;
-use MiniDBI;
+use DBIish;
 
 # Define the only database specific values used by the common tests.
-my ( $*mdriver, $*test_dsn, $*test_user, $*test_password );
-{
-    # Define values that are relevant only to Postgres
-    my $hostname   = 'localhost';
-    my $port       = 5432;
-    my $database   = 'zavolaj';
-    # Set up the common variables with the Postgres specific values
-    $*mdriver       = 'Pg';
-    $*test_dsn      = "MiniDBI:$*mdriver" ~ ":dbname=$database;"
-                     ~ "host=$hostname;port=$port";
-    $*test_user     = 'testuser';
-    $*test_password = 'testpass';
-}
-
+my ( $*mdriver, %*opts ) = 'Pg';
+%*opts<host>     = 'localhost';
+%*opts<port>     = 5432;
+%*opts<database> = 'zavolaj';
+%*opts<user>     = 'testuser';
+%*opts<password> = 'testpass';
 my $dbh;
+
 my $post_connect_cb = {
     my $dbh = @_.shift;
     $dbh.do('SET client_min_messages = warning');

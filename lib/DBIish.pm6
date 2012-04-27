@@ -1,25 +1,21 @@
-# MiniDBI.pm6
+# DBIish.pm6
 
-class MiniDBI:auth<mberends>:ver<0.1.0> {
+class DBIish:auth<mberends>:ver<0.1.0> {
     has $!err;
     has $!errstr;
-    method connect( $dsn, $username, $password, :$RaiseError=0, :$PrintError=0, :$AutoCommit=1 ) {
-        # warn "in MiniDBI.connect('$dsn')";
-        # Divide $dsn up into its separate fields.
-        my ( $prefix, $drivername, $params ) = $dsn.split(':');
-        my $driver = self.install_driver( $drivername );
-        # warn "calling MiniDBD::" ~ $drivername ~ ".connect($username,*,$params)";
-        my $connection = $driver.connect( $username, $password, $params, $RaiseError );
+    method connect($driver, :$RaiseError=0, :$PrintError=0, :$AutoCommit=1, *%opts ) {
+        my $d = self.install_driver( $driver );
+        # warn "calling DBDish::" ~ $drivername ~ ".connect($username,*,$params)";
+        my $connection = $d.connect(:$RaiseError, :$PrintError, :$AutoCommit, |%opts );
         return $connection;
     }
     method install_driver( $drivername ) {
         my $driver;
         given $drivername {
-            when 'CSV'     { eval 'use MiniDBD::CSV;   $driver = MiniDBD::CSV.new()' }
-            when 'mysql'   { eval 'use MiniDBD::mysql; $driver = MiniDBD::mysql.new()' }
-            when 'PgPir'   { eval 'use MiniDBD::PgPir; $driver = MiniDBD::PgPir.new()' }
-            when 'Pg'      { eval 'use MiniDBD::Pg;    $driver = MiniDBD::Pg.new()' }
-            when 'SQLite'  { eval 'use MiniDBD::SQLite;$driver = MiniDBD::SQLite.new()' }
+            when 'CSV'     { eval 'use DBDish::CSV;   $driver = DBDish::CSV.new()' }
+            when 'mysql'   { eval 'use DBDish::mysql; $driver = DBDish::mysql.new()' }
+            when 'Pg'      { eval 'use DBDish::Pg;    $driver = DBDish::Pg.new()' }
+            when 'SQLite'  { eval 'use DBDish::SQLite;$driver = DBDish::SQLite.new()' }
             default        { die "driver name '$drivername' is not known"; }
         }
         return $driver;
@@ -100,12 +96,12 @@ our sub SQL_INTERVAL_MINUTE_TO_SECOND { 113 }
 =begin pod
 =head1 SYNOPSIS
  # the list is from Perl 5 DBI, uncommented is working here
- use MiniDBI;
+ use DBIish;
  # TODO: @driver_names = DBI.available_drivers;
  # TODO: %drivers      = DBI.installed_drivers;
  # TODO: @data_sources = DBI.data_sources($driver_name, \%attr);
 
- $dbh = MiniDBI.connect($data_source, $username, $auth, \%attr);
+ $dbh = DBIish.connect($driver, :$username, :$password, |%options);
 
  $rv  = $dbh.do($statement);
  # TODO: $rv  = $dbh.do($statement, \%attr);
@@ -161,19 +157,19 @@ our sub SQL_INTERVAL_MINUTE_TO_SECOND { 113 }
 The (Perl 5) synopsis above only lists the major methods and parameters.
 
 =head1 DESCRIPTION
-The name C<MiniDBI> has two meanings.  In lowercase it indicates the
+The name C<DBIish> has two meanings.  In lowercase it indicates the
 github project being used for development.  In mixed case it is the
 module name and class name that database client applications should use.
 
-=head1 MiniDBI CLASSES and ROLES
+=head1 DBIish CLASSES and ROLES
 
-=head2 MiniDBI
-The C<MiniDBI> class exists mainly to provide the F<connect> method,
+=head2 DBIish
+The C<DBIish> class exists mainly to provide the F<connect> method,
 which acts as a constructor for database connections.
 
-=head2 MiniDBD
-The C<MiniDBD> role should only be used with 'does' to provide standard
-members for MiniDBD classes.
+=head2 DBDish
+The C<DBDish> role should only be used with 'does' to provide standard
+members for DBDish classes.
 
 =head1 SEE ALSO
 L<http://dbi.perl.org>

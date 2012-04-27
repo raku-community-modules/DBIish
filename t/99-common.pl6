@@ -1,22 +1,22 @@
-# MiniDBI/t/99-common.pl6
+# DBIish/t/99-common.pl6
 # This script is intended to be included as the common SQL tests in
 # scripts for specific DBDs such as CSV or mysql.
 
 #use Test;     # "use" dies in a runtime eval
-#use MiniDBI;
+#use DBIish;
 diag "Testing MiniDBD::$*mdriver";
-plan 32;
+plan 33;
 
 # Verify that the driver loads before attempting a connect
-my $drh = MiniDBI.install_driver($*mdriver);
+my $drh = DBIish.install_driver($*mdriver);
 ok $drh, 'Install driver'; # test 1
 my $drh_version;
 $drh_version = $drh.Version;
 ok $drh_version > 0, "MiniDBD::$*mdriver version $drh_version"; # test 2
 
 # Connect to the data sourcequantity*price AS amount FROM nom
-my $dbh = MiniDBI.connect( $*test_dsn, $*test_user, $*test_password, :RaiseError<1> );
-ok $dbh, "connect to $*test_dsn"; # test 3
+my $dbh = DBIish.connect( $*mdriver, |%*opts, :RaiseError<1> );
+ok $dbh, "connect to %*opts<database>"; # test 3
 
 try eval '$*post_connect_cb.($dbh)';
 
@@ -63,7 +63,11 @@ ok $sth = $dbh.prepare( "
 ok $sth.execute('TAFM', 'Mild fish taco', 1, 4.85 ) &&
    $sth.execute('BEOM', 'Medium size orange juice', 2, 1.20 ),
    "execute twice with parameters"; # test 11
-is $sth.rows, 1, "each insert with parameters also reports 1 row affected"; # test 12
+if $dbh.^can('rows') {
+    is $sth.rows, 1, "each insert with parameters also reports 1 row affected"; # test 12
+}
+else { skip '$dbh.rows not implemented', 1 }
+
 
 if $sth.^can('bind_param_array') {
     my @tuple_status;
@@ -94,7 +98,7 @@ if 'fetchall_arrayref' eq any($sth.^methods) {
         [ 'BEOM', 'Medium size orange juice', '2', '1.20', '2.40' ] ],
     "selected data matches what was written"; # test 18
 }
-else { skip 2, 'fetchall_arrayref not implemented' }
+else { skip 'fetchall_arrayref not implemented', 2 }
 
 ok $sth = $dbh.prepare("SELECT * FROM nom WHERE name='TAFM';"),
 'prepare new select for fetchrow_hashref test'; #test 19
@@ -105,7 +109,7 @@ if 'fetchrow_hashref' eq any ($sth.^methods) {
     is $hashref, { 'name' => 'TAFM', 'description' => 'Mild fish taco', 'quantity'
     => 1, 'price' => '4.85' }, 'selected data matches test hashref'; #test 22
 }
-else { skip 2, 'fetchrow_hashref not implemented' }
+else { skip 'fetchrow_hashref not implemented', 2 }
 
 # TODO: weird sth behavior workaround! Any sth concerning call at this point
 # will return empty or (properly) fail if something is called on that
@@ -116,7 +120,7 @@ if 'fetchrow_arrayref' eq any ($sth.^methods) {
     #is $arrayref, [ 'TAFM', 'Mild fish taco', '1', '4.85' ],
     #'selected data matches test data'; #test 23
 }
-else { skip 2, 'fetchrow_arrayref not implemented' }
+else { skip 'fetchrow_arrayref not implemented', 2 }
 
 #TODO: I made piña colada (+U00F1) at first to test unicode. It gets properly
 # inserted and selected, but a comparison within arrayref fails.
@@ -127,7 +131,7 @@ ok $sth = $dbh.prepare("INSERT INTO nom (name, description, quantity, price)
                          'insert new value for fetchrow_arrayref test'; #test 25
 
 ok $sth.execute(), 'new insert statement executed'; #test 26
-is $sth.rows, 1, "insert reports 1 row affected"; # test 27
+is $sth.?rows, 1, "insert reports 1 row affected"; # test 27
 
 ok $sth = $dbh.prepare("SELECT * FROM nom WHERE quantity='5';"),
 'prepare new select for fetchrow_arrayref test'; #test 28
@@ -139,7 +143,7 @@ if 'fetchrow_arrayref' eq any ($sth.^methods) {
     is $arrayref, [ 'PICO', 'Delish pina colada', '5', '7.90' ],
     'selected data matches test data of fetchrow_arrayref'; #test 32
 }
-else { skip 2, 'fetchrow_arrayref not implemented' }
+else { skip 'fetchrow_arrayref not implemented', 2 }
 
 # TODO: weird sth/dbh behavior workaround again. 
 if 'fetchrow_arrayref' eq any ($sth.^methods) {
@@ -148,6 +152,12 @@ if 'fetchrow_arrayref' eq any ($sth.^methods) {
 
 # Drop the table when finished, and disconnect
 ok $dbh.do("DROP TABLE nom"), "final cleanup";
+if $dbh.can('ping') {
+    ok $dbh.ping, '.ping is true on a working DB handle';
+}
+else {
+    skip('ping not implemented', 1);
+}
 ok $dbh.disconnect, "disconnect";
 
 # Return an unabiguous sign of successful completion

@@ -1,9 +1,9 @@
-# MiniDBD.pm6
+# DBDish.pm6
 # Provide default methods for all database drivers
 
 =begin pod
 =head1 DESCRIPTION
-The MiniDBD module contains generic code that should be re-used by every
+The DBDish module contains generic code that should be re-used by every
 database driver, and documentation guidelines for DBD implementation.
 
 It is also an experiment in distributing Pod fragments in and around the
@@ -11,15 +11,15 @@ code.  Without syntax highlighting, it is very awkward to work with.  It
 shows that this style of file layout is unsuitable for general use.
 
 =head1 ROLES
-=head2 role MiniDBD::StatementHandle
+=head2 role DBDish::StatementHandle
 The Connection C<prepare> method returns a StatementHandle object that
 mainly provides the C<execute> and C<finish> methods.
 =end pod
 
-role MiniDBD::StatementHandle {
+role DBDish::StatementHandle {
 
 =begin pod
-=head3 MiniDBD::StatementHandle members
+=head3 DBDish::StatementHandle members
 =head4 instance variables
 =head5 $!errstr
 The C<$!errstr> variable keeps an internal copy of the last error
@@ -53,13 +53,13 @@ database driver.
 }
 
 =begin pod
-=head2 role MiniDBD::Connection
+=head2 role DBDish::Connection
 =end pod
 
-role MiniDBD::Connection {
+role DBDish::Connection {
 
 =begin pod
-=head3 MiniDBD::Connection members
+=head3 DBDish::Connection members
 =head4 instance variables
 =head5 $!errstr
 The C<$!errstr> variable keeps an internal copy of the last error
@@ -75,7 +75,7 @@ message retrieved from the database driver.  It is cleared (when?).
 =end pod
 
     method do( Str $statement, *@params ) {
-        # warn "in MiniDBD::Connection.do('$statement')";
+        # warn "in DBDish::Connection.do('$statement')";
         my $sth = self.prepare($statement) or return fail();
         $sth.execute(@params);
 #       $sth.execute(@params) or return fail();
@@ -87,7 +87,7 @@ The C<disconnect> method
 =end pod
 
     method disconnect() {
-        # warn "in MiniDBI::DatabaseHandle.disconnect()";
+        # warn "in DBIish::DatabaseHandle.disconnect()";
         return Bool::True;
     }
 
