@@ -99,9 +99,9 @@ try {
     CATCH { die "ERROR: {DBIish.errstr}. Can't continue test\n"; }
 }
 ok($dbh.defined, "Connected to database"); # test 5
-ok($dbh.do("DROP TABLE IF EXISTS $table"), "making slate clean"); # test 6
+lives_ok({$dbh.do("DROP TABLE IF EXISTS $table")}, "making slate clean"); # test 6
 ok($dbh.do("CREATE TABLE $table (id INT(4), name VARCHAR(20))"), "creating $table"); # test 7
-ok($dbh.do("DROP TABLE $table"), "dropping created $table"); # test 8
+lives_ok({$dbh.do("DROP TABLE $table")}, "dropping created $table"); # test 8
 
 #-----------------------------------------------------------------------
 # from perl5 DBD/mysql/t/25lockunlock.t

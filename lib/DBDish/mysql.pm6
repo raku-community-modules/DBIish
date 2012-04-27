@@ -141,7 +141,7 @@ class DBDish::mysql::StatementHandle does DBDish::StatementHandle {
         $!result_set = Mu;
         my $status = mysql_query( $!mysql_client, $statement ); # 0 means OK
         $.mysql_warning_count = mysql_warning_count( $!mysql_client );
-        self!set_errstr(Str);
+        self!reset_errstr();
         if $status != 0 {
             self!set_errstr(mysql_error( $!mysql_client ));
         }
@@ -154,7 +154,7 @@ class DBDish::mysql::StatementHandle does DBDish::StatementHandle {
     # rows() is called on the statement handle $sth.
     method rows() {
         unless defined $!affected_rows {
-            self!set_errstr(Str);
+            self!reset_errstr();
             $!affected_rows = mysql_affected_rows($!mysql_client);
             my $errstr      = mysql_error( $!mysql_client );
 
@@ -176,7 +176,7 @@ class DBDish::mysql::StatementHandle does DBDish::StatementHandle {
 
         if defined $!result_set {
             # warn "fetching a row";
-            self!set_errstr(Str);
+            self!reset_errstr();
 
             my $native_row = mysql_fetch_row($!result_set); # can return NULL
             my $errstr     = mysql_error( $!mysql_client );
@@ -201,7 +201,7 @@ class DBDish::mysql::StatementHandle does DBDish::StatementHandle {
         }
         if defined $!result_set {
             # warn "fetching a row";
-            self!set_errstr(Str);
+            self!reset_errstr();
             my $native_row = mysql_fetch_row($!result_set); # can return NULL
             my $errstr = mysql_error( $!mysql_client );
             if $errstr ne '' { self!set_errstr($errstr); }
@@ -224,7 +224,7 @@ class DBDish::mysql::StatementHandle does DBDish::StatementHandle {
             $!field_count = mysql_field_count($!mysql_client);
         }
         if defined $!result_set {
-            self!set_errstr(Str);
+            self!reset_errstr();
             my @all_array;
             while ! self.errstr && my $native_row = mysql_fetch_row($!result_set) { # can return NULL
                 my $row_arrayref;
@@ -255,7 +255,7 @@ class DBDish::mysql::StatementHandle does DBDish::StatementHandle {
         }
 
         if defined $!result_set {
-            self!set_errstr(Str);
+            self!reset_errstr();
             my $errstr = mysql_error( $!mysql_client );
             if $errstr ne '' { self!set_errstr($errstr); }
 
@@ -318,7 +318,8 @@ class DBDish::mysql::Connection does DBDish::Connection {
     }
 
     method disconnect() {
-        die 'disconnect is NYI';
+        #die 'disconnect is NYI';
+        True
     }
 }
 
