@@ -42,8 +42,8 @@ migrated to become DBDI drivers. Once DBDI and driver functionality has reached
 a suitable level a full port of DBI can be built over DBDI.
 
 =head1 STATUS
-The MySQL driver performs CRUD operations.  Testing with production data
-is urgently needed.  Testers, please volunteer!
+Mysql and postgresql drivers perform CRUD operations, text only.
+PostgreSQL uses prepared statements and placeholders.
 
 =head1 BUGS
 Numbers with decimal points are passed to the database server as quoted
