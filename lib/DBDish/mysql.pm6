@@ -266,7 +266,7 @@ class DBDish::mysql::Connection does DBDish::Connection {
     }
 
     method disconnect() {
-        #die 'disconnect is NYI';
+        mysql_close($!mysql_client);
         True
     }
 }
