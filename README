@@ -1,19 +1,22 @@
 =begin pod
 
 =head1 NAME
-MiniDBI - a simple database interface for Rakudo Perl 6
+DBIish - a simple database interface for Rakudo Perl 6
 
 =head1 DESCRIPTION
-The MiniDBI project provides a simple database interface for Perl 6.
+The DBIish project provides a simple database interface for Perl 6.
 
 It's not a port of the Perl 5 DBI and does not intend to become one.
 It is, however, a simple and useful database interface for Perl 6 that works
 now. It looks like a DBI, and it talks like a DBI (although it only offers
 a subset of the functionality).
 
-=head1 DBD CLASSES
-Until there is a benefit in doing it otherwise, the MiniDBD drivers stay
-and install together with the main MiniDBI.pm6 in a single project.  The
+It is based on Martin Berends' MiniDBI project, but unlike MiniDBI, DBDish
+aims to provide an interface that takes advantage of Perl 6 idioms
+
+=head1 DBDish CLASSES
+Until there is a benefit in doing it otherwise, the DBDish drivers stay
+and install together with the main DBIish.pm6 in a single project.  The
 first DBD is for MySQL, there will probably soon be SQLite, Postgres and
 FreeTDS.  An AnyData driver for memory or file formats such as YAML or
 XML is also planned.
@@ -47,10 +50,10 @@ Numbers with decimal points are passed to the database server as quoted
 strings, because of far-too-simple checking in execute().
 
 =head1 SEE ALSO
-The Perl 6 Pod in the L<doc:MiniDBI> module.
+The Perl 6 Pod in the L<doc:DBIish> module.
 The Perl 5 L<doc:DBI> and L<doc:DBI::DBD>.
 
-This README and the documention of the MiniDBI and the MiniDBD modules
+This README and the documention of the DBIish and the DBDish modules
 are in the proposed Pod6 format.  The reasons are that Perl 6 does not
 allow any other kind of Pod, and that Pod6 needs more examples.  View it
 with an appropriate formatter if your system has one.

@@ -1,7 +1,7 @@
-# MiniDBI/t/35-Pg-common.t
+# DBIish/t/35-Pg-common.t
 use v6;
 use Test;
-use MiniDBI;
+use DBIish;
 
 # Define the only database specific values used by the common tests.
 my ( $*mdriver, %*opts ) = 'Pg';

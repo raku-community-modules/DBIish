@@ -1,8 +1,8 @@
-# MiniDBD/CSV.pm6
+# DBDish/CSV.pm6
 
-use MiniDBD;
+use DBDish;
 
-grammar MiniDBD::CSV::SQL {
+grammar DBDish::CSV::SQL {
     # note: token means regex :ratchet, rule means token :sigspace
     regex TOP { ^ [ <create_table> | <drop_table> | <insert> | <update>
                 | <delete> | <select> ] }
@@ -19,7 +19,7 @@ grammar MiniDBD::CSV::SQL {
     token column_type {:i int|char|numeric}
 }
 
-class MiniDBD::CSV::SQL::actions {
+class DBDish::CSV::SQL::actions {
     method create_table(Match $m) {
         print "doing CREATE TABLE ";
         my $table_name = ~$m<table_name>;
@@ -36,13 +36,13 @@ class MiniDBD::CSV::SQL::actions {
     method select(Match $m) { say "doing SELECT" }
 }
 
-class MiniDBD::CSV::StatementHandle does MiniDBD::StatementHandle {
+class DBDish::CSV::StatementHandle does DBDish::StatementHandle {
     has $!RaiseError;
     has $!sql_command;
     method execute(*@params is copy) {
         #say "executing: $!sql_command";
-        my Match $sql_match = MiniDBD::CSV::SQL.parse( $!sql_command,
-                        :actions( MiniDBD::CSV::SQL::actions ) );
+        my Match $sql_match = DBDish::CSV::SQL.parse( $!sql_command,
+                        :actions( DBDish::CSV::SQL::actions ) );
         say "execute " ~ $sql_match.perl;
         return Bool::True;
     }
@@ -54,12 +54,12 @@ class MiniDBD::CSV::StatementHandle does MiniDBD::StatementHandle {
     }
 }
 
-class MiniDBD::CSV::Connection does MiniDBD::Connection {
+class DBDish::CSV::Connection does DBDish::Connection {
     has $!RaiseError;
     method prepare( Str $sql_command ) {
         my $statement_handle;
-        $statement_handle = MiniDBD::CSV::StatementHandle.bless(
-            MiniDBD::CSV::StatementHandle.CREATE(),
+        $statement_handle = DBDish::CSV::StatementHandle.bless(
+            DBDish::CSV::StatementHandle.CREATE(),
             RaiseError => $!RaiseError,
             sql_command => $sql_command
         );
@@ -67,14 +67,14 @@ class MiniDBD::CSV::Connection does MiniDBD::Connection {
     }
 }
 
-class MiniDBD::CSV:auth<mberends>:ver<0.0.1> {
+class DBDish::CSV:auth<mberends>:ver<0.0.1> {
 
     has $.Version = 0.01;
 
     method connect(:$RaiseError ) {
-        #warn "in MiniDBD::CSV.connect('$user',*,'$params')";
-        my $connection = MiniDBD::CSV::Connection.bless(
-            MiniDBD::CSV::Connection.CREATE(),
+        #warn "in DBDish::CSV.connect('$user',*,'$params')";
+        my $connection = DBDish::CSV::Connection.bless(
+            DBDish::CSV::Connection.CREATE(),
             :$RaiseError
         );
         return $connection;

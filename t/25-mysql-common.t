@@ -1,7 +1,7 @@
-# MiniDBI/t/10-mysql-common.t
+# DBIish/t/10-mysql-common.t
 
 use Test;
-use MiniDBI;
+use DBIish;
 
 # Define the only database specific values used by the common tests.
 my $*mdriver = 'mysql';

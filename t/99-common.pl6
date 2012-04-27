@@ -1,21 +1,21 @@
-# MiniDBI/t/99-common.pl6
+# DBIish/t/99-common.pl6
 # This script is intended to be included as the common SQL tests in
 # scripts for specific DBDs such as CSV or mysql.
 
 #use Test;     # "use" dies in a runtime eval
-#use MiniDBI;
+#use DBIish;
 diag "Testing MiniDBD::$*mdriver";
 plan 33;
 
 # Verify that the driver loads before attempting a connect
-my $drh = MiniDBI.install_driver($*mdriver);
+my $drh = DBIish.install_driver($*mdriver);
 ok $drh, 'Install driver'; # test 1
 my $drh_version;
 $drh_version = $drh.Version;
 ok $drh_version > 0, "MiniDBD::$*mdriver version $drh_version"; # test 2
 
 # Connect to the data sourcequantity*price AS amount FROM nom
-my $dbh = MiniDBI.connect( $*mdriver, |%*opts, :RaiseError<1> );
+my $dbh = DBIish.connect( $*mdriver, |%*opts, :RaiseError<1> );
 ok $dbh, "connect to %*opts<database>"; # test 3
 
 try eval '$*post_connect_cb.($dbh)';

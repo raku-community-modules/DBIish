@@ -1,5 +1,5 @@
 use NativeCall;
-use MiniDBD;
+use DBDish;
 
 enum SQLITE (
     SQLITE_OK        =>    0 , #  Successful result
@@ -77,7 +77,7 @@ sub sqlite3_finalize(OpaquePointer) returns Int is native('libsqlite3') { ... }
 sub sqlite3_column_count(OpaquePointer) returns Int is native('libsqlite3') { ... }
 
 
-class MiniDBD::SQLite::StatementHandle does MiniDBD::StatementHandle {
+class DBDish::SQLite::StatementHandle does DBDish::StatementHandle {
     has $!conn;
     has $.statement;
     has $!statement_handle;
@@ -153,12 +153,12 @@ class MiniDBD::SQLite::StatementHandle does MiniDBD::StatementHandle {
     }
 }
 
-class MiniDBD::SQLite::Connection does MiniDBD::Connection {
+class DBDish::SQLite::Connection does DBDish::Connection {
     has $.RaiseError;
     has $!conn;
     method BUILD(:$!conn) { }
     method prepare(Str $statement, $attr?) {
-        MiniDBD::SQLite::StatementHandle.bless(*,
+        DBDish::SQLite::StatementHandle.bless(*,
             :$!conn,
             :$statement,
             :$!RaiseError,
@@ -216,7 +216,7 @@ class MiniDBD::SQLite::Connection does MiniDBD::Connection {
     }
 }
 
-class MiniDBD::SQLite:auth<mberends>:ver<0.0.1> {
+class DBDish::SQLite:auth<mberends>:ver<0.0.1> {
     has $.Version = 0.01;
     has $.errstr;
     method !errstr() is rw { $!errstr }
@@ -228,7 +228,7 @@ class MiniDBD::SQLite:auth<mberends>:ver<0.0.1> {
         @conn[0]  = OpaquePointer;
         my $status = sqlite3_open($dbname, @conn);
         if $status == SQLITE_OK {
-            return MiniDBD::SQLite::Connection.bless(*,
+            return DBDish::SQLite::Connection.bless(*,
                     :conn(@conn[0]),
                     :$RaiseError,
             );

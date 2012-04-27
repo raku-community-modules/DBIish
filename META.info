@@ -1,7 +1,7 @@
 {
-    "name"          : "MiniDBI",
+    "name"          : "DBIish",
     "version"       : "*",
     "description"   : "a subset of Perl 5 DBI ported to Perl 6 to use while experts build the Real Deal",
     "depends"       : ["NativeCall"],
-    "source-url"    : "git://github.com/mberends/MiniDBI.git"
+    "source-url"    : "git://github.com/mberends/DBIish.git"
 }
