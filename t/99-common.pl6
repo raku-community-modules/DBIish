@@ -5,7 +5,7 @@
 #use Test;     # "use" dies in a runtime eval
 #use MiniDBI;
 diag "Testing MiniDBD::$*mdriver";
-plan 32;
+plan 33;
 
 # Verify that the driver loads before attempting a connect
 my $drh = MiniDBI.install_driver($*mdriver);
@@ -152,6 +152,12 @@ if 'fetchrow_arrayref' eq any ($sth.^methods) {
 
 # Drop the table when finished, and disconnect
 ok $dbh.do("DROP TABLE nom"), "final cleanup";
+if $dbh.can('ping') {
+    ok $dbh.ping, '.ping is true on a working DB handle';
+}
+else {
+    skip('ping not implemented', 1);
+}
 ok $dbh.disconnect, "disconnect";
 
 # Return an unabiguous sign of successful completion

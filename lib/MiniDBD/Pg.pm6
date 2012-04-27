@@ -17,14 +17,6 @@ sub PQprepare (OpaquePointer $conn, Str $statement_name, Str $query, Int $n_para
     is native('libpq')
     { ... }
 
-# PGresult *PQexecPrepared(PGconn *conn,
-#                          const char *stmtName,
-#                          int nParams,
-#                          const char * const *paramValues,
-#                          const int *paramLengths,
-#                          const int *paramFormats,
-#                          int resultFormat);
-# 
 sub PQexecPrepared(
         OpaquePointer $conn,
         Str $statement_name,
@@ -415,6 +407,10 @@ class MiniDBD::Pg::Connection does MiniDBD::Connection {
         };
         PQexec($!pg_conn, "ROLLBACK");
         $.in_transaction = 0;
+    }
+
+    method ping {
+        PQstatus($!pg_conn) == CONNECTION_OK
     }
 }
 
