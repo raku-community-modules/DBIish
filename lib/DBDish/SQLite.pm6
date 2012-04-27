@@ -39,6 +39,11 @@ sub sqlite3_open(Str $filename, CArray[OpaquePointer] $handle)
     is native('libsqlite3')
     { ... }
 
+sub sqlite3_close(OpaquePointer)
+    returns Int
+    is native('libsqlite3')
+    { * }
+
 
 sub sqlite3_prepare_v2 (
         OpaquePointer $handle,
@@ -143,6 +148,11 @@ class DBDish::SQLite::StatementHandle does DBDish::StatementHandle {
 class DBDish::SQLite::Connection does DBDish::Connection {
     has $!conn;
     method BUILD(:$!conn) { }
+    method !handle-error($status) {
+        return if $status == SQLITE_OK;
+        my $errstr = SQLITE($status);
+        self!set_errstr($errstr);
+    }
     method prepare(Str $statement, $attr?) {
         DBDish::SQLite::StatementHandle.bless(*,
             :$!conn,
@@ -200,7 +210,10 @@ class DBDish::SQLite::Connection does DBDish::Connection {
         my $aref = @results;
         return $aref;
     }
-    method disconnect() { die 'disconnect NYI' }
+    method disconnect() {
+        self!handle_error(sqlite3_close($!conn));
+        return not self!errstr;
+    }
 }
 
 class DBDish::SQLite:auth<mberends>:ver<0.0.1> {
