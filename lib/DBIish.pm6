@@ -12,7 +12,6 @@ class DBIish:auth<mberends>:ver<0.1.0> {
     method install_driver( $drivername ) {
         my $driver;
         given $drivername {
-            when 'CSV'     { eval 'use DBDish::CSV;   $driver = DBDish::CSV.new()' }
             when 'mysql'   { eval 'use DBDish::mysql; $driver = DBDish::mysql.new()' }
             when 'Pg'      { eval 'use DBDish::Pg;    $driver = DBDish::Pg.new()' }
             when 'SQLite'  { eval 'use DBDish::SQLite;$driver = DBDish::SQLite.new()' }

@@ -16,9 +16,6 @@ all: lib/DBIish.pir
 lib/DBDish.pir: lib/DBDish.pm6
 	$(PERL6_EXE) --target=pir --output=lib/DBDish.pir lib/DBDish.pm6
 
-lib/DBDish/CSV.pir: lib/DBDish/CSV.pm6 lib/DBDish.pir
-	export PERL6LIB=lib; $(PERL6_EXE) --target=pir --output=lib/DBDish/CSV.pir lib/DBDish/CSV.pm6
-
 lib/DBDish/mysql.pir: lib/DBDish/mysql.pm6 lib/DBDish.pir
 	export PERL6LIB=lib; $(PERL6_EXE) --target=pir --output=lib/DBDish/mysql.pir lib/DBDish/mysql.pm6
 
@@ -28,12 +25,11 @@ lib/DBDish/Pg.pir: lib/DBDish/Pg.pm6 lib/DBDish.pir
 lib/DBDish/SQLite.pir: lib/DBDish/SQLite.pm6 lib/DBDish.pir
 	export PERL6LIB=lib; $(PERL6_EXE) --target=pir --output=lib/DBDish/SQLite.pir lib/DBDish/SQLite.pm6
 
-lib/DBIish.pir: lib/DBIish.pm6 lib/DBDish/CSV.pir lib/DBDish/mysql.pir lib/DBDish/Pg.pir lib/DBDish/SQLite.pir
+lib/DBIish.pir: lib/DBIish.pm6 lib/DBDish/mysql.pir lib/DBDish/Pg.pir lib/DBDish/SQLite.pir
 	export PERL6LIB=lib; $(PERL6_EXE) --target=pir --output=lib/DBIish.pir lib/DBIish.pm6
 
-test: lib/DBIish.pir lib/DBDish/CSV.pir lib/DBDish/mysql.pir lib/DBDish/Pg.pir lib/DBDish/SQLite.pir
+test: lib/DBIish.pir lib/DBDish/mysql.pir lib/DBDish/Pg.pir lib/DBDish/SQLite.pir
 	@#export PERL6LIB=lib; prove --exec $(PERL6_EXE) t/10-mysql.t
-	@#export PERL6LIB=lib; prove --exec $(PERL6_EXE) t/20-CSV-common.t
 	@#export PERL6LIB=lib; prove --exec $(PERL6_EXE) t/25-mysql-common.t
 	@#export PERL6LIB=lib; prove --exec $(PERL6_EXE) t/30-pgpir.t
 	export PERL6LIB=lib; prove --exec $(PERL6_EXE) t/
@@ -44,7 +40,6 @@ install: lib/DBIish.pir lib/DBDish.pir lib/DBDish/mysql.pir lib/DBDish/Pg.pir li
 	@$(CP) lib/DBIish.pm6 lib/DBIish.pir $(LIBSYSTEM)
 	@$(CP) lib/DBDish.pm6 lib/DBDish.pir $(LIBSYSTEM)
 	@$(MKPATH) $(LIBSYSTEM)/DBDish
-	@$(CP) lib/DBDish/CSV.pm6 lib/DBDish/CSV.pir $(LIBSYSTEM)/DBDish
 	@$(CP) lib/DBDish/mysql.pm6 lib/DBDish/mysql.pir $(LIBSYSTEM)/DBDish
 	@$(CP) lib/DBDish/Pg.pm6 lib/DBDish/Pg.pir $(LIBSYSTEM)/DBDish
 	@$(CP) lib/DBDish/SQLite.pm6 lib/DBDish/SQLite.pir $(LIBSYSTEM)/DBDish
@@ -55,7 +50,6 @@ install-user: lib/DBIish.pir lib/DBDish.pir lib/DBDish/mysql.pir lib/DBDish/Pg.p
 	@$(CP) lib/DBIish.pm6 lib/DBIish.pir $(LIBUSER)
 	@$(CP) lib/DBDish.pm6 lib/DBDish.pir $(LIBUSER)
 	@$(MKPATH) $(LIBUSER)/DBDish
-	@$(CP) lib/DBDish/CSV.pm6 lib/DBDish/CSV.pir $(LIBUSER)/DBDish
 	@$(CP) lib/DBDish/mysql.pm6 lib/DBDish/mysql.pir $(LIBUSER)/DBDish
 	@$(CP) lib/DBDish/Pg.pm6 lib/DBDish/Pg.pir $(LIBUSER)/DBDish
 	@$(CP) lib/DBDish/SQLite.pm6 lib/DBDish/SQLite.pir $(LIBUSER)/DBDish
@@ -68,10 +62,6 @@ uninstall:
 	@$(RM_F)   $(LIBSYSTEM)/DBDish.pm6
 	@$(TEST_F) $(LIBSYSTEM)/DBIish.pir
 	@$(RM_F)   $(LIBSYSTEM)/DBDish.pir
-	@$(TEST_F) $(LIBSYSTEM)/DBDish/CSV.pm6
-	@$(RM_F)   $(LIBSYSTEM)/DBDish/CSV.pm6
-	@$(TEST_F) $(LIBSYSTEM)/DBDish/CSV.pir
-	@$(RM_F)   $(LIBSYSTEM)/DBDish/CSV.pir
 	@$(TEST_F) $(LIBSYSTEM)/DBDish/mysql.pm6
 	@$(RM_F)   $(LIBSYSTEM)/DBDish/mysql.pm6
 	@$(TEST_F) $(LIBSYSTEM)/DBDish/mysql.pir
@@ -93,10 +83,6 @@ uninstall-user:
 	@$(RM_F)   $(LIBUSER)/DBIish.pm6
 	@$(TEST_F) $(LIBUSER)/DBIish.pir
 	@$(RM_F)   $(LIBUSER)/DBIish.pir
-	@$(TEST_F) $(LIBUSER)/DBDish/CSV.pm6
-	@$(RM_F)   $(LIBUSER)/DBDish/CSV.pm6
-	@$(TEST_F) $(LIBUSER)/DBDish/CSV.pir
-	@$(RM_F)   $(LIBUSER)/DBDish/CSV.pir
 	@$(TEST_F) $(LIBUSER)/DBDish/mysql.pm6
 	@$(RM_F)   $(LIBUSER)/DBDish/mysql.pm6
 	@$(TEST_F) $(LIBUSER)/DBDish/mysql.pir
