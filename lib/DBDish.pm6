@@ -60,10 +60,10 @@ role DBDish::StatementHandle does DBDish::ErrorHandling {
 
     method fetchrow_hashref { $.fetchrow-hash }
 
-    method fetchall-HoA {
+    method fetchall-hash {
         my @names := self.column_names;
         my %res = @names Z=> [] xx *;
-        for self.allrows -> @a {
+        for self.fetchall-array -> @a {
             for @a Z @names -> $v, $n {
                 %res{$n}.push: $v;
             }
@@ -77,7 +77,7 @@ role DBDish::StatementHandle does DBDish::ErrorHandling {
         }
     }
 
-    method allrows {
+    method fetchall-array {
         gather while self.fetchrow -> @row {
             take @row.item;
         }
@@ -89,7 +89,7 @@ role DBDish::StatementHandle does DBDish::ErrorHandling {
     method fetch() {
         $.fetchrow;
     }
-    method fetchall_arrayref { [ self.allrows.eager ] }
+    method fetchall_arrayref { [ self.fetchall-array.eager ] }
 }
 
 =begin pod
