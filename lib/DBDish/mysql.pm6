@@ -166,7 +166,7 @@ class DBDish::mysql::StatementHandle does DBDish::StatementHandle {
         } 
     }
 
-    method fetchrow_array() {
+    method fetchrow() {
         my @row_array;
 
         unless defined $!result_set {
@@ -191,58 +191,6 @@ class DBDish::mysql::StatementHandle does DBDish::StatementHandle {
             else { self.finish; }
         }
         return @row_array;
-    }
-
-    method fetchrow_arrayref() {
-        my $row_arrayref;
-        unless defined $!result_set {
-            $!result_set  = mysql_use_result( $!mysql_client);
-            $!field_count = mysql_field_count($!mysql_client);
-        }
-        if defined $!result_set {
-            # warn "fetching a row";
-            self!reset_errstr();
-            my $native_row = mysql_fetch_row($!result_set); # can return NULL
-            my $errstr = mysql_error( $!mysql_client );
-            if $errstr ne '' { self!set_errstr($errstr); }
-            if $native_row {
-                my @row_array;
-                loop ( my $i=0; $i < $!field_count; $i++ ) {
-                    @row_array[$i] = $native_row[$i];
-                }
-                $row_arrayref = @row_array;
-            }
-            else { self.finish; }
-        }
-        return $row_arrayref;
-    }
-    method fetch() { self.fetchrow_arrayref(); } # alias according to perldoc DBI
-    method fetchall_arrayref() {
-        my $all_arrayref;
-        unless defined $!result_set {
-            $!result_set  = mysql_use_result( $!mysql_client);
-            $!field_count = mysql_field_count($!mysql_client);
-        }
-        if defined $!result_set {
-            self!reset_errstr();
-            my @all_array;
-            while ! self.errstr && my $native_row = mysql_fetch_row($!result_set) { # can return NULL
-                my $row_arrayref;
-                my $errstr = mysql_error( $!mysql_client );
-                if $errstr ne '' { self!set_errstr($errstr); }
-                if $native_row {
-                    my @row_array;
-                    loop ( my $i=0; $i < $!field_count; $i++ ) {
-                        @row_array[$i] = $native_row[$i];
-                    }
-                    $row_arrayref = @row_array;
-                    push @all_array, $row_arrayref;
-                }
-                else { self.finish; }
-            }
-            $all_arrayref = @all_array;
-        }
-        return $all_arrayref;
     }
 
     method fetchrow_hashref () {

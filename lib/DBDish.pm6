@@ -51,7 +51,22 @@ mainly provides the C<execute> and C<finish> methods. It also has all the method
 
 role DBDish::StatementHandle does DBDish::ErrorHandling {
     method finish() { ... }
+    method fetchrow() { ... }
     method execute(*@) { ... }
+
+    method allrows {
+        gather while self.fetchrow -> @row {
+            take @row.item;
+        }
+    }
+    method fetchrow_array { self.fetchrow }
+    method fetchrow_arrayref {
+        $.fetchrow;
+    }
+    method fetch() {
+        $.fetchrow;
+    }
+    method fetchall_arrayref { [ self.allrows.eager ] }
 }
 
 =begin pod

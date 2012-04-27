@@ -175,7 +175,7 @@ class DBDish::Pg::StatementHandle does DBDish::StatementHandle {
         }
     }
 
-    method fetchrow_array() {
+    method fetchrow() {
         my @row_array;
         return if $!current_row >= $!row_count;
 
@@ -184,7 +184,7 @@ class DBDish::Pg::StatementHandle does DBDish::StatementHandle {
         }
 
         if defined $!result {
-            self!errstr = Any;
+            self!reset_errstr;
 
             for ^$!field_count {
                 @row_array.push(PQgetvalue($!result, $!current_row, $_));
@@ -195,40 +195,6 @@ class DBDish::Pg::StatementHandle does DBDish::StatementHandle {
             if ! @row_array { self.finish; }
         }
         return @row_array;
-    }
-
-    method fetchrow_arrayref() {
-        my $row_arrayref;
-
-        return if $!current_row >= $!row_count;
-
-        unless defined $!field_count {
-            $!field_count = PQnfields($!result);
-        }
-        if defined $!result {
-            self!reset_errstr;
-
-            my @row = self!get_row();
-
-            my $errstr = PQresultErrorMessage ($!result);
-            if $errstr ne '' {
-                self!set_errstr($errstr);
-            }
-
-            if @row {
-                $row_arrayref = @row;
-            }
-            else { self.finish; }
-        }
-        return $row_arrayref;
-    }
-    method fetch() { self.fetchrow_arrayref(); } # alias according to perldoc DBI
-    method fetchall_arrayref() {
-        my @res;
-        while self.fetchrow_arrayref -> $a {
-            @res.push: $a;
-        }
-        @res.item
     }
 
     method fetchrow_hashref () {

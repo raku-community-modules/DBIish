@@ -119,7 +119,7 @@ class DBDish::SQLite::StatementHandle does DBDish::StatementHandle {
         $rows == 0 ?? '0E0' !! $rows;
     }
 
-    method fetchrow_array {
+    method fetchrow {
         my @row;
         die 'fetchrow_array without prior execute' unless $!row_status.defined;
         return @row if $!row_status == SQLITE_DONE;
@@ -131,17 +131,6 @@ class DBDish::SQLite::StatementHandle does DBDish::StatementHandle {
         $!row_status = sqlite3_step($!statement_handle);
 
         @row;
-    }
-    method fetchrow_arrayref {
-        self.fetchrow_array.item;
-    }
-    method fetch() { self.fetchrow_arrayref }
-    method fetchall_arrayref {
-        my @rows;
-        while self.fetchrow_arrayref -> $r {
-            @rows.push: $r;
-        }
-        @rows.item;
     }
 
     method finish() {
