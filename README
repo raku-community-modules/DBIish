@@ -60,6 +60,8 @@ with an appropriate formatter if your system has one.
 
 =head1 LICENSE and COPYRIGHT
 Use these files at your risk and without warranty.  Give due credit if
-you do.  Written by Martin Berends.
+you do.  Written by Moritz Lenz, based on the MiniDBI code by Martin Berends.
+
+See the F<CREDITS> file for a list of all contributors.
 
 =end pod
