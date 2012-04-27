@@ -24,18 +24,20 @@ lib/DBDish/Pg.pir: lib/DBDish/Pg.pm6 lib/DBDish.pir
 
 lib/DBDish/SQLite.pir: lib/DBDish/SQLite.pm6 lib/DBDish.pir
 	export PERL6LIB=lib; $(PERL6_EXE) --target=pir --output=lib/DBDish/SQLite.pir lib/DBDish/SQLite.pm6
+lib/DBDish/TestMock.pir: lib/DBDish/TestMock.pm6 lib/DBDish.pir
+	export PERL6LIB=lib; $(PERL6_EXE) --target=pir --output=lib/DBDish/TestMock.pir lib/DBDish/TestMock.pm6
 
-lib/DBIish.pir: lib/DBIish.pm6 lib/DBDish/mysql.pir lib/DBDish/Pg.pir lib/DBDish/SQLite.pir
+lib/DBIish.pir: lib/DBIish.pm6 lib/DBDish/mysql.pir lib/DBDish/Pg.pir lib/DBDish/SQLite.pir lib/DBDish/TestMock.pir
 	export PERL6LIB=lib; $(PERL6_EXE) --target=pir --output=lib/DBIish.pir lib/DBIish.pm6
 
-test: lib/DBIish.pir lib/DBDish/mysql.pir lib/DBDish/Pg.pir lib/DBDish/SQLite.pir
+test: lib/DBIish.pir
 	@#export PERL6LIB=lib; prove --exec $(PERL6_EXE) t/10-mysql.t
 	@#export PERL6LIB=lib; prove --exec $(PERL6_EXE) t/25-mysql-common.t
 	@#export PERL6LIB=lib; prove --exec $(PERL6_EXE) t/30-pgpir.t
 	export PERL6LIB=lib; prove --exec $(PERL6_EXE) t/
 
 # standard install is to the shared system wide directory
-install: lib/DBIish.pir lib/DBDish.pir lib/DBDish/mysql.pir lib/DBDish/Pg.pir lib/DBDish/SQLite.pir
+install: lib/DBIish.pir lib/DBDish.pir
 	@echo "--> $(LIBSYSTEM)"
 	@$(CP) lib/DBIish.pm6 lib/DBIish.pir $(LIBSYSTEM)
 	@$(CP) lib/DBDish.pm6 lib/DBDish.pir $(LIBSYSTEM)

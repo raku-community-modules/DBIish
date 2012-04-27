@@ -15,6 +15,7 @@ class DBIish:auth<mberends>:ver<0.1.0> {
             when 'mysql'   { eval 'use DBDish::mysql; $driver = DBDish::mysql.new()' }
             when 'Pg'      { eval 'use DBDish::Pg;    $driver = DBDish::Pg.new()' }
             when 'SQLite'  { eval 'use DBDish::SQLite;$driver = DBDish::SQLite.new()' }
+            when 'TestMock'  { eval 'use DBDish::TestMock;$driver = DBDish::TestMock.new()' }
             default        { die "driver name '$drivername' is not known"; }
         }
         return $driver;

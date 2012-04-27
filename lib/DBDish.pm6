@@ -60,6 +60,23 @@ role DBDish::StatementHandle does DBDish::ErrorHandling {
 
     method fetchrow_hashref { $.fetchrow-hash }
 
+    method fetchall-HoA {
+        my @names := self.column_names;
+        my %res = @names Z=> [] xx *;
+        for self.allrows -> @a {
+            for @a Z @names -> $v, $n {
+                %res{$n}.push: $v;
+            }
+        }
+        return %res;
+    }
+
+    method fetchall-AoH {
+        gather while self.fetchrow-hash -> %h {
+            take %h.item;
+        }
+    }
+
     method allrows {
         gather while self.fetchrow -> @row {
             take @row.item;
