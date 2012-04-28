@@ -192,45 +192,19 @@ class DBDish::mysql::StatementHandle does DBDish::StatementHandle {
         }
         return @row_array;
     }
-
-    method fetchrow_hashref () {
-        my $row_hashref;
-        my %row_hash;
-
-        unless defined $!result_set {
-            $!result_set  = mysql_use_result($!mysql_client);
-            $!field_count = mysql_field_count($!mysql_client);
-        }
-
-        if defined $!result_set {
-            self!reset_errstr();
-            my $errstr = mysql_error( $!mysql_client );
-            if $errstr ne '' { self!set_errstr($errstr); }
-
-            my $native_row = mysql_fetch_row($!result_set); # can return NULL
-
-            unless @!column_names {    
-                loop ( my $i=0; $i < $!field_count; $i++ ) {
-                    my $field_info  = mysql_fetch_field($!result_set);
-                    my $column_name = $field_info[0];
-                    @!column_names.push($column_name);    
-                }
+    method column_names {
+        unless @!column_names {
+            unless defined $!result_set {
+                $!result_set  = mysql_use_result( $!mysql_client);
+                $!field_count = mysql_field_count($!mysql_client);
             }
-
-            if $native_row && @!column_names {
-                loop ( my $i=0; $i < $!field_count; $i++ ) {
-                    my $column_value = $native_row[$i];
-                    my $column_name  = @!column_names[$i];
-
-                    %row_hash{$column_name} = $column_value;
-                }
-            } else {
-                self.finish;
+            loop ( my $i=0; $i < $!field_count; $i++ ) {
+                my $field_info  = mysql_fetch_field($!result_set);
+                my $column_name = $field_info[0];
+                @!column_names.push($column_name);    
             }
-
-            $row_hashref = %row_hash;
         }
-        return $row_hashref;
+        @!column_names;
     }
 
     method mysql_insertid() {
