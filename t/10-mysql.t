@@ -94,7 +94,8 @@ ok $result, 'disconnect returned true'; # test 4
 #$dbh->disconnect();
 
 try {
-    $dbh = DBIish.connect( $mdriver, :user($test_user), :password($test_password), :$host, :$port,
+    $dbh = DBIish.connect( $mdriver, :user($test_user), :password($test_password),
+	:$host, :$port, :$database,
         RaiseError => 1, PrintError => 1, AutoCommit => 0 );
     CATCH { die "ERROR: {DBIish.errstr}. Can't continue test\n"; }
 }
@@ -146,7 +147,7 @@ try {
 ok defined($sth), "Prepare of select"; # test 14
 ok $sth.execute , "Execute"; # test 15
 my ($row, $errstr);
-$row = $sth.fetchrow_arrayref;
+$row = $sth.fetchrow_arrayref();
 $errstr= $sth.errstr;
 ok !defined($row), "Fetch should have failed"; # test 16
 ok !defined($errstr), "Fetch should have failed"; # test 17
@@ -239,7 +240,8 @@ ok $dbh.do("DROP TABLE $table"),"drop table $table"; # test 38
 # Because the drop table might fail, disconnect and reconnect
 $dbh.disconnect();
 try {
-    $dbh = DBIish.connect( $mdriver, :user($test_user), :password($test_password), :$host, :$port,
+    $dbh = DBIish.connect( $mdriver, :user($test_user), :password($test_password),
+	:$host, :$port, :$database,
         RaiseError => 1, PrintError => 1, AutoCommit => 0 );
     CATCH { die "ERROR: {DBIish.errstr}. Can't continue test\n"; }
 }
@@ -278,10 +280,10 @@ ok $dbh.do($create), "create $table"; # test 40
 $query = "INSERT INTO $table (id, name) VALUES (?,?)";
 ok ($sth = $dbh.prepare($query)),"prepare $query"; #  test 41
 ok $sth.execute(1, "Jocken"), "execute insert Jocken"; # test 42
-$sth.PrintError = 0;
+$sth.PrintError = Bool::False;
 dies_ok { $sth.execute(1, 'Jochen') }, 'fails with duplicate entry'; # test 43
 ok $sth.errstr.defined, '... and got an error in $sth.errstr';       # test 44
-$sth.PrintError = 1;
+$sth.PrintError = Bool::True;
 
 
 #-----------------------------------------------------------------------
