@@ -27,7 +27,7 @@ lib/DBDish/SQLite.pir: lib/DBDish/SQLite.pm6 lib/DBDish.pir
 lib/DBDish/TestMock.pir: lib/DBDish/TestMock.pm6 lib/DBDish.pir
 	export PERL6LIB=lib; $(PERL6_EXE) --target=pir --output=lib/DBDish/TestMock.pir lib/DBDish/TestMock.pm6
 
-lib/DBIish.pir: lib/DBIish.pm6 lib/DBDish/mysql.pir lib/DBDish/Pg.pir lib/DBDish/SQLite.pir lib/DBDish/TestMock.pir
+lib/DBIish.pir: lib/DBIish.pm6 lib/DBDish/mysql.pir lib/DBDish/Pg.pir lib/DBDish/SQLite.pir
 	export PERL6LIB=lib; $(PERL6_EXE) --target=pir --output=lib/DBIish.pir lib/DBIish.pm6
 
 test: lib/DBIish.pir
