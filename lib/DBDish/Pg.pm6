@@ -88,6 +88,36 @@ sub PQfinish(OpaquePointer)
     is native('libpq')
     { ... }
 
+sub PQftype(OpaquePointer, Int)
+    is native('libpq')
+    returns Int
+    { * }
+
+# from pg_type.h
+constant %oid-to-type-name = (
+        16  => 'Bool',  # bool
+        17  => 'Buf',   # bytea
+        20  => 'Int',   # int8
+        21  => 'Int',   # int2
+        23  => 'Int',   # int4
+        25  => 'Str',   # text
+       700  => 'Num',   # float4
+       701  => 'Num',   # float8
+      1000  => 'Bool',  # _bool
+      1001  => 'Buf',   # _bytea
+      1005  => 'Int',   # _int2
+      1009  => 'Str',   # _text
+      1015  => 'Str',   # _varchar
+      1021  => 'Num',   # _float4
+      1022  => 'Num',   # _float8
+      1043  => 'Str',   # varchar
+      1700  => 'Real',  # numeric
+      2950  => 'Str',   # uuid
+      2951  => 'Str',   # _uuid
+
+
+).hash;
+
 constant CONNECTION_OK     = 0;
 constant CONNECTION_BAD    = 1;
 
@@ -205,6 +235,16 @@ class DBDish::Pg::StatementHandle does DBDish::StatementHandle {
                 @!column_names.push($column_name);
             }
         }
+    }
+
+    # for debugging only so far
+    method column_oids {
+        $!field_count = PQnfields($!result);
+        my @res;
+        for ^$!field_count {
+            @res.push: PQftype($!result, $_);
+        }
+        @res;
     }
 
     method fetchall_hashref(Str $key) {
