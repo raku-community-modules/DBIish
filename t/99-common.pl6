@@ -133,7 +133,7 @@ else { skip 'fetchrow_arrayref not implemented', 2 }
 # Output _looks_ identical.
 
 ok $sth = $dbh.prepare("INSERT INTO nom (name, description, quantity, price)
-                         VALUES ('PICO', 'Delish pina colada', '5', '7.90');"), 
+                         VALUES ('PICO', 'Delish pina colada', '5', '7.9');"), 
                          'insert new value for fetchrow_arrayref test'; #test 25
 
 ok $sth.execute(), 'new insert statement executed'; #test 26
@@ -147,7 +147,7 @@ ok $sth.execute(), 'execute prepared statement for fetchrow_arrayref'; #test 29
 if 'fetchrow_arrayref' eq any ($sth.^methods) {
     ok my $arrayref = $sth.fetchrow_arrayref(), 'called fetchrow_arrayref'; #test 30
     is $arrayref.elems, 4, "fetchrow_arrayref returns 4 fields in a row"; #test 31
-    is $arrayref, [ 'PICO', 'Delish pina colada', '5', '7.90' ],
+    is $arrayref, [ 'PICO', 'Delish pina colada', '5', '7.9' ],
     'selected data matches test data of fetchrow_arrayref'; #test 32
 }
 else { skip 'fetchrow_arrayref not implemented', 2 }
