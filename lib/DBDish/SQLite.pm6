@@ -164,6 +164,7 @@ class DBDish::SQLite::Connection does DBDish::Connection {
     method do(Str $statement, $attr?, *@bind is copy) {
         my $sth = self.prepare($statement);
         $sth.execute(@bind);
+        $sth.finish;
         # TODO: return actual number of rows
         self.rows;
     }
