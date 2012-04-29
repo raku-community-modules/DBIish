@@ -104,7 +104,7 @@ ok $sth = $dbh.prepare("SELECT * FROM nom WHERE name='TAFM';"),
 'prepare new select for fetchrow_hashref test'; #test 19
 ok $sth.execute(), 'execute prepared statement for fetchrow_hashref'; #test 20
 
-if 'fetchrow_hashref' eq any ($sth.^methods) {
+if $sth.can('column_names') {
     ok my $hashref = $sth.fetchrow_hashref(), 'called fetchrow_hashref'; #test 21
     is $hashref, { 'name' => 'TAFM', 'description' => 'Mild fish taco', 'quantity'
     => 1, 'price' => '4.85' }, 'selected data matches test hashref'; #test 22
