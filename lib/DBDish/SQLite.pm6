@@ -211,7 +211,7 @@ class DBDish::SQLite::Connection does DBDish::Connection {
         return $aref;
     }
     method disconnect() {
-        self!handle_error(sqlite3_close($!conn));
+        self!handle-error(sqlite3_close($!conn));
         return not self!errstr;
     }
 }
