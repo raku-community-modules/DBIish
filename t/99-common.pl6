@@ -7,6 +7,18 @@
 diag "Testing MiniDBD::$*mdriver";
 plan 33;
 
+sub magic_cmp(@a, @b) {
+    my $res =  @a[0] eq @b[0]
+            && @a[1] eq @b[1]
+            && @a[2] == @b[2]
+            && @a[3] == @b[3];
+    unless $res {
+        diag "     Got: @a[]";
+        diag "Expected: @b[]";
+    }
+    $res;
+}
+
 # Verify that the driver loads before attempting a connect
 my $drh = DBIish.install_driver($*mdriver);
 ok $drh, 'Install driver'; # test 1
@@ -147,7 +159,7 @@ ok $sth.execute(), 'execute prepared statement for fetchrow_arrayref'; #test 29
 if 'fetchrow_arrayref' eq any ($sth.^methods) {
     ok my $arrayref = $sth.fetchrow_arrayref(), 'called fetchrow_arrayref'; #test 30
     is $arrayref.elems, 4, "fetchrow_arrayref returns 4 fields in a row"; #test 31
-    is $arrayref, [ 'PICO', 'Delish pina colada', '5', '7.9' ],
+    ok magic_cmp($arrayref, [ 'PICO', 'Delish pina colada', '5', '7.9' ]),
     'selected data matches test data of fetchrow_arrayref'; #test 32
 }
 else { skip 'fetchrow_arrayref not implemented', 2 }
