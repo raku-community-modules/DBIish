@@ -26,6 +26,7 @@ my $sth = $dbh.prepare("DROP TABLE IF EXISTS nom");
 my $rc = $sth.execute();
 isnt $rc, Bool::True, "drop table gave an expected error " ~
     "(did a previous test not clean up?)"; # test 4
+$sth.finish;
 
 # Create a table
 $sth = $dbh.prepare( "
@@ -43,6 +44,8 @@ if $dbh.^can('err') {
 }
 else { skip 'err after successful create should be 0', 1 }
 nok $dbh.errstr, "errstr after successful create should be false"; # test 7
+
+$sth.finish;
 
 # Insert rows using the various method calls
 ok $dbh.do( "
@@ -97,6 +100,7 @@ if 'fetchall_arrayref' eq any($sth.^methods) {
         [ 'TAFM', 'Mild fish taco', '1', '4.85', '4.85' ],
         [ 'BEOM', 'Medium size orange juice', '2', '1.20', '2.40' ] ],
     "selected data matches what was written"; # test 18
+    $sth.finish;
 }
 else { skip 'fetchall_arrayref not implemented', 2 }
 
@@ -108,6 +112,7 @@ if $sth.can('column_names') {
     ok my $hashref = $sth.fetchrow_hashref(), 'called fetchrow_hashref'; #test 21
     is $hashref, { 'name' => 'TAFM', 'description' => 'Mild fish taco', 'quantity'
     => 1, 'price' => '4.85' }, 'selected data matches test hashref'; #test 22
+    $sth.finish;
 }
 else { skip 'fetchrow_hashref not implemented', 2 }
 
@@ -116,6 +121,7 @@ else { skip 'fetchrow_hashref not implemented', 2 }
 # sth - after this, everything works fine again.
 if 'fetchrow_arrayref' eq any ($sth.^methods) {
     my $arrayref = $sth.fetchrow_arrayref(); #'called fetchrow_arrayref'; #test23
+    $sth.finish;
     #is $arrayref.elems, 4, "fetchrow_arrayref returns 4 fields in a row"; #test 24
     #is $arrayref, [ 'TAFM', 'Mild fish taco', '1', '4.85' ],
     #'selected data matches test data'; #test 23
@@ -132,6 +138,7 @@ ok $sth = $dbh.prepare("INSERT INTO nom (name, description, quantity, price)
 
 ok $sth.execute(), 'new insert statement executed'; #test 26
 is $sth.?rows, 1, "insert reports 1 row affected"; # test 27
+$sth.finish;
 
 ok $sth = $dbh.prepare("SELECT * FROM nom WHERE quantity='5';"),
 'prepare new select for fetchrow_arrayref test'; #test 28
@@ -149,6 +156,7 @@ else { skip 'fetchrow_arrayref not implemented', 2 }
 if 'fetchrow_arrayref' eq any ($sth.^methods) {
     my $arrayref = $sth.fetchrow_arrayref(); #'called fetchrow_arrayref'; #test23
 }
+$sth.finish;
 
 # Drop the table when finished, and disconnect
 ok $dbh.do("DROP TABLE nom"), "final cleanup";
