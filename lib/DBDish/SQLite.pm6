@@ -80,6 +80,7 @@ sub sqlite3_reset(OpaquePointer) returns Int is native('libsqlite3') { ... }
 sub sqlite3_column_text(OpaquePointer, Int) returns Str is native('libsqlite3') { ... }
 sub sqlite3_finalize(OpaquePointer) returns Int is native('libsqlite3') { ... }
 sub sqlite3_column_count(OpaquePointer) returns Int is native('libsqlite3') { ... }
+sub sqlite3_column_name(OpaquePointer, Int) returns Str is native('libsqlite3') { * }
 
 
 class DBDish::SQLite::StatementHandle does DBDish::StatementHandle {
@@ -89,6 +90,7 @@ class DBDish::SQLite::StatementHandle does DBDish::StatementHandle {
     has $.dbh;
     has Int $!row_status;
     has @!mem_rows;
+    has @!column_names;
 
     method !handle-error($status) {
         return if $status == SQLITE_OK;
@@ -118,6 +120,15 @@ class DBDish::SQLite::StatementHandle does DBDish::StatementHandle {
         die 'Cannot determine rows of closed connection' unless $!conn.DEFINITE;
         my $rows = sqlite3_changes($!conn);
         $rows == 0 ?? '0E0' !! $rows;
+    }
+
+    method column_names {
+        unless @!column_names {
+                my Int $count = sqlite3_column_count($!statement_handle);
+                @!column_names.push: sqlite3_column_name($!statement_handle, $_)
+                    for ^$count;
+        }
+        @!column_names;
     }
 
     method fetchrow {
