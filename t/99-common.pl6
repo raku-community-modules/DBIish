@@ -5,7 +5,7 @@
 #use Test;     # "use" dies in a runtime eval
 #use DBIish;
 diag "Testing MiniDBD::$*mdriver";
-plan 33;
+plan 35;
 
 sub magic_cmp(@a, @b) {
     my $res =  @a[0] eq @b[0]
@@ -135,12 +135,12 @@ else { skip 'fetchrow_hashref not implemented', 2 }
 # TODO: weird sth behavior workaround! Any sth concerning call at this point
 # will return empty or (properly) fail if something is called on that
 # sth - after this, everything works fine again.
-if 'fetchrow_arrayref' eq any ($sth.^methods) {
+if $sth.can('colum_names') {
+    $sth.execute;
     my $arrayref = $sth.fetchrow_arrayref(); #'called fetchrow_arrayref'; #test23
     $sth.finish;
-    #is $arrayref.elems, 4, "fetchrow_arrayref returns 4 fields in a row"; #test 24
-    #is $arrayref, [ 'TAFM', 'Mild fish taco', '1', '4.85' ],
-    #'selected data matches test data'; #test 23
+    is $arrayref.elems, 4, "fetchrow_arrayref returns 4 fields in a row"; #test 24
+    ok magic_cmp($arrayref, [ 'TAFM', 'Mild fish taco', 1, 4.85 ]), 'selected data matches test data'; #test 23
 }
 else { skip 'fetchrow_arrayref not implemented', 2 }
 
