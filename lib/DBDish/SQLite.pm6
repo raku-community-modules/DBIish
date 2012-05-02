@@ -88,6 +88,7 @@ class DBDish::SQLite::StatementHandle does DBDish::StatementHandle {
     has $!statement_handle;
     has $.dbh;
     has Int $!row_status;
+    has @!mem_rows;
 
     method !handle-error($status) {
         return if $status == SQLITE_OK;
@@ -106,13 +107,21 @@ class DBDish::SQLite::StatementHandle does DBDish::StatementHandle {
                 CArray[OpaquePointer]
         );
         $!statement_handle = @stmt[0];
+        note "prepare: $!statement_handle.WHICH() text: $!statement";
         self!handle-error($status);
     }
 
     method execute(*@params) {
         sqlite3_reset($!statement_handle) if $!statement_handle.defined;
+        @!mem_rows = ();
+        my @strings;
         for @params.kv -> $idx, $v {
+            if $v ~~ Str {
+                explicitly-manage($v);
+                @!mem_rows.push: $v;
+            }
             self!handle-error(sqlite3_bind($!statement_handle, $idx + 1, $v));
+            push @strings, $v;
         }
         $!row_status = sqlite3_step($!statement_handle);
         self.rows;
