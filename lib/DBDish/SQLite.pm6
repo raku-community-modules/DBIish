@@ -96,20 +96,7 @@ class DBDish::SQLite::StatementHandle does DBDish::StatementHandle {
         self!set_errstr($errstr);
     }
 
-    submethod BUILD(:$!conn, :$!statement) {
-        my @stmt := CArray[OpaquePointer].new;
-        @stmt[0]  = OpaquePointer;
-        my $status = sqlite3_prepare_v2(
-                $!conn,
-                $!statement,
-                -1,
-                @stmt,
-                CArray[OpaquePointer]
-        );
-        $!statement_handle = @stmt[0];
-        note "prepare: $!statement_handle.WHICH() text: $!statement";
-        self!handle-error($status);
-    }
+    submethod BUILD(:$!conn, :$!statement, :$!statement_handle, :$!dbh) { }
 
     method execute(*@params) {
         sqlite3_reset($!statement_handle) if $!statement_handle.defined;
@@ -138,7 +125,6 @@ class DBDish::SQLite::StatementHandle does DBDish::StatementHandle {
         die 'fetchrow_array without prior execute' unless $!row_status.defined;
         return @row if $!row_status == SQLITE_DONE;
         my Int $count = sqlite3_column_count($!statement_handle);
-        note "Column count: $count";
         for ^$count {
             @row.push: sqlite3_column_text($!statement_handle, $_);
         }
@@ -150,32 +136,45 @@ class DBDish::SQLite::StatementHandle does DBDish::StatementHandle {
     method finish() {
         sqlite3_finalize($!statement_handle) if $!statement_handle.defined;
         $!row_status = Int;;
+        $!dbh._remove_sth(self);
         True;
     }
 }
 
 class DBDish::SQLite::Connection does DBDish::Connection {
     has $!conn;
+    has @!sths;
     method BUILD(:$!conn) { }
     method !handle-error($status) {
         return if $status == SQLITE_OK;
-        my $errstr = SQLITE($status);
-        self!set_errstr($errstr);
+        self!set_errstr(SQLITE($status));
     }
     method prepare(Str $statement, $attr?) {
-        DBDish::SQLite::StatementHandle.bless(*,
+        my @stmt := CArray[OpaquePointer].new;
+        @stmt[0]  = OpaquePointer;
+        my $status = sqlite3_prepare_v2(
+                $!conn,
+                $statement,
+                -1,
+                @stmt,
+                CArray[OpaquePointer]
+        );
+        my $statement_handle = @stmt[0];
+        self!handle-error($status);
+        return Nil unless $status == SQLITE_OK;
+        my $sth = DBDish::SQLite::StatementHandle.bless(*,
             :$!conn,
             :$statement,
+            :$statement_handle,
             :$.RaiseError,
             :dbh(self),
         );
+        @!sths.push: $sth;
+        $sth;
     }
-    method do(Str $statement, $attr?, *@bind is copy) {
-        my $sth = self.prepare($statement);
-        $sth.execute(@bind);
-        $sth.finish;
-        # TODO: return actual number of rows
-        self.rows;
+
+    method _remove_sth($sth) {
+        @!sths.=grep(* !=== $sth);
     }
 
     method rows() {
@@ -220,9 +219,18 @@ class DBDish::SQLite::Connection does DBDish::Connection {
         my $aref = @results;
         return $aref;
     }
+
+    method do(Str $sql, *@args) {
+        my $sth = self.prepare($sql);
+        $sth.execute(@args);
+        my $res = $sth.rows || '0e0';
+        $sth.finish;
+        return $sth;
+    }
     method disconnect() {
+        .finish for @!sths;
         self!handle-error(sqlite3_close($!conn));
-        return not self!errstr;
+        return not self.errstr;
     }
 }
 
