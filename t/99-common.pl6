@@ -107,11 +107,15 @@ ok $sth.execute(), "execute a prepared select statement without parameters"; # t
 if 'fetchall_arrayref' eq any($sth.^methods) {
     my $arrayref = $sth.fetchall_arrayref();
     is $arrayref.elems, 3, "fetchall_arrayref returns 3 rows"; # test 17
-    is $arrayref, [ # TODO: numeric columns return as numeric, not string
+    my @ref =
         [ 'BUBH', 'Hot beef burrito', '1', '4.95', '4.95' ],
         [ 'TAFM', 'Mild fish taco', '1', '4.85', '4.85' ],
-        [ 'BEOM', 'Medium size orange juice', '2', '1.20', '2.40' ] ],
-    "selected data matches what was written"; # test 18
+        [ 'BEOM', 'Medium size orange juice', '2', '1.20', '2.40' ];
+    my $ok = True;
+    for ^3 -> $i {
+        $ok &&= magic_cmp($arrayref[$i], @ref[$i]);
+    }
+    ok $ok, "selected data matches what was written"; # test 18
     $sth.finish;
 }
 else { skip 'fetchall_arrayref not implemented', 2 }
