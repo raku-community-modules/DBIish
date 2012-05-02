@@ -149,7 +149,7 @@ ok $sth.execute , "Execute"; # test 15
 my ($row, $errstr);
 $row = $sth.fetchrow_arrayref();
 $errstr= $sth.errstr;
-nok defined($row), "Fetch should have failed"; # test 16
+nok $row, "Fetch should have failed"; # test 16
 nok $errstr, "Fetch should have failed"; # test 17
 ok $dbh.do("UNLOCK TABLES"), "Unlock tables"; # test 18
 ok $dbh.do("DROP TABLE $table"), "Drop table $table"; # test 19
