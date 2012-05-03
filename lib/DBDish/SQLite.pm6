@@ -141,7 +141,7 @@ class DBDish::SQLite::StatementHandle does DBDish::StatementHandle {
         }
         $!row_status = sqlite3_step($!statement_handle);
 
-        @row;
+        @row || Nil;
     }
 
     method finish() {
@@ -192,43 +192,6 @@ class DBDish::SQLite::Connection does DBDish::Connection {
         die 'Cannot determine rows of closed connection' unless $!conn.DEFINITE;
         my $rows = sqlite3_changes($!conn);
         $rows == 0 ?? '0E0' !! $rows;
-    }
-
-    method selectrow_arrayref(Str $statement, $attr?, *@bind is copy) {
-        my $sth = self.prepare($statement, $attr);
-        $sth.execute(@bind);
-        return $sth.fetchrow_arrayref;
-    }
-
-    method selectrow_hashref(Str $statement, $attr?, *@bind is copy) {
-        my $sth = self.prepare($statement, $attr);
-        $sth.execute(@bind);
-        return $sth.fetchrow_hashref;
-    }
-
-    method selectall_arrayref(Str $statement, $attr?, *@bind is copy) {
-        my $sth = self.prepare($statement, $attr);
-        $sth.execute(@bind);
-        return $sth.fetchall_arrayref;
-    }
-
-    method selectall_hashref(Str $statement, Str $key, $attr?, *@bind is copy) {
-        my $sth = self.prepare($statement, $attr);
-        $sth.execute(@bind);
-        return $sth.fetchall_hashref($key);
-    }
-
-    method selectcol_arrayref(Str $statement, $attr?, *@bind is copy) {
-        my @results;
-
-        my $sth = self.prepare($statement, $attr);
-        $sth.execute(@bind);
-        while (my $row = $sth.fetchrow_arrayref) {
-            @results.push($row[0]);
-        }
-
-        my $aref = @results;
-        return $aref;
     }
 
     method do(Str $sql, *@args) {
