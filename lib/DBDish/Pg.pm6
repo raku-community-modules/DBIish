@@ -30,6 +30,17 @@ sub PQexecPrepared(
     is native('libpq')
     { ... }
 
+sub PQnparams (OpaquePointer)
+    returns Int
+    is native('libpq')
+    { * }
+
+sub PQdescribePrepared (OpaquePointer, Str)
+    returns OpaquePointer
+    is native('libpq')
+    { * }
+
+
 sub PQresultStatus (OpaquePointer $result)
     returns Int
     is native('libpq')
@@ -133,6 +144,7 @@ class DBDish::Pg::StatementHandle does DBDish::StatementHandle {
     has $!pg_conn;
     has Str $!statement_name;
     has $!statement;
+    has $!param_count;
     has $.dbh;
     has $!result;
     has $!affected_rows;
@@ -151,27 +163,29 @@ class DBDish::Pg::StatementHandle does DBDish::StatementHandle {
 
     method !munge_statement {
         my $count = 0;
-        my $munged = $!statement.subst(:g, '?', { '$' ~ ++$count});
-        return ($munged, $count);
+        $!statement.subst(:g, '?', { '$' ~ ++$count});
     }
 
     submethod BUILD(:$!statement, :$!pg_conn) {
         state $statement_postfix = 0;
         $!statement_name = join '_', 'pg', $*PID, $statement_postfix++;
-        my ($munged, $nparams) = self!munge_statement;
+        my $munged = self!munge_statement;
 
         $!result = PQprepare(
                 $!pg_conn,
                 $!statement_name,
                 $munged,
-                $nparams,
+                0,
                 OpaquePointer
         );
         self!handle-errors;
+        my $info = PQdescribePrepared($!pg_conn, $!statement_name);
+        $!param_count = PQnparams($info);
         True;
     }
     method execute(*@params is copy) {
         $!current_row = 0;
+        die "Wrong number of arguments to method execute: got @params.elems(), expected $!param_count" if @params != $!param_count;
         my @param_values := CArray[Str].new;
         for @params.kv -> $k, $v {
             @param_values[$k] = $v.Str;
