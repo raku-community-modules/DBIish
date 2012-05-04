@@ -5,7 +5,7 @@
 #use Test;     # "use" dies in a runtime eval
 #use DBIish;
 diag "Testing MiniDBD::$*mdriver";
-plan 35;
+plan 38;
 
 sub magic_cmp(@a, @b) {
     my $res =  @a[0] eq @b[0]
@@ -173,6 +173,24 @@ if 'fetchrow_arrayref' eq any ($sth.^methods) {
     my $arrayref = $sth.fetchrow_arrayref(); #'called fetchrow_arrayref'; #test23
 }
 $sth.finish;
+
+# test quotes and so on 
+{
+    $sth = $dbh.prepare(q[INSERT INTO nom (name, description) VALUES (?, ?)]);
+    my $lived;
+    lives_ok { $sth.execute("quot", q["';]); $lived = 1 }, 'can insert single and double quotes';
+    $sth.finish;
+    if $lived {
+        $sth = $dbh.prepare(q[SELECT description FROM nom where name = ?]);
+        lives_ok { $sth.execute('quot') }, 'lived while retrieving result';
+        is $sth.fetchrow.join, q["';], 'got the right string back';
+        $sth.finish;
+    }
+    else {
+        skip('dependent tests', 2);
+    }
+}
+
 
 # Drop the table when finished, and disconnect
 ok $dbh.do("DROP TABLE nom"), "final cleanup";
