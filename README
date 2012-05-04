@@ -16,10 +16,22 @@ aims to provide an interface that takes advantage of Perl 6 idioms
 
 =head1 DBDish CLASSES
 Until there is a benefit in doing it otherwise, the DBDish drivers stay
-and install together with the main DBIish.pm6 in a single project.  The
-first DBD is for MySQL, there will probably soon be SQLite, Postgres and
-FreeTDS.  An AnyData driver for memory or file formats such as YAML or
-XML is also planned.
+and install together with the main DBIish.pm6 in a single project. 
+
+Currently the following backends are supported
+
+=head2 Pg (Postgresql)
+
+Supports basic CRUD operations and prepared statements with placeholders
+
+=head2 SQLite
+
+Supports basic CRUD operations and prepared statements with placeholders
+
+=head2 mysql
+
+Supports basic CRUD operations. Emulates prepared statements by escaping
+and interpolating strings.
 
 =head1 TESTING
 The initial test script is merely a concatenation of all the scripts in
@@ -34,34 +46,57 @@ particular databases.  The aim is to make the suite demonstrate portable
 and non portable operations.
 
 =head1 ROADMAP
-Add some DBDs.  Improve the test suite.  Attract more contributors.
+Add some more drivers. Improve robustness of all drivers. Improve the test suite.  Attract more contributors.
 
-We'll add a driver for the DBDI project (L<http://github.com/timbunce/DBDI>)
-once it has sufficient functionality. Then the existing drivers would be
-migrated to become DBDI drivers. Once DBDI and driver functionality has reached
-a suitable level a full port of DBI can be built over DBDI.
+Integrate with the DBDI project (L<http://github.com/timbunce/DBDI>)
+once it has sufficient functionality.
 
-=head1 STATUS
-Mysql and postgresql drivers perform CRUD operations, text only.
-PostgreSQL uses prepared statements and placeholders.
-
-=head1 BUGS
-Numbers with decimal points are passed to the database server as quoted
-strings, because of far-too-simple checking in execute().
 
 =head1 SEE ALSO
 The Perl 6 Pod in the L<doc:DBIish> module.
 The Perl 5 L<doc:DBI> and L<doc:DBI::DBD>.
 
 This README and the documention of the DBIish and the DBDish modules
-are in the proposed Pod6 format.  The reasons are that Perl 6 does not
-allow any other kind of Pod, and that Pod6 needs more examples.  View it
-with an appropriate formatter if your system has one.
+are in the Pod6 format. It can be extracted by running
 
-=head1 LICENSE and COPYRIGHT
-Use these files at your risk and without warranty.  Give due credit if
-you do.  Written by Moritz Lenz, based on the MiniDBI code by Martin Berends.
+    perl6 --doc <filename>
+
+Or, if L<Pod::To::HTML> is installed,
+
+    perl6 --doc=html <filename>
+
+=head1 COPYRIGHT
+Written by Moritz Lenz, based on the MiniDBI code by Martin Berends.
 
 See the F<CREDITS> file for a list of all contributors.
+
+=head1 LICENSE
+
+Copyright (C) 2009-2012, the DBIish contributors
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+ * Redistributions of source code must retain the above copyright notice,
+   this list of conditions and the following disclaimer.
+
+ * Redistributions in binary form must reproduce the above copyright
+   notice, this list of conditions and the following disclaimer in the
+   documentation and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
+OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY
+WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
+
 
 =end pod
