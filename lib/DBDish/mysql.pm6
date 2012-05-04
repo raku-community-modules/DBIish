@@ -140,11 +140,11 @@ class DBDish::mysql::StatementHandle does DBDish::StatementHandle {
         my $statement = $!statement;
         while @params.elems>0 and $statement.index('?')>=0 {
             my $param = @params.shift;
-            if $param ~~ /<-[0..9]>/ {
-                $statement .= subst("?","'$param'"); # quote non numerics
+            if $param ~~ /<-[0..9.]>/ {
+                $statement .= subst("?", self.quote($param.Str)); # quote non numerics
             }
             else {
-                $statement .= subst("?",$param); # do not quote numbers
+                $statement .= subst("?", $param); # do not quote numbers
             }
         }
         # warn "in DBDish::mysql::StatementHandle.execute statement=$statement";
@@ -158,6 +158,17 @@ class DBDish::mysql::StatementHandle does DBDish::StatementHandle {
 
         my $rows = self.rows;
         return ($rows == 0) ?? "0E0" !! $rows;
+    }
+
+    method escape(Str $x) {
+        # XXX should really call mysql_real_scape_string
+        $x.trans(
+                [q['],  q["],  q[\\],   chr(0), "\r", "\n"]
+            =>  [q[\'], q[\"], q[\\\\], '\0',   '\r', '\n']
+        );
+    }
+    method quote(Str $x) {
+        q['] ~ self.escape($x) ~ q['];
     }
 
     # do() and execute() return the number of affected rows directly or:
