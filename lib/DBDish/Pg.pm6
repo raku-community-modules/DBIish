@@ -199,14 +199,19 @@ class DBDish::Pg::StatementHandle does DBDish::StatementHandle {
     has @!column_names;
     has Int $!row_count;
     has $!field_count;
-    has $!current_row;
+    has $!current_row = 0;
 
     method !handle-errors {
         my $status = PQresultStatus($!result);
         if $status != PGRES_EMPTY_QUERY | PGRES_COMMAND_OK | PGRES_TUPLES_OK | PGRES_COPY_OUT | PGRES_COPY_IN {
             self!set_errstr(PQresultErrorMessage($!result));
+            die self.errstr if $.RaiseError;
+            return Nil;
         }
-        self!set_errstr(Any);
+        else {
+            self!reset_errstr;
+            return True;
+        }
     }
 
     method !munge_statement {
@@ -214,22 +219,8 @@ class DBDish::Pg::StatementHandle does DBDish::StatementHandle {
         $!statement.subst(:g, '?', { '$' ~ ++$count});
     }
 
-    submethod BUILD(:$!statement, :$!pg_conn) {
-        state $statement_postfix = 0;
-        $!statement_name = join '_', 'pg', $*PID, $statement_postfix++;
-        my $munged = self!munge_statement;
-
-        $!result = PQprepare(
-                $!pg_conn,
-                $!statement_name,
-                $munged,
-                0,
-                OpaquePointer
-        );
-        self!handle-errors;
-        my $info = PQdescribePrepared($!pg_conn, $!statement_name);
-        $!param_count = PQnparams($info);
-        True;
+    submethod BUILD(:$!statement, :$!pg_conn, :$!statement_name, :$!param_count,
+           :$!dbh) {
     }
     method execute(*@params is copy) {
         $!current_row = 0;
@@ -349,12 +340,34 @@ class DBDish::Pg::Connection does DBDish::Connection {
     method BUILD(:$!pg_conn) { }
 
     method prepare(Str $statement, $attr?) {
+        state $statement_postfix = 0;
+        my $statement_name = join '_', 'pg', $*PID, $statement_postfix++;
+        my $munged = DBDish::Pg::pg-replace-placeholder($statement);
+        my $result = PQprepare(
+                $!pg_conn,
+                $statement_name,
+                $munged,
+                0,
+                OpaquePointer
+        );
+        my $status = PQresultStatus($result);
+        if $status != PGRES_EMPTY_QUERY | PGRES_COMMAND_OK | PGRES_TUPLES_OK | PGRES_COPY_OUT | PGRES_COPY_IN {
+            self!set_errstr(PQresultErrorMessage($result));
+            die self!errstr if $.RaiseError;
+            return Nil;
+        }
+        my $info = PQdescribePrepared($!pg_conn, $statement_name);
+        my $param_count = PQnparams($info);
+
         my $statement_handle = DBDish::Pg::StatementHandle.bless(
-            DBDish::Pg::StatementHandle.CREATE(),
+            *,
             :$!pg_conn,
             :$statement,
             :$.RaiseError,
             :dbh(self),
+            :$statement_name,
+            :$result,
+            :$param_count,
         );
         return $statement_handle;
     }
@@ -433,7 +446,7 @@ class DBDish::Pg::Connection does DBDish::Connection {
 
 class DBDish::Pg:auth<mberends>:ver<0.0.1> {
 
-    sub pg-replace-placeholder(Str $query) is export {
+    our sub pg-replace-placeholder(Str $query) is export {
         PgTokenizer.parse($query, :actions(PgTokenizer::Actions.new))
             and $/.ast;
     }
