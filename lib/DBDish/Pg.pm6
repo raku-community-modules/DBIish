@@ -140,6 +140,54 @@ constant PGRES_COPY_IN     = 4;
 
 #-----------------------------------------------------------------------
 
+my grammar PgTokenizer {
+    token double_quote_normal { <-[\\"]>+ }
+    token double_quote_escape { [\\ . ]+ }
+    token double_quote {
+        \"
+        [
+            | <.double_quote_normal>
+            | <.double_quote_escape>
+        ]*
+        \"
+    }
+    token single_quote_normal { <-['\\]>+ }
+    token single_quote_escape { [ \'\' || \\ . ]+ }
+    token single_quote {
+        \'
+        [
+            | <.single_quote_normal>
+            | <.single_quote_escape>
+        ]*
+        \'
+    }
+    token placeholder { '?' }
+    token normal { <-[?"']>+ }
+
+    token TOP {
+        ^
+        (
+            | <normal>
+            | <placeholder>
+            | <single_quote>
+            | <double_quote>
+        )*
+        $
+    }
+}
+
+my class PgTokenizer::Actions {
+    has $.counter = 0;
+    method single_quote($/) { make $/.Str }
+    method double_quote($/) { make $/.Str }
+    method placeholder($/)  { make '$' ~ ++$!counter }
+    method normal($/)       { make $/.Str }
+    method TOP($/) {
+        make $0.map(*.values[0].ast).join;
+    }
+}
+
+
 class DBDish::Pg::StatementHandle does DBDish::StatementHandle {
     has $!pg_conn;
     has Str $!statement_name;
@@ -384,6 +432,11 @@ class DBDish::Pg::Connection does DBDish::Connection {
 }
 
 class DBDish::Pg:auth<mberends>:ver<0.0.1> {
+
+    sub pg-replace-placeholder(Str $query) is export {
+        PgTokenizer.parse($query, :actions(PgTokenizer::Actions.new))
+            and $/.ast;
+    }
 
     has $.Version = 0.01;
     has $!errstr;
