@@ -5,7 +5,7 @@
 #use Test;     # "use" dies in a runtime eval
 #use DBIish;
 diag "Testing MiniDBD::$*mdriver";
-plan 38;
+plan 40;
 
 sub magic_cmp(@a, @b) {
     my $res =  @a[0] eq @b[0]
@@ -188,6 +188,18 @@ $sth.finish;
     }
     else {
         skip('dependent tests', 2);
+    }
+
+    $lived = 0;
+    lives_ok { $dbh.do(q[INSERT INTO nom (name, description) VALUES(?, '?"')], 'mark'); $lived = 1}, 'can use question mark in quoted strings';
+    if $lived {
+        my $sth = $dbh.prepare(q[SELECT description FROM nom WHERE name = 'mark']);
+        $sth.execute;
+        is $sth.fetchrow.join, '?"', 'correctly retrieved question mark';
+        $sth.finish;
+    }
+    else {
+        skip('dependent test', 1);
     }
 }
 

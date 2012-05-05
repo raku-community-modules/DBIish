@@ -372,7 +372,7 @@ class DBDish::Pg::Connection does DBDish::Connection {
         return $statement_handle;
     }
 
-    method do(Str $statement, $attr?, *@bind is copy) {
+    method do(Str $statement, *@bind is copy) {
         my $sth = self.prepare($statement);
         $sth.execute(@bind);
         my $rows = $sth.rows;
