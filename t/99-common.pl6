@@ -27,7 +27,17 @@ $drh_version = $drh.Version;
 ok $drh_version > 0, "MiniDBD::$*mdriver version $drh_version"; # test 2
 
 # Connect to the data sourcequantity*price AS amount FROM nom
-my $dbh = DBIish.connect( $*mdriver, |%*opts, :RaiseError<1> );
+my $dbh;
+try {
+    $dbh = DBIish.connect( $*mdriver, |%*opts, :RaiseError<1> );
+    CATCH {
+        default {
+            diag "Connect failed with error $_";
+            skip 'connect failed -- maybe the prerequisits are not installed?', 38;
+            exit;
+        }
+    }
+}
 ok $dbh, "connect to %*opts<database>"; # test 3
 
 try eval '$*post_connect_cb.($dbh)';

@@ -75,10 +75,20 @@ ok $drh_version > 0, "DBDish::mysql version $drh_version"; # test 2
 #ok defined $dbh, "Connected to database";
 #ok $dbh->disconnect();
 #
-my $dbh = DBIish.connect($mdriver, :user($test_user), :password($test_password),
+my $dbh = try {
+    CATCH { default {
+        diag "Connect failed with error $_";
+        skip 'connect failed -- missing prereqs?', 85;
+        exit;
+
+    }}
+   
+    DBIish.connect($mdriver, :user($test_user), :password($test_password),
         :$host, :$port, :$database,
         RaiseError => 1, PrintError => 1, AutoCommit => 0
-);
+    );
+}
+
 # die "ERROR: {DBIish.errstr}. Can't continue test" if $!.defined;
 ok $dbh.defined, "Connected to database"; # test 3
 my $result = $dbh.disconnect();
