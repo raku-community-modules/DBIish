@@ -455,13 +455,18 @@ class DBDish::Pg:auth<mberends>:ver<0.0.1> {
     has $!errstr;
     method !errstr() is rw { $!errstr }
 
+    sub quote-and-escape($s) {
+        "'" ~ $s.trans([q{'}, q{\\]}] => [q{\\\'}, q{\\\\}])
+            ~ "'"
+    }
+
 #------------------ methods to be called from DBIish ------------------
     method connect(*%params) {
-        my $host     = %params<host>     // 'localhost';
-        my $port     = %params<port>     // 5432;
-        my $database = %params<dbname>   // %params<database> // 'postgres';
-        my $user     = %params<user>     // die 'Missing <user> config';
-        my $password = %params<password> // die 'Missing <password> config';
+        my $host     = quote-and-escape %params<host>     // 'localhost';
+        my $port     = quote-and-escape %params<port>     // 5432;
+        my $database = quote-and-escape %params<dbname>   // %params<database> // 'postgres';
+        my $user     = quote-and-escape %params<user>     // die 'Missing <user> config';
+        my $password = quote-and-escape %params<password> // die 'Missing <password> config';
         my $conninfo = "host=$host port=$port dbname=$database user=$user password=$password";
         my $pg_conn = PQconnectdb($conninfo);
         my $status = PQstatus($pg_conn);
