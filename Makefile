@@ -7,8 +7,8 @@ MKPATH    = $(PERL_EXE) -MExtUtils::Command -e mkpath
 RM_F      = $(PERL_EXE) -MExtUtils::Command -e rm_f
 TEST_F    = $(PERL_EXE) -MExtUtils::Command -e test_f
 # try to make these OS agnostic (ie use the same definition on Unix and Windows)
-LIBSYSTEM = $(shell $(PERL6_EXE) -e 'print @*INC[2]')
-LIBUSER   = $(shell $(PERL6_EXE) -e 'print @*INC[1]')
+LIBSYSTEM = $(shell $(PERL6_EXE) -e 'print @*INC[1]')
+LIBUSER   = $(shell $(PERL6_EXE) -e 'print @*INC[0]')
 
 # first (therefore default) target is DBIish.pir
 all: lib/DBIish.pir
