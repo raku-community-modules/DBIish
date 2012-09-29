@@ -3,18 +3,20 @@
 use NativeCall;  # from project 'zavolaj'
 use DBDish;     # roles for drivers
 
+constant lib = 'libpq';
+
 #module DBDish:auth<mberends>:ver<0.0.1>;
 
 #------------ Pg library functions in alphabetical order ------------
 
 sub PQexec (OpaquePointer $conn, Str $statement)
     returns OpaquePointer
-    is native('libpq')
+    is native(lib)
     { ... }
 
 sub PQprepare (OpaquePointer $conn, Str $statement_name, Str $query, Int $n_params, OpaquePointer $paramTypes)
     returns OpaquePointer
-    is native('libpq')
+    is native(lib)
     { ... }
 
 sub PQexecPrepared(
@@ -27,80 +29,80 @@ sub PQexecPrepared(
         Int $resultFormat
     )
     returns OpaquePointer
-    is native('libpq')
+    is native(lib)
     { ... }
 
 sub PQnparams (OpaquePointer)
     returns Int
-    is native('libpq')
+    is native(lib)
     { * }
 
 sub PQdescribePrepared (OpaquePointer, Str)
     returns OpaquePointer
-    is native('libpq')
+    is native(lib)
     { * }
 
 
 sub PQresultStatus (OpaquePointer $result)
     returns Int
-    is native('libpq')
+    is native(lib)
     { ... }
 
 sub PQerrorMessage (OpaquePointer $conn)
     returns Str
-    is native('libpq')
+    is native(lib)
     { ... }
 
 sub PQresultErrorMessage (OpaquePointer $result)
     returns Str
-    is native('libpq')
+    is native(lib)
     { ... }
 
 sub PQconnectdb (Str $conninfo)
     returns OpaquePointer
-    is native('libpq')
+    is native(lib)
     { ... }
 
 sub PQstatus (OpaquePointer $conn)
     returns Int
-    is native('libpq')
+    is native(lib)
     { ... }
 
 sub PQnfields (OpaquePointer $result)
     returns Int
-    is native('libpq')
+    is native(lib)
     { ... }
 
 sub PQntuples (OpaquePointer $result)
     returns Int
-    is native('libpq')
+    is native(lib)
     { ... }
 
 sub PQcmdTuples (OpaquePointer $result)
     returns Str
-    is native('libpq')
+    is native(lib)
     { ... }
 
 sub PQgetvalue (OpaquePointer $result, Int $row, Int $col)
     returns Str
-    is native('libpq')
+    is native(lib)
     { ... }
 
 sub PQfname (OpaquePointer $result, Int $col)
     returns Str
-    is native('libpq')
+    is native(lib)
     { ... }
 
 sub PQclear (OpaquePointer $result)
-    is native('libpq')
+    is native(lib)
     { ... }
 
 sub PQfinish(OpaquePointer) 
-    is native('libpq')
+    is native(lib)
     { ... }
 
 sub PQftype(OpaquePointer, Int)
-    is native('libpq')
+    is native(lib)
     returns Int
     { * }
 
