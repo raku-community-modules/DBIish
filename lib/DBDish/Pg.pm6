@@ -3,7 +3,7 @@
 use NativeCall;  # from project 'zavolaj'
 use DBDish;     # roles for drivers
 
-constant lib = 'libpq';
+my constant lib = 'libpq.so';
 
 #module DBDish:auth<mberends>:ver<0.0.1>;
 
