@@ -113,6 +113,18 @@ role DBDish::Connection does DBDish::ErrorHandling {
     }
 
 =begin pod
+=head5 quote-identifier
+
+Returns the string parameter as a quoted identifier
+
+=end pod
+
+    method quote-identifier(Str:D $name) {
+        # a first approximation
+        qq["$name"];
+    }
+
+=begin pod
 =head5 disconnect
 The C<disconnect> method 
 =end pod

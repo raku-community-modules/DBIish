@@ -264,6 +264,10 @@ class DBDish::mysql::Connection does DBDish::Connection {
         mysql_close($!mysql_client);
         True
     }
+
+    method quote-identifer(Str:D $name) {
+        qq[`$name`];
+    }
 }
 
 class DBDish::mysql:auth<mberends>:ver<0.0.1> {
