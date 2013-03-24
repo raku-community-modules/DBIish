@@ -122,6 +122,11 @@ sub mysql_stmt_prepare( OpaquePointer $mysql_stmt, Str, Int $length )
     is native('libmysqlclient')
     { * }
 
+sub mysql_ping(OpaquePointer $mysql_client)
+    returns int
+    is native('libmysqlclient')
+    { * }
+
 #-----------------------------------------------------------------------
 
 class DBDish::mysql::StatementHandle does DBDish::StatementHandle {
@@ -258,6 +263,10 @@ class DBDish::mysql::Connection does DBDish::Connection {
     method mysql_insertid() {
         mysql_insert_id($!mysql_client);
         # but Parrot NCI cannot return an unsigned  long long :-(
+    }
+
+    method ping() {
+        0 == mysql_ping($!mysql_client);
     }
 
     method disconnect() {
