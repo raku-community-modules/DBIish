@@ -145,11 +145,16 @@ class DBDish::mysql::StatementHandle does DBDish::StatementHandle {
         my $statement = $!statement;
         while @params.elems>0 and $statement.index('?')>=0 {
             my $param = @params.shift;
-            if $param ~~ /<-[0..9.]>/ {
-                $statement .= subst("?", self.quote($param.Str)); # quote non numerics
+            if $param.defined {
+                if $param ~~ Real {
+                    $statement .= subst("?", $param.Str);
+                }
+                else {
+                    $statement .= subst("?", self.quote($param.Str));
+                }
             }
             else {
-                $statement .= subst("?", $param); # do not quote numbers
+                $statement .= subst("?", 'NULL'); # do not quote numbers
             }
         }
         # warn "in DBDish::mysql::StatementHandle.execute statement=$statement";
