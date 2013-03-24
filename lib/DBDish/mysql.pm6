@@ -142,22 +142,26 @@ class DBDish::mysql::StatementHandle does DBDish::StatementHandle {
     
     method execute(*@params is copy) {
         # warn "in DBDish::mysql::StatementHandle.execute()";
-        my $statement = $!statement;
-        while @params.elems>0 and $statement.index('?')>=0 {
+        my $statement = '';
+        my @chunks = $!statement.split('?', @params + 1);
+        my $last-chunk = @chunks.pop;
+        for @chunks {
+            $statement ~= $_;
             my $param = @params.shift;
             if $param.defined {
                 if $param ~~ Real {
-                    $statement .= subst("?", $param.Str);
+                    $statement ~= $param 
                 }
                 else {
-                    $statement .= subst("?", self.quote($param.Str));
+                    $statement ~= self.quote($param.Str);
                 }
             }
             else {
-                $statement .= subst("?", 'NULL'); # do not quote numbers
+                $statement ~= 'NULL';
             }
         }
-        # warn "in DBDish::mysql::StatementHandle.execute statement=$statement";
+        $statement ~= $last-chunk;
+        # note "in DBDish::mysql::StatementHandle.execute statement=$statement";
         $!result_set = Mu;
         my $status = mysql_query( $!mysql_client, $statement ); # 0 means OK
         $.mysql_warning_count = mysql_warning_count( $!mysql_client );
