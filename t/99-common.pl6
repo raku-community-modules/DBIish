@@ -19,6 +19,10 @@ sub magic_cmp(@a, @b) {
     $res;
 }
 
+sub hash-str(%h) {
+    %h.sort.map({ join '', .key, '=«', .value, '»' }).join('; ');
+}
+
 # Verify that the driver loads before attempting a connect
 my $drh = DBIish.install_driver($*mdriver);
 ok $drh, 'Install driver'; # test 1
@@ -136,8 +140,8 @@ ok $sth.execute(), 'execute prepared statement for fetchrow_hashref'; #test 20
 
 if $sth.can('column_names') {
     ok my $hashref = $sth.fetchrow_hashref(), 'called fetchrow_hashref'; #test 21
-    is $hashref, { 'name' => 'TAFM', 'description' => 'Mild fish taco', 'quantity'
-    => 1, 'price' => '4.85' }, 'selected data matches test hashref'; #test 22
+    is hash-str($hashref), hash-str({ 'name' => 'TAFM', 'description' => 'Mild fish taco', 'quantity'
+    => 1, 'price' => '4.85' }), 'selected data matches test hashref'; #test 22
     $sth.finish;
 }
 else { skip 'fetchrow_hashref not implemented', 2 }
