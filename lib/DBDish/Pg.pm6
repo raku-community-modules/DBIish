@@ -140,6 +140,8 @@ constant PGRES_TUPLES_OK   = 2;
 constant PGRES_COPY_OUT    = 3;
 constant PGRES_COPY_IN     = 4;
 
+sub status-is-ok($status) { $status ~~ 0..4 }
+
 #-----------------------------------------------------------------------
 
 my grammar PgTokenizer {
@@ -205,14 +207,14 @@ class DBDish::Pg::StatementHandle does DBDish::StatementHandle {
 
     method !handle-errors {
         my $status = PQresultStatus($!result);
-        if $status != PGRES_EMPTY_QUERY | PGRES_COMMAND_OK | PGRES_TUPLES_OK | PGRES_COPY_OUT | PGRES_COPY_IN {
+        if status-is-ok($status) {
+            self!reset_errstr;
+            return True;
+        }
+        else {
             self!set_errstr(PQresultErrorMessage($!result));
             die self.errstr if $.RaiseError;
             return Nil;
-        }
-        else {
-            self!reset_errstr;
-            return True;
         }
     }
 
@@ -353,7 +355,7 @@ class DBDish::Pg::Connection does DBDish::Connection {
                 OpaquePointer
         );
         my $status = PQresultStatus($result);
-        if $status != PGRES_EMPTY_QUERY | PGRES_COMMAND_OK | PGRES_TUPLES_OK | PGRES_COPY_OUT | PGRES_COPY_IN {
+        unless status-is-ok($status) {
             self!set_errstr(PQresultErrorMessage($result));
             die self!errstr if $.RaiseError;
             return Nil;
