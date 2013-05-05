@@ -292,6 +292,7 @@ class DBDish::Pg::StatementHandle does DBDish::StatementHandle {
                 @!column_names.push($column_name);
             }
         }
+        @!column_names
     }
 
     # for debugging only so far
