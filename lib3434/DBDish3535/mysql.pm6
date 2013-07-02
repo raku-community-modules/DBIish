@@ -248,7 +248,7 @@ class DBDish::mysql::StatementHandle does DBDish::StatementHandle {
     }
 
     method finish() {
-        self.fetch; 
+        self.fetchrow if !defined $!result_set; 
         if defined( $!result_set ) {
             mysql_free_result($!result_set);
             $!result_set   = Mu;
