@@ -39,9 +39,9 @@ use DBIish;
 my $mdriver       = 'mysql';
 my $host          = 'localhost';
 my $port          = 3306;
-my $database      = 'moritz4';
-my $test_user     = 'moritz';
-my $test_password = 'aeNohh4a';
+my $database      = 'zavolaj';
+my $test_user     = 'testuser';
+my $test_password = 'testpass';
 my $table         = 't1';
 
 #-----------------------------------------------------------------------
