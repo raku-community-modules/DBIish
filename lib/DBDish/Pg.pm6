@@ -365,7 +365,6 @@ class DBDish::Pg::Connection does DBDish::Connection {
         my $param_count = PQnparams($info);
 
         my $statement_handle = DBDish::Pg::StatementHandle.bless(
-            *,
             :$!pg_conn,
             :$statement,
             :$.RaiseError,
@@ -477,7 +476,7 @@ class DBDish::Pg:auth<mberends>:ver<0.0.1> {
         my $status = PQstatus($pg_conn);
         my $connection;
         if $status eq CONNECTION_OK {
-            $connection = DBDish::Pg::Connection.bless(*,
+            $connection = DBDish::Pg::Connection.bless(
                 :$pg_conn,
                 :RaiseError(%params<RaiseError>),
             );

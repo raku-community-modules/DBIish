@@ -173,7 +173,7 @@ class DBDish::SQLite::Connection does DBDish::Connection {
         my $statement_handle = @stmt[0];
         self!handle-error($status);
         return Nil unless $status == SQLITE_OK;
-        my $sth = DBDish::SQLite::StatementHandle.bless(*,
+        my $sth = DBDish::SQLite::StatementHandle.bless(
             :$!conn,
             :$statement,
             :$statement_handle,
@@ -220,7 +220,7 @@ class DBDish::SQLite:auth<mberends>:ver<0.0.1> {
         @conn[0]  = OpaquePointer;
         my $status = sqlite3_open($dbname, @conn);
         if $status == SQLITE_OK {
-            return DBDish::SQLite::Connection.bless(*,
+            return DBDish::SQLite::Connection.bless(
                     :conn(@conn[0]),
                     :$RaiseError,
             );
