@@ -70,7 +70,7 @@ ok $drh_version > 0, "DBDish::mysql version $drh_version"; # test 2
 #-----------------------------------------------------------------------
 # from perl5 DBD/mysql/t/10connect.t
 #plan tests => 2;
-#eval {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
+#EVAL {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
 #         { RaiseError => 1, PrintError => 1, AutoCommit => 0 });};
 #ok defined $dbh, "Connected to database";
 #ok $dbh->disconnect();
@@ -127,7 +127,7 @@ lives_ok({$dbh.do("DROP TABLE $table")}, "dropping created $table"); # test 8
 #ok $dbh->do("LOCK TABLES $table WRITE"), "lock table $table";
 #ok $dbh->do("INSERT INTO $table VALUES(1, 'Alligator Descartes')"), "Insert ";
 #ok $dbh->do("DELETE FROM $table WHERE id = 1"), "Delete"; 
-#eval {$sth= $dbh->prepare("SELECT * FROM $table WHERE id = 1")};
+#EVAL {$sth= $dbh->prepare("SELECT * FROM $table WHERE id = 1")};
 #ok !$@, "Prepare of select";
 #ok defined($sth), "Prepare of select";
 #ok  $sth->execute , "Execute";
@@ -273,8 +273,8 @@ try {
 #ok (my $sth = $dbh->prepare($query));
 #ok $sth->execute(1, "Jocken");
 #$sth->{PrintError} = 0;
-#eval {$sth->execute(1, "Jochen")};
-#ok defined($@), 'fails with duplicate entry'; # $@ is last eval error message
+#EVAL {$sth->execute(1, "Jochen")};
+#ok defined($@), 'fails with duplicate entry'; # $@ is last EVAL error message
 #$sth->{PrintError} = 1;
 #ok $sth->execute(2, "Jochen");
 #ok $sth->finish;
@@ -532,7 +532,7 @@ ok ($sth.execute($numericVal, $charVal)),"insert with number for numeric"; # tes
 
 #-----------------------------------------------------------------------
 # from perl5 DBD/mysql/t/40bindparam2.t
-#eval {$dbh = DBI->connect($test_dsn, $test_user, $test_password,
+#EVAL {$dbh = DBI->connect($test_dsn, $test_user, $test_password,
 #  { RaiseError => 1, AutoCommit => 1}) or ServerError();};
 #if ($@) {
 #    plan skip_all => "ERROR: $DBI::errstr. Can't continue test";
@@ -626,7 +626,7 @@ ok ($sth.execute($numericVal, $charVal)),"insert with number for numeric"; # tes
 =begin pod
 #-----------------------------------------------------------------------
 # from perl5 DBD/mysql/t/40catalog.t
-#eval {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
+#EVAL {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
 #                      { RaiseError            => 1,
 #                        PrintError            => 1,
 #                        AutoCommit            => 0,
@@ -906,7 +906,7 @@ $|= 1;
 
 use vars qw($table $test_dsn $test_user $test_password);
 my $dbh;
-eval {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
+EVAL {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
                       { RaiseError => 1, PrintError => 1, AutoCommit => 0 });};
 
 if ($@) {
@@ -968,7 +968,7 @@ my $quoted;
 my $create;
 
 my $dbh;
-eval {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
+EVAL {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
                       { RaiseError => 1, PrintError => 1, AutoCommit => 0 });};
 
 if ($@) {
@@ -1040,13 +1040,13 @@ ok($sth->execute);
 
 ok (! defined $sth->{'NUM_OF_FIELDS'});
 
-$quoted = eval { $dbh->quote(0, DBI::SQL_INTEGER()) };
+$quoted = EVAL { $dbh->quote(0, DBI::SQL_INTEGER()) };
 
 ok (!$@);
 
 cmp_ok $quoted, 'eq', '0', "equals '0'";
 
-$quoted = eval { $dbh->quote('abc', DBI::SQL_VARCHAR()) };
+$quoted = EVAL { $dbh->quote('abc', DBI::SQL_VARCHAR()) };
 
 ok (!$@);
 
@@ -1069,7 +1069,7 @@ use lib 't', '.';
 require 'lib.pl';
 
 my ($dbh, $sth);
-eval {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
+EVAL {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
                       { RaiseError => 1, PrintError => 1, AutoCommit => 0 });};
 if ($@) {
     plan skip_all => 
@@ -1122,7 +1122,7 @@ use lib 't', '.';
 require 'lib.pl';
 
 my ($dbh, $sth, $aref);
-eval {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
+EVAL {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
                       { RaiseError => 1, PrintError => 1, AutoCommit => 0 });};
 if ($@) {
     plan skip_all => 
@@ -1214,7 +1214,7 @@ use vars qw($test_dsn $test_user $test_password);
 
 $test_dsn.= ";mysql_server_prepare=1";
 my $dbh;
-eval {$dbh = DBI->connect($test_dsn, $test_user, $test_password,
+EVAL {$dbh = DBI->connect($test_dsn, $test_user, $test_password,
   { RaiseError => 1, AutoCommit => 1})};
 
 if ($@) {
@@ -1236,7 +1236,7 @@ my $q = "select select select";	# invalid SQL
 $dbh->{PrintError} = 0;
 $dbh->{PrintWarn} = 0;
 my $sth;
-eval {$sth = $dbh->prepare($q);};
+EVAL {$sth = $dbh->prepare($q);};
 $dbh->{PrintError} = 1;
 $dbh->{PrintWarn} = 1;
 ok defined($DBI::errstr);
@@ -1259,7 +1259,7 @@ $|= 1;
 $test_dsn.= ";mysql_server_prepare=1";
 
 my $dbh;
-eval {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
+EVAL {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
                       { RaiseError => 1, PrintError => 1, AutoCommit => 0 });};
 
 if ($@) {
@@ -1330,7 +1330,7 @@ $|= 1;
 use vars qw($table $test_dsn $test_user $test_password);
 
 my $dbh;
-eval {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
+EVAL {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
                       { RaiseError => 1, PrintError => 1, AutoCommit => 0 });};
 print "err perl $@\n";
 if ($@) {
@@ -1403,7 +1403,7 @@ use lib 't', '.';
 require 'lib.pl';
 
 my ($dbh, $sth);
-eval {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
+EVAL {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
                       { RaiseError => 1, PrintError => 1, AutoCommit => 0 });};
 if ($@) {
     plan skip_all => 
@@ -1458,7 +1458,7 @@ use lib 't', '.';
 require 'lib.pl';
 
 my ($dbh, $row);
-eval {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
+EVAL {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
                       { RaiseError => 1, PrintError => 1, AutoCommit => 0 });};
 if ($@) {
     plan skip_all => "ERROR: $DBI::errstr. Can't continue test";
@@ -1553,7 +1553,7 @@ use lib 't', '.';
 require 'lib.pl';
 
 my $dbh;
-eval {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
+EVAL {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
                       { RaiseError => 1, PrintError => 1, AutoCommit => 0 });};
 if ($@) {
     plan skip_all => "ERROR: $@. Can't continue test";
@@ -1609,7 +1609,7 @@ require 'lib.pl';
 use vars qw($test_dsn $test_user $test_password $table);
 
 my $dbh;
-eval {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
+EVAL {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
                       { RaiseError => 1, PrintError => 1, AutoCommit => 0 });};
 if ($@) {
     plan skip_all => 
@@ -1684,7 +1684,7 @@ require 'lib.pl';
 use vars qw($got_warning $test_dsn $test_user $test_password $table);
 
 my $dbh;
-eval {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
+EVAL {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
                       { RaiseError => 1, PrintError => 1, AutoCommit => 0 });};
 if ($@) {
     plan skip_all => 
@@ -1815,7 +1815,7 @@ EOT
 
   $got_warning = 0;
 
-  eval { $result = $dbh->commit; };
+  EVAL { $result = $dbh->commit; };
 
   $SIG{__WARN__} = 'DEFAULT';
 
@@ -1829,7 +1829,7 @@ EOT
   $@ = '';
   $SIG{__WARN__} = \&catch_warning;
   $got_warning = 0;
-  eval { $result = $dbh->rollback; };
+  EVAL { $result = $dbh->rollback; };
   $SIG{__WARN__} = 'DEFAULT';
 
   ok $got_warning, "Should be warning defined upon rollback of non-trx table"; 
@@ -1852,7 +1852,7 @@ require 'lib.pl';
 use vars qw($test_dsn $test_user $test_password $table);
 
 my $dbh;
-eval {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
+EVAL {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
                       { RaiseError => 1, PrintError => 1, AutoCommit => 0 });};
 if ($@) {
     plan skip_all => 
@@ -1941,7 +1941,7 @@ use lib 't', '.';
 require 'lib.pl';
 
 my $dbh;
-eval {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
+EVAL {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
                       { RaiseError => 1, PrintError => 1, AutoCommit => 0 });};
 if ($@) {
     plan skip_all => "ERROR: $@. Can't continue test";
@@ -2004,7 +2004,7 @@ cmp_ok $ref->[0], 'eq', $utf8_str;
 cmp_ok $ref->[3], 'eq', $utf8_str;
 
 SKIP: {
-        eval {use Encode;};
+        EVAL {use Encode;};
           skip "Can't test is_utf8 tests 'use Encode;' not available", 2, if $@;
           ok !Encode::is_utf8($ref->[1]), "blob was made utf8!.";
 
@@ -2044,16 +2044,16 @@ if (!$ENV{SLOW_TESTS}) {
     plan skip_all => "Skip \$ENV{SLOW_TESTS} is not set\n";
 }
 
-eval { require Proc::ProcessTable; };
+EVAL { require Proc::ProcessTable; };
 if ($@) {
     plan skip_all => "Skip Proc::ProcessTable not installed \n";
 }
 
-eval { require Storable };
+EVAL { require Storable };
 $have_storable = $@ ? 0 : 1;
 
 my ($dbh, $sth);
-eval {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
+EVAL {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
                       { RaiseError => 1, PrintError => 1, AutoCommit => 0 });};
 if ($@) {
     plan skip_all => 
@@ -2093,7 +2093,7 @@ $not_ok = 0;
 $prev_size= undef;
 
 for (my $i = 0;  $i < $COUNT_CONNECT;  $i++) {
-  eval {$dbh2 = DBI->connect($test_dsn, $test_user, $test_password,
+  EVAL {$dbh2 = DBI->connect($test_dsn, $test_user, $test_password,
     { RaiseError => 1, PrintError => 1, AutoCommit => 0 });};
   if ($@) {
     $not_ok++;
@@ -2246,7 +2246,7 @@ use lib 't', '.';
 require 'lib.pl';
 
 my $dbh;
-eval {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
+EVAL {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
                       { RaiseError => 1, PrintError => 1, AutoCommit => 0 });};
 if ($@) {
     plan skip_all => "ERROR: $@. Can't continue test";
@@ -2265,7 +2265,7 @@ EOT
 ok $dbh->do($create);
 
 my $sth;
-eval {$sth= $dbh->prepare("insert into $table values (?)")};
+EVAL {$sth= $dbh->prepare("insert into $table values (?)")};
 
 ok ! $@, "prepare: $@";
 
@@ -2281,7 +2281,7 @@ ok $dbh->do("DROP TABLE $table");
 
 ok $dbh->do("create table $table (a int, b double, primary key (a))");
 
-eval { $sth= $dbh->prepare("insert into $table values (?, ?)")};
+EVAL { $sth= $dbh->prepare("insert into $table values (?, ?)")};
 
 ok ! $@, "prepare: $@";
 
@@ -2322,14 +2322,14 @@ $|= 1;
 use vars qw($table $test_dsn $test_user $test_password);
 
 my $drh;
-eval {$drh = DBI->install_driver('mysql')};
+EVAL {$drh = DBI->install_driver('mysql')};
 
 if ($@) {
     plan skip_all => "Can't obtain driver handle ERROR: $@. Can't continue test";
 }
 
 my $dbh;
-eval {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
+EVAL {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
                       { RaiseError => 1, PrintError => 1, AutoCommit => 0 })};
 
 if ($@) {
@@ -2443,7 +2443,7 @@ use Test::More;
 use vars qw($test_dsn $test_user $test_password);
 
 my $dbh;
-eval {$dbh= DBI->connect( $test_dsn, $test_user, $test_password);};
+EVAL {$dbh= DBI->connect( $test_dsn, $test_user, $test_password);};
 if ($@) {
     plan skip_all => "$@. Can't continue test";
 }
@@ -2495,7 +2495,7 @@ require 'lib.pl';
 my ($row, $vers, $test_procs);
 
 my $dbh;
-eval {$dbh = DBI->connect($test_dsn, $test_user, $test_password,
+EVAL {$dbh = DBI->connect($test_dsn, $test_user, $test_password,
   { RaiseError => 1, AutoCommit => 1})};
 
 if ($@) {
@@ -2549,7 +2549,7 @@ $|= 1;
 use vars qw($table $test_dsn $test_user $test_password);
 
 my $dbh;
-eval {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
+EVAL {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
                       { RaiseError => 1, PrintError => 1, AutoCommit => 0,
                         mysql_multi_statements => 1 });};
 
@@ -2622,7 +2622,7 @@ use Carp qw(croak);
 use vars qw($table $test_dsn $test_user $test_password);
 
 my ($row, $vers, $test_procs, $dbh, $sth);
-eval {$dbh = DBI->connect($test_dsn, $test_user, $test_password,
+EVAL {$dbh = DBI->connect($test_dsn, $test_user, $test_password,
   { RaiseError => 1, AutoCommit => 1})};
 
 if ($@) {
@@ -2753,7 +2753,7 @@ use lib 't', '.';
 require 'lib.pl';
 
 my $dbh;
-eval {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
+EVAL {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
     { RaiseError => 1, PrintError => 1, AutoCommit => 0, mysql_init_command => 'SET SESSION wait_timeout=7' });};
 if ($@) {
     plan skip_all => "ERROR: $DBI::errstr. Can't continue test";
@@ -2813,7 +2813,7 @@ if (-f ($file = "t/$dbdriver.dbtest")  ||
     -f ($file = "$dbdriver.dbtest")    ||
     -f ($file = "../tests/$dbdriver.dbtest")  ||
     -f ($file = "tests/$dbdriver.dbtest")) {
-    eval { require $file; };
+    EVAL { require $file; };
     if ($@) {
 	print STDERR "Cannot execute $file: $@.\n";
 	print "1..0\n";
@@ -2827,7 +2827,7 @@ if (-f ($file = "t/$mdriver.mtest")  ||
     -f ($file = "$mdriver.mtest")    ||
     -f ($file = "../tests/$mdriver.mtest")  ||
     -f ($file = "tests/$mdriver.mtest")) {
-    eval { require $file; };
+    EVAL { require $file; };
     if ($@) {
 	print STDERR "Cannot execute $file: $@.\n";
 	print "1..0\n";

@@ -2,7 +2,7 @@
 # This script is intended to be included as the common SQL tests in
 # scripts for specific DBDs such as CSV or mysql.
 
-#use Test;     # "use" dies in a runtime eval
+#use Test;     # "use" dies in a runtime EVAL
 #use DBIish;
 diag "Testing MiniDBD::$*mdriver";
 plan 40;
@@ -44,7 +44,7 @@ try {
 }
 ok $dbh, "connect to %*opts<database>"; # test 3
 
-try eval '$*post_connect_cb.($dbh)';
+try EVAL '$*post_connect_cb.($dbh)';
 
 # Test .prepare() and .execute() a few times while setting things up.
 # Drop a table of the same name so that the following create can work.

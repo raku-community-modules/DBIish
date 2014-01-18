@@ -8,5 +8,5 @@ my ( $*mdriver, %*opts) = 'SQLite';
 %*opts<database> = 'minidbi-test.sqlite3';
 my $dbh;
 
-# Detect and report possible errors from eval of the common test script
-warn $! if "ok 99-common.pl6" ne eval slurp 't/99-common.pl6';
+# Detect and report possible errors from EVAL of the common test script
+warn $! if "ok 99-common.pl6" ne EVAL slurp 't/99-common.pl6';

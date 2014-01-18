@@ -17,8 +17,8 @@ my $post_connect_cb = {
     $dbh.do('SET client_min_messages = warning');
 };
 
-# Detect and report possible errors from eval of the common test script
-warn $! if "ok 99-common.pl6" ne eval slurp 't/99-common.pl6';
+# Detect and report possible errors from EVAL of the common test script
+warn $! if "ok 99-common.pl6" ne EVAL slurp 't/99-common.pl6';
 
 =begin pod
 
