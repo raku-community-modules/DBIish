@@ -358,7 +358,7 @@ class DBDish::Pg::Connection does DBDish::Connection {
         my $status = PQresultStatus($result);
         unless status-is-ok($status) {
             self!set_errstr(PQresultErrorMessage($result));
-            die self!errstr if $.RaiseError;
+            die self.errstr if $.RaiseError;
             return Nil;
         }
         my $info = PQdescribePrepared($!pg_conn, $statement_name);
