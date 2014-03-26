@@ -33,7 +33,7 @@ sub mysql_fetch_field( OpaquePointer $result_set )
     { * }
 
 sub mysql_fetch_lengths( OpaquePointer $result_set )
-    returns CArray[Int]
+    returns CArray[int]
     is native('libmysqlclient')
     { * }
 
