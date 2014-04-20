@@ -72,15 +72,19 @@ role DBDish::StatementHandle does DBDish::ErrorHandling {
     }
 
     method fetchall-AoH {
-        gather while self.fetchrow-hash -> %h {
-            take %h.item;
-        }
+        (0 xx *).map: {
+            my $h = self.fetchrow-hash;
+            last unless $h;
+            $h;
+        };
     }
 
     method fetchall-array {
-        gather while self.fetchrow -> @row {
-            take @row.item;
-        }
+        (0 xx *).map: {
+            my $r = self.fetchrow;
+            last unless $r;
+            $r;
+        };
     }
     method fetchrow_array { self.fetchrow }
     method fetchrow_arrayref {
