@@ -35,12 +35,12 @@ sub PQexecPrepared(
 sub PQnparams (OpaquePointer)
     returns Int
     is native(lib)
-    { * }
+    { ... }
 
 sub PQdescribePrepared (OpaquePointer, Str)
     returns OpaquePointer
     is native(lib)
-    { * }
+    { ... }
 
 
 sub PQresultStatus (OpaquePointer $result)
@@ -104,7 +104,7 @@ sub PQfinish(OpaquePointer)
 sub PQftype(OpaquePointer, Int)
     is native(lib)
     returns Int
-    { * }
+    { ... }
 
 # from pg_type.h
 constant %oid-to-type-name = (

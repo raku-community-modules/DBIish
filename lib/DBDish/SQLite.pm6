@@ -42,7 +42,7 @@ sub sqlite3_open(Str $filename, CArray[OpaquePointer] $handle)
 sub sqlite3_close(OpaquePointer)
     returns Int
     is native('libsqlite3')
-    { * }
+    { ... }
 
 
 sub sqlite3_prepare_v2 (
@@ -80,7 +80,7 @@ sub sqlite3_reset(OpaquePointer) returns Int is native('libsqlite3') { ... }
 sub sqlite3_column_text(OpaquePointer, Int) returns Str is native('libsqlite3') { ... }
 sub sqlite3_finalize(OpaquePointer) returns Int is native('libsqlite3') { ... }
 sub sqlite3_column_count(OpaquePointer) returns Int is native('libsqlite3') { ... }
-sub sqlite3_column_name(OpaquePointer, Int) returns Str is native('libsqlite3') { * }
+sub sqlite3_column_name(OpaquePointer, Int) returns Str is native('libsqlite3') { ... }
 
 
 class DBDish::SQLite::StatementHandle does DBDish::StatementHandle {
