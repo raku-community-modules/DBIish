@@ -14,6 +14,10 @@ a subset of the functionality).
 It is based on Martin Berends' MiniDBI project, but unlike MiniDBI, DBDish
 aims to provide an interface that takes advantage of Perl 6 idioms
 
+=head1 INSTALLATION
+
+    $ panda install DBIish
+
 =head1 DBDish CLASSES
 
 Until there is a benefit in doing it otherwise, the DBDish drivers stay
