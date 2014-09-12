@@ -1,9 +1,9 @@
-=begin pod
-
 =head1 NAME
+
 DBIish - a simple database interface for Rakudo Perl 6
 
 =head1 DESCRIPTION
+
 The DBIish project provides a simple database interface for Perl 6.
 
 It's not a port of the Perl 5 DBI and does not intend to become one.
@@ -15,6 +15,7 @@ It is based on Martin Berends' MiniDBI project, but unlike MiniDBI, DBDish
 aims to provide an interface that takes advantage of Perl 6 idioms
 
 =head1 DBDish CLASSES
+
 Until there is a benefit in doing it otherwise, the DBDish drivers stay
 and install together with the main DBIish.pm6 in a single project. 
 
@@ -34,6 +35,7 @@ Supports basic CRUD operations. Emulates prepared statements by escaping
 and interpolating strings.
 
 =head1 TESTING
+
 The initial test script is merely a concatenation of all the scripts in
 the Perl 5 DBD::mysql test suite, translated to Perl 6.  It's not
 efficient but indispensable to assess coverage of the existing DBI
@@ -46,6 +48,7 @@ particular databases.  The aim is to make the suite demonstrate portable
 and non portable operations.
 
 =head1 ROADMAP
+
 Add some more drivers. Improve robustness of all drivers. Improve the test suite.  Attract more contributors.
 
 Integrate with the DBDI project (L<http://github.com/timbunce/DBDI>)
@@ -53,6 +56,7 @@ once it has sufficient functionality.
 
 
 =head1 SEE ALSO
+
 The Perl 6 Pod in the L<doc:DBIish> module.
 The Perl 5 L<doc:DBI> and L<doc:DBI::DBD>.
 
@@ -66,6 +70,7 @@ Or, if L<Pod::To::HTML> is installed,
     perl6 --doc=html <filename>
 
 =head1 COPYRIGHT
+
 Written by Moritz Lenz, based on the MiniDBI code by Martin Berends.
 
 See the F<CREDITS> file for a list of all contributors.
@@ -97,6 +102,3 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
 LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY
 WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
-
-
-=end pod
