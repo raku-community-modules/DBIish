@@ -426,13 +426,13 @@ class DBDish::Oracle:auth<mberends>:ver<0.0.1> {
         my OpaquePointer $ctxp,
         my @usrmempp := CArray[OpaquePointer].new;
         @usrmempp[0]  = OpaquePointer;
-        my int $errcode = OCIEnvNlsCreate (
+        my int $errcode = OCIEnvNlsCreate(
             @envhpp,
             OCI_THREADED,
             $ctxp,
-            0,
-            0,
-            0,
+            OpaquePointer,
+            OpaquePointer,
+            OpaquePointer,
             0,
             @usrmempp,
             OCI_UTF16ID,
@@ -445,7 +445,7 @@ class DBDish::Oracle:auth<mberends>:ver<0.0.1> {
             warn "successfully executed OCIEnvNlsCreate";
         }
 
-        $errcode = OCILogon2 (
+        $errcode = OCILogon2(
             @envhpp[0],
             $errhp,
             @svchp,
