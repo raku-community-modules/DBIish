@@ -312,12 +312,13 @@ constant OCI_LOGON2_STMTCACHE   = 4;
 #    }
 #}
 #
-#class DBDish::Pg::Connection does DBDish::Connection {
-#    has $!pg_conn;
-#    has $.AutoCommit is rw = 1;
-#    has $.in_transaction is rw;
-#    method BUILD(:$!pg_conn) { }
-#
+class DBDish::Oracle::Connection does DBDish::Connection {
+    has $!svchp;
+    has $!errhp;
+    #has $.AutoCommit is rw = 1;
+    #has $.in_transaction is rw;
+    method BUILD(:$!svchp, :$!errhp) { }
+
 #    method prepare(Str $statement, $attr?) {
 #        state $statement_postfix = 0;
 #        my $statement_name = join '_', 'pg', $*PID, $statement_postfix++;
@@ -415,12 +416,12 @@ constant OCI_LOGON2_STMTCACHE   = 4;
 #    method ping {
 #        PQstatus($!pg_conn) == CONNECTION_OK
 #    }
-#
-#    method disconnect() {
-#        PQfinish($!pg_conn);
-#        True;
-#    }
-#}
+
+    method disconnect() {
+        OCILogoff($!svchp, $!errhp);
+        True;
+    }
+}
 
 class DBDish::Oracle:auth<mberends>:ver<0.0.1> {
 
@@ -517,6 +518,7 @@ class DBDish::Oracle:auth<mberends>:ver<0.0.1> {
 
         my $connection = DBDish::Oracle::Connection.bless(
                 :@svchp[0],
+                :$errhp,
                 :RaiseError(%params<RaiseError>),
             );
         return $connection;
