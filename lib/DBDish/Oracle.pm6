@@ -456,8 +456,7 @@ class DBDish::Oracle:auth<mberends>:ver<0.0.1> {
         my @envhpp := CArray[OpaquePointer].new;
         @envhpp[0]  = OpaquePointer;
         my OpaquePointer $ctxp,
-        my @usrmempp := CArray[OpaquePointer].new;
-        @usrmempp[0]  = OpaquePointer;
+
         my int $errcode = OCIEnvNlsCreate(
             @envhpp,
             OCI_DEFAULT,
@@ -466,7 +465,7 @@ class DBDish::Oracle:auth<mberends>:ver<0.0.1> {
             OpaquePointer,
             OpaquePointer,
             0,
-            @usrmempp,
+            OpaquePointer,
             OCI_UTF16ID,
             OCI_UTF16ID,
         );
