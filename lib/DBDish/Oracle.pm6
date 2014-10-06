@@ -64,6 +64,16 @@ sub OCIErrorGet (
     is native(lib)
     { ... }
 
+sub OCIHandleAlloc (
+        OpaquePointer           $parenth,
+        CArray[OpaquePointer]   $hndlpp,
+        int32                   $type,
+        int                     $xtramem_sz,
+        CArray[OpaquePointer]   $usrmempp,
+    )
+    returns int
+    is native(lib)
+    { ... }
 
 sub OCILogon2 (
         OpaquePointer $envhp,
@@ -477,6 +487,12 @@ class DBDish::Oracle:auth<mberends>:ver<0.0.1> {
             my $errortext = self.get_errortext( $envhp, OCI_HTYPE_ENV );
             die "OCIEnvNlsCreate failed: '$errortext'\n";
         }
+
+        # allocate the error handle
+        my @errhpp := CArray[OpaquePointer].new;
+        @errhpp[0]  = OpaquePointer;
+        OCIHandleAlloc($envhp, @errhpp, OCI_HTYPE_ERROR, 0, OpaquePointer );
+        my $errhp = @errhpp[0];
 
         my @svchp := CArray[OpaquePointer].new;
         @svchp[0]  = OpaquePointer;
