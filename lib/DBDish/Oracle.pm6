@@ -429,6 +429,21 @@ class DBDish::Oracle:auth<mberends>:ver<0.0.1> {
     #        ~ "'"
     #}
 
+    method get_errortext(OpaquePointer $handle, $handle_type = OCI_HTYPE_ERROR) {
+        my @errorcodep := CArray[int32].new;
+        @errorcodep[0] = 0;
+        my @errortextp := CArray[int8].new;
+        @errortextp[$_] = 0 for ^512;
+
+        OCIErrorGet( $handle, 1, OpaquePointer, @errorcodep, @errortextp, 512, $handle_type );
+        my @errortextary;
+        for ^512 {
+            last if @errortextp[$_] eq \0;
+            @errortextary[$_] = @errortextp[$_];
+        }
+        return Buf.new(@errortextary).decode();
+    }
+
 #------------------ methods to be called from DBIish ------------------
     method connect(*%params) {
         my $host     = %params<host>     // 'localhost';
@@ -459,16 +474,8 @@ class DBDish::Oracle:auth<mberends>:ver<0.0.1> {
             OCI_UTF16ID,
         );
         if $errcode ne OCI_SUCCESS {
-            my @errorcodep := CArray[int32].new;
-            @errorcodep[0] = 0;
-            my @errortextp := CArray[int8].new;
-            @errortextp[511] = 0;
-            OCIErrorGet( $envhp, 1, OpaquePointer, @errorcodep, @errortextp, 512, OCI_HTYPE_ENV );
-            my Str $errortext = Buf.new(@errortextp).decode();
-            die "OCIEnvNlsCreate failed: $errortext\n";
-        }
-        else {
-            warn "successfully executed OCIEnvNlsCreate";
+            my $errortext = self.get_errortext( $envhp, OCI_HTYPE_ENV );
+            die "OCIEnvNlsCreate failed: '$errortext'\n";
         }
 
         $errcode = OCILogon2(
