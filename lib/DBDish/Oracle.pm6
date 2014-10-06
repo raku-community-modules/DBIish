@@ -510,7 +510,8 @@ class DBDish::Oracle:auth<mberends>:ver<0.0.1> {
             OCI_LOGON2_STMTCACHE,
         );
         if $errcode ne OCI_SUCCESS {
-            die "OCILogon2 failed with errcode = $errcode.\n";
+            my $errortext = self.get_errortext($errhp);
+            die "OCILogon2 failed: $errortext.\n";
         }
 
         my $connection = DBDish::Oracle::Connection.bless(
