@@ -497,16 +497,17 @@ class DBDish::Oracle:auth<mberends>:ver<0.0.1> {
         my @svchp := CArray[OpaquePointer].new;
         @svchp[0]  = OpaquePointer;
 
+        # TODO: pass correct number of bytes
         $errcode = OCILogon2(
             $envhp,
             $errhp,
             @svchp,
             $username,
-            $username.encode('UTF-16').elems,
+            $username.encode('UTF-16').elems * 2,
             $password,
-            $password.encode('UTF-16').elems,
+            $password.encode('UTF-16').elems * 2,
             $dbname,
-            $dbname.encode('UTF-16').elems,
+            $dbname.encode('UTF-16').elems * 2,
             OCI_LOGON2_STMTCACHE,
         );
         if $errcode ne OCI_SUCCESS {
