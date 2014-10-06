@@ -452,12 +452,9 @@ class DBDish::Oracle:auth<mberends>:ver<0.0.1> {
         my $username = %params<username> // die 'Missing <username> config';
         my $password = %params<password> // die 'Missing <password> config';
 
-        my OpaquePointer $envhp;
+        # create the environment handle
         my @envhpp := CArray[OpaquePointer].new;
-        @envhpp[0]  = $envhp;
-        my OpaquePointer $errhp;
-        my @svchp := CArray[OpaquePointer].new;
-        @svchp[0]  = OpaquePointer;
+        @envhpp[0]  = OpaquePointer;
         my OpaquePointer $ctxp,
         my @usrmempp := CArray[OpaquePointer].new;
         @usrmempp[0]  = OpaquePointer;
@@ -473,13 +470,20 @@ class DBDish::Oracle:auth<mberends>:ver<0.0.1> {
             OCI_UTF16ID,
             OCI_UTF16ID,
         );
+
+        # fetch environment handle from pointer
+        my $envhp = @envhpp[0];
+
         if $errcode ne OCI_SUCCESS {
             my $errortext = self.get_errortext( $envhp, OCI_HTYPE_ENV );
             die "OCIEnvNlsCreate failed: '$errortext'\n";
         }
 
+        my @svchp := CArray[OpaquePointer].new;
+        @svchp[0]  = OpaquePointer;
+
         $errcode = OCILogon2(
-            @envhpp[0],
+            $envhp,
             $errhp,
             @svchp,
             $username,
