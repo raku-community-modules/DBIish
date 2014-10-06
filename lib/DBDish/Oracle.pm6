@@ -16,6 +16,7 @@ my constant lib = 'libclntsh.so';
 # sword     int
 # ub2       int16
 # ub4       int32
+# sb4       int32
 # size_t    int
 
 #------------ Oracle library functions in alphabetical order ------------
@@ -54,8 +55,8 @@ sub OCIErrorGet (
         OpaquePointer   $hndlp,
         int32           $recordno,
         OpaquePointer   $sqlstate,
-        OpaquePointer   $errcodep,
-        OpaquePointer   $bufp,
+        CArray[int32]   $errcodep,
+        CArray[int8]    $bufp,
         int32           $bufsiz,
         int32           $type,
     )
@@ -90,6 +91,7 @@ sub OCILogoff (
 
 #-----
 
+constant OCI_DEFAULT            = 0;
 constant OCI_THREADED           = 1;
 
 constant OCI_SUCCESS            = 0;
@@ -446,7 +448,7 @@ class DBDish::Oracle:auth<mberends>:ver<0.0.1> {
         @usrmempp[0]  = OpaquePointer;
         my int $errcode = OCIEnvNlsCreate(
             @envhpp,
-            OCI_THREADED,
+            OCI_DEFAULT,
             $ctxp,
             OpaquePointer,
             OpaquePointer,
@@ -457,13 +459,12 @@ class DBDish::Oracle:auth<mberends>:ver<0.0.1> {
             OCI_UTF16ID,
         );
         if $errcode ne OCI_SUCCESS {
-            my Str $errorcode;
-            my @errorcodep := CArray[Str].new;
-            @errorcodep[0] = $errorcode;
-            my Str $errortext;
-            my @errortextp := CArray[Str].new;
-            @errortextp[0] = $errortext;
+            my @errorcodep := CArray[int32].new;
+            @errorcodep[0] = 0;
+            my @errortextp := CArray[int8].new;
+            @errortextp[511] = 0;
             OCIErrorGet( $envhp, 1, OpaquePointer, @errorcodep, @errortextp, 512, OCI_HTYPE_ENV );
+            my Str $errortext = Buf.new(@errortextp).decode();
             die "OCIEnvNlsCreate failed: $errortext\n";
         }
         else {
