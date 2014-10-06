@@ -50,6 +50,20 @@ sub OCIEnvNlsCreate (
     is native(lib)
     { ... }
 
+sub OCIErrorGet (
+        OpaquePointer   $hndlp,
+        int32           $recordno,
+        OpaquePointer   $sqlstate,
+        OpaquePointer   $errcodep,
+        OpaquePointer   $bufp,
+        int32           $bufsiz,
+        int32           $type,
+    )
+    returns int
+    is native(lib)
+    { ... }
+
+
 sub OCILogon2 (
         OpaquePointer $envhp,
         OpaquePointer $errhp,
@@ -80,6 +94,9 @@ constant OCI_THREADED           = 1;
 
 constant OCI_SUCCESS            = 0;
 constant OCI_ERROR              = -1;
+
+constant OCI_HTYPE_ENV          = 1;
+constant OCI_HTYPE_ERROR        = 2;
 
 constant OCI_UTF16ID            = 1000;
 
@@ -418,8 +435,9 @@ class DBDish::Oracle:auth<mberends>:ver<0.0.1> {
         my $username = %params<username> // die 'Missing <username> config';
         my $password = %params<password> // die 'Missing <password> config';
 
+        my OpaquePointer $envhp;
         my @envhpp := CArray[OpaquePointer].new;
-        @envhpp[0]  = OpaquePointer;
+        @envhpp[0]  = $envhp;
         my OpaquePointer $errhp;
         my @svchp := CArray[OpaquePointer].new;
         @svchp[0]  = OpaquePointer;
@@ -439,7 +457,14 @@ class DBDish::Oracle:auth<mberends>:ver<0.0.1> {
             OCI_UTF16ID,
         );
         if $errcode ne OCI_SUCCESS {
-            die "OCIEnvNlsCreate failed with errcode = $errcode.\n";
+            my Str $errorcode;
+            my @errorcodep := CArray[Str].new;
+            @errorcodep[0] = $errorcode;
+            my Str $errortext;
+            my @errortextp := CArray[Str].new;
+            @errortextp[0] = $errortext;
+            OCIErrorGet( $envhp, 1, OpaquePointer, @errorcodep, @errortextp, 512, OCI_HTYPE_ENV );
+            die "OCIEnvNlsCreate failed: $errortext\n";
         }
         else {
             warn "successfully executed OCIEnvNlsCreate";
