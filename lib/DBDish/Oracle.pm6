@@ -332,7 +332,7 @@ class DBDish::Oracle::Connection does DBDish::Connection {
     has $!errhp;
     #has $.AutoCommit is rw = 1;
     #has $.in_transaction is rw;
-    method BUILD(:$!svchp, :$!errhp) { }
+    submethod BUILD(:$!svchp!, :$!errhp!) { }
 
 #    method prepare(Str $statement, $attr?) {
 #        state $statement_postfix = 0;
@@ -518,11 +518,12 @@ class DBDish::Oracle:auth<mberends>:ver<0.0.1> {
             my $errortext = get_errortext($errhp);
             die "OCILogon2 failed: $errortext.\n";
         }
+        my $svchp = @svchp[0];
 
         my $connection = DBDish::Oracle::Connection.bless(
-                :@svchp[0],
+                :$svchp,
                 :$errhp,
-                :RaiseError(%params<RaiseError>),
+                #:RaiseError(%params<RaiseError>),
             );
         return $connection;
     }
