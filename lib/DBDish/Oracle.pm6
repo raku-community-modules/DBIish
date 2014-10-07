@@ -3,7 +3,7 @@
 use NativeCall;  # from project 'zavolaj'
 use DBDish;     # roles for drivers
 
-my constant lib = 'libclntsh.so';
+my constant lib = 'libclntsh';
 
 #module DBDish:auth<mberends>:ver<0.0.1>;
 
