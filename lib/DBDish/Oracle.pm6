@@ -114,6 +114,18 @@ sub OCIStmtPrepare2 (
     is native(lib)
     { ... }
 
+sub OCIAttrGet (
+        OpaquePointer   $trgthndlp,
+        int32           $trghndltyp,
+        CArray[int]     $attributep,
+        int32           $sizep,
+        int32           $attrtype,
+        OpaquePointer   $errhp,
+    )
+    returns int
+    is native(lib)
+    { ... }
+
 #-----
 
 constant OCI_DEFAULT            = 0;
@@ -124,12 +136,27 @@ constant OCI_ERROR              = -1;
 
 constant OCI_HTYPE_ENV          = 1;
 constant OCI_HTYPE_ERROR        = 2;
+constant OCI_HTYPE_STMT         = 4;
 
 constant OCI_UTF16ID            = 1000;
 
 constant OCI_LOGON2_STMTCACHE   = 4;
 
 constant OCI_NTV_SYNTAX         = 1;
+
+constant OCI_ATTR_STMT_TYPE     = 24;
+
+constant OCI_STMT_UNKNOWN       = 0;
+constant OCI_STMT_SELECT        = 1;
+constant OCI_STMT_UPDATE        = 2;
+constant OCI_STMT_DELETE        = 3;
+constant OCI_STMT_INSERT        = 4;
+constant OCI_STMT_CREATE        = 5;
+constant OCI_STMT_DROP          = 6;
+constant OCI_STMT_ALTER         = 7;
+constant OCI_STMT_BEGIN         = 8;
+constant OCI_STMT_DECLARE       = 9;
+constant OCI_STMT_CALL          = 10;
 
 sub get_errortext(OpaquePointer $handle, $handle_type = OCI_HTYPE_ERROR) {
     my @errorcodep := CArray[int32].new;
@@ -199,9 +226,11 @@ sub get_errortext(OpaquePointer $handle, $handle_type = OCI_HTYPE_ERROR) {
 #
 #
 class DBDish::Oracle::StatementHandle does DBDish::StatementHandle {
-    has $!svchp;
-#    has Str $!statement_name;
     has $!statement;
+    has $!statementtype;
+    has $!svchp;
+    has $!errhp;
+    has $!stmthp;
 #    has $!param_count;
     has $.dbh;
     has $!result;
@@ -229,7 +258,8 @@ class DBDish::Oracle::StatementHandle does DBDish::StatementHandle {
 #        $!statement.subst(:g, '?', { '$' ~ ++$count});
 #    }
 #
-    submethod BUILD(:$!statement, :$!svchp, :$!dbh) { }
+    submethod BUILD(:$!statement!, :$!statementtype!, :$!svchp!, :$!errhp!, :$!stmthp!, :$!dbh!) { }
+
 #    method execute(*@params is copy) {
 #        $!current_row = 0;
 #        die "Wrong number of arguments to method execute: got @params.elems(), expected $!param_count" if @params != $!param_count;
@@ -370,12 +400,25 @@ class DBDish::Oracle::Connection does DBDish::Connection {
 #            return Nil;
         }
         my $stmthp = @stmthpp[0];
+
+        my @stmttype := CArray[int].new;
+        @stmttype[0] = 0;
+        $errcode = OCIAttrGet($stmthp, OCI_HTYPE_STMT, @stmttype, OpaquePointer, OCI_ATTR_STMT_TYPE, $!errhp);
+        if $errcode ne OCI_SUCCESS {
+            my $errortext = get_errortext($!errhp);
+            die "statement type get failed ($errcode): $errortext.\n";
+        }
+        my $statementtype = @stmttype[0];
+
 #        my $info = PQdescribePrepared($!pg_conn, $statement_name);
 #        my $param_count = PQnparams($info);
 
         my $statement_handle = DBDish::Oracle::StatementHandle.bless(
-            :$!svchp,
             :$statement,
+            :$statementtype,
+            :$!svchp,
+            :$!errhp,
+            :$stmthp,
             #:$.RaiseError,
             :dbh(self),
         );
