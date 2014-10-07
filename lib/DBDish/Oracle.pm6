@@ -492,7 +492,10 @@ class DBDish::Oracle:auth<mberends>:ver<0.0.1> {
         # allocate the error handle
         my @errhpp := CArray[OpaquePointer].new;
         @errhpp[0]  = OpaquePointer;
-        OCIHandleAlloc($envhp, @errhpp, OCI_HTYPE_ERROR, 0, OpaquePointer );
+        $errcode = OCIHandleAlloc($envhp, @errhpp, OCI_HTYPE_ERROR, 0, OpaquePointer );
+        if $errcode ne OCI_SUCCESS {
+            die "OCIHandleAlloc failed: '$errcode'\n";
+        }
         my $errhp = @errhpp[0];
 
         my @svchp := CArray[OpaquePointer].new;
