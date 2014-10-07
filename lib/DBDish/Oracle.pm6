@@ -473,9 +473,10 @@ class DBDish::Oracle:auth<mberends>:ver<0.0.1> {
 
 #------------------ methods to be called from DBIish ------------------
     method connect(*%params) {
-        my $host     = %params<host>     // 'localhost';
-        my $port     = %params<port>     // 1521;
-        my $dbname   = %params<dbname>   // die 'Missing <dbname> config';
+        # TODO: the dbname from tnsnames.ora includes the host and port config
+        #my $host     = %params<host>     // 'localhost';
+        #my $port     = %params<port>     // 1521;
+        my $database = %params<database> // die 'Missing <database> config';
         my $username = %params<username> // die 'Missing <username> config';
         my $password = %params<password> // die 'Missing <password> config';
 
@@ -526,8 +527,8 @@ class DBDish::Oracle:auth<mberends>:ver<0.0.1> {
             $username.encode('UTF-16').elems * 2,
             $password,
             $password.encode('UTF-16').elems * 2,
-            $dbname,
-            $dbname.encode('UTF-16').elems * 2,
+            $database,
+            $database.encode('UTF-16').elems * 2,
             OCI_LOGON2_STMTCACHE,
         );
         if $errcode ne OCI_SUCCESS {

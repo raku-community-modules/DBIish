@@ -7,7 +7,7 @@ use DBIish;
 my ( $*mdriver, %*opts ) = 'Oracle';
 %*opts<host>     = 'localhost';
 %*opts<port>     = 1521;
-%*opts<dbname>   = 'XE';
+%*opts<database> = 'XE';
 %*opts<username> = 'testuser';
 %*opts<password> = 'testpass';
 my $dbh;
