@@ -21,19 +21,19 @@ my constant lib = 'libclntsh.so';
 
 #------------ Oracle library functions in alphabetical order ------------
 
-sub OCIEnvCreate (
-        CArray[OpaquePointer] $envhpp,
-        int32         $mode,
-        OpaquePointer $ctxp,
-        OpaquePointer $malocfp,
-        OpaquePointer $ralocfp,
-        OpaquePointer $mfreefp,
-        int           $xtramemsz,
-        CArray[OpaquePointer] $usrmempp,
-    )
-    returns int
-    is native(lib)
-    { ... }
+#sub OCIEnvCreate (
+#        CArray[OpaquePointer] $envhpp,
+#        int32         $mode,
+#        OpaquePointer $ctxp,
+#        OpaquePointer $malocfp,
+#        OpaquePointer $ralocfp,
+#        OpaquePointer $mfreefp,
+#        int           $xtramemsz,
+#        CArray[OpaquePointer] $usrmempp,
+#    )
+#    returns int
+#    is native(lib)
+#    { ... }
 
 sub OCIEnvNlsCreate (
         CArray[OpaquePointer] $envhpp,
