@@ -99,6 +99,21 @@ sub OCILogoff (
     is native(lib)
     { ... }
 
+sub OCIStmtPrepare2 (
+    OpaquePointer           $svchp,
+    CArray[OpaquePointer]   $stmthp,
+    OpaquePointer           $errhp,
+    Str                     $stmttext is encoded('utf16'),
+    int32                   $stmt_len,
+    Str                     $key is encoded('utf16'),
+    int32                   $keylen,
+    int32                   $language,
+    int32                   $mode,
+    )
+    returns int
+    is native(lib)
+    { ... }
+
 #-----
 
 constant OCI_DEFAULT            = 0;
@@ -113,6 +128,8 @@ constant OCI_HTYPE_ERROR        = 2;
 constant OCI_UTF16ID            = 1000;
 
 constant OCI_LOGON2_STMTCACHE   = 4;
+
+constant OCI_NTV_SYNTAX         = 1;
 
 sub get_errortext(OpaquePointer $handle, $handle_type = OCI_HTYPE_ERROR) {
     my @errorcodep := CArray[int32].new;
@@ -181,13 +198,13 @@ sub get_errortext(OpaquePointer $handle, $handle_type = OCI_HTYPE_ERROR) {
 #}
 #
 #
-#class DBDish::Pg::StatementHandle does DBDish::StatementHandle {
-#    has $!pg_conn;
+class DBDish::Oracle::StatementHandle does DBDish::StatementHandle {
+    has $!svchp;
 #    has Str $!statement_name;
-#    has $!statement;
+    has $!statement;
 #    has $!param_count;
-#    has $.dbh;
-#    has $!result;
+    has $.dbh;
+    has $!result;
 #    has $!affected_rows;
 #    has @!column_names;
 #    has Int $!row_count;
@@ -212,9 +229,7 @@ sub get_errortext(OpaquePointer $handle, $handle_type = OCI_HTYPE_ERROR) {
 #        $!statement.subst(:g, '?', { '$' ~ ++$count});
 #    }
 #
-#    submethod BUILD(:$!statement, :$!pg_conn, :$!statement_name, :$!param_count,
-#           :$!dbh) {
-#    }
+    submethod BUILD(:$!statement, :$!svchp, :$!dbh) { }
 #    method execute(*@params is copy) {
 #        $!current_row = 0;
 #        die "Wrong number of arguments to method execute: got @params.elems(), expected $!param_count" if @params != $!param_count;
@@ -334,37 +349,38 @@ class DBDish::Oracle::Connection does DBDish::Connection {
     #has $.in_transaction is rw;
     submethod BUILD(:$!svchp!, :$!errhp!) { }
 
-#    method prepare(Str $statement, $attr?) {
-#        state $statement_postfix = 0;
-#        my $statement_name = join '_', 'pg', $*PID, $statement_postfix++;
-#        my $munged = DBDish::Pg::pg-replace-placeholder($statement);
-#        my $result = PQprepare(
-#                $!pg_conn,
-#                $statement_name,
-#                $munged,
-#                0,
-#                OpaquePointer
-#        );
-#        my $status = PQresultStatus($result);
-#        unless status-is-ok($status) {
-#            self!set_errstr(PQresultErrorMessage($result));
+    method prepare(Str $statement, $attr?) {
+        my @stmthpp := CArray[OpaquePointer].new;
+        @stmthpp[0]  = OpaquePointer;
+        my $errcode = OCIStmtPrepare2(
+                $!svchp,
+                @stmthpp,
+                $!errhp,
+                $statement,
+                $statement.encode('UTF-16').elems * 2,
+                OpaquePointer,
+                0,
+                OCI_NTV_SYNTAX,
+                OCI_DEFAULT,
+            );
+        if $errcode ne OCI_SUCCESS {
+            my $errortext = get_errortext($!errhp);
+            die "prepare failed ($errcode): $errortext.\n";
 #            die self.errstr if $.RaiseError;
 #            return Nil;
-#        }
+        }
+        my $stmthp = @stmthpp[0];
 #        my $info = PQdescribePrepared($!pg_conn, $statement_name);
 #        my $param_count = PQnparams($info);
-#
-#        my $statement_handle = DBDish::Pg::StatementHandle.bless(
-#            :$!pg_conn,
-#            :$statement,
-#            :$.RaiseError,
-#            :dbh(self),
-#            :$statement_name,
-#            :$result,
-#            :$param_count,
-#        );
-#        return $statement_handle;
-#    }
+
+        my $statement_handle = DBDish::Oracle::StatementHandle.bless(
+            :$!svchp,
+            :$statement,
+            #:$.RaiseError,
+            :dbh(self),
+        );
+        return $statement_handle;
+    }
 #
 #    method do(Str $statement, *@bind is copy) {
 #        my $sth = self.prepare($statement);
