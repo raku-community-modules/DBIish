@@ -114,6 +114,21 @@ constant OCI_UTF16ID            = 1000;
 
 constant OCI_LOGON2_STMTCACHE   = 4;
 
+sub get_errortext(OpaquePointer $handle, $handle_type = OCI_HTYPE_ERROR) {
+    my @errorcodep := CArray[int32].new;
+    @errorcodep[0] = 0;
+    my @errortextp := CArray[int8].new;
+    @errortextp[$_] = 0 for ^512;
+
+    OCIErrorGet( $handle, 1, OpaquePointer, @errorcodep, @errortextp, 512, $handle_type );
+    my @errortextary;
+    for ^512 {
+        #last if @errortextp[$_] eq \0;
+        @errortextary[$_] = @errortextp[$_];
+    }
+    return Buf.new(@errortextary).decode();
+}
+
 #sub status-is-ok($status) { $status ~~ 0..4 }
 
 #-----------------------------------------------------------------------
@@ -440,21 +455,6 @@ class DBDish::Oracle:auth<mberends>:ver<0.0.1> {
     #        ~ "'"
     #}
 
-    method get_errortext(OpaquePointer $handle, $handle_type = OCI_HTYPE_ERROR) {
-        my @errorcodep := CArray[int32].new;
-        @errorcodep[0] = 0;
-        my @errortextp := CArray[int8].new;
-        @errortextp[$_] = 0 for ^512;
-
-        OCIErrorGet( $handle, 1, OpaquePointer, @errorcodep, @errortextp, 512, $handle_type );
-        my @errortextary;
-        for ^512 {
-            last if @errortextp[$_] eq \0;
-            @errortextary[$_] = @errortextp[$_];
-        }
-        return Buf.new(@errortextary).decode();
-    }
-
 #------------------ methods to be called from DBIish ------------------
     method connect(*%params) {
         my $host     = %params<host>     // 'localhost';
@@ -485,7 +485,7 @@ class DBDish::Oracle:auth<mberends>:ver<0.0.1> {
         my $envhp = @envhpp[0];
 
         if $errcode ne OCI_SUCCESS {
-            my $errortext = self.get_errortext( $envhp, OCI_HTYPE_ENV );
+            my $errortext = get_errortext( $envhp, OCI_HTYPE_ENV );
             die "OCIEnvNlsCreate failed: '$errortext'\n";
         }
 
@@ -512,7 +512,7 @@ class DBDish::Oracle:auth<mberends>:ver<0.0.1> {
             OCI_LOGON2_STMTCACHE,
         );
         if $errcode ne OCI_SUCCESS {
-            my $errortext = self.get_errortext($errhp);
+            my $errortext = get_errortext($errhp);
             die "OCILogon2 failed: $errortext.\n";
         }
 
