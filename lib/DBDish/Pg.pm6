@@ -342,7 +342,7 @@ class DBDish::Pg::Connection does DBDish::Connection {
     has $!pg_conn;
     has $.AutoCommit is rw = 1;
     has $.in_transaction is rw;
-    method BUILD(:$!pg_conn) { }
+    submethod BUILD(:$!pg_conn, :$!AutoCommit, :$!in_transaction) { }
 
     method prepare(Str $statement, $attr?) {
         state $statement_postfix = 0;
