@@ -5,8 +5,9 @@ use DBIish;
 
 # Define the only database specific values used by the common tests.
 my ( $*mdriver, %*opts ) = 'Oracle';
-%*opts<host>     = 'localhost';
-%*opts<port>     = 1521;
+# DBDish::Oracle doesn't allow to pass host and port at the moment
+#%*opts<host>     = 'localhost';
+#%*opts<port>     = 1521;
 %*opts<database> = 'XE';
 %*opts<username> = 'testuser';
 %*opts<password> = 'testpass';
