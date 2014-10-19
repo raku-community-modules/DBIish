@@ -126,6 +126,43 @@ sub OCIAttrGet (
     is native(lib)
     { ... }
 
+sub OCIStmtExecute (
+        OpaquePointer           $svchp,
+        OpaquePointer           $stmtp,
+        OpaquePointer           $errhp,
+        int32                   $iters,
+        int32                   $rowoff,
+        OpaquePointer           $snap_in,
+        OpaquePointer           $snap_out,
+        int32                   $mode,
+    )
+    returns int
+    is native(lib)
+    { ... }
+
+sub OCIParamGet (
+        OpaquePointer           $hndlp,
+        int32                   $htype,
+        OpaquePointer           $errhp,
+        CArray[OpaquePointer]   $parmdpp,
+        int32                   $pos,
+    )
+    returns int
+    is native(lib)
+    { ... }
+
+sub OCIStmtFetch2 (
+        OpaquePointer   $stmtp,
+        OpaquePointer   $errhp,
+        int32           $nrows,
+        int16           $orientation,
+        int32           $fetchOffset,
+        int32           $mode,
+    )
+    returns int
+    is native(lib)
+    { ... }
+
 #-----
 
 constant OCI_DEFAULT            = 0;
@@ -260,13 +297,51 @@ class DBDish::Oracle::StatementHandle does DBDish::StatementHandle {
 #
     submethod BUILD(:$!statement!, :$!statementtype!, :$!svchp!, :$!errhp!, :$!stmthp!, :$!dbh!) { }
 
-#    method execute(*@params is copy) {
+    method execute(*@params is copy) {
 #        $!current_row = 0;
 #        die "Wrong number of arguments to method execute: got @params.elems(), expected $!param_count" if @params != $!param_count;
 #        my @param_values := CArray[Str].new;
 #        for @params.kv -> $k, $v {
 #            @param_values[$k] = $v.Str;
 #        }
+
+        my $iters = 0;
+        if $!statementtype ne OCI_STMT_SELECT {
+            $iters = 1;
+        }
+
+        my $errcode = OCIStmtExecute(
+            $!svchp,
+            $!stmthp,
+            $!errhp,
+            $iters,
+            0,
+            OpaquePointer,
+            OpaquePointer,
+            OCI_DEFAULT,
+        );
+        if $errcode ne OCI_SUCCESS {
+            my $errortext = get_errortext($!errhp);
+            die "execute of '$!statement' failed ($errcode): $errortext.\n";
+        }
+
+        # for DDL statements, no further steps are necessary
+        return "0E0"
+            if $!statementtype ~~ OCI_STMT_CREATE, OCI_STMT_DROP, OCI_STMT_ALTER;
+
+        my @parmdpp := CArray[OpaquePointer].new;
+        @parmdpp[0]  = OpaquePointer;
+        $errcode = OCIParamGet($!stmthp, OCI_HTYPE_STMT, $!errhp, @parmdpp, 1);
+        if $errcode ne OCI_SUCCESS {
+            my $errortext = get_errortext($!errhp);
+            die "param get failed ($errcode): $errortext.\n";
+        }
+
+        $errcode = OCIStmtFetch2($!stmthp, $!errhp, 1, OCI_DEFAULT, 0, OCI_DEFAULT);
+        if $errcode ne OCI_SUCCESS {
+            my $errortext = get_errortext($!errhp);
+            die "fetch failed ($errcode): $errortext.\n";
+        }
 #
 #        $!result = PQexecPrepared($!pg_conn, $!statement_name, @params.elems,
 #                @param_values,
@@ -280,8 +355,8 @@ class DBDish::Oracle::StatementHandle does DBDish::StatementHandle {
 #
 #        my $rows = self.rows;
 #        return ($rows == 0) ?? "0E0" !! $rows;
-#    }
-#
+    }
+
 #    # do() and execute() return the number of affected rows directly or:
 #    # rows() is called on the statement handle $sth.
 #    method rows() {
@@ -295,8 +370,8 @@ class DBDish::Oracle::StatementHandle does DBDish::StatementHandle {
 #            return +$!affected_rows;
 #        }
 #    }
-#
-#    method fetchrow() {
+
+    method fetchrow() {
 #        my @row_array;
 #        return if $!current_row >= $!row_count;
 #
@@ -316,8 +391,8 @@ class DBDish::Oracle::StatementHandle does DBDish::StatementHandle {
 #            if ! @row_array { self.finish; }
 #        }
 #        return @row_array;
-#    }
-#
+    }
+
 #    method column_names {
 #        $!field_count = PQnfields($!result);
 #        unless @!column_names {
@@ -351,16 +426,16 @@ class DBDish::Oracle::StatementHandle does DBDish::StatementHandle {
 #        my $results_ref = %results;
 #        return $results_ref;
 #    }
-#
-#    method finish() {
-#        if defined($!result) {
-#            PQclear($!result);
-#            $!result       = Any;
-#            @!column_names = ();
-#        }
-#        return Bool::True;
-#    }
-#
+
+    method finish() {
+        if defined($!result) {
+            #PQclear($!result);
+            #$!result       = Any;
+            #@!column_names = ();
+        }
+        return Bool::True;
+    }
+
 #    method !get_row {
 #        my @data;
 #        for ^$!field_count {
@@ -370,8 +445,8 @@ class DBDish::Oracle::StatementHandle does DBDish::StatementHandle {
 #
 #        return @data;
 #    }
-#}
-#
+}
+
 class DBDish::Oracle::Connection does DBDish::Connection {
     has $!svchp;
     has $!errhp;

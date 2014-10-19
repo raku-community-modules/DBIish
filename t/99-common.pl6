@@ -7,6 +7,8 @@
 diag "Testing DBDish::$*mdriver";
 plan 58;
 
+%*query<drop_table> //= "DROP TABLE IF EXISTS nom";
+
 sub magic_cmp(@a, @b) {
     my $res =  @a[0] eq @b[0]
             && @a[1] eq @b[1]
@@ -48,7 +50,7 @@ try EVAL '$*post_connect_cb.($dbh)';
 
 # Test .prepare() and .execute() a few times while setting things up.
 # Drop a table of the same name so that the following create can work.
-my $sth = $dbh.prepare("DROP TABLE IF EXISTS nom");
+my $sth = $dbh.prepare(%*query<drop_table>);
 my $rc = $sth.execute();
 isnt $rc, Bool::True, "drop table gave an expected error " ~
     "(did a previous test not clean up?)"; # test 4

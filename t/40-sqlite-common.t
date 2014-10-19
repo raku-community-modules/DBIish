@@ -4,7 +4,7 @@ use Test;
 use DBIish;
 
 # Define the only database specific values used by the common tests.
-my ( $*mdriver, %*opts) = 'SQLite';
+my ( $*mdriver, %*opts, %*query ) = 'SQLite';
 %*opts<database> = 'minidbi-test.sqlite3';
 my $dbh;
 

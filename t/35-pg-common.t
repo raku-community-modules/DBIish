@@ -7,14 +7,13 @@ use lib 't/lib';
 use Test::Config::Pg;
 
 # Define the only database specific values used by the common tests.
-
 my $*mdriver    = 'Pg';
 my %*opts;
 try %*opts      = config_pg_connect;
+my %*query;
 diag $! if $!;
 
-my $post_connect_cb =
-{
+my $post_connect_cb = {
     my $dbh = @_.shift;
 
     $dbh.do( 'SET client_min_messages = warning' );
