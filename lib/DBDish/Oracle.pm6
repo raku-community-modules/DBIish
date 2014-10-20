@@ -214,54 +214,54 @@ sub get_errortext(OpaquePointer $handle, $handle_type = OCI_HTYPE_ERROR) {
 
 #-----------------------------------------------------------------------
 
-#my grammar PgTokenizer {
-#    token double_quote_normal { <-[\\"]>+ }
-#    token double_quote_escape { [\\ . ]+ }
-#    token double_quote {
-#        \"
-#        [
-#            | <.double_quote_normal>
-#            | <.double_quote_escape>
-#        ]*
-#        \"
-#    }
-#    token single_quote_normal { <-['\\]>+ }
-#    token single_quote_escape { [ \'\' || \\ . ]+ }
-#    token single_quote {
-#        \'
-#        [
-#            | <.single_quote_normal>
-#            | <.single_quote_escape>
-#        ]*
-#        \'
-#    }
-#    token placeholder { '?' }
-#    token normal { <-[?"']>+ }
-#
-#    token TOP {
-#        ^
-#        (
-#            | <normal>
-#            | <placeholder>
-#            | <single_quote>
-#            | <double_quote>
-#        )*
-#        $
-#    }
-#}
-#
-#my class PgTokenizer::Actions {
-#    has $.counter = 0;
-#    method single_quote($/) { make $/.Str }
-#    method double_quote($/) { make $/.Str }
-#    method placeholder($/)  { make '$' ~ ++$!counter }
-#    method normal($/)       { make $/.Str }
-#    method TOP($/) {
-#        make $0.map({.values[0].ast}).join;
-#    }
-#}
-#
-#
+my grammar OracleTokenizer {
+    token TOP {
+        ^
+        (
+            | <normal>
+            | <placeholder>
+            | <single_quote>
+            | <double_quote>
+        )*
+        $
+    }
+    token normal { <-[?"']>+ }
+    token placeholder { '?' }
+    token double_quote_normal { <-[\\"]>+ }
+    token double_quote_escape { [\\ . ]+ }
+    token double_quote {
+        \"
+        [
+            | <.double_quote_normal>
+            | <.double_quote_escape>
+        ]*
+        \"
+    }
+    token single_quote_normal { <-['\\]>+ }
+    token single_quote_escape { [ \'\' || \\ . ]+ }
+    token single_quote {
+        \'
+        [
+            | <.single_quote_normal>
+            | <.single_quote_escape>
+        ]*
+        \'
+    }
+}
+
+my class OracleTokenizer::Actions {
+    has $.counter = 0;
+    method TOP($/) {
+        make $0.map({.values[0].ast}).join;
+    }
+    method normal($/)       { make $/.Str }
+    # replace each ? placeholder with a named one
+    method placeholder($/)  { make ':p' ~ $!counter++ }
+    method single_quote($/) { make $/.Str }
+    method double_quote($/) { make $/.Str }
+}
+
+
 class DBDish::Oracle::StatementHandle does DBDish::StatementHandle {
     has $!statement;
     has $!statementtype;
@@ -455,14 +455,15 @@ class DBDish::Oracle::Connection does DBDish::Connection {
     submethod BUILD(:$!svchp!, :$!errhp!) { }
 
     method prepare(Str $statement, $attr?) {
+        my $oracle_statement = DBDish::Oracle::oracle-replace-placeholder($statement);
         my @stmthpp := CArray[OpaquePointer].new;
         @stmthpp[0]  = OpaquePointer;
         my $errcode = OCIStmtPrepare2(
                 $!svchp,
                 @stmthpp,
                 $!errhp,
-                $statement,
-                $statement.encode('UTF-16').elems * 2,
+                $oracle_statement,
+                $oracle_statement.encode('UTF-16').elems * 2,
                 OpaquePointer,
                 0,
                 OCI_NTV_SYNTAX,
@@ -489,7 +490,9 @@ class DBDish::Oracle::Connection does DBDish::Connection {
 #        my $param_count = PQnparams($info);
 
         my $statement_handle = DBDish::Oracle::StatementHandle.bless(
-            :$statement,
+            # TODO: pass the original or the Oracle statment here?
+            statement => $oracle_statement,
+            #:$statement,
             :$statementtype,
             :$!svchp,
             :$!errhp,
@@ -574,10 +577,10 @@ class DBDish::Oracle::Connection does DBDish::Connection {
 
 class DBDish::Oracle:auth<mberends>:ver<0.0.1> {
 
-    #our sub pg-replace-placeholder(Str $query) is export {
-    #    PgTokenizer.parse($query, :actions(PgTokenizer::Actions.new))
-    #        and $/.ast;
-    #}
+    our sub oracle-replace-placeholder(Str $query) is export {
+        OracleTokenizer.parse($query, :actions(OracleTokenizer::Actions.new))
+            and $/.ast;
+    }
 
     has $.Version = 0.01;
     #has $!errstr;
