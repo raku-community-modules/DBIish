@@ -37,7 +37,7 @@ try {
     CATCH {
         default {
             diag "Connect failed with error $_";
-            skip 'connect failed -- maybe the prerequisits are not installed?', 38;
+            skip 'connect failed -- maybe the prerequisites are not installed?', 38;
             exit;
         }
     }
