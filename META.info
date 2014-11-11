@@ -3,5 +3,13 @@
     "version"       : "*",
     "description"   : "Database connectivity for Perl 6",
     "depends"       : ["NativeCall"],
+    "provides" : {
+        "DBIish"    : "lib/DBIish.pm6",
+        "DBDish"    : "lib/DBDish.pm6",
+        "DBDish::Pg"       : "lib/DBDish/Pg.pm6",
+        "DBDish::SQLite"   : "lib/DBDish/SQLite.pm6",
+        "DBDish::TestMock" : "lib/DBDish/TestMock.pm6",
+        "DBDish::mysql"    : "lib/DBDish/mysql.pm6"
+    },
     "source-url"    : "git://github.com/perl6/DBIish.git"
 }
