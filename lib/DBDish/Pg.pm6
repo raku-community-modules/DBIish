@@ -467,12 +467,12 @@ class DBDish::Pg:auth<mberends>:ver<0.0.1> {
 
 #------------------ methods to be called from DBIish ------------------
     method connect(*%params) {
-        my $host     = quote-and-escape %params<host>     // 'localhost';
-        my $port     = quote-and-escape %params<port>     // 5432;
-        my $database = quote-and-escape %params<dbname>   // %params<database> // 'postgres';
-        my $user     = quote-and-escape %params<user>     // die 'Missing <user> config';
-        my $password = quote-and-escape %params<password> // die 'Missing <password> config';
-        my $conninfo = "host=$host port=$port dbname=$database user=$user password=$password";
+        my @connection_parameters = gather for %params.kv -> $key, $value {
+            # Internal parameter, not for PostgreSQL usage.
+            next if $key eq 'RaiseError';
+            take "$key={quote-and-escape $value}"
+        }
+        my $conninfo = ~@connection_parameters;
         my $pg_conn = PQconnectdb($conninfo);
         my $status = PQstatus($pg_conn);
         my $connection;
