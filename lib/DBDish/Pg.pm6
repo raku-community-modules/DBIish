@@ -469,7 +469,7 @@ class DBDish::Pg:auth<mberends>:ver<0.0.1> {
     method connect(*%params) {
         my @connection_parameters = gather for %params.kv -> $key, $value {
             # Internal parameter, not for PostgreSQL usage.
-            next if $key.lc ne $key;
+            next if $key ~~ / <-lower> /;
             take "$key={quote-and-escape $value}"
         }
         my $conninfo = ~@connection_parameters;
