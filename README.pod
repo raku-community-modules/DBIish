@@ -76,14 +76,22 @@ Currently the following backends are supported
 
 Supports basic CRUD operations and prepared statements with placeholders
 
+    my $dbh = DBIish.connect('Pg', :host<db01.yourdomain.com>, :port(5432),
+            :database<blerg>, :user<myuser>, :$password);
+
 =head2 SQLite
 
 Supports basic CRUD operations and prepared statements with placeholders
+
+    my $dbh = DBIish.connect('SQLite', :database<thefile.sqlite3>);
 
 =head2 mysql
 
 Supports basic CRUD operations. Emulates prepared statements by escaping
 and interpolating strings.
+
+    my $dbh = DBIish.connect('mysql', :host<db02.yourdomain.com>, :port(3306),
+            :database<blerg>, :user<myuser>, :$password);
 
 =head1 TESTING
 
