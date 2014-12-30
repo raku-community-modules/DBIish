@@ -72,7 +72,7 @@ role DBDish::StatementHandle does DBDish::ErrorHandling {
     }
 
     method fetchall-AoH {
-        (0 xx *).map: {
+        (0 xx *).for: {
             my $h = self.fetchrow-hash;
             last unless $h;
             $h;
@@ -80,7 +80,7 @@ role DBDish::StatementHandle does DBDish::ErrorHandling {
     }
 
     method fetchall-array {
-        (0 xx *).map: {
+        (0 xx *).for: {
             my $r = self.fetchrow;
             last unless $r;
             $r;

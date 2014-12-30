@@ -20,7 +20,7 @@ sub magic_cmp(@a, @b) {
 }
 
 sub hash-str(%h) {
-    %h.sort.map({ join '', .key, '=«', .value, '»' }).join('; ');
+    %h.sort.for({ join '', .key, '=«', .value, '»' }).join('; ');
 }
 
 # Verify that the driver loads before attempting a connect
