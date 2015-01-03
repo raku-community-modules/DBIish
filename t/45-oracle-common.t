@@ -37,8 +37,8 @@ installed.
 Connect to the Oracle XE database and set up a test environment with the
 following:
 
- CREATE USER testuser IDENTIFIED BY testpass DEFAULT TABLESPACE "USERS" TEMPORARY TABLESPACE "TEMP";
- ALTER USER "TESTUSER" QUOTA UNLIMITED ON USERS;
+ CREATE USER "testuser" IDENTIFIED BY testpass DEFAULT TABLESPACE "USERS" TEMPORARY TABLESPACE "TEMP";
+ ALTER USER "testuser" QUOTA UNLIMITED ON USERS;
  GRANT "CONNECT" TO "testuser";
  GRANT CREATE TABLE TO "testuser";
  GRANT CREATE VIEW TO "testuser";
