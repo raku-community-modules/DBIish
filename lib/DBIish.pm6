@@ -10,15 +10,10 @@ class DBIish:auth<mberends>:ver<0.1.0> {
         return $connection;
     }
     method install_driver( $drivername ) {
-        my $driver;
-        given $drivername {
-            when 'mysql'   { EVAL 'use DBDish::mysql; $driver = DBDish::mysql.new()' }
-            when 'Pg'      { EVAL 'use DBDish::Pg;    $driver = DBDish::Pg.new()' }
-            when 'SQLite'  { EVAL 'use DBDish::SQLite;$driver = DBDish::SQLite.new()' }
-            when 'TestMock'  { EVAL 'use DBDish::TestMock;$driver = DBDish::TestMock.new()' }
-            default        { die "driver name '$drivername' is not known"; }
-        }
-        return $driver;
+        my $module = "DBDish::$drivername";
+        require $module;
+        ::($module).new;
+
     }
     # TODO: revise error reporting to conform better to Perl 5 DBI
     method err() {
