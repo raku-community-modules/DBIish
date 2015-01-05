@@ -118,7 +118,7 @@ ok $sth = $dbh.prepare( "
 
 ok $sth.execute(), "execute a prepared select statement without parameters"; # test 16
 
-if 'fetchall_arrayref' eq any($sth.^methods) {
+if $sth.^can('fetchall_arrayref') {
     my $arrayref = $sth.fetchall_arrayref();
     is $arrayref.elems, 3, "fetchall_arrayref returns 3 rows"; # test 17
     my @ref =
@@ -174,7 +174,7 @@ ok $sth = $dbh.prepare("SELECT * FROM nom WHERE quantity='5';"),
 'prepare new select for fetchrow_arrayref test'; #test 28
 ok $sth.execute(), 'execute prepared statement for fetchrow_arrayref'; #test 29
 
-if 'fetchrow_arrayref' eq any ($sth.^methods) {
+if $sth.^can('fetchrow_arrayref') {
     ok my $arrayref = $sth.fetchrow_arrayref(), 'called fetchrow_arrayref'; #test 30
     is $arrayref.elems, 4, "fetchrow_arrayref returns 4 fields in a row"; #test 31
     ok magic_cmp($arrayref, [ 'PICO', 'Delish pina colada', '5', '7.9' ]),
@@ -183,7 +183,7 @@ if 'fetchrow_arrayref' eq any ($sth.^methods) {
 else { skip 'fetchrow_arrayref not implemented', 2 }
 
 # TODO: weird sth/dbh behavior workaround again. 
-if 'fetchrow_arrayref' eq any ($sth.^methods) {
+if $sth.^can('fetchrow_arrayref') {
     my $arrayref = $sth.fetchrow_arrayref(); #'called fetchrow_arrayref'; #test23
 }
 $sth.finish;
