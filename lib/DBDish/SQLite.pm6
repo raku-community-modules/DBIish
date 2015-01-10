@@ -33,6 +33,10 @@ enum SQLITE (
     SQLITE_DONE      =>   101, #  sqlite3_step() has finished executing
 );
 
+sub sqlite3_errmsg(OpaquePointer $handle)
+    returns Str
+    is native('libsqlite3')
+    { ... }
 
 sub sqlite3_open(Str $filename, CArray[OpaquePointer] $handle)
     returns Int
@@ -94,8 +98,7 @@ class DBDish::SQLite::StatementHandle does DBDish::StatementHandle {
 
     method !handle-error($status) {
         return if $status == SQLITE_OK;
-        my $errstr = SQLITE($status);
-        self!set_errstr($errstr);
+        self!set_errstr(join ' ', SQLITE($status), sqlite3_errmsg($!conn));
     }
 
     submethod BUILD(:$!conn, :$!statement, :$!statement_handle, :$!dbh) { }
@@ -158,7 +161,7 @@ class DBDish::SQLite::Connection does DBDish::Connection {
     method BUILD(:$!conn) { }
     method !handle-error($status) {
         return if $status == SQLITE_OK;
-        self!set_errstr(SQLITE($status));
+        self!set_errstr(join ' ', SQLITE($status), sqlite3_errmsg($!conn));
     }
     method prepare(Str $statement, $attr?) {
         my @stmt := CArray[OpaquePointer].new;
