@@ -473,10 +473,8 @@ class DBDish::Pg:auth<mberends>:ver<0.0.1> {
         my @connection_parameters = gather for %params.kv -> $key, $value {
             # Internal parameter, not for PostgreSQL usage.
             next if $key ~~ / <-lower> /;
-            if %keymap{ $key } -> $translated {
-                $key = $translated;
-            }
-            take "$key={quote-and-escape $value}"
+            my $translated = %keymap { $key } // $key;
+            take "$translated={quote-and-escape $value}"
         }
         my $conninfo = ~@connection_parameters;
         my $pg_conn = PQconnectdb($conninfo);
