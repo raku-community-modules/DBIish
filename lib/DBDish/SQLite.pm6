@@ -116,6 +116,9 @@ class DBDish::SQLite::StatementHandle does DBDish::StatementHandle {
             push @strings, $v;
         }
         $!row_status = sqlite3_step($!statement_handle);
+        if $!row_status != SQLITE_ROW and $!row_status != SQLITE_DONE {
+            self!handle-error($!row_status);
+        }
         self.rows;
     }
 
