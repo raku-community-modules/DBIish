@@ -5,7 +5,11 @@ use DBIish;
 
 my $dbfile = 't/exec-error.sqlite3';
 try unlink $dbfile;
-my $dbh = DBIish.connect('SQLite', database => $dbfile);
+my $dbh = try { DBIish.connect('SQLite', database => $dbfile) };
+unless $dbh {
+    skip_rest 'SQLite3 not available';
+    exit;
+}
 
 
 lives_ok {
