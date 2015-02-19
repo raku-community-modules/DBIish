@@ -2,7 +2,7 @@
     "name"          : "DBIish",
     "version"       : "*",
     "description"   : "Database connectivity for Perl 6",
-    "depends"       : ["NativeCall"],
+    "depends"       : [],
     "provides" : {
         "DBIish"    : "lib/DBIish.pm6",
         "DBDish"    : "lib/DBDish.pm6",
