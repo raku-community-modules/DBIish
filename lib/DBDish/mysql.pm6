@@ -304,9 +304,10 @@ class DBDish::mysql:auth<mberends>:ver<0.0.1> {
         my $host     = %params<host>     // 'localhost';
         my $port     = (%params<port>     // 0).Int;
         my $database = %params<database> // 'mysql';
+        my $socket   = %params<socket> // OpaquePointer;
         # real_connect() returns either the same client pointer or null
         my $result   = mysql_real_connect( $mysql_client, $host,
-            $user, $password, $database, $port, OpaquePointer, 0 );
+            $user, $password, $database, $port, $socket, 0 );
         my $error = mysql_error( $mysql_client );
         my $connection;
         if $error eq '' {

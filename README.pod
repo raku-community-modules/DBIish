@@ -92,6 +92,9 @@ and interpolating strings.
 
     my $dbh = DBIish.connect('mysql', :host<db02.yourdomain.com>, :port(3306),
             :database<blerg>, :user<myuser>, :$password);
+    # Or via socket:
+    my $dbh = DBIish.connect('mysql', :socket<mysql.sock>,
+            :database<blerg>, :user<myuser>, :$password);
 
 =head1 TESTING
 
