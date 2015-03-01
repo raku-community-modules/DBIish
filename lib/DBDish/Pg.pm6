@@ -14,7 +14,7 @@ sub PQexec (OpaquePointer $conn, str $statement)
     is native(lib)
     { ... }
 
-sub PQprepare (OpaquePointer $conn, str $statement_name, str $query, int $n_params, OpaquePointer $paramTypes)
+sub PQprepare (OpaquePointer $conn, str $statement_name, str $query, int32 $n_params, OpaquePointer $paramTypes)
     returns OpaquePointer
     is native(lib)
     { ... }
@@ -22,18 +22,18 @@ sub PQprepare (OpaquePointer $conn, str $statement_name, str $query, int $n_para
 sub PQexecPrepared(
         OpaquePointer $conn,
         str $statement_name,
-        int $n_params,
+        int32 $n_params,
         CArray[Str] $param_values,
-        CArray[int] $param_length,
-        CArray[int] $param_formats,
-        int $resultFormat
+        CArray[int32] $param_length,
+        CArray[int32] $param_formats,
+        int32 $resultFormat
     )
     returns OpaquePointer
     is native(lib)
     { ... }
 
 sub PQnparams (OpaquePointer)
-    returns int
+    returns int32
     is native(lib)
     { ... }
 
@@ -44,7 +44,7 @@ sub PQdescribePrepared (OpaquePointer, str)
 
 
 sub PQresultStatus (OpaquePointer $result)
-    returns int
+    returns int32
     is native(lib)
     { ... }
 
@@ -64,17 +64,17 @@ sub PQconnectdb (str $conninfo)
     { ... }
 
 sub PQstatus (OpaquePointer $conn)
-    returns int
+    returns int32
     is native(lib)
     { ... }
 
 sub PQnfields (OpaquePointer $result)
-    returns int
+    returns int32
     is native(lib)
     { ... }
 
 sub PQntuples (OpaquePointer $result)
-    returns int
+    returns int32
     is native(lib)
     { ... }
 
@@ -83,17 +83,17 @@ sub PQcmdTuples (OpaquePointer $result)
     is native(lib)
     { ... }
 
-sub PQgetvalue (OpaquePointer $result, int $row, int $col)
+sub PQgetvalue (OpaquePointer $result, int32 $row, int32 $col)
     returns str
     is native(lib)
     { ... }
 
-sub PQgetisnull (OpaquePointer $result, int $row, int $col)
-    returns int
+sub PQgetisnull (OpaquePointer $result, int32 $row, int32 $col)
+    returns int32
     is native(lib)
     { ... }
 
-sub PQfname (OpaquePointer $result, int $col)
+sub PQfname (OpaquePointer $result, int32 $col)
     returns str
     is native(lib)
     { ... }
@@ -106,9 +106,9 @@ sub PQfinish(OpaquePointer)
     is native(lib)
     { ... }
 
-sub PQftype(OpaquePointer, int)
+sub PQftype(OpaquePointer, int32)
     is native(lib)
-    returns int
+    returns int32
     { ... }
 
 # from pg_type.h
