@@ -88,6 +88,11 @@ sub PQgetvalue (OpaquePointer $result, Int $row, Int $col)
     is native(lib)
     { ... }
 
+sub PQgetisnull (OpaquePointer $result, int $row, int $col)
+    returns int
+    is native(lib)
+    { ... }
+
 sub PQfname (OpaquePointer $result, Int $col)
     returns Str
     is native(lib)
@@ -274,7 +279,11 @@ class DBDish::Pg::StatementHandle does DBDish::StatementHandle {
             self!reset_errstr;
 
             for ^$!field_count {
-                @row_array.push(PQgetvalue($!result, $!current_row, $_));
+                my $res := PQgetvalue($!result, $!current_row, $_);
+                if $res eq '' {
+                    $res := Str if PQgetisnull($!result, $!current_row, $_)
+                }
+                @row_array.push($res)
             }
             $!current_row++;
             self!handle-errors;
