@@ -1,6 +1,6 @@
 # DBDish::Pg.pm6
 
-use NativeCall;  # from project 'zavolaj'
+use NativeCall;
 use DBDish;     # roles for drivers
 
 my constant lib = 'libpq';
