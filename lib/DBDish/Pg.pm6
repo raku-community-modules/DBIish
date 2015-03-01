@@ -1,6 +1,6 @@
 # DBDish::Pg.pm6
 
-use NativeCall;  # from project 'zavolaj'
+use NativeCall;
 use DBDish;     # roles for drivers
 
 my constant lib = 'libpq';
@@ -85,6 +85,11 @@ sub PQcmdTuples (OpaquePointer $result)
 
 sub PQgetvalue (OpaquePointer $result, Int $row, Int $col)
     returns Str
+    is native(lib)
+    { ... }
+
+sub PQgetisnull (OpaquePointer $result, int $row, int $col)
+    returns int
     is native(lib)
     { ... }
 
@@ -274,7 +279,11 @@ class DBDish::Pg::StatementHandle does DBDish::StatementHandle {
             self!reset_errstr;
 
             for ^$!field_count {
-                @row_array.push(PQgetvalue($!result, $!current_row, $_));
+                my $res := PQgetvalue($!result, $!current_row, $_);
+                if $res eq '' {
+                    $res := Str if PQgetisnull($!result, $!current_row, $_)
+                }
+                @row_array.push($res)
             }
             $!current_row++;
             self!handle-errors;

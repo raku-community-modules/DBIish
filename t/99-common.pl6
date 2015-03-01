@@ -5,7 +5,7 @@
 #use Test;     # "use" dies in a runtime EVAL
 #use DBIish;
 diag "Testing MiniDBD::$*mdriver";
-plan 40;
+plan 42;
 
 sub magic_cmp(@a, @b) {
     my $res =  @a[0] eq @b[0]
@@ -157,6 +157,15 @@ if $sth.can('colum_names') {
     ok magic_cmp($arrayref, [ 'TAFM', 'Mild fish taco', 1, 4.85 ]), 'selected data matches test data'; #test 23
 }
 else { skip 'fetchrow_arrayref not implemented', 2 }
+
+{
+    ok $sth = $dbh.prepare('SELECT NULL'), 'can prepare statement "SELECT NULL"';
+    $sth.execute;
+    my ($v) = $sth.fetchrow;
+    $sth.finish;
+    nok $v.defined, 'NULL returns an undefined value'
+        or diag "NULL returned as $v.perl()";
+}
 
 #TODO: I made piña colada (+U00F1) at first to test unicode. It gets properly
 # inserted and selected, but a comparison within arrayref fails.
