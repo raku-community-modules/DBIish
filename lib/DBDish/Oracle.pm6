@@ -463,7 +463,7 @@ class DBDish::Oracle::Connection does DBDish::Connection {
                 @stmthpp,
                 $!errhp,
                 $oracle_statement,
-                $oracle_statement.encode('UTF-16').elems * 2,
+                $oracle_statement.encode('UTF-16').bytes,
                 OpaquePointer,
                 0,
                 OCI_NTV_SYNTAX,
@@ -639,17 +639,16 @@ class DBDish::Oracle:auth<mberends>:ver<0.0.1> {
         my @svchp := CArray[OpaquePointer].new;
         @svchp[0]  = OpaquePointer;
 
-        # TODO: pass correct number of bytes
         $errcode = OCILogon2(
             $envhp,
             $errhp,
             @svchp,
             $username,
-            $username.encode('UTF-16').elems * 2,
+            $username.encode('UTF-16').bytes,
             $password,
-            $password.encode('UTF-16').elems * 2,
+            $password.encode('UTF-16').bytes,
             $database,
-            $database.encode('UTF-16').elems * 2,
+            $database.encode('UTF-16').bytes,
             OCI_LOGON2_STMTCACHE,
         );
         if $errcode ne OCI_SUCCESS {
