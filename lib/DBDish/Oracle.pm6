@@ -322,7 +322,7 @@ class DBDish::Oracle::StatementHandle does DBDish::StatementHandle {
         );
         if $errcode ne OCI_SUCCESS {
             my $errortext = get_errortext($!errhp);
-            die "execute of '$!statement' failed ($errcode): $errortext.\n";
+            die "execute of '$!statement' failed ($errcode): '$errortext'";
         }
 
         # for DDL statements, no further steps are necessary
@@ -334,13 +334,13 @@ class DBDish::Oracle::StatementHandle does DBDish::StatementHandle {
         $errcode = OCIParamGet($!stmthp, OCI_HTYPE_STMT, $!errhp, @parmdpp, 1);
         if $errcode ne OCI_SUCCESS {
             my $errortext = get_errortext($!errhp);
-            die "param get failed ($errcode): $errortext.\n";
+            die "param get failed ($errcode): '$errortext'";
         }
 
         $errcode = OCIStmtFetch2($!stmthp, $!errhp, 1, OCI_DEFAULT, 0, OCI_DEFAULT);
         if $errcode ne OCI_SUCCESS {
             my $errortext = get_errortext($!errhp);
-            die "fetch failed ($errcode): $errortext.\n";
+            die "fetch failed ($errcode): '$errortext'";
         }
 #
 #        $!result = PQexecPrepared($!pg_conn, $!statement_name, @params.elems,
@@ -471,7 +471,7 @@ class DBDish::Oracle::Connection does DBDish::Connection {
             );
         if $errcode ne OCI_SUCCESS {
             my $errortext = get_errortext($!errhp);
-            die "prepare failed ($errcode): $errortext.\n";
+            die "prepare failed ($errcode): '$errortext'";
 #            die self.errstr if $.RaiseError;
 #            return Nil;
         }
@@ -482,7 +482,7 @@ class DBDish::Oracle::Connection does DBDish::Connection {
         $errcode = OCIAttrGet($stmthp, OCI_HTYPE_STMT, @stmttype, OpaquePointer, OCI_ATTR_STMT_TYPE, $!errhp);
         if $errcode ne OCI_SUCCESS {
             my $errortext = get_errortext($!errhp);
-            die "statement type get failed ($errcode): $errortext.\n";
+            die "statement type get failed ($errcode): '$errortext'";
         }
         my $statementtype = @stmttype[0];
 
@@ -624,7 +624,7 @@ class DBDish::Oracle:auth<mberends>:ver<0.0.1> {
 
         if $errcode ne OCI_SUCCESS {
             my $errortext = get_errortext( $envhp, OCI_HTYPE_ENV );
-            die "OCIEnvNlsCreate failed: '$errortext'\n";
+            die "OCIEnvNlsCreate failed: '$errortext'";
         }
 
         # allocate the error handle
@@ -632,7 +632,7 @@ class DBDish::Oracle:auth<mberends>:ver<0.0.1> {
         @errhpp[0]  = OpaquePointer;
         $errcode = OCIHandleAlloc($envhp, @errhpp, OCI_HTYPE_ERROR, 0, OpaquePointer );
         if $errcode ne OCI_SUCCESS {
-            die "OCIHandleAlloc failed: '$errcode'\n";
+            die "OCIHandleAlloc failed: '$errcode'";
         }
         my $errhp = @errhpp[0];
 
@@ -653,7 +653,7 @@ class DBDish::Oracle:auth<mberends>:ver<0.0.1> {
         );
         if $errcode ne OCI_SUCCESS {
             my $errortext = get_errortext($errhp);
-            die "OCILogon2 failed: $errortext.\n";
+            die "OCILogon2 failed: '$errortext'";
         }
         my $svchp = @svchp[0];
 
