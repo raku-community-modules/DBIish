@@ -1,6 +1,6 @@
 # DBDish::Oracle.pm6
 
-use NativeCall;  # from project 'zavolaj'
+use NativeCall;
 use DBDish;     # roles for drivers
 
 my constant lib = 'libclntsh';
@@ -205,14 +205,13 @@ sub get_errortext(OCIError $handle, $handle_type = OCI_HTYPE_ERROR) {
     my @errorcodep := CArray[sb4].new;
     @errorcodep[0] = 0;
     my @errortextp := CArray[int8].new;
-    @errortextp[$_] = 0 for ^512;
+    @errortextp[$_] = 0
+        for ^512;
 
     OCIErrorGet( $handle, 1, OraText, @errorcodep, @errortextp, 512, $handle_type );
     my @errortextary;
-    for ^512 {
-        #last if @errortextp[$_] eq \0;
-        @errortextary[$_] = @errortextp[$_];
-    }
+    @errortextary[$_] = @errortextp[$_]
+        for ^512;
     return Buf.new(@errortextary).decode();
 }
 
