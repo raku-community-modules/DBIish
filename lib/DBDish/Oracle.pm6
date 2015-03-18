@@ -9,15 +9,20 @@ my constant lib = 'libclntsh';
 
 #------------ Oracle library to NativeCall data type mapping ------------
 
-# OCIEnv    OpaquePointer
-# OCIError  OpaquePointer
-# OCISvcCtx OpaquePointer
-# OraText   Str
-# sword     int
-# ub2       int16
-# ub4       int32
-# sb4       int32
-# size_t    int
+constant sb2            = int16;
+constant sb4            = int32;
+constant size_t         = long;
+constant sword          = int32;
+constant ub2            = int16;
+constant ub4            = int32;
+
+constant OCIBind        = OpaquePointer;
+constant OCIEnv         = OpaquePointer;
+constant OCIError       = OpaquePointer;
+constant OCISnapshot    = OpaquePointer;
+constant OCIStmt        = OpaquePointer;
+constant OCISvcCtx      = OpaquePointer;
+constant OraText        = Str;
 
 #------------ Oracle library functions in alphabetical order ------------
 
@@ -28,7 +33,7 @@ my constant lib = 'libclntsh';
 #        OpaquePointer $malocfp,
 #        OpaquePointer $ralocfp,
 #        OpaquePointer $mfreefp,
-#        int           $xtramemsz,
+#        size_t        $xtramemsz,
 #        CArray[OpaquePointer] $usrmempp,
 #    )
 #    returns int
@@ -36,130 +41,130 @@ my constant lib = 'libclntsh';
 #    { ... }
 
 sub OCIEnvNlsCreate (
-        CArray[OpaquePointer] $envhpp,
-        int32         $mode,
-        OpaquePointer $ctxp,
-        OpaquePointer $malocfp,
-        OpaquePointer $ralocfp,
-        OpaquePointer $mfreefp,
-        int           $xtramemsz,
+        CArray[OCIEnv] $envhpp,
+        ub4            $mode,
+        OpaquePointer  $ctxp,
+        OpaquePointer  $malocfp,
+        OpaquePointer  $ralocfp,
+        OpaquePointer  $mfreefp,
+        size_t         $xtramemsz,
         CArray[OpaquePointer] $usrmempp,
-        int16         $charset,
-        int16         $ncharset,
+        ub2            $charset,
+        ub2            $ncharset,
     )
-    returns int
+    returns sword
     is native(lib)
     { ... }
 
 sub OCIErrorGet (
-        OpaquePointer   $hndlp,
-        int32           $recordno,
-        OpaquePointer   $sqlstate,
-        CArray[int32]   $errcodep,
-        CArray[int8]    $bufp,
-        int32           $bufsiz,
-        int32           $type,
+        OpaquePointer $hndlp,
+        ub4           $recordno,
+        OraText       $sqlstate,
+        CArray[sb4]   $errcodep,
+        CArray[int8]  $bufp,
+        ub4           $bufsiz,
+        ub4           $type,
     )
-    returns int
+    returns sword
     is native(lib)
     { ... }
 
 sub OCIHandleAlloc (
         OpaquePointer           $parenth,
         CArray[OpaquePointer]   $hndlpp,
-        int32                   $type,
-        int                     $xtramem_sz,
+        ub4                     $type,
+        size_t                  $xtramem_sz,
         CArray[OpaquePointer]   $usrmempp,
     )
-    returns int
+    returns sword
     is native(lib)
     { ... }
 
 sub OCILogon2 (
-        OpaquePointer $envhp,
-        OpaquePointer $errhp,
-        CArray[OpaquePointer] $svchp,
-        Str $username is encoded('utf16'),
-        int32         $uname_len,
-        Str $password is encoded('utf16'),
-        int32         $passwd_len,
-        Str $dbname is encoded('utf16'),
-        int32         $dbname_len,
-        int32         $mode,
+        OCIEnv              $envhp,
+        OCIError            $errhp,
+        CArray[OCISvcCtx]   $svchp,
+        OraText             $username is encoded('utf16'),
+        ub4                 $uname_len,
+        OraText             $password is encoded('utf16'),
+        ub4                 $passwd_len,
+        OraText             $dbname is encoded('utf16'),
+        ub4                 $dbname_len,
+        ub4                 $mode,
     )
-    returns int
+    returns sword
     is native(lib)
     { ... }
 
 sub OCILogoff (
-        OpaquePointer $svchp,
-        OpaquePointer $errhp,
+        OCISvcCtx   $svchp,
+        OCIError    $errhp,
     )
-    returns int
+    returns sword
     is native(lib)
     { ... }
 
 sub OCIStmtPrepare2 (
-        OpaquePointer           $svchp,
-        CArray[OpaquePointer]   $stmthp,
-        OpaquePointer           $errhp,
-        Str                     $stmttext is encoded('utf16'),
-        int32                   $stmt_len,
-        Str                     $key is encoded('utf16'),
-        int32                   $keylen,
-        int32                   $language,
-        int32                   $mode,
+        OCISvcCtx           $svchp,
+        CArray[OCIStmt]     $stmthp,
+        OCIError            $errhp,
+        OraText             $stmttext is encoded('utf16'),
+        ub4                 $stmt_len,
+        OraText             $key is encoded('utf16'),
+        ub4                 $keylen,
+        ub4                 $language,
+        ub4                 $mode,
     )
-    returns int
+    returns sword
     is native(lib)
     { ... }
 
 sub OCIAttrGet (
         OpaquePointer   $trgthndlp,
-        int32           $trghndltyp,
-        CArray[int]     $attributep,
-        int32           $sizep,
-        int32           $attrtype,
-        OpaquePointer   $errhp,
+        ub4             $trghndltyp,
+        CArray[int8]    $attributep,
+        ub4             $sizep,
+        ub4             $attrtype,
+        OCIError        $errhp,
     )
-    returns int
+    returns sword
     is native(lib)
     { ... }
 
 sub OCIStmtExecute (
-        OpaquePointer           $svchp,
-        OpaquePointer           $stmtp,
-        OpaquePointer           $errhp,
-        int32                   $iters,
-        int32                   $rowoff,
-        OpaquePointer           $snap_in,
-        OpaquePointer           $snap_out,
-        int32                   $mode,
+        OCISvcCtx       $svchp,
+        OCIStmt         $stmtp,
+        OCIError        $errhp,
+        ub4             $iters,
+        ub4             $rowoff,
+        OCISnapshot     $snap_in,
+        OCISnapshot     $snap_out,
+        ub4             $mode,
     )
-    returns int
+    returns sword
     is native(lib)
     { ... }
 
 sub OCIParamGet (
         OpaquePointer           $hndlp,
-        int32                   $htype,
-        OpaquePointer           $errhp,
+        ub4                     $htype,
+        OCIError                $errhp,
         CArray[OpaquePointer]   $parmdpp,
-        int32                   $pos,
+        ub4                     $pos,
     )
-    returns int
+    returns sword
     is native(lib)
     { ... }
 
 sub OCIStmtFetch2 (
-        OpaquePointer   $stmtp,
-        OpaquePointer   $errhp,
-        int32           $nrows,
-        int16           $orientation,
-        int32           $fetchOffset,
-        int32           $mode,
+        OCIStmt     $stmtp,
+        OCIError    $errhp,
+        ub4         $nrows,
+        ub2         $orientation,
+        sb4         $fetchOffset,
+        ub4         $mode,
     )
-    returns int
+    returns sword
     is native(lib)
     { ... }
 
@@ -195,13 +200,13 @@ constant OCI_STMT_BEGIN         = 8;
 constant OCI_STMT_DECLARE       = 9;
 constant OCI_STMT_CALL          = 10;
 
-sub get_errortext(OpaquePointer $handle, $handle_type = OCI_HTYPE_ERROR) {
-    my @errorcodep := CArray[int32].new;
+sub get_errortext(OCIError $handle, $handle_type = OCI_HTYPE_ERROR) {
+    my @errorcodep := CArray[sb4].new;
     @errorcodep[0] = 0;
     my @errortextp := CArray[int8].new;
     @errortextp[$_] = 0 for ^512;
 
-    OCIErrorGet( $handle, 1, OpaquePointer, @errorcodep, @errortextp, 512, $handle_type );
+    OCIErrorGet( $handle, 1, OraText, @errorcodep, @errortextp, 512, $handle_type );
     my @errortextary;
     for ^512 {
         #last if @errortextp[$_] eq \0;
@@ -456,15 +461,15 @@ class DBDish::Oracle::Connection does DBDish::Connection {
 
     method prepare(Str $statement, $attr?) {
         my $oracle_statement = DBDish::Oracle::oracle-replace-placeholder($statement);
-        my @stmthpp := CArray[OpaquePointer].new;
-        @stmthpp[0]  = OpaquePointer;
+        my @stmthpp := CArray[OCIStmt].new;
+        @stmthpp[0]  = OCIStmt;
         my $errcode = OCIStmtPrepare2(
                 $!svchp,
                 @stmthpp,
                 $!errhp,
                 $oracle_statement,
                 $oracle_statement.encode('UTF-16').bytes,
-                OpaquePointer,
+                OraText,
                 0,
                 OCI_NTV_SYNTAX,
                 OCI_DEFAULT,
@@ -477,14 +482,14 @@ class DBDish::Oracle::Connection does DBDish::Connection {
         }
         my $stmthp = @stmthpp[0];
 
-        my @stmttype := CArray[int].new;
-        @stmttype[0] = 0;
-        $errcode = OCIAttrGet($stmthp, OCI_HTYPE_STMT, @stmttype, OpaquePointer, OCI_ATTR_STMT_TYPE, $!errhp);
+        my @attributep := CArray[int8].new;
+        @attributep[0] = 0;
+        $errcode = OCIAttrGet($stmthp, OCI_HTYPE_STMT, @attributep, OpaquePointer, OCI_ATTR_STMT_TYPE, $!errhp);
         if $errcode ne OCI_SUCCESS {
             my $errortext = get_errortext($!errhp);
             die "statement type get failed ($errcode): '$errortext'";
         }
-        my $statementtype = @stmttype[0];
+        my $statementtype = @attributep[0];
 
 #        my $info = PQdescribePrepared($!pg_conn, $statement_name);
 #        my $param_count = PQnparams($info);
@@ -606,7 +611,7 @@ class DBDish::Oracle:auth<mberends>:ver<0.0.1> {
         @envhpp[0]  = OpaquePointer;
         my OpaquePointer $ctxp,
 
-        my int $errcode = OCIEnvNlsCreate(
+        my sword $errcode = OCIEnvNlsCreate(
             @envhpp,
             OCI_DEFAULT,
             $ctxp,
@@ -636,8 +641,8 @@ class DBDish::Oracle:auth<mberends>:ver<0.0.1> {
         }
         my $errhp = @errhpp[0];
 
-        my @svchp := CArray[OpaquePointer].new;
-        @svchp[0]  = OpaquePointer;
+        my @svchp := CArray[OCISvcCtx].new;
+        @svchp[0]  = OCISvcCtx;
 
         $errcode = OCILogon2(
             $envhp,
