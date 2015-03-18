@@ -84,11 +84,11 @@ sub OCILogon2 (
         OCIEnv              $envhp,
         OCIError            $errhp,
         CArray[OCISvcCtx]   $svchp,
-        OraText             $username is encoded('utf16'),
+        OraText             $username is encoded('utf8'),
         ub4                 $uname_len,
-        OraText             $password is encoded('utf16'),
+        OraText             $password is encoded('utf8'),
         ub4                 $passwd_len,
-        OraText             $dbname is encoded('utf16'),
+        OraText             $dbname is encoded('utf8'),
         ub4                 $dbname_len,
         ub4                 $mode,
     )
@@ -108,9 +108,9 @@ sub OCIStmtPrepare2 (
         OCISvcCtx           $svchp,
         CArray[OCIStmt]     $stmthp,
         OCIError            $errhp,
-        OraText             $stmttext is encoded('utf16'),
+        OraText             $stmttext is encoded('utf8'),
         ub4                 $stmt_len,
-        OraText             $key is encoded('utf16'),
+        OraText             $key is encoded('utf8'),
         ub4                 $keylen,
         ub4                 $language,
         ub4                 $mode,
@@ -180,8 +180,6 @@ constant OCI_HTYPE_ENV          = 1;
 constant OCI_HTYPE_ERROR        = 2;
 constant OCI_HTYPE_STMT         = 4;
 
-constant OCI_UTF16ID            = 1000;
-
 constant OCI_LOGON2_STMTCACHE   = 4;
 
 constant OCI_NTV_SYNTAX         = 1;
@@ -199,6 +197,9 @@ constant OCI_STMT_ALTER         = 7;
 constant OCI_STMT_BEGIN         = 8;
 constant OCI_STMT_DECLARE       = 9;
 constant OCI_STMT_CALL          = 10;
+
+# SELECT NLS_CHARSET_ID('AL32UTF8') FROM dual;
+constant AL32UTF8               = 873;
 
 sub get_errortext(OCIError $handle, $handle_type = OCI_HTYPE_ERROR) {
     my @errorcodep := CArray[sb4].new;
@@ -468,7 +469,7 @@ class DBDish::Oracle::Connection does DBDish::Connection {
                 @stmthpp,
                 $!errhp,
                 $oracle_statement,
-                $oracle_statement.encode('UTF-16').bytes,
+                $oracle_statement.encode('utf8').bytes,
                 OraText,
                 0,
                 OCI_NTV_SYNTAX,
@@ -620,8 +621,8 @@ class DBDish::Oracle:auth<mberends>:ver<0.0.1> {
             OpaquePointer,
             0,
             OpaquePointer,
-            OCI_UTF16ID,
-            OCI_UTF16ID,
+            AL32UTF8,
+            AL32UTF8,
         );
 
         # fetch environment handle from pointer
@@ -649,11 +650,11 @@ class DBDish::Oracle:auth<mberends>:ver<0.0.1> {
             $errhp,
             @svchp,
             $username,
-            $username.encode('UTF-16').bytes,
+            $username.encode('utf8').bytes,
             $password,
-            $password.encode('UTF-16').bytes,
+            $password.encode('utf8').bytes,
             $database,
-            $database.encode('UTF-16').bytes,
+            $database.encode('utf8').bytes,
             OCI_LOGON2_STMTCACHE,
         );
         if $errcode ne OCI_SUCCESS {
