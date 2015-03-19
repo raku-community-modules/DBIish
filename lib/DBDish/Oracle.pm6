@@ -131,6 +131,76 @@ sub OCIAttrGet (
     is native(lib)
     { ... }
 
+# strings
+multi sub OCIBindByName (
+        OCIStmt             $stmtp,
+        #CArray[OCIBind]     $bindpp,
+        #OCIBind             $bindpp is rw,
+        CArray              $bindpp,
+        OCIError            $errhp,
+        OraText             $placeholder is encoded('utf8'),
+        sb4                 $placeh_len,
+        Str                 $valuep is encoded('utf8'),
+        sb4                 $value_sz,
+        ub2                 $dty,
+        sb2                 $indp is rw,
+        ub2                 $alenp is rw,
+        ub2                 $rcodep is rw,
+        ub4                 $maxarr_len,
+        ub4                 $curelep is rw,
+        ub4                 $mode,
+    )
+    returns sword
+    is native(lib)
+    { ... }
+
+# ints
+multi sub OCIBindByName (
+        OCIStmt             $stmtp,
+        #CArray[OCIBind]     $bindpp,
+        #OCIBind             $bindpp is rw,
+        CArray              $bindpp,
+        OCIError            $errhp,
+        OraText             $placeholder is encoded('utf8'),
+        sb4                 $placeh_len,
+        long                $valuep is rw,
+        sb4                 $value_sz,
+        ub2                 $dty,
+        sb2                 $indp is rw,
+        ub2                 $alenp is rw,
+        ub2                 $rcodep is rw,
+        ub4                 $maxarr_len,
+        ub4                 $curelep is rw,
+        ub4                 $mode,
+    )
+    returns sword
+    is native(lib)
+    { ... }
+
+# floats
+multi sub OCIBindByName (
+        OCIStmt             $stmtp,
+        #CArray[OCIBind]     $bindpp,
+        CArray              $bindpp,
+        #OCIBind             $bindpp is rw,
+        OCIError            $errhp,
+        OraText             $placeholder is encoded('utf8'),
+        sb4                 $placeh_len,
+        #CArray[int8]    $valuep,
+        num32               $valuep is rw,
+        sb4                 $value_sz,
+        ub2                 $dty,
+        sb2                 $indp is rw,
+        ub2                 $alenp is rw,
+        ub2                 $rcodep is rw,
+        ub4                 $maxarr_len,
+        ub4                 $curelep is rw,
+        ub4                 $mode,
+    )
+    returns sword
+    is native(lib)
+    { ... }
+
 sub OCIStmtExecute (
         OCISvcCtx       $svchp,
         OCIStmt         $stmtp,
@@ -197,6 +267,11 @@ constant OCI_STMT_ALTER         = 7;
 constant OCI_STMT_BEGIN         = 8;
 constant OCI_STMT_DECLARE       = 9;
 constant OCI_STMT_CALL          = 10;
+
+constant SQLT_CHR               = 1;
+constant SQLT_INT               = 3;
+constant SQLT_FLT               = 4;
+constant SQLT_STR               = 5;
 
 # SELECT NLS_CHARSET_ID('AL32UTF8') FROM dual;
 constant AL32UTF8               = 873;
@@ -305,15 +380,70 @@ class DBDish::Oracle::StatementHandle does DBDish::StatementHandle {
     method execute(*@params is copy) {
 #        $!current_row = 0;
 #        die "Wrong number of arguments to method execute: got @params.elems(), expected $!param_count" if @params != $!param_count;
-#        my @param_values := CArray[Str].new;
-#        for @params.kv -> $k, $v {
-#            @param_values[$k] = $v.Str;
-#        }
 
-        my $iters = 0;
-        if $!statementtype ne OCI_STMT_SELECT {
-            $iters = 1;
+        # bind placeholder values
+        for @params.kv -> $k, $v {
+            my @bindpp := CArray[OCIBind].new;
+            @bindpp[0]  = OCIBind;
+            #my OCIBind $bindpp;
+
+            my OraText $placeholder = ":p$k";
+            my sb4 $placeh_len = $placeholder.encode('utf8').bytes;
+
+            #my $valuebuf;
+            my sb4 $value_sz;
+            my ub2 $dty;
+            if $v ~~ long {
+                $dty = SQLT_INT;
+                #$valuebuf = $v;
+                #$value_sz = nativesizeof($v);
+                $value_sz = 8;
+            }
+            elsif $v ~~ num32 {
+                $dty = SQLT_FLT;
+                #$valuebuf = $v;
+                #$value_sz = nativesizeof($v);
+                $value_sz = 4;
+            }
+            elsif $v ~~ Str {
+                $dty = SQLT_CHR;
+                #$valuebuf = $v;
+                $value_sz = $v.encode('utf8').bytes;
+            }
+            else {
+                die "unhandled type: $v";
+            }
+            # -1 tells OCI to set the value to NULL
+            my sb2 $indp = $v.chars == 0 ?? -1 !! 0;
+            my ub2 $alenp = 0;
+            my ub2 $rcodep = 0;
+            my ub4 $maxarr_len = 0;
+            my ub4 $curelep = 0;
+            warn "binding '$placeholder' ($placeh_len): '$v' ($value_sz) as OCI type '$dty' Perl type '$v.^name()' \n";
+            my $errcode = OCIBindByName(
+                $!stmthp,
+                @bindpp,
+                $!errhp,
+                $placeholder,
+                $placeh_len,
+                $v,
+                $value_sz,
+                $dty,
+                $indp,
+                $alenp,
+                $rcodep,
+                $maxarr_len,
+                $curelep,
+                OCI_DEFAULT,
+            );
+            if $errcode ne OCI_SUCCESS {
+                my $errortext = get_errortext($!errhp);
+                die "bind of param '$placeholder' with value '$v' of statement '$!statement' failed ($errcode): '$errortext'";
+            }
+            #warn "bind of param '$placeholder' with value '$valuebuf' succeeded";
         }
+
+        my $iters = $!statementtype eq OCI_STMT_SELECT ?? 0 !! 1;
 
         my $errcode = OCIStmtExecute(
             $!svchp,
@@ -329,6 +459,7 @@ class DBDish::Oracle::StatementHandle does DBDish::StatementHandle {
             my $errortext = get_errortext($!errhp);
             die "execute of '$!statement' failed ($errcode): '$errortext'";
         }
+        #say 'successfully executed';
 
         # for DDL statements, no further steps are necessary
         return "0E0"
