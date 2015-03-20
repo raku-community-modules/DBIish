@@ -132,11 +132,11 @@ sub OCIAttrGet (
     { ... }
 
 # strings
-multi sub OCIBindByName (
+sub OCIBindByName_Str (
         OCIStmt             $stmtp,
-        #CArray[OCIBind]     $bindpp,
+        CArray[OCIBind]     $bindpp,
+        #CArray              $bindpp,
         #OCIBind             $bindpp is rw,
-        CArray              $bindpp,
         OCIError            $errhp,
         OraText             $placeholder is encoded('utf8'),
         sb4                 $placeh_len,
@@ -152,14 +152,15 @@ multi sub OCIBindByName (
     )
     returns sword
     is native(lib)
+    is symbol('OCIBindByName')
     { ... }
 
 # ints
-multi sub OCIBindByName (
+sub OCIBindByName_Int (
         OCIStmt             $stmtp,
-        #CArray[OCIBind]     $bindpp,
+        CArray[OCIBind]     $bindpp,
+        #CArray              $bindpp,
         #OCIBind             $bindpp is rw,
-        CArray              $bindpp,
         OCIError            $errhp,
         OraText             $placeholder is encoded('utf8'),
         sb4                 $placeh_len,
@@ -175,19 +176,20 @@ multi sub OCIBindByName (
     )
     returns sword
     is native(lib)
+    is symbol('OCIBindByName')
     { ... }
 
 # floats
-multi sub OCIBindByName (
+sub OCIBindByName_Real (
         OCIStmt             $stmtp,
-        #CArray[OCIBind]     $bindpp,
-        CArray              $bindpp,
+        CArray[OCIBind]     $bindpp,
+        #CArray              $bindpp,
         #OCIBind             $bindpp is rw,
         OCIError            $errhp,
         OraText             $placeholder is encoded('utf8'),
         sb4                 $placeh_len,
         #CArray[int8]    $valuep,
-        num32               $valuep is rw,
+        num64               $valuep is rw,
         sb4                 $value_sz,
         ub2                 $dty,
         sb2                 $indp is rw,
@@ -199,6 +201,7 @@ multi sub OCIBindByName (
     )
     returns sword
     is native(lib)
+    is symbol('OCIBindByName')
     { ... }
 
 sub OCIStmtExecute (
@@ -240,7 +243,7 @@ sub OCIStmtFetch2 (
 
 #-----
 
-constant OCI_DEFAULT            = 0;
+my ub4 constant OCI_DEFAULT     = 0;
 constant OCI_THREADED           = 1;
 
 constant OCI_SUCCESS            = 0;
@@ -390,25 +393,29 @@ class DBDish::Oracle::StatementHandle does DBDish::StatementHandle {
             my OraText $placeholder = ":p$k";
             my sb4 $placeh_len = $placeholder.encode('utf8').bytes;
 
-            #my $valuebuf;
+            my $valuebuf;
             my sb4 $value_sz;
             my ub2 $dty;
-            if $v ~~ long {
+            my $method;
+            if $v ~~ Int {
                 $dty = SQLT_INT;
-                #$valuebuf = $v;
-                #$value_sz = nativesizeof($v);
-                $value_sz = 8;
+                $valuebuf = $v;
+                # see multi sub defition for the C data type
+                $value_sz = nativesizeof(long);
+                $method = &OCIBindByName_Int;
             }
-            elsif $v ~~ num32 {
+            elsif $v ~~ Real {
                 $dty = SQLT_FLT;
-                #$valuebuf = $v;
-                #$value_sz = nativesizeof($v);
-                $value_sz = 4;
+                $valuebuf = $v.Num;
+                # see multi sub defition for the C data type
+                $value_sz = nativesizeof(num64);
+                $method = &OCIBindByName_Real;
             }
             elsif $v ~~ Str {
                 $dty = SQLT_CHR;
-                #$valuebuf = $v;
+                $valuebuf = $v;
                 $value_sz = $v.encode('utf8').bytes;
+                $method = &OCIBindByName_Str;
             }
             else {
                 die "unhandled type: $v";
@@ -420,13 +427,13 @@ class DBDish::Oracle::StatementHandle does DBDish::StatementHandle {
             my ub4 $maxarr_len = 0;
             my ub4 $curelep = 0;
             warn "binding '$placeholder' ($placeh_len): '$v' ($value_sz) as OCI type '$dty' Perl type '$v.^name()' \n";
-            my $errcode = OCIBindByName(
+            my $errcode = $method(
                 $!stmthp,
                 @bindpp,
                 $!errhp,
                 $placeholder,
                 $placeh_len,
-                $v,
+                $valuebuf,
                 $value_sz,
                 $dty,
                 $indp,
