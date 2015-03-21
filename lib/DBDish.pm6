@@ -35,7 +35,7 @@ role DBDish::ErrorHandling {
     has Bool $.PrintError is rw = False;
     has Bool $.RaiseError is rw = True;
     has $.errstr;
-    method !set_errstr($err) is hidden_from_backtrace {
+    method !set_errstr($err) is hidden-from-backtrace {
         $!errstr = $err;
         note $!errstr if self.PrintError;
         die  $!errstr if self.RaiseError;
