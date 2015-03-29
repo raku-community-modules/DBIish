@@ -394,27 +394,27 @@ class DBDish::Oracle::StatementHandle does DBDish::StatementHandle {
             my OraText $placeholder = ":p$k";
             my sb4 $placeh_len = $placeholder.encode('utf8').bytes;
 
-            my $valuebuf;
+            my $valuep;
             my sb4 $value_sz;
             my ub2 $dty;
             my $method;
             if $v ~~ Int {
                 $dty = SQLT_INT;
-                $valuebuf = $v;
+                $valuep = $v;
                 # see multi sub defition for the C data type
                 $value_sz = nativesizeof(long);
                 $method = &OCIBindByName_Int;
             }
             elsif $v ~~ Real {
                 $dty = SQLT_FLT;
-                $valuebuf = $v.Num;
+                $valuep = $v.Num;
                 # see multi sub defition for the C data type
                 $value_sz = nativesizeof(num64);
                 $method = &OCIBindByName_Real;
             }
             elsif $v ~~ Str {
                 $dty = SQLT_CHR;
-                $valuebuf = $v;
+                $valuep = $v;
                 $value_sz = $v.encode('utf8').bytes;
                 $method = &OCIBindByName_Str;
             }
@@ -427,14 +427,14 @@ class DBDish::Oracle::StatementHandle does DBDish::StatementHandle {
             my ub2 $rcodep = 0;
             my ub4 $maxarr_len = 0;
             my ub4 $curelep = 0;
-            warn "binding '$placeholder' ($placeh_len): '$v' ($value_sz) as OCI type '$dty' Perl type '$v.^name()' \n";
+            warn "binding '$placeholder' ($placeh_len): '$v' ($value_sz) as OCI type '$dty' Perl type '$v.^name()' NULL '$indp'\n";
             my $errcode = $method(
                 $!stmthp,
                 @bindpp,
                 $!errhp,
                 $placeholder,
                 $placeh_len,
-                $valuebuf,
+                $valuep,
                 $value_sz,
                 $dty,
                 $indp,
