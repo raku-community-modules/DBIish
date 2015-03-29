@@ -645,14 +645,12 @@ class DBDish::Oracle::Connection does DBDish::Connection {
         );
         return $statement_handle;
     }
-#
-#    method do(Str $statement, *@bind is copy) {
-#        my $sth = self.prepare($statement);
-#        $sth.execute(@bind);
-#        my $rows = $sth.rows;
-#        return ($rows == 0) ?? "0E0" !! $rows;
-#    }
-#
+
+    method do(Str $statement, *@bind is copy) {
+        my $sth = self.prepare($statement);
+        return $sth.execute(@bind);
+    }
+
 #    method selectrow_arrayref(Str $statement, $attr?, *@bind is copy) {
 #        my $sth = self.prepare($statement, $attr);
 #        $sth.execute(@bind);
