@@ -595,7 +595,7 @@ class DBDish::Oracle::Connection does DBDish::Connection {
     has $!svchp;
     has $!errhp;
     has $.AutoCommit is rw;
-    #has $.in_transaction is rw;
+    has $.in_transaction is rw;
     submethod BUILD(:$!svchp!, :$!errhp!, :$!AutoCommit = 1) { }
 
     method prepare(Str $statement, $attr?) {
@@ -689,24 +689,24 @@ class DBDish::Oracle::Connection does DBDish::Connection {
 #        return $aref;
 #    }
 #
-#    method commit {
-#        if $!AutoCommit {
-#            warn "Commit ineffective while AutoCommit is on";
-#            return;
-#        };
-#        PQexec($!pg_conn, "COMMIT");
-#        $.in_transaction = 0;
-#    }
-#
-#    method rollback {
-#        if $!AutoCommit {
-#            warn "Rollback ineffective while AutoCommit is on";
-#            return;
-#        };
-#        PQexec($!pg_conn, "ROLLBACK");
-#        $.in_transaction = 0;
-#    }
-#
+    method commit {
+        if $!AutoCommit {
+            warn "Commit ineffective while AutoCommit is on";
+            return;
+        };
+        self.do("COMMIT");
+        $.in_transaction = 0;
+    }
+
+    method rollback {
+        if $!AutoCommit {
+            warn "Rollback ineffective while AutoCommit is on";
+            return;
+        };
+        self.do("ROLLBACK");
+        $.in_transaction = 0;
+    }
+
 #    method ping {
 #        PQstatus($!pg_conn) == CONNECTION_OK
 #    }
