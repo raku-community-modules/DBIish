@@ -245,6 +245,7 @@ sub OCIStmtFetch2 (
 
 my ub4 constant OCI_DEFAULT     = 0;
 constant OCI_THREADED           = 1;
+constant OCI_COMMIT_ON_SUCCESS  = 0x00000020;
 
 constant OCI_SUCCESS            = 0;
 constant OCI_ERROR              = -1;
@@ -460,13 +461,13 @@ class DBDish::Oracle::StatementHandle does DBDish::StatementHandle {
             0,
             OpaquePointer,
             OpaquePointer,
-            OCI_DEFAULT,
+            $!dbh.AutoCommit ?? OCI_COMMIT_ON_SUCCESS !! OCI_DEFAULT,
         );
         if $errcode ne OCI_SUCCESS {
             my $errortext = get_errortext($!errhp);
             die "execute of '$!statement' failed ($errcode): '$errortext'";
         }
-        #say 'successfully executed';
+        #warn "successfully executed $!dbh.AutoCommit()";
 
         # for DDL statements, no further steps are necessary
         return "0E0"
@@ -593,9 +594,9 @@ class DBDish::Oracle::StatementHandle does DBDish::StatementHandle {
 class DBDish::Oracle::Connection does DBDish::Connection {
     has $!svchp;
     has $!errhp;
-    #has $.AutoCommit is rw = 1;
+    has $.AutoCommit is rw;
     #has $.in_transaction is rw;
-    submethod BUILD(:$!svchp!, :$!errhp!) { }
+    submethod BUILD(:$!svchp!, :$!errhp!, :$!AutoCommit = 1) { }
 
     method prepare(Str $statement, $attr?) {
         my $oracle_statement = DBDish::Oracle::oracle-replace-placeholder($statement);
@@ -801,6 +802,7 @@ class DBDish::Oracle:auth<mberends>:ver<0.0.1> {
         my $connection = DBDish::Oracle::Connection.bless(
                 :$svchp,
                 :$errhp,
+                :AutoCommit(%params<AutoCommit>),
                 #:RaiseError(%params<RaiseError>),
             );
         return $connection;
