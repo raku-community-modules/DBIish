@@ -8,7 +8,7 @@ use DBDish;     # roles for drivers
 #------------ mysql library functions in alphabetical order ------------
 
 sub mysql_affected_rows( OpaquePointer $mysql_client )
-    returns Int
+    returns int32
     is native('libmysqlclient')
     { ... }
 
@@ -16,23 +16,13 @@ sub mysql_close( OpaquePointer $mysql_client )
     is native('libmysqlclient')
     { ... }
 
-sub mysql_data_seek( OpaquePointer $result_set, Int $row_number )
-    returns OpaquePointer
-    is native('libmysqlclient')
-    { ... }
-
 sub mysql_error( OpaquePointer $mysql_client)
-    returns Str
+    returns str
     is native('libmysqlclient')
     { ... }
 
 sub mysql_fetch_field( OpaquePointer $result_set )
     returns CArray[Str]
-    is native('libmysqlclient')
-    { ... }
-
-sub mysql_fetch_lengths( OpaquePointer $result_set )
-    returns CArray[int]
     is native('libmysqlclient')
     { ... }
 
@@ -42,16 +32,11 @@ sub mysql_fetch_row( OpaquePointer $result_set )
     { ... }
 
 sub mysql_field_count( OpaquePointer $mysql_client )
-    returns Int
+    returns Int # XXX should be unsigned int
     is native('libmysqlclient')
     { ... }
 
 sub mysql_free_result( OpaquePointer $result_set )
-    is native('libmysqlclient')
-    { ... }
-
-sub mysql_get_client_info( OpaquePointer $mysql_client)
-    returns Str
     is native('libmysqlclient')
     { ... }
 
@@ -61,17 +46,7 @@ sub mysql_init( OpaquePointer $mysql_client )
     { ... }
 
 sub mysql_insert_id( OpaquePointer $mysql_client )
-    returns Int # WRONG: actually returns an unsigned long long
-    is native('libmysqlclient')
-    { ... }
-
-sub mysql_library_init( Int $argc, OpaquePointer $argv,
-    OpaquePointer $group )
-    returns Int
-    is native('libmysqlclient')
-    { ... }
-
-sub mysql_library_end()
+    returns Int  # XXX should be unsigned long long
     is native('libmysqlclient')
     { ... }
 
@@ -80,23 +55,13 @@ sub mysql_num_rows( OpaquePointer $result_set )
     is native('libmysqlclient')
     { ... }
 
-sub mysql_query( OpaquePointer $mysql_client, Str $sql_command )
-    returns Int
+sub mysql_query( OpaquePointer $mysql_client, str $sql_command )
+    returns int32
     is native('libmysqlclient')
     { ... }
 
 sub mysql_real_connect( OpaquePointer $mysql_client, Str $host, Str $user,
     Str $password, Str $database, int32 $port, Str $socket, Int $flag )
-    returns OpaquePointer
-    is native('libmysqlclient')
-    { ... }
-
-sub mysql_stat( OpaquePointer $mysql_client)
-    returns Str
-    is native('libmysqlclient')
-    { ... }
-
-sub mysql_store_result( OpaquePointer $mysql_client )
     returns OpaquePointer
     is native('libmysqlclient')
     { ... }
@@ -107,7 +72,7 @@ sub mysql_use_result( OpaquePointer $mysql_client )
     { ... }
 
 sub mysql_warning_count( OpaquePointer $mysql_client )
-    returns Int
+    returns Int     # XXX should be unsigned int
     is native('libmysqlclient')
     { ... }
 
@@ -122,7 +87,7 @@ sub mysql_stmt_prepare( OpaquePointer $mysql_stmt, Str, Int $length )
     { ... }
 
 sub mysql_ping(OpaquePointer $mysql_client)
-    returns int
+    returns int32
     is native('libmysqlclient')
     { ... }
 
