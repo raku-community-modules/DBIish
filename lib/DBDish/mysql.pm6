@@ -1,6 +1,6 @@
 # DBDish::mysql.pm6
 
-use NativeCall;  # from project 'zavolaj'
+use NativeCall;
 use DBDish;     # roles for drivers
 
 #module DBDish:auth<mberends>:ver<0.0.1>;
@@ -13,7 +13,6 @@ sub mysql_affected_rows( OpaquePointer $mysql_client )
     { ... }
 
 sub mysql_close( OpaquePointer $mysql_client )
-    returns OpaquePointer
     is native('libmysqlclient')
     { ... }
 
