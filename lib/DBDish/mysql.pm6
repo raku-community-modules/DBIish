@@ -32,7 +32,7 @@ sub mysql_fetch_row( OpaquePointer $result_set )
     { ... }
 
 sub mysql_field_count( OpaquePointer $mysql_client )
-    returns Int # XXX should be unsigned int
+    returns uint32
     is native('libmysqlclient')
     { ... }
 
@@ -46,7 +46,7 @@ sub mysql_init( OpaquePointer $mysql_client )
     { ... }
 
 sub mysql_insert_id( OpaquePointer $mysql_client )
-    returns Int  # XXX should be unsigned long long
+    returns uint64
     is native('libmysqlclient')
     { ... }
 
@@ -72,7 +72,7 @@ sub mysql_use_result( OpaquePointer $mysql_client )
     { ... }
 
 sub mysql_warning_count( OpaquePointer $mysql_client )
-    returns Int     # XXX should be unsigned int
+    returns uint32
     is native('libmysqlclient')
     { ... }
 
