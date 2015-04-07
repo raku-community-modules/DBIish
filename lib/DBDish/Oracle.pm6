@@ -118,6 +118,19 @@ sub OCIAttrGet_ub2 (
     is symbol('OCIAttrGet')
     { ... }
 
+sub OCIAttrGet_ub4 (
+        Pointer         $trgthndlp,
+        ub4             $trghndltyp,
+        ub4             $attributep is rw,
+        ub4             $sizep,
+        ub4             $attrtype,
+        OCIError        $errhp,
+    )
+    returns sword
+    is native(lib)
+    is symbol('OCIAttrGet')
+    { ... }
+
 # strings
 sub OCIBindByName_Str (
         OCIStmt             $stmtp,
@@ -244,6 +257,7 @@ constant OCI_LOGON2_STMTCACHE   = 4;
 
 constant OCI_NTV_SYNTAX         = 1;
 
+constant OCI_ATTR_ROW_COUNT     = 9;
 constant OCI_ATTR_STMT_TYPE     = 24;
 
 constant OCI_STMT_UNKNOWN       = 0;
@@ -342,7 +356,7 @@ class DBDish::Oracle::StatementHandle does DBDish::StatementHandle {
     has $!result;
 #    has $!affected_rows;
 #    has @!column_names;
-#    has Int $!row_count;
+    has Int $!row_count;
 #    has $!field_count;
 #    has $!current_row = 0;
 #
@@ -491,50 +505,46 @@ class DBDish::Oracle::StatementHandle does DBDish::StatementHandle {
         #warn "successfully executed $!dbh.AutoCommit()";
 
         # for DDL statements, no further steps are necessary
+        # if $!statementtype ~~ ( OCI_STMT_CREATE, OCI_STMT_DROP, OCI_STMT_ALTER );
+
+#        my @parmdpp := CArray[Pointer].new;
+#        @parmdpp[0]  = Pointer;
+#        $errcode = OCIParamGet($!stmthp, OCI_HTYPE_STMT, $!errhp, @parmdpp, 1);
+#        if $errcode ne OCI_SUCCESS {
+#            my $errortext = get_errortext($!errhp);
+#            die "param get failed ($errcode): '$errortext'";
+#        }
+
+#        $errcode = OCIStmtFetch2($!stmthp, $!errhp, 1, OCI_DEFAULT, 0, OCI_DEFAULT);
+#        if $errcode ne OCI_SUCCESS {
+#            my $errortext = get_errortext($!errhp);
+#            die "fetch failed ($errcode): '$errortext'";
+#        }
+
+        return self.rows;
+    }
+
+    # do() and execute() return the number of affected rows directly or:
+    # rows() is called on the statement handle $sth.
+    method rows() {
+        # DDL statements always return 0E0
         return "0E0"
             if $!statementtype ~~ ( OCI_STMT_CREATE, OCI_STMT_DROP, OCI_STMT_ALTER );
 
-        my @parmdpp := CArray[Pointer].new;
-        @parmdpp[0]  = Pointer;
-        $errcode = OCIParamGet($!stmthp, OCI_HTYPE_STMT, $!errhp, @parmdpp, 1);
-        if $errcode ne OCI_SUCCESS {
-            my $errortext = get_errortext($!errhp);
-            die "param get failed ($errcode): '$errortext'";
+        unless defined $!row_count {
+            my ub4 $row_count;
+            my $errcode = OCIAttrGet_ub4($!stmthp, OCI_HTYPE_STMT, $row_count, Pointer, OCI_ATTR_ROW_COUNT, $!errhp);
+            if $errcode ne OCI_SUCCESS {
+                my $errortext = get_errortext($!errhp);
+                die "statement type get failed ($errcode): '$errortext'";
+            }
+            $!row_count = $row_count;
         }
 
-        $errcode = OCIStmtFetch2($!stmthp, $!errhp, 1, OCI_DEFAULT, 0, OCI_DEFAULT);
-        if $errcode ne OCI_SUCCESS {
-            my $errortext = get_errortext($!errhp);
-            die "fetch failed ($errcode): '$errortext'";
+        if defined $!row_count {
+            return ($!row_count == 0) ?? "0E0" !! $!row_count;
         }
-#
-#        $!result = PQexecPrepared($!pg_conn, $!statement_name, @params.elems,
-#                @param_values,
-#                Pointer, # ParamLengths, NULL pointer == all text
-#                Pointer, # ParamFormats, NULL pointer == all text
-#                0,             # Resultformat, 0 == text
-#        );
-#
-#        self!handle-errors;
-#        $!row_count = PQntuples($!result);
-#
-#        my $rows = self.rows;
-#        return ($rows == 0) ?? "0E0" !! $rows;
     }
-
-#    # do() and execute() return the number of affected rows directly or:
-#    # rows() is called on the statement handle $sth.
-#    method rows() {
-#        unless defined $!affected_rows {
-#            $!affected_rows = PQcmdTuples($!result);
-#
-#            self!handle-errors;
-#        }
-#
-#        if defined $!affected_rows {
-#            return +$!affected_rows;
-#        }
-#    }
 
     method fetchrow() {
 #        my @row_array;
