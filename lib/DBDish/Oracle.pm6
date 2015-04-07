@@ -13,8 +13,8 @@ constant sb2            = int16;
 constant sb4            = int32;
 constant size_t         = long;
 constant sword          = int32;
-constant ub2            = int16;
-constant ub4            = int32;
+constant ub2            = uint16;
+constant ub4            = uint32;
 
 constant OCIBind        = OpaquePointer;
 constant OCIEnv         = OpaquePointer;
