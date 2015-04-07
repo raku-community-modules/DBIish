@@ -144,10 +144,10 @@ sub OCIBindByName_Str (
         sb4                 $value_sz,
         ub2                 $dty,
         sb2                 $indp is rw,
-        ub2                 $alenp is rw,
-        ub2                 $rcodep is rw,
+        Pointer[ub2]        $alenp,
+        Pointer[ub2]        $rcodep,
         ub4                 $maxarr_len,
-        ub4                 $curelep is rw,
+        Pointer[ub4]        $curelep,
         ub4                 $mode,
     )
     returns sword
@@ -168,10 +168,10 @@ sub OCIBindByName_Int (
         sb4                 $value_sz,
         ub2                 $dty,
         sb2                 $indp is rw,
-        ub2                 $alenp is rw,
-        ub2                 $rcodep is rw,
+        Pointer[ub2]        $alenp,
+        Pointer[ub2]        $rcodep,
         ub4                 $maxarr_len,
-        ub4                 $curelep is rw,
+        Pointer[ub4]        $curelep,
         ub4                 $mode,
     )
     returns sword
@@ -188,15 +188,14 @@ sub OCIBindByName_Real (
         OCIError            $errhp,
         OraText             $placeholder is encoded('utf8'),
         sb4                 $placeh_len,
-        #CArray[int8]    $valuep,
         num64               $valuep is rw,
         sb4                 $value_sz,
         ub2                 $dty,
         sb2                 $indp is rw,
-        ub2                 $alenp is rw,
-        ub2                 $rcodep is rw,
+        Pointer[ub2]        $alenp,
+        Pointer[ub2]        $rcodep,
         ub4                 $maxarr_len,
-        ub4                 $curelep is rw,
+        Pointer[ub4]        $curelep,
         ub4                 $mode,
     )
     returns sword
@@ -393,71 +392,107 @@ class DBDish::Oracle::StatementHandle does DBDish::StatementHandle {
             my OraText $placeholder = ":p$k";
             my sb4 $placeh_len = $placeholder.encode('utf8').bytes;
 
-            my $valuep;
             my sb4 $value_sz;
             my ub2 $dty;
-            my $method;
+            # -1 tells OCI to set the value to NULL
+            my sb2 $indp = $v.chars == 0
+                ?? -1
+                !! 0;
+            my Pointer[ub2] $alenp;
+            my Pointer[ub2] $rcodep;
+            my ub4 $maxarr_len  = 0;
+            my Pointer[ub4] $curelep;
+            my $errcode;
             if $v ~~ Int {
                 $dty = SQLT_INT;
-                $valuep = $v;
+                my long $valuep = $v;
                 # see multi sub defition for the C data type
                 $value_sz = nativesizeof(long);
-                $method = &OCIBindByName_Int;
+                #warn "binding '$placeholder' ($placeh_len): '$valuep' ($value_sz) as OCI type '$dty' Perl type '$v.^name()' NULL '$indp'\n";
+                #$method = &OCIBindByName_Int;
+                $errcode = OCIBindByName_Int(
+                    $!stmthp,
+                    @bindpp,
+                    $!errhp,
+                    $placeholder,
+                    $placeh_len,
+                    $valuep,
+                    $value_sz,
+                    $dty,
+                    $indp,
+                    $alenp,
+                    $rcodep,
+                    $maxarr_len,
+                    $curelep,
+                    OCI_DEFAULT,
+                );
             }
             elsif $v ~~ Real {
                 $dty = SQLT_FLT;
-                $valuep = $v.Num;
+                my num64 $valuep = $v.Num;
                 # see multi sub defition for the C data type
                 $value_sz = nativesizeof(num64);
-                $method = &OCIBindByName_Real;
+                #warn "binding '$placeholder' ($placeh_len): '$valuep' ($value_sz) as OCI type '$dty' Perl type '$v.^name()' NULL '$indp'\n";
+                #$method = &OCIBindByName_Real;
+                $errcode = OCIBindByName_Real(
+                    $!stmthp,
+                    @bindpp,
+                    $!errhp,
+                    $placeholder,
+                    $placeh_len,
+                    $valuep,
+                    $value_sz,
+                    $dty,
+                    $indp,
+                    $alenp,
+                    $rcodep,
+                    $maxarr_len,
+                    $curelep,
+                    OCI_DEFAULT,
+                );
             }
             elsif $v ~~ Str {
                 $dty = SQLT_CHR;
-                $valuep = $v;
+                my Str $valuep = $v;
                 $value_sz = $v.encode('utf8').bytes;
-                $method = &OCIBindByName_Str;
+                #warn "binding '$placeholder' ($placeh_len): '$valuep' ($value_sz) as OCI type '$dty' Perl type '$v.^name()' NULL '$indp'\n";
+                #$method = &OCIBindByName_Str;
+                $errcode = OCIBindByName_Str(
+                    $!stmthp,
+                    @bindpp,
+                    $!errhp,
+                    $placeholder,
+                    $placeh_len,
+                    $valuep,
+                    $value_sz,
+                    $dty,
+                    $indp,
+                    $alenp,
+                    $rcodep,
+                    $maxarr_len,
+                    $curelep,
+                    OCI_DEFAULT,
+                );
             }
             else {
                 die "unhandled type: $v";
             }
-            # -1 tells OCI to set the value to NULL
-            my sb2 $indp = $v.chars == 0 ?? -1 !! 0;
-            my ub2 $alenp = 0;
-            my ub2 $rcodep = 0;
-            my ub4 $maxarr_len = 0;
-            my ub4 $curelep = 0;
-            warn "binding '$placeholder' ($placeh_len): '$v' ($value_sz) as OCI type '$dty' Perl type '$v.^name()' NULL '$indp'\n";
-            my $errcode = $method(
-                $!stmthp,
-                @bindpp,
-                $!errhp,
-                $placeholder,
-                $placeh_len,
-                $valuep,
-                $value_sz,
-                $dty,
-                $indp,
-                $alenp,
-                $rcodep,
-                $maxarr_len,
-                $curelep,
-                OCI_DEFAULT,
-            );
             if $errcode ne OCI_SUCCESS {
                 my $errortext = get_errortext($!errhp);
                 die "bind of param '$placeholder' with value '$v' of statement '$!statement' failed ($errcode): '$errortext'";
             }
-            #warn "bind of param '$placeholder' with value '$valuebuf' succeeded";
+            #warn "bind of param '$placeholder' with value '$v' succeeded";
         }
 
-        my $iters = $!statementtype eq OCI_STMT_SELECT ?? 0 !! 1;
+        my ub4 $iters = $!statementtype eq OCI_STMT_SELECT ?? 0 !! 1;
+        my ub4 $rowoff = 0;
 
         my $errcode = OCIStmtExecute(
             $!svchp,
             $!stmthp,
             $!errhp,
             $iters,
-            0,
+            $rowoff,
             OpaquePointer,
             OpaquePointer,
             $!dbh.AutoCommit ?? OCI_COMMIT_ON_SUCCESS !! OCI_DEFAULT,
