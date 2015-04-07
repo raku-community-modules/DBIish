@@ -90,39 +90,53 @@ ok $sth = $dbh.prepare( "
     INSERT INTO nom (name)
     VALUES ( ? )
 "), "prepare an insert command with one string parameter"; # test 10
-ok $sth.execute('TAFM'), "execute one with one string parameter"; # test 11
+ok $rc = $sth.execute('TAFM'), "execute one with one string parameter"; # test 11
+is $rc, 1, "execute one with one string parameter should return 1 row affected"; # test 12
+if $sth.^can('rows') {
+    is $sth.rows, 1, '$sth.rows for execute one with one string parameter should report 1 row affected'; # test 13
+}
+else { skip '$sth.rows not implemented', 1 }
 
 ok $sth = $dbh.prepare( "
     INSERT INTO nom (quantity)
     VALUES ( ? )
-"), "prepare an insert command with one integer parameter"; # test 12
-ok $sth.execute(1), "execute one with one integer parameter"; # test 13
+"), "prepare an insert command with one integer parameter"; # test 14
+ok $rc = $sth.execute(1), "execute one with one integer parameter"; # test 15
+is $rc, 1, "execute one with one integer parameter should return 1 row affected"; # test 16
+if $sth.^can('rows') {
+    is $sth.rows, 1, '$sth.rows for execute one with one integer parameter should report 1 row affected'; # test 17
+}
+else { skip '$sth.rows not implemented', 1 }
 
 ok $sth = $dbh.prepare( "
     INSERT INTO nom (price)
     VALUES ( ? )
-"), "prepare an insert command with one float parameter"; # test 14
-ok $sth.execute(4.85), "execute one with one float parameter"; # test 15
+"), "prepare an insert command with one float parameter"; # test 18
+ok $rc = $sth.execute(4.85), "execute one with one float parameter"; # test 19
+is $rc, 1, "execute one with one float parameter should return 1 row affected"; # test 20
+if $sth.^can('rows') {
+    is $sth.rows, 1, '$sth.rows for execute one with one float parameter should report 1 row affected'; # test 21
+}
+else { skip '$sth.rows not implemented', 1 }
 
 ok $sth = $dbh.prepare( "
     INSERT INTO nom (name, description, quantity, price)
     VALUES ( ?, ?, ?, ? )
-"), "prepare an insert command with parameters"; # test 16
+"), "prepare an insert command with parameters"; # test 22
 
 ok $sth.execute('TAFM', 'Mild fish taco', 1, 4.85 ) &&
    $sth.execute('BEOM', 'Medium size orange juice', 2, 1.20 ),
-   "execute twice with parameters"; # test 17
+   "execute twice with parameters"; # test 23
 if $dbh.^can('rows') {
-    is $sth.rows, 1, "each insert with parameters also reports 1 row affected"; # test 18
+    is $sth.rows, 1, "each insert with parameters also reports 1 row affected"; # test 24
 }
 else { skip '$dbh.rows not implemented', 1 }
-
 
 if $sth.^can('bind_param_array') {
     my @tuple_status;
     ok $sth.bind_param_array( 1, [ 'BEOM', 'Medium size orange juice', 2, 1.20 ] ),
-       "bind_param_array"; # test 19
-    ok $sth.execute_array(  { ArrayTupleStatus => @tuple_status } ); # test 20
+       "bind_param_array"; # test 25
+    ok $sth.execute_array(  { ArrayTupleStatus => @tuple_status } ); # test 26
 }
 else { skip '$sth.bind_param_array() and $sth.execute_array() not implemented', 2 }
 
@@ -134,13 +148,13 @@ else { skip '$sth.bind_param_array() and $sth.execute_array() not implemented', 
 ok $sth = $dbh.prepare( "
     SELECT name, description, quantity, price, quantity*price AS amount
     FROM nom
-"), "prepare a select command without parameters"; # test 21
+"), "prepare a select command without parameters"; # test 27
 
-ok $sth.execute(), "execute a prepared select statement without parameters"; # test 22
+ok $sth.execute(), "execute a prepared select statement without parameters"; # test 28
 
 if $sth.^can('fetchall_arrayref') {
     my $arrayref = $sth.fetchall_arrayref();
-    is $arrayref.elems, 3, "fetchall_arrayref returns 3 rows"; # test 23
+    is $arrayref.elems, 3, "fetchall_arrayref returns 3 rows"; # test 29
     my @ref =
         [ 'BUBH', 'Hot beef burrito', '1', '4.95', '4.95' ],
         [ 'TAFM', 'Mild fish taco', '1', '4.85', '4.85' ],
@@ -149,7 +163,7 @@ if $sth.^can('fetchall_arrayref') {
     for ^3 -> $i {
         $ok &&= magic_cmp($arrayref[$i], @ref[$i]);
     }
-    ok $ok, "selected data matches what was written"; # test 24
+    ok $ok, "selected data matches what was written"; # test 30
     $sth.finish;
 }
 else { skip 'fetchall_arrayref not implemented', 2 }
@@ -210,13 +224,13 @@ todo "Figure what is wrong with is-deeply";
 is-deeply @results, @ref;
 
 ok $sth = $dbh.prepare("SELECT * FROM nom WHERE name='TAFM';"),
-'prepare new select for fetchrow_hashref test'; #test 25
-ok $sth.execute(), 'execute prepared statement for fetchrow_hashref'; #test 26
+'prepare new select for fetchrow_hashref test'; #test 31
+ok $sth.execute(), 'execute prepared statement for fetchrow_hashref'; #test 32
 
 if $sth.can('column_names') {
-    ok my $hashref = $sth.fetchrow_hashref(), 'called fetchrow_hashref'; #test 27
+    ok my $hashref = $sth.fetchrow_hashref(), 'called fetchrow_hashref'; #test 33
     is hash-str($hashref), hash-str({ 'name' => 'TAFM', 'description' => 'Mild fish taco', 'quantity'
-    => 1, 'price' => '4.85' }), 'selected data matches test hashref'; #test 28
+    => 1, 'price' => '4.85' }), 'selected data matches test hashref'; #test 34
     $sth.finish;
 }
 else { skip 'fetchrow_hashref not implemented', 2 }
@@ -226,10 +240,10 @@ else { skip 'fetchrow_hashref not implemented', 2 }
 # sth - after this, everything works fine again.
 if $sth.can('colum_names') {
     $sth.execute;
-    my $arrayref = $sth.fetchrow_arrayref(); #'called fetchrow_arrayref'; #test29
+    my $arrayref = $sth.fetchrow_arrayref(); #'called fetchrow_arrayref'; #test 35
     $sth.finish;
-    is $arrayref.elems, 4, "fetchrow_arrayref returns 4 fields in a row"; #test 30
-    ok magic_cmp($arrayref, [ 'TAFM', 'Mild fish taco', 1, 4.85 ]), 'selected data matches test data'; #test 31
+    is $arrayref.elems, 4, "fetchrow_arrayref returns 4 fields in a row"; #test 36
+    ok magic_cmp($arrayref, [ 'TAFM', 'Mild fish taco', 1, 4.85 ]), 'selected data matches test data'; #test 37
 }
 else { skip 'fetchrow_arrayref not implemented', 2 }
 
@@ -248,27 +262,27 @@ else { skip 'fetchrow_arrayref not implemented', 2 }
 
 ok $sth = $dbh.prepare("INSERT INTO nom (name, description, quantity, price)
                          VALUES ('PICO', 'Delish pina colada', '5', '7.9');"),
-                         'insert new value for fetchrow_arrayref test'; #test 32
+                         'insert new value for fetchrow_arrayref test'; #test 38
 
-ok $sth.execute(), 'new insert statement executed'; #test 33
-is $sth.?rows, 1, "insert reports 1 row affected"; # test 34
+ok $sth.execute(), 'new insert statement executed'; #test 39
+is $sth.?rows, 1, "insert reports 1 row affected"; #test 40
 $sth.finish;
 
 ok $sth = $dbh.prepare("SELECT * FROM nom WHERE quantity='5';"),
-'prepare new select for fetchrow_arrayref test'; #test 35
-ok $sth.execute(), 'execute prepared statement for fetchrow_arrayref'; #test 36
+'prepare new select for fetchrow_arrayref test'; #test 41
+ok $sth.execute(), 'execute prepared statement for fetchrow_arrayref'; #test 42
 
 if $sth.^can('fetchrow_arrayref') {
-    ok my $arrayref = $sth.fetchrow_arrayref(), 'called fetchrow_arrayref'; #test 37
-    is $arrayref.elems, 4, "fetchrow_arrayref returns 4 fields in a row"; #test 38
+    ok my $arrayref = $sth.fetchrow_arrayref(), 'called fetchrow_arrayref'; #test 43
+    is $arrayref.elems, 4, "fetchrow_arrayref returns 4 fields in a row"; #test 44
     ok magic_cmp($arrayref, [ 'PICO', 'Delish pina colada', '5', '7.9' ]),
-    'selected data matches test data of fetchrow_arrayref'; #test 39
+    'selected data matches test data of fetchrow_arrayref'; #test 45
 }
 else { skip 'fetchrow_arrayref not implemented', 2 }
 
 # TODO: weird sth/dbh behavior workaround again.
 if $sth.^can('fetchrow_arrayref') {
-    my $arrayref = $sth.fetchrow_arrayref(); #'called fetchrow_arrayref'; #test40
+    my $arrayref = $sth.fetchrow_arrayref(); #'called fetchrow_arrayref'; #test 46
 }
 $sth.finish;
 
