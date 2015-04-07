@@ -26,20 +26,6 @@ constant OraText        = Str;
 
 #------------ Oracle library functions in alphabetical order ------------
 
-#sub OCIEnvCreate (
-#        CArray[OpaquePointer] $envhpp,
-#        int32         $mode,
-#        OpaquePointer $ctxp,
-#        OpaquePointer $malocfp,
-#        OpaquePointer $ralocfp,
-#        OpaquePointer $mfreefp,
-#        size_t        $xtramemsz,
-#        CArray[OpaquePointer] $usrmempp,
-#    )
-#    returns int
-#    is native(lib)
-#    { ... }
-
 sub OCIEnvNlsCreate (
         CArray[OCIEnv] $envhpp,
         ub4            $mode,
