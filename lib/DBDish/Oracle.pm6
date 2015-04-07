@@ -275,7 +275,6 @@ constant OCI_STMT_CALL          = 10;
 constant SQLT_CHR               = 1;
 constant SQLT_INT               = 3;
 constant SQLT_FLT               = 4;
-constant SQLT_STR               = 5;
 
 # SELECT NLS_CHARSET_ID('AL32UTF8') FROM dual;
 constant AL32UTF8               = 873;
