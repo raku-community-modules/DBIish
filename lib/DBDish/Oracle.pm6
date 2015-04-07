@@ -16,12 +16,12 @@ constant sword          = int32;
 constant ub2            = uint16;
 constant ub4            = uint32;
 
-constant OCIBind        = OpaquePointer;
-constant OCIEnv         = OpaquePointer;
-constant OCIError       = OpaquePointer;
-constant OCISnapshot    = OpaquePointer;
-constant OCIStmt        = OpaquePointer;
-constant OCISvcCtx      = OpaquePointer;
+constant OCIBind        = Pointer;
+constant OCIEnv         = Pointer;
+constant OCIError       = Pointer;
+constant OCISnapshot    = Pointer;
+constant OCIStmt        = Pointer;
+constant OCISvcCtx      = Pointer;
 constant OraText        = Str;
 
 #------------ Oracle library functions in alphabetical order ------------
@@ -29,12 +29,12 @@ constant OraText        = Str;
 sub OCIEnvNlsCreate (
         CArray[OCIEnv] $envhpp,
         ub4            $mode,
-        OpaquePointer  $ctxp,
-        OpaquePointer  $malocfp,
-        OpaquePointer  $ralocfp,
-        OpaquePointer  $mfreefp,
+        Pointer        $ctxp,
+        Pointer        $malocfp,
+        Pointer        $ralocfp,
+        Pointer        $mfreefp,
         size_t         $xtramemsz,
-        CArray[OpaquePointer] $usrmempp,
+        CArray[Pointer] $usrmempp,
         ub2            $charset,
         ub2            $ncharset,
     )
@@ -43,7 +43,7 @@ sub OCIEnvNlsCreate (
     { ... }
 
 sub OCIErrorGet (
-        OpaquePointer $hndlp,
+        Pointer       $hndlp,
         ub4           $recordno,
         OraText       $sqlstate,
         CArray[sb4]   $errcodep,
@@ -56,11 +56,11 @@ sub OCIErrorGet (
     { ... }
 
 sub OCIHandleAlloc (
-        OpaquePointer           $parenth,
-        CArray[OpaquePointer]   $hndlpp,
-        ub4                     $type,
-        size_t                  $xtramem_sz,
-        CArray[OpaquePointer]   $usrmempp,
+        Pointer           $parenth,
+        CArray[Pointer]   $hndlpp,
+        ub4               $type,
+        size_t            $xtramem_sz,
+        CArray[Pointer]   $usrmempp,
     )
     returns sword
     is native(lib)
@@ -106,7 +106,7 @@ sub OCIStmtPrepare2 (
     { ... }
 
 sub OCIAttrGet (
-        OpaquePointer   $trgthndlp,
+        Pointer         $trgthndlp,
         ub4             $trghndltyp,
         CArray[int8]    $attributep,
         ub4             $sizep,
@@ -204,10 +204,10 @@ sub OCIStmtExecute (
     { ... }
 
 sub OCIParamGet (
-        OpaquePointer           $hndlp,
+        Pointer                 $hndlp,
         ub4                     $htype,
         OCIError                $errhp,
-        CArray[OpaquePointer]   $parmdpp,
+        CArray[Pointer]         $parmdpp,
         ub4                     $pos,
     )
     returns sword
@@ -479,8 +479,8 @@ class DBDish::Oracle::StatementHandle does DBDish::StatementHandle {
             $!errhp,
             $iters,
             $rowoff,
-            OpaquePointer,
-            OpaquePointer,
+            Pointer,
+            Pointer,
             $!dbh.AutoCommit ?? OCI_COMMIT_ON_SUCCESS !! OCI_DEFAULT,
         );
         if $errcode ne OCI_SUCCESS {
@@ -493,8 +493,8 @@ class DBDish::Oracle::StatementHandle does DBDish::StatementHandle {
         return "0E0"
             if $!statementtype ~~ OCI_STMT_CREATE, OCI_STMT_DROP, OCI_STMT_ALTER;
 
-        my @parmdpp := CArray[OpaquePointer].new;
-        @parmdpp[0]  = OpaquePointer;
+        my @parmdpp := CArray[Pointer].new;
+        @parmdpp[0]  = Pointer;
         $errcode = OCIParamGet($!stmthp, OCI_HTYPE_STMT, $!errhp, @parmdpp, 1);
         if $errcode ne OCI_SUCCESS {
             my $errortext = get_errortext($!errhp);
@@ -509,8 +509,8 @@ class DBDish::Oracle::StatementHandle does DBDish::StatementHandle {
 #
 #        $!result = PQexecPrepared($!pg_conn, $!statement_name, @params.elems,
 #                @param_values,
-#                OpaquePointer, # ParamLengths, NULL pointer == all text
-#                OpaquePointer, # ParamFormats, NULL pointer == all text
+#                Pointer, # ParamLengths, NULL pointer == all text
+#                Pointer, # ParamFormats, NULL pointer == all text
 #                0,             # Resultformat, 0 == text
 #        );
 #
@@ -643,7 +643,7 @@ class DBDish::Oracle::Connection does DBDish::Connection {
 
         my @attributep := CArray[int8].new;
         @attributep[0] = 0;
-        $errcode = OCIAttrGet($stmthp, OCI_HTYPE_STMT, @attributep, OpaquePointer, OCI_ATTR_STMT_TYPE, $!errhp);
+        $errcode = OCIAttrGet($stmthp, OCI_HTYPE_STMT, @attributep, Pointer, OCI_ATTR_STMT_TYPE, $!errhp);
         if $errcode ne OCI_SUCCESS {
             my $errortext = get_errortext($!errhp);
             die "statement type get failed ($errcode): '$errortext'";
@@ -764,19 +764,19 @@ class DBDish::Oracle:auth<mberends>:ver<0.0.1> {
         my $password = %params<password> // die 'Missing <password> config';
 
         # create the environment handle
-        my @envhpp := CArray[OpaquePointer].new;
-        @envhpp[0]  = OpaquePointer;
-        my OpaquePointer $ctxp,
+        my @envhpp := CArray[Pointer].new;
+        @envhpp[0]  = Pointer;
+        my Pointer $ctxp,
 
         my sword $errcode = OCIEnvNlsCreate(
             @envhpp,
             OCI_DEFAULT,
             $ctxp,
-            OpaquePointer,
-            OpaquePointer,
-            OpaquePointer,
+            Pointer,
+            Pointer,
+            Pointer,
             0,
-            OpaquePointer,
+            Pointer,
             AL32UTF8,
             AL32UTF8,
         );
@@ -790,9 +790,9 @@ class DBDish::Oracle:auth<mberends>:ver<0.0.1> {
         }
 
         # allocate the error handle
-        my @errhpp := CArray[OpaquePointer].new;
-        @errhpp[0]  = OpaquePointer;
-        $errcode = OCIHandleAlloc($envhp, @errhpp, OCI_HTYPE_ERROR, 0, OpaquePointer );
+        my @errhpp := CArray[Pointer].new;
+        @errhpp[0]  = Pointer;
+        $errcode = OCIHandleAlloc($envhp, @errhpp, OCI_HTYPE_ERROR, 0, Pointer );
         if $errcode ne OCI_SUCCESS {
             die "OCIHandleAlloc failed: '$errcode'";
         }
