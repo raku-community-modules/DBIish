@@ -105,16 +105,17 @@ sub OCIStmtPrepare2 (
     is native(lib)
     { ... }
 
-sub OCIAttrGet (
+sub OCIAttrGet_ub2 (
         Pointer         $trgthndlp,
         ub4             $trghndltyp,
-        CArray[int8]    $attributep,
+        ub2             $attributep is rw,
         ub4             $sizep,
         ub4             $attrtype,
         OCIError        $errhp,
     )
     returns sword
     is native(lib)
+    is symbol('OCIAttrGet')
     { ... }
 
 # strings
@@ -641,14 +642,12 @@ class DBDish::Oracle::Connection does DBDish::Connection {
         }
         my $stmthp = @stmthpp[0];
 
-        my @attributep := CArray[int8].new;
-        @attributep[0] = 0;
-        $errcode = OCIAttrGet($stmthp, OCI_HTYPE_STMT, @attributep, Pointer, OCI_ATTR_STMT_TYPE, $!errhp);
+        my ub2 $statementtype;
+        $errcode = OCIAttrGet_ub2($stmthp, OCI_HTYPE_STMT, $statementtype, Pointer, OCI_ATTR_STMT_TYPE, $!errhp);
         if $errcode ne OCI_SUCCESS {
             my $errortext = get_errortext($!errhp);
             die "statement type get failed ($errcode): '$errortext'";
         }
-        my $statementtype = @attributep[0];
 
 #        my $info = PQdescribePrepared($!pg_conn, $statement_name);
 #        my $param_count = PQnparams($info);
