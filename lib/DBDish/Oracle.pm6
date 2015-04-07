@@ -492,7 +492,7 @@ class DBDish::Oracle::StatementHandle does DBDish::StatementHandle {
 
         # for DDL statements, no further steps are necessary
         return "0E0"
-            if $!statementtype ~~ OCI_STMT_CREATE, OCI_STMT_DROP, OCI_STMT_ALTER;
+            if $!statementtype ~~ ( OCI_STMT_CREATE, OCI_STMT_DROP, OCI_STMT_ALTER );
 
         my @parmdpp := CArray[Pointer].new;
         @parmdpp[0]  = Pointer;
