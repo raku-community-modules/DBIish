@@ -9,8 +9,8 @@ my ( $*mdriver, %*opts, %*query ) = 'Oracle';
 #%*opts<host>     = 'localhost';
 #%*opts<port>     = 1521;
 %*opts<database> = 'XE';
-%*opts<username> = 'testuser';
-%*opts<password> = 'testpass';
+%*opts<username> = 'TESTUSER';
+%*opts<password> = 'Testpass';
 
 # from http://stackoverflow.com/questions/1799128/oracle-if-table-exists
 %*query<drop_table> = "
@@ -37,10 +37,10 @@ installed.
 Connect to the Oracle XE database and set up a test environment with the
 following:
 
- CREATE USER "testuser" IDENTIFIED BY testpass DEFAULT TABLESPACE "USERS" TEMPORARY TABLESPACE "TEMP";
- ALTER USER "testuser" QUOTA UNLIMITED ON USERS;
- GRANT "CONNECT" TO "testuser";
- GRANT CREATE TABLE TO "testuser";
- GRANT CREATE VIEW TO "testuser";
+ CREATE USER "TESTUSER" IDENTIFIED BY Testpass DEFAULT TABLESPACE "USERS" TEMPORARY TABLESPACE "TEMP";
+ ALTER USER "TESTUSER" QUOTA UNLIMITED ON USERS;
+ GRANT "CONNECT" TO "TESTUSER";
+ GRANT CREATE TABLE TO "TESTUSER";
+ GRANT CREATE VIEW TO "TESTUSER";
 
 =end pod
