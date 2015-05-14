@@ -64,7 +64,7 @@ role DBDish::StatementHandle does DBDish::ErrorHandling {
         my @names := self.column_names;
         my %res = @names Z=> [] xx *;
         for self.fetchall-array -> @a {
-            for @a Z @names -> $v, $n {
+            for @a Z @names -> ($v, $n) {
                 %res{$n}.push: $v;
             }
         }
