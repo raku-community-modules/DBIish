@@ -192,7 +192,7 @@ my class PgTokenizer::Actions {
     method placeholder($/)  { make '$' ~ ++$!counter }
     method normal($/)       { make $/.Str }
     method TOP($/) {
-        make $0.for({.values[0].ast}).join;
+        make $0.flatmap({.values[0].ast}).join;
     }
 }
 
