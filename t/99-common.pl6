@@ -37,7 +37,7 @@ try {
     CATCH {
         default {
             diag "Connect failed with error $_";
-            skip_rest 'connect failed -- maybe the prerequisites are not installed?';
+            skip-rest 'connect failed -- maybe the prerequisites are not installed?';
             exit;
         }
     }
@@ -201,11 +201,11 @@ $sth.finish;
 {
     $sth = $dbh.prepare(q[INSERT INTO nom (name, description) VALUES (?, ?)]);
     my $lived;
-    lives_ok { $sth.execute("quot", q["';]); $lived = 1 }, 'can insert single and double quotes';
+    lives-ok { $sth.execute("quot", q["';]); $lived = 1 }, 'can insert single and double quotes';
     $sth.finish;
     if $lived {
         $sth = $dbh.prepare(q[SELECT description FROM nom where name = ?]);
-        lives_ok { $sth.execute('quot') }, 'lived while retrieving result';
+        lives-ok { $sth.execute('quot') }, 'lived while retrieving result';
         is $sth.fetchrow.join, q["';], 'got the right string back';
         $sth.finish;
     }
@@ -214,7 +214,7 @@ $sth.finish;
     }
 
     $lived = 0;
-    lives_ok { $dbh.do(q[INSERT INTO nom (name, description) VALUES(?, '?"')], 'mark'); $lived = 1}, 'can use question mark in quoted strings';
+    lives-ok { $dbh.do(q[INSERT INTO nom (name, description) VALUES(?, '?"')], 'mark'); $lived = 1}, 'can use question mark in quoted strings';
     if $lived {
         my $sth = $dbh.prepare(q[SELECT description FROM nom WHERE name = 'mark']);
         $sth.execute;
