@@ -5,7 +5,7 @@
 #use Test;     # "use" dies in a runtime EVAL
 #use DBIish;
 diag "Testing MiniDBD::$*mdriver";
-plan 42;
+plan 44;
 
 sub magic_cmp(@a, @b) {
     my $res =  @a[0] eq @b[0]
@@ -224,6 +224,27 @@ $sth.finish;
     else {
         skip('dependent test', 1);
     }
+}
+
+# test that a query with no results has a falsy value
+{
+    $sth = $dbh.prepare('SELECT * FROM nom WHERE 1 = 0');
+    $sth.execute;
+
+    my $row = $sth.fetchrow-hash;
+
+    ok !?$row, 'a query with no results should have a falsy value';
+}
+
+# test that a query that's exhausted its result set has a falsy value
+{
+    $sth = $dbh.prepare('SELECT COUNT(*) FROM nom');
+    $sth.execute;
+
+    my $row = $sth.fetchrow-hash;
+       $row = $sth.fetchrow-hash;
+
+    ok !?$row, 'a query with no more results should have a falsy value';
 }
 
 
