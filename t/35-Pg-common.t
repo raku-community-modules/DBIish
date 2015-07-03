@@ -3,41 +3,48 @@ use v6;
 use Test;
 use DBIish;
 
-# Define the only database specific values used by the common tests.
-my ( $*mdriver, %*opts ) = 'Pg';
-%*opts<host>     = 'localhost';
-%*opts<port>     = 5432;
-%*opts<database> = 'zavolaj';
-%*opts<user>     = 'testuser';
-%*opts<password> = 'testpass';
-my $dbh;
+use lib 't/lib';
+use Test::Config::Pg;
 
-my $post_connect_cb = {
+# Define the only database specific values used by the common tests.
+
+my $*mdriver    = 'Pg';
+my %*opts       = config_pg_connect;
+
+my $post_connect_cb =
+{
     my $dbh = @_.shift;
-    $dbh.do('SET client_min_messages = warning');
+
+    $dbh.do( 'SET client_min_messages = warning' );
 };
 
 # Detect and report possible errors from EVAL of the common test script
+
 warn $! if "ok 99-common.pl6" ne EVAL slurp 't/99-common.pl6';
 
 =begin pod
 
 =head1 PREREQUISITES
-Your system should already have libpq-dev installed.  Change to the
-postgres user and connect to the postgres server as follows:
 
- sudo -u postgres psql
+Your system should already have libpq-dev installed. 
 
-Then set up a test environment with the following:
+This uses the standard PG* environment variables to determine the 
+connection arguments:
 
- CREATE DATABASE zavolaj;
- CREATE ROLE testuser LOGIN PASSWORD 'testpass';
- GRANT ALL PRIVILEGES ON DATABASE zavolaj TO testuser;
+    export PGDATABASE = 'public';   # mininum required
 
-The '\l' psql command output should include zavolaj as a database name.
-Exit the psql client with a ^D, then try to use the new account:
+This will connect to the 'public' on 'localhost' at port 5432.
 
- psql --host=localhost --dbname=zavolaj --username=testuser --password
- SELECT * FROM pg_database;
+The user should have connect, create table priv's on the database.
+
+=head1 SEE ALSO
+
+=over 4
+
+=item t/lib/Test/Config/Pg.pm
+
+Env var's used to configure connection.
+
+=back
 
 =end pod
