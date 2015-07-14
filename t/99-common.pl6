@@ -102,7 +102,7 @@ if $sth.^can('bind_param_array') {
     my @tuple_status;
     ok $sth.bind_param_array( 1, [ 'BEOM', 'Medium size orange juice', 2, 1.20 ] ),
        "bind_param_array"; # test 13
-    ok $sth.execute_array(  { ArrayTupleStatus => \@tuple_status } ); # test 14
+    ok $sth.execute_array(  { ArrayTupleStatus => @tuple_status } ); # test 14
 }
 else { skip '$sth.bind_param_array() and $sth.execute_array() not implemented', 2 }
 
