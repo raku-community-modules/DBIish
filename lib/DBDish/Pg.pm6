@@ -161,7 +161,7 @@ my grammar PgTokenizer {
         \"
     }
     token single_quote_normal { <-['\\]>+ }
-    token single_quote_escape { [ \'\' || \\ . ]+ }
+    token single_quote_escape { [ \'\' | \\ . ]+ }
     token single_quote {
         \'
         [
