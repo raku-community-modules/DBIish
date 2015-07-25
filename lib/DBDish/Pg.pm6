@@ -145,7 +145,7 @@ constant PGRES_TUPLES_OK   = 2;
 constant PGRES_COPY_OUT    = 3;
 constant PGRES_COPY_IN     = 4;
 
-sub status-is-ok($status) { $status ~~ 0..4 }
+sub status-is-ok($status) { $status ~~ (0..4) }
 
 #-----------------------------------------------------------------------
 
