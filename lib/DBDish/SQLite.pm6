@@ -67,7 +67,7 @@ sub sqlite3_step(OpaquePointer $statement_handle)
 
 sub sqlite3_bind_blob(OpaquePointer $stmt, int, OpaquePointer, Int, OpaquePointer) returns Int is native('libsqlite3') { ... };
 sub sqlite3_bind_double(OpaquePointer $stmt, Int, Num) returns Int is native('libsqlite3') { ... };
-sub sqlite3_bind_int(OpaquePointer $stmt, Int, Int) returns Int is native('libsqlite3') { ... };
+sub sqlite3_bind_int64(OpaquePointer $stmt, Int, Int) returns Int is native('libsqlite3') { ... };
 sub sqlite3_bind_null(OpaquePointer $stmt, Int) returns Int is native('libsqlite3') { ... };
 sub sqlite3_bind_text(OpaquePointer $stmt, Int, Str, Int, OpaquePointer) returns Int is native('libsqlite3') { ... };
 
@@ -76,7 +76,7 @@ sub sqlite3_changes(OpaquePointer $handle) returns Int is native('libsqlite3') {
 proto sub sqlite3_bind($, $, $) {*}
 multi sub sqlite3_bind($stmt, Int $n, Buf:D $b)  { sqlite3_bind_blob($stmt, $n, $b, $b.bytes, OpaquePointer) }
 multi sub sqlite3_bind($stmt, Int $n, Real:D $d) { sqlite3_bind_double($stmt, $n, $d.Num) }
-multi sub sqlite3_bind($stmt, Int $n, Int:D $i)  { sqlite3_bind_int($stmt, $n, $i) }
+multi sub sqlite3_bind($stmt, Int $n, Int:D $i)  { sqlite3_bind_int64($stmt, $n, $i) }
 multi sub sqlite3_bind($stmt, Int $n, Any:U)     { sqlite3_bind_null($stmt, $n) }
 multi sub sqlite3_bind($stmt, Int $n, Str:D $d)  { sqlite3_bind_text($stmt, $n, $d, -1,  OpaquePointer) }
 
