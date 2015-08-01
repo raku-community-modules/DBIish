@@ -9,7 +9,7 @@ use Test::Config::Pg;
 # Define the only database specific values used by the common tests.
 
 my $*mdriver    = 'Pg';
-my %opts;
+my %*opts;
 try %*opts      = config_pg_connect;
 diag $! if $!;
 
