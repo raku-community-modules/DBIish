@@ -59,7 +59,7 @@ $sth = $dbh.prepare( "
     CREATE TABLE nom (
         name        varchar(4),
         description varchar(30),
-        quantity    int,
+        quantity    bigint,
         price       numeric(5,2)
     )
 ");
