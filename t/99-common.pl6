@@ -5,7 +5,7 @@
 #use Test;     # "use" dies in a runtime EVAL
 #use DBIish;
 diag "Testing MiniDBD::$*mdriver";
-plan 44;
+plan 48;
 
 sub magic_cmp(@a, @b) {
     my $res =  @a[0] eq @b[0]
@@ -247,6 +247,22 @@ $sth.finish;
     ok !?$row, 'a query with no more results should have a falsy value';
 }
 
+# test that an integer >= 2**31 still works as an argument to execute
+{
+    my $large-int = 2 ** 31;
+    $dbh.do(qq[INSERT INTO nom (name, description, quantity) VALUES ('too', 'many', $large-int)]);
+    $sth = $dbh.prepare('SELECT name, description, quantity FROM nom WHERE quantity = ?');
+    $sth.execute($large-int);
+
+    my $row = $sth.fetchrow_arrayref;
+
+    ok $row, 'A row was successfully retrieved when using a large integer in a prepared statement';
+    is $row[0], 'too', 'The contents of the row fetched via a large integer are correct';
+    is $row[1], 'many', 'The contents of the row fetched via a large integer are correct';
+    is $row[2], $large-int, 'The contents of the row fetched via a large integer are correct';
+
+    $sth.finish;
+}
 
 # Drop the table when finished, and disconnect
 ok $dbh.do("DROP TABLE nom"), "final cleanup";
