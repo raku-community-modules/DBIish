@@ -106,10 +106,10 @@ sub OCIStmtPrepare2 (
     { ... }
 
 sub OCIAttrGet_ub2 (
-        Pointer         $trgthndlp,
+        Pointer[void]   $trgthndlp,
         ub4             $trghndltyp,
         ub2             $attributep is rw,
-        ub4             $sizep,
+        CArray[ub4]     $sizep,
         ub4             $attrtype,
         OCIError        $errhp,
     )
@@ -119,10 +119,10 @@ sub OCIAttrGet_ub2 (
     { ... }
 
 sub OCIAttrGet_ub4 (
-        Pointer         $trgthndlp,
+        Pointer[void]   $trgthndlp,
         ub4             $trghndltyp,
         ub4             $attributep is rw,
-        ub4             $sizep,
+        CArray[ub4]     $sizep,
         ub4             $attrtype,
         OCIError        $errhp,
     )
