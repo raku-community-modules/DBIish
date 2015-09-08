@@ -105,16 +105,17 @@ sub OCIStmtPrepare2 (
     is native(lib)
     { ... }
 
-sub OCIAttrGet(
-        Pointer[void]   $trgthndlp,
-        ub4             $trghndltyp,
-        CArray[int8]    $attributep,
-        CArray[ub4]     $sizep,
-        ub4             $attrtype,
-        OCIError        $errhp,
+sub OCIAttrGet_Str(
+        Pointer[void]           $trgthndlp,
+        ub4                     $trghndltyp,
+        CArray[Pointer[Str]]    $attributep is encoded('utf8'),
+        CArray[ub4]             $sizep,
+        ub4                     $attrtype,
+        OCIError                $errhp,
     )
     returns sword
     is native(lib)
+    is symbol('OCIAttrGet')
     { ... }
 
 sub OCIAttrGet_ub2 (
@@ -573,26 +574,20 @@ class DBDish::Oracle::StatementHandle does DBDish::StatementHandle {
 
 
             # retrieve the column name
-            my @col_name := CArray[int8].new;
-            @col_name[$_] = 0
-                for ^512;
+            my CArray[Pointer] $col_namepp.=new;
+            $col_namepp[0] = Pointer[Str].new;
 
             my @col_name_len := CArray[ub4].new;
             @col_name_len[0] = 0;
 
-            #say @col_name[^16];
-            $errcode = OCIAttrGet(@parmdpp[0], OCI_DTYPE_PARAM, @col_name, @col_name_len, OCI_ATTR_NAME, $!errhp);
-            #say @col_name[^16];
+            $errcode = OCIAttrGet_Str(@parmdpp[0], OCI_DTYPE_PARAM, $col_namepp, @col_name_len, OCI_ATTR_NAME, $!errhp);
+            my $col_name = nativecast(Str, $col_namepp[0]);
+            # FIXME: NativeCall fails currently 2015.07.2
+            #say $col_namepp[0].deref;
 
-            my $col_name_len = @col_name_len[0];
-            warn "COLUMN NAME LENTH: $col_name_len";
+            # not needed, NativeCall can handle null-terminated strings itself
+            #my $col_name_len = @col_name_len[0];
 
-            my @col_name_ary;
-            @col_name_ary[$_] = @col_name[$_]
-                for ^$col_name_len;
-            #warn @col_name;
-            #warn @col_name_ary.perl
-            #my $col_name = Buf.new(@col_name_ary).decode();
             #warn "COLUMN: $col_name";
         }
 
