@@ -11,12 +11,14 @@ my constant lib = 'libclntsh';
 
 constant sb2            = int16;
 constant sb4            = int32;
+constant sb8            = int64;
 constant size_t         = long;
 constant sword          = int32;
 constant ub2            = uint16;
 constant ub4            = uint32;
 
 constant OCIBind        = Pointer;
+constant OCIDefine      = Pointer;
 constant OCIEnv         = Pointer;
 constant OCIError       = Pointer;
 constant OCISnapshot    = Pointer;
@@ -216,6 +218,60 @@ sub OCIBindByName_Real (
     is symbol('OCIBindByName')
     { ... }
 
+sub OCIBindByPos2_Str (
+        OCIStmt             $stmtp,
+        CArray[OCIDefine]   $defnpp,
+        OCIError            $errhp,
+        ub4                 $position,
+        Str                 $valuep is encoded('utf8'),
+        sb8                 $value_sz,
+        ub2                 $dty,
+        sb2                 $indp is rw, # sb2 only for non-array binds
+        ub4                 $rlenp is rw,
+        ub2                 $rcodep is rw,
+        ub4                 $mode,
+    )
+    returns sword
+    is native(lib)
+    is symbol('OCIBindByPos2')
+    { ... }
+
+sub OCIBindByPos2_Int (
+        OCIStmt             $stmtp,
+        CArray[OCIDefine]   $defnpp,
+        OCIError            $errhp,
+        ub4                 $position,
+        long                $valuep is rw,
+        sb8                 $value_sz,
+        ub2                 $dty,
+        sb2                 $indp is rw, # sb2 only for non-array binds
+        ub4                 $rlenp is rw,
+        ub2                 $rcodep is rw,
+        ub4                 $mode,
+    )
+    returns sword
+    is native(lib)
+    is symbol('OCIBindByPos2')
+    { ... }
+
+sub OCIBindByPos2_Real (
+        OCIStmt             $stmtp,
+        CArray[OCIDefine]   $defnpp,
+        OCIError            $errhp,
+        ub4                 $position,
+        num64               $valuep is rw,
+        sb8                 $value_sz,
+        ub2                 $dty,
+        sb2                 $indp is rw, # sb2 only for non-array binds
+        ub4                 $rlenp is rw,
+        ub2                 $rcodep is rw,
+        ub4                 $mode,
+    )
+    returns sword
+    is native(lib)
+    is symbol('OCIBindByPos2')
+    { ... }
+
 sub OCIStmtExecute (
         OCISvcCtx       $svchp,
         OCIStmt         $stmtp,
@@ -291,6 +347,7 @@ constant OCI_STMT_DECLARE       = 9;
 constant OCI_STMT_CALL          = 10;
 
 constant SQLT_CHR               = 1;
+constant SQLT_NUM               = 2;
 constant SQLT_INT               = 3;
 constant SQLT_FLT               = 4;
 
@@ -525,12 +582,6 @@ class DBDish::Oracle::StatementHandle does DBDish::StatementHandle {
         # for DDL statements, no further steps are necessary
         # if $!statementtype ~~ ( OCI_STMT_CREATE, OCI_STMT_DROP, OCI_STMT_ALTER );
 
-#        $errcode = OCIStmtFetch2($!stmthp, $!errhp, 1, OCI_DEFAULT, 0, OCI_DEFAULT);
-#        if $errcode ne OCI_SUCCESS {
-#            my $errortext = get_errortext($!errhp);
-#            die "fetch failed ($errcode): '$errortext'";
-#        }
-
         return self.rows;
     }
 
@@ -568,10 +619,9 @@ class DBDish::Oracle::StatementHandle does DBDish::StatementHandle {
             }
 
             # retrieve the data type
-            my ub2 $dtype;
-            $errcode = OCIAttrGet_ub2(@parmdpp[0], OCI_DTYPE_PARAM, $dtype, Pointer, OCI_ATTR_DATA_TYPE, $!errhp);
-            warn "DATA TYPE: $dtype";
-
+            my ub2 $dty;
+            $errcode = OCIAttrGet_ub2(@parmdpp[0], OCI_DTYPE_PARAM, $dty, Pointer, OCI_ATTR_DATA_TYPE, $!errhp);
+            #warn "DATA TYPE: $dty";
 
             # retrieve the column name
             my CArray[Pointer] $col_namepp.=new;
@@ -589,6 +639,79 @@ class DBDish::Oracle::StatementHandle does DBDish::StatementHandle {
             #my $col_name_len = @col_name_len[0];
 
             #warn "COLUMN: $col_name";
+            # bind select list items
+            my CArray[OCIDefine] $defnpp.=new;
+            $defnpp[0] = OCIDefine.new;
+            my sb2 $indp;
+            my ub4 $rlenp;
+            my ub2 $rcodep;
+            if $dty == SQLT_CHR {
+                warn "binding $field_index '$col_name' as CHR";
+                my Str $valuep;
+                @row.push($valuep);
+                my sb8 $value_sz;# = $valuep.encode('utf8').bytes;
+                $errcode = OCIBindByPos2_Str(
+                    $!stmthp,
+                    $defnpp,
+                    $!errhp,
+                    $field_index,
+                    $valuep,
+                    $value_sz,
+                    $dty,
+                    $indp,
+                    $rlenp,
+                    $rcodep,
+                    OCI_DEFAULT,
+                );
+            }
+            elsif $dty == SQLT_INT, SQLT_NUM {
+                warn "binding $field_index '$col_name' as INT|NUM";
+                my long $valuep;
+                @row.push($valuep);
+                my sb8 $value_sz = nativesizeof(long);
+                $errcode = OCIBindByPos2_Int(
+                    $!stmthp,
+                    $defnpp,
+                    $!errhp,
+                    $field_index,
+                    $valuep,
+                    $value_sz,
+                    $dty,
+                    $indp,
+                    $rlenp,
+                    $rcodep,
+                    OCI_DEFAULT,
+                );
+            }
+            elsif $dty == SQLT_FLT {
+                warn "binding $field_index '$col_name' as FLT";
+                my num64 $valuep;
+                @row.push($valuep);
+                my sb8 $value_sz = nativesizeof(num64);
+                $errcode = OCIBindByPos2_Real(
+                    $!stmthp,
+                    $defnpp,
+                    $!errhp,
+                    $field_index,
+                    $valuep,
+                    $value_sz,
+                    $dty,
+                    $indp,
+                    $rlenp,
+                    $rcodep,
+                    OCI_DEFAULT,
+                );
+            }
+            else {
+                die "unhandled type: $dty";
+            }
+        }
+
+        my $errcode = OCIStmtFetch2($!stmthp, $!errhp, 1, OCI_DEFAULT, 0, OCI_DEFAULT);
+        say @row.perl;
+        if $errcode ne OCI_SUCCESS {
+            my $errortext = get_errortext($!errhp);
+            die "fetch failed ($errcode): '$errortext'";
         }
 
 
