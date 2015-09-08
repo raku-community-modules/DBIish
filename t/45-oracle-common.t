@@ -23,6 +23,14 @@ EXCEPTION
       END IF;
 END;
 ";
+%*query<create_table> = "
+    CREATE TABLE nom (
+        name        VARCHAR2(4),
+        description VARCHAR2(30),
+        quantity    NUMBER(20),
+        price       NUMBER(5,2)
+    )
+";
 
 my $dbh;
 

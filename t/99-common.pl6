@@ -8,6 +8,14 @@ diag "Testing DBDish::$*mdriver";
 plan 58;
 
 %*query<drop_table> //= "DROP TABLE IF EXISTS nom";
+%*query<create_table> //= "
+    CREATE TABLE nom (
+        name        varchar(4),
+        description varchar(30),
+        quantity    bigint,
+        price       numeric(5,2)
+    )
+";
 
 sub magic_cmp(@a, @b) {
     my $res =  @a[0] eq @b[0]
@@ -57,14 +65,7 @@ isnt $rc, Bool::True, "drop table gave an expected error " ~
 $sth.finish;
 
 # Create a table
-$sth = $dbh.prepare( "
-    CREATE TABLE nom (
-        name        varchar(4),
-        description varchar(30),
-        quantity    bigint,
-        price       numeric(5,2)
-    )
-");
+$sth = $dbh.prepare(%*query<create_table>);
 $rc = $sth.execute();
 is $rc, '0E0', "do: create table nom"; # test 5
 if $dbh.^can('err') {
