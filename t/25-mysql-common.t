@@ -12,6 +12,7 @@ my %*opts = ().hash;
 %*opts<database>   = 'zavolaj';
 %*opts<user>       = 'testuser';
 %*opts<password>   = 'testpass';
+my %*query;
 
 # Detect and report possible errors from EVAL of the common test script
 warn $! if "ok 99-common.pl6" ne EVAL slurp 't/99-common.pl6';
