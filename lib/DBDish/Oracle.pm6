@@ -105,6 +105,18 @@ sub OCIStmtPrepare2 (
     is native(lib)
     { ... }
 
+sub OCIAttrGet(
+        Pointer[void]   $trgthndlp,
+        ub4             $trghndltyp,
+        CArray[int8]    $attributep,
+        CArray[ub4]     $sizep,
+        ub4             $attrtype,
+        OCIError        $errhp,
+    )
+    returns sword
+    is native(lib)
+    { ... }
+
 sub OCIAttrGet_ub2 (
         Pointer[void]   $trgthndlp,
         ub4             $trghndltyp,
@@ -253,10 +265,14 @@ constant OCI_HTYPE_ENV          = 1;
 constant OCI_HTYPE_ERROR        = 2;
 constant OCI_HTYPE_STMT         = 4;
 
+constant OCI_DTYPE_PARAM        = 53;
+
 constant OCI_LOGON2_STMTCACHE   = 4;
 
 constant OCI_NTV_SYNTAX         = 1;
 
+constant OCI_ATTR_DATA_TYPE     = 2;
+constant OCI_ATTR_NAME          = 4;
 constant OCI_ATTR_ROW_COUNT     = 9;
 constant OCI_ATTR_PARAM_COUNT   = 18;
 constant OCI_ATTR_STMT_TYPE     = 24;
@@ -500,20 +516,13 @@ class DBDish::Oracle::StatementHandle does DBDish::StatementHandle {
         );
         if $errcode ne OCI_SUCCESS {
             my $errortext = get_errortext($!errhp);
+            # TODO: handle OCI_SUCCESS_WITH_INFO
             die "execute of '$!statement' failed ($errcode): '$errortext'";
         }
         #warn "successfully executed $!dbh.AutoCommit()";
 
         # for DDL statements, no further steps are necessary
         # if $!statementtype ~~ ( OCI_STMT_CREATE, OCI_STMT_DROP, OCI_STMT_ALTER );
-
-#        my @parmdpp := CArray[Pointer].new;
-#        @parmdpp[0]  = Pointer;
-#        $errcode = OCIParamGet($!stmthp, OCI_HTYPE_STMT, $!errhp, @parmdpp, 1);
-#        if $errcode ne OCI_SUCCESS {
-#            my $errortext = get_errortext($!errhp);
-#            die "param get failed ($errcode): '$errortext'";
-#        }
 
 #        $errcode = OCIStmtFetch2($!stmthp, $!errhp, 1, OCI_DEFAULT, 0, OCI_DEFAULT);
 #        if $errcode ne OCI_SUCCESS {
@@ -547,16 +556,52 @@ class DBDish::Oracle::StatementHandle does DBDish::StatementHandle {
     }
 
     method fetchrow() {
-#        my @row_array;
+        my @row;
+        for 1 .. self.field_count -> $field_index {
+            my @parmdpp := CArray[Pointer].new;
+            @parmdpp[0]  = Pointer;
+            my $errcode = OCIParamGet($!stmthp, OCI_HTYPE_STMT, $!errhp, @parmdpp, $field_index);
+            if $errcode ne OCI_SUCCESS {
+                my $errortext = get_errortext($!errhp);
+                die "param get failed ($errcode): '$errortext'";
+            }
+
+            # retrieve the data type
+            my ub2 $dtype;
+            $errcode = OCIAttrGet_ub2(@parmdpp[0], OCI_DTYPE_PARAM, $dtype, Pointer, OCI_ATTR_DATA_TYPE, $!errhp);
+            warn "DATA TYPE: $dtype";
+
+
+            # retrieve the column name
+            my @col_name := CArray[int8].new;
+            @col_name[$_] = 0
+                for ^512;
+
+            my @col_name_len := CArray[ub4].new;
+            @col_name_len[0] = 0;
+
+            #say @col_name[^16];
+            $errcode = OCIAttrGet(@parmdpp[0], OCI_DTYPE_PARAM, @col_name, @col_name_len, OCI_ATTR_NAME, $!errhp);
+            #say @col_name[^16];
+
+            my $col_name_len = @col_name_len[0];
+            warn "COLUMN NAME LENTH: $col_name_len";
+
+            my @col_name_ary;
+            @col_name_ary[$_] = @col_name[$_]
+                for ^$col_name_len;
+            #warn @col_name;
+            #warn @col_name_ary.perl
+            #my $col_name = Buf.new(@col_name_ary).decode();
+            #warn "COLUMN: $col_name";
+        }
+
+
 #        return if $!current_row >= $!row_count;
-#
-#        unless defined $!field_count {
-#            $!field_count = PQnfields($!result);
-#        }
 #
 #        if defined $!result {
 #            self!reset_errstr;
-#
+
 #            for ^$!field_count {
 #                @row_array.push(PQgetvalue($!result, $!current_row, $_));
 #            }
@@ -565,7 +610,7 @@ class DBDish::Oracle::StatementHandle does DBDish::StatementHandle {
 #
 #            if ! @row_array { self.finish; }
 #        }
-#        return @row_array;
+        return @row;
     }
 
     method field_count {
