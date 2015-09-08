@@ -5,7 +5,7 @@
 #use Test;     # "use" dies in a runtime EVAL
 #use DBIish;
 diag "Testing DBDish::$*mdriver";
-plan 58;
+plan 59;
 
 %*query<drop_table> //= "DROP TABLE IF EXISTS nom";
 %*query<create_table> //= "
@@ -91,7 +91,7 @@ ok $sth = $dbh.prepare( "
     INSERT INTO nom (name)
     VALUES ( ? )
 "), "prepare an insert command with one string parameter"; # test 10
-ok $rc = $sth.execute('TAFM'), "execute one with one string parameter"; # test 11
+ok $rc = $sth.execute('ONE'), "execute one with one string parameter"; # test 11
 is $rc, 1, "execute one with one string parameter should return 1 row affected"; # test 12
 if $sth.^can('rows') {
     is $sth.rows, 1, '$sth.rows for execute one with one string parameter should report 1 row affected'; # test 13
@@ -149,17 +149,21 @@ else { skip '$sth.bind_param_array() and $sth.execute_array() not implemented', 
 ok $sth = $dbh.prepare( "
     SELECT name, description, quantity, price, quantity*price AS amount
     FROM nom
+    ORDER BY name
 "), "prepare a select command without parameters"; # test 27
 
 ok $sth.execute(), "execute a prepared select statement without parameters"; # test 28
 
 if $sth.^can('fetchall_arrayref') {
     my $arrayref = $sth.fetchall_arrayref();
-    is $arrayref.elems, 3, "fetchall_arrayref returns 3 rows"; # test 29
+    is $arrayref.elems, 6, "fetchall_arrayref returns 6 rows"; # test 29
     my @ref =
+        [ Any, Any, 1 ],
+        [ Any, Any, Any, 4.85 ],
+        [ 'BEOM', 'Medium size orange juice', '2', '1.20', '2.40' ],
         [ 'BUBH', 'Hot beef burrito', '1', '4.95', '4.95' ],
-        [ 'TAFM', 'Mild fish taco', '1', '4.85', '4.85' ],
-        [ 'BEOM', 'Medium size orange juice', '2', '1.20', '2.40' ];
+        [ 'ONE' ],
+        [ 'TAFM', 'Mild fish taco', '1', '4.85', '4.85' ];
     my $ok = True;
     for ^3 -> $i {
         $ok &&= magic_cmp($arrayref[$i], @ref[$i]);
