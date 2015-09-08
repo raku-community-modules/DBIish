@@ -258,6 +258,7 @@ constant OCI_LOGON2_STMTCACHE   = 4;
 constant OCI_NTV_SYNTAX         = 1;
 
 constant OCI_ATTR_ROW_COUNT     = 9;
+constant OCI_ATTR_PARAM_COUNT   = 18;
 constant OCI_ATTR_STMT_TYPE     = 24;
 
 constant OCI_STMT_UNKNOWN       = 0;
@@ -357,7 +358,6 @@ class DBDish::Oracle::StatementHandle does DBDish::StatementHandle {
 #    has $!affected_rows;
 #    has @!column_names;
     has Int $!row_count;
-#    has $!field_count;
 #    has $!current_row = 0;
 #
 #    method !handle-errors {
@@ -566,6 +566,21 @@ class DBDish::Oracle::StatementHandle does DBDish::StatementHandle {
 #            if ! @row_array { self.finish; }
 #        }
 #        return @row_array;
+    }
+
+    method field_count {
+        # cache field count
+        state Int $field_count;
+        # TODO: what should be returned before the statement has been executed?
+        unless $field_count.defined {
+            # TODO: because 2015.07.2: 'Natively typed state variables not yet implemented'
+            my ub4 $field_count_native;
+            my $errcode = OCIAttrGet_ub4($!stmthp, OCI_HTYPE_STMT, $field_count_native,
+                                  Pointer, OCI_ATTR_PARAM_COUNT, $!errhp);
+            $field_count = $field_count_native;
+            # FIXME: error handling
+        }
+        return $field_count;
     }
 
 #    method column_names {
