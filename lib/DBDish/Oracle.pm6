@@ -428,6 +428,7 @@ class DBDish::Oracle::StatementHandle does DBDish::StatementHandle {
     has $!svchp;
     has $!errhp;
     has $!stmthp;
+    has Int $!state = 0; # execute (1) has to happen before fetch (2)
 #    has $!param_count;
     has $.dbh;
     has $!result;
@@ -584,6 +585,7 @@ class DBDish::Oracle::StatementHandle does DBDish::StatementHandle {
         # for DDL statements, no further steps are necessary
         # if $!statementtype ~~ ( OCI_STMT_CREATE, OCI_STMT_DROP, OCI_STMT_ALTER );
 
+        $!state = 1;
         return self.rows;
     }
 
@@ -610,6 +612,9 @@ class DBDish::Oracle::StatementHandle does DBDish::StatementHandle {
     }
 
     method fetchrow() {
+        die "Can't fetch without execute first"
+            unless $!state >= 1;
+
         state @row;
         # only declare the first time a row is fetched
         unless @row.elems {
