@@ -640,16 +640,14 @@ class DBDish::Oracle::StatementHandle does DBDish::StatementHandle {
                 #warn "DATA TYPE: $dty";
 
                 # retrieve the column name
-                my CArray[Pointer] $col_namepp.=new;
+                my CArray[Pointer[Str]] $col_namepp.=new;
                 $col_namepp[0] = Pointer[Str].new;
 
                 my @col_name_len := CArray[ub4].new;
                 @col_name_len[0] = 0;
 
                 $errcode = OCIAttrGet_Str(@parmdpp[0], OCI_DTYPE_PARAM, $col_namepp, @col_name_len, OCI_ATTR_NAME, $!errhp);
-                my $col_name = nativecast(Str, $col_namepp[0]);
-                # FIXME: NativeCall fails currently 2015.07.2
-                #say $col_namepp[0].deref;
+                my Str $col_name = $col_namepp[0].deref;
 
                 # not needed, NativeCall can handle null-terminated strings itself
                 #my $col_name_len = @col_name_len[0];
