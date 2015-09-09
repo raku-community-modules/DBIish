@@ -218,25 +218,25 @@ sub OCIBindByName_Real (
     is symbol('OCIBindByName')
     { ... }
 
-sub OCIBindByPos2_Str (
-        OCIStmt             $stmtp,
-        CArray[OCIDefine]   $defnpp,
-        OCIError            $errhp,
-        ub4                 $position,
-        Str                 $valuep is encoded('utf8'),
-        sb8                 $value_sz,
-        ub2                 $dty,
-        sb2                 $indp is rw, # sb2 only for non-array binds
-        ub4                 $rlenp is rw,
-        ub2                 $rcodep is rw,
-        ub4                 $mode,
+sub OCIDefineByPos2_Str (
+        OCIStmt                 $stmtp,
+        CArray[OCIDefine]       $defnpp,
+        OCIError                $errhp,
+        ub4                     $position,
+        CArray[Pointer[Str]]    $valuep is encoded('utf8'),
+        sb8                     $value_sz,
+        ub2                     $dty,
+        sb2                     $indp is rw, # sb2 only for non-array binds
+        ub4                     $rlenp is rw,
+        ub2                     $rcodep is rw,
+        ub4                     $mode,
     )
     returns sword
     is native(lib)
-    is symbol('OCIBindByPos2')
+    is symbol('OCIDefineByPos2')
     { ... }
 
-sub OCIBindByPos2_Int (
+sub OCIDefineByPos2_Int (
         OCIStmt             $stmtp,
         CArray[OCIDefine]   $defnpp,
         OCIError            $errhp,
@@ -251,10 +251,10 @@ sub OCIBindByPos2_Int (
     )
     returns sword
     is native(lib)
-    is symbol('OCIBindByPos2')
+    is symbol('OCIDefineByPos2')
     { ... }
 
-sub OCIBindByPos2_Real (
+sub OCIDefineByPos2_Real (
         OCIStmt             $stmtp,
         CArray[OCIDefine]   $defnpp,
         OCIError            $errhp,
@@ -269,7 +269,7 @@ sub OCIBindByPos2_Real (
     )
     returns sword
     is native(lib)
-    is symbol('OCIBindByPos2')
+    is symbol('OCIDefineByPos2')
     { ... }
 
 sub OCIStmtExecute (
@@ -328,6 +328,7 @@ constant OCI_LOGON2_STMTCACHE   = 4;
 
 constant OCI_NTV_SYNTAX         = 1;
 
+constant OCI_ATTR_DATA_SIZE     = 1;
 constant OCI_ATTR_DATA_TYPE     = 2;
 constant OCI_ATTR_NAME          = 4;
 constant OCI_ATTR_ROW_COUNT     = 9;
@@ -350,6 +351,7 @@ constant SQLT_CHR               = 1;
 constant SQLT_NUM               = 2;
 constant SQLT_INT               = 3;
 constant SQLT_FLT               = 4;
+constant SQLT_STR               = 5;
 
 # SELECT NLS_CHARSET_ID('AL32UTF8') FROM dual;
 constant AL32UTF8               = 873;
@@ -608,111 +610,128 @@ class DBDish::Oracle::StatementHandle does DBDish::StatementHandle {
     }
 
     method fetchrow() {
-        my @row;
-        for 1 .. self.field_count -> $field_index {
-            my @parmdpp := CArray[Pointer].new;
-            @parmdpp[0]  = Pointer;
-            my $errcode = OCIParamGet($!stmthp, OCI_HTYPE_STMT, $!errhp, @parmdpp, $field_index);
-            if $errcode ne OCI_SUCCESS {
-                my $errortext = get_errortext($!errhp);
-                die "param get failed ($errcode): '$errortext'";
+        state @row;
+        # only declare the first time a row is fetched
+        unless @row.elems {
+            for 1 .. self.field_count -> $field_index {
+                my @parmdpp := CArray[Pointer].new;
+                @parmdpp[0]  = Pointer;
+                my $errcode = OCIParamGet($!stmthp, OCI_HTYPE_STMT, $!errhp, @parmdpp, $field_index);
+                if $errcode ne OCI_SUCCESS {
+                    my $errortext = get_errortext($!errhp);
+                    die "param get failed ($errcode): '$errortext'";
+                }
+
+                # retrieve the data type
+                my ub2 $dty;
+                $errcode = OCIAttrGet_ub2(@parmdpp[0], OCI_DTYPE_PARAM, $dty, Pointer, OCI_ATTR_DATA_TYPE, $!errhp);
+                #warn "DATA TYPE: $dty";
+
+                # retrieve the column name
+                my CArray[Pointer] $col_namepp.=new;
+                $col_namepp[0] = Pointer[Str].new;
+
+                my @col_name_len := CArray[ub4].new;
+                @col_name_len[0] = 0;
+
+                $errcode = OCIAttrGet_Str(@parmdpp[0], OCI_DTYPE_PARAM, $col_namepp, @col_name_len, OCI_ATTR_NAME, $!errhp);
+                my $col_name = nativecast(Str, $col_namepp[0]);
+                # FIXME: NativeCall fails currently 2015.07.2
+                #say $col_namepp[0].deref;
+
+                # not needed, NativeCall can handle null-terminated strings itself
+                #my $col_name_len = @col_name_len[0];
+
+                #warn "COLUMN: $col_name";
+
+                # retrieve the data length
+                my ub4 $datalen;
+                $errcode = OCIAttrGet_ub4(@parmdpp[0], OCI_DTYPE_PARAM, $datalen, Pointer, OCI_ATTR_DATA_SIZE, $!errhp);
+                #warn "DATA LENGTH: $datalen";
+
+                # bind select list items
+                my CArray[OCIDefine] $defnpp.=new;
+                $defnpp[0] = OCIDefine.new;
+                my sb2 $indp;
+                my ub4 $rlenp;
+                my ub2 $rcodep;
+                if $dty == SQLT_CHR {
+                    warn "defining #$field_index '$col_name'($datalen) as CHR($dty)";
+                    my CArray[Pointer] $valuep.=new;
+                    $valuep[0] = Pointer[Str].new;
+                    #my Str $valuep;# = ' ' x (($datalen+1) * 2);
+                    my sb8 $value_sz = $datalen + 1;
+                    $errcode = OCIDefineByPos2_Str(
+                        $!stmthp,
+                        $defnpp,
+                        $!errhp,
+                        $field_index,
+                        $valuep,
+                        $value_sz,
+                        #$dty,
+                        SQLT_STR,
+                        $indp,
+                        $rlenp,
+                        $rcodep,
+                        OCI_DEFAULT,
+                    );
+                    @row.push($valuep);
+                }
+                elsif $dty == SQLT_INT, SQLT_NUM {
+                    warn "defining #$field_index '$col_name'($datalen) as INT|NUM($dty)";
+                    my long $valuep = 0;
+                    my sb8 $value_sz = nativesizeof(long);
+                    $errcode = OCIDefineByPos2_Int(
+                        $!stmthp,
+                        $defnpp,
+                        $!errhp,
+                        $field_index,
+                        $valuep,
+                        $value_sz,
+                        $dty,
+                        $indp,
+                        $rlenp,
+                        $rcodep,
+                        OCI_DEFAULT,
+                    );
+                    @row.push($valuep);
+                }
+                elsif $dty == SQLT_FLT {
+                    warn "defining #$field_index '$col_name'($datalen) as FLT($dty)";
+                    my num64 $valuep = 0;
+                    my sb8 $value_sz = nativesizeof(num64);
+                    $errcode = OCIDefineByPos2_Real(
+                        $!stmthp,
+                        $defnpp,
+                        $!errhp,
+                        $field_index,
+                        $valuep,
+                        $value_sz,
+                        $dty,
+                        $indp,
+                        $rlenp,
+                        $rcodep,
+                        OCI_DEFAULT,
+                    );
+                    @row.push($valuep);
+                }
+                else {
+                    die "unhandled type: $dty";
+                }
+                if $errcode ne OCI_SUCCESS {
+                    my $errortext = get_errortext($!errhp);
+                    die "define failed ($errcode): '$errortext'";
+                }
             }
-
-            # retrieve the data type
-            my ub2 $dty;
-            $errcode = OCIAttrGet_ub2(@parmdpp[0], OCI_DTYPE_PARAM, $dty, Pointer, OCI_ATTR_DATA_TYPE, $!errhp);
-            #warn "DATA TYPE: $dty";
-
-            # retrieve the column name
-            my CArray[Pointer] $col_namepp.=new;
-            $col_namepp[0] = Pointer[Str].new;
-
-            my @col_name_len := CArray[ub4].new;
-            @col_name_len[0] = 0;
-
-            $errcode = OCIAttrGet_Str(@parmdpp[0], OCI_DTYPE_PARAM, $col_namepp, @col_name_len, OCI_ATTR_NAME, $!errhp);
-            my $col_name = nativecast(Str, $col_namepp[0]);
-            # FIXME: NativeCall fails currently 2015.07.2
-            #say $col_namepp[0].deref;
-
-            # not needed, NativeCall can handle null-terminated strings itself
-            #my $col_name_len = @col_name_len[0];
-
-            #warn "COLUMN: $col_name";
-            # bind select list items
-            my CArray[OCIDefine] $defnpp.=new;
-            $defnpp[0] = OCIDefine.new;
-            my sb2 $indp;
-            my ub4 $rlenp;
-            my ub2 $rcodep;
-            if $dty == SQLT_CHR {
-                warn "binding $field_index '$col_name' as CHR";
-                my Str $valuep;
-                @row.push($valuep);
-                my sb8 $value_sz;# = $valuep.encode('utf8').bytes;
-                $errcode = OCIBindByPos2_Str(
-                    $!stmthp,
-                    $defnpp,
-                    $!errhp,
-                    $field_index,
-                    $valuep,
-                    $value_sz,
-                    $dty,
-                    $indp,
-                    $rlenp,
-                    $rcodep,
-                    OCI_DEFAULT,
-                );
-            }
-            elsif $dty == SQLT_INT, SQLT_NUM {
-                warn "binding $field_index '$col_name' as INT|NUM";
-                my long $valuep;
-                @row.push($valuep);
-                my sb8 $value_sz = nativesizeof(long);
-                $errcode = OCIBindByPos2_Int(
-                    $!stmthp,
-                    $defnpp,
-                    $!errhp,
-                    $field_index,
-                    $valuep,
-                    $value_sz,
-                    $dty,
-                    $indp,
-                    $rlenp,
-                    $rcodep,
-                    OCI_DEFAULT,
-                );
-            }
-            elsif $dty == SQLT_FLT {
-                warn "binding $field_index '$col_name' as FLT";
-                my num64 $valuep;
-                @row.push($valuep);
-                my sb8 $value_sz = nativesizeof(num64);
-                $errcode = OCIBindByPos2_Real(
-                    $!stmthp,
-                    $defnpp,
-                    $!errhp,
-                    $field_index,
-                    $valuep,
-                    $value_sz,
-                    $dty,
-                    $indp,
-                    $rlenp,
-                    $rcodep,
-                    OCI_DEFAULT,
-                );
-            }
-            else {
-                die "unhandled type: $dty";
-            }
+            warn 'defining complete';
         }
 
         my $errcode = OCIStmtFetch2($!stmthp, $!errhp, 1, OCI_DEFAULT, 0, OCI_DEFAULT);
-        say @row.perl;
         if $errcode ne OCI_SUCCESS {
             my $errortext = get_errortext($!errhp);
             die "fetch failed ($errcode): '$errortext'";
         }
+        say @row.perl;
 
 
 #        return if $!current_row >= $!row_count;
@@ -836,9 +855,6 @@ class DBDish::Oracle::Connection does DBDish::Connection {
             my $errortext = get_errortext($!errhp);
             die "statement type get failed ($errcode): '$errortext'";
         }
-
-#        my $info = PQdescribePrepared($!pg_conn, $statement_name);
-#        my $param_count = PQnparams($info);
 
         my $statement_handle = DBDish::Oracle::StatementHandle.bless(
             # TODO: pass the original or the Oracle statment here?
