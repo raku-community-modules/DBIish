@@ -832,17 +832,25 @@ class DBDish::Oracle::StatementHandle does DBDish::StatementHandle {
 }
 
 class DBDish::Oracle::Connection does DBDish::Connection {
+    has $!envhp;
     has $!svchp;
     has $!errhp;
     has $.AutoCommit is rw;
     has $.in_transaction is rw;
-    submethod BUILD(:$!svchp!, :$!errhp!, :$!AutoCommit = 1) { }
+    submethod BUILD(:$!envhp!, :$!svchp!, :$!errhp!, :$!AutoCommit = 1) { }
 
     method prepare(Str $statement, $attr?) {
         my $oracle_statement = DBDish::Oracle::oracle-replace-placeholder($statement);
+
+        # allocate a statement handle
         my @stmthpp := CArray[OCIStmt].new;
         @stmthpp[0]  = OCIStmt;
-        my $errcode = OCIStmtPrepare2(
+        my $errcode = OCIHandleAlloc($!envhp, @stmthpp, OCI_HTYPE_STMT, 0, Pointer );
+        if $errcode ne OCI_SUCCESS {
+            die "statement handle allocation failed: '$errcode'";
+        }
+
+        $errcode = OCIStmtPrepare2(
                 $!svchp,
                 @stmthpp,
                 $!errhp,
@@ -1035,6 +1043,7 @@ class DBDish::Oracle:auth<mberends>:ver<0.0.1> {
         my $svchp = @svchp[0];
 
         my $connection = DBDish::Oracle::Connection.bless(
+                :$envhp,
                 :$svchp,
                 :$errhp,
                 :AutoCommit(%params<AutoCommit>),
