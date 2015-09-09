@@ -160,6 +160,8 @@ sub OCIBindByName_Str (
         ub2                 $dty,
         sb2                 $indp is rw,
         Pointer[ub2]        $alenp,
+        # FIXME: because this doesn't work
+        #ub2                 $alenp is rw,
         Pointer[ub2]        $rcodep,
         ub4                 $maxarr_len,
         Pointer[ub4]        $curelep,
@@ -184,6 +186,8 @@ sub OCIBindByName_Int (
         ub2                 $dty,
         sb2                 $indp is rw,
         Pointer[ub2]        $alenp,
+        # FIXME: because this doesn't work
+        #ub2                 $alenp is rw,
         Pointer[ub2]        $rcodep,
         ub4                 $maxarr_len,
         Pointer[ub4]        $curelep,
@@ -208,6 +212,8 @@ sub OCIBindByName_Real (
         ub2                 $dty,
         sb2                 $indp is rw,
         Pointer[ub2]        $alenp,
+        # FIXME: because this doesn't work
+        #ub2                 $alenp is rw,
         Pointer[ub2]        $rcodep,
         ub4                 $maxarr_len,
         Pointer[ub4]        $curelep,
@@ -575,6 +581,7 @@ class DBDish::Oracle::StatementHandle does DBDish::StatementHandle {
             Pointer,
             $!dbh.AutoCommit ?? OCI_COMMIT_ON_SUCCESS !! OCI_DEFAULT,
         );
+        # TODO: handle OCI_NO_DATA
         if $errcode ne OCI_SUCCESS {
             my $errortext = get_errortext($!errhp);
             # TODO: handle OCI_SUCCESS_WITH_INFO
