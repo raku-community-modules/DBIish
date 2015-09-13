@@ -93,6 +93,6 @@ lives-ok
 },
 "True PGDATABASE lives ({$!//''})";
 
-done
+done-testing;
 
 =finish
