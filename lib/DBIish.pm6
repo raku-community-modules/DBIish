@@ -11,7 +11,7 @@ class DBIish:auth<mberends>:ver<0.1.0> {
     }
     method install_driver( $drivername ) {
         my $module = "DBDish::$drivername";
-        require $module;
+        require ::($module);
         ::($module).new;
 
     }
