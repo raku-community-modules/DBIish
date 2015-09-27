@@ -23,7 +23,7 @@ dies-ok
 },
 "False PGDATABASE dies ({$!//''})";
 
-diag "Using PGDATABASE: %*ENV< PGDATABASE >";
+diag "Using PGDATABASE: " ~ (%*ENV< PGDATABASE > // '(none)');
 
 lives-ok
 {
