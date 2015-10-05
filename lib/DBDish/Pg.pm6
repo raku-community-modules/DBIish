@@ -84,7 +84,7 @@ sub PQcmdTuples (OpaquePointer $result)
     { ... }
 
 sub PQgetvalue (OpaquePointer $result, int32 $row, int32 $col)
-    returns str
+    returns Str
     is native(lib)
     { ... }
 
