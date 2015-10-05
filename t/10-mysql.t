@@ -327,8 +327,8 @@ ok(($sth = $dbh.prepare("INSERT INTO $table (id,name) VALUES (?,?)")),"prepare i
 my ( %testInsertVals, $all_ok );
 $all_ok = Bool::True;
 loop (my $i = 0 ; $i < 100; $i++) {
-  my @chars = grep { /<-[0O1Iil]>/ }, 0..9, 'A'..'Z', 'a'..'z';
-  my $random_chars = join '', map { @chars[@chars.elems.rand] }, 0 .. 16;
+  my @chars = grep /<-[0O1Iil]>/, 0..9, 'A'..'Z', 'a'..'z';
+  my $random_chars = @chars.roll(16).join;
   %testInsertVals{$i} = $random_chars; # save these values for later testing
   unless $sth.execute($i, $random_chars) { $all_ok = Bool::False; }
 }
@@ -423,8 +423,8 @@ ok($sth= $dbh.prepare("INSERT INTO t1 values (?, ?)"),"Preparing insert, this ti
 %testInsertVals = ();
 $all_ok = Bool::True;
 loop ($i = 0 ; $i < 10; $i++) {
-  my @chars = grep { /<-[0O1Iil]> / }, 0..9, 'A'..'Z', 'a'..'z';
-  my $random_chars= join '', map { @chars[@chars.elems.rand] }, 0 .. 16;
+  my @chars = grep /<-[0O1Iil]> /, flat 0..9, 'A'..'Z', 'a'..'z';
+  my $random_chars= @chars.roll(16).join('');
   %testInsertVals{$i}= $random_chars; # save these values for later testing
   unless $sth.execute($i, $random_chars) { $all_ok = Bool::False; }
 }
@@ -1463,10 +1463,10 @@ EVAL {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
 if ($@) {
     plan skip_all => "ERROR: $DBI::errstr. Can't continue test";
 }
-plan tests => 25; 
+plan tests => 25;
 
-my @chars = grep !/[0O1Iil]/, 0..9, 'A'..'Z', 'a'..'z';
-my $blob1= join '', map { $chars[rand @chars] } 0 .. 10000;
+my @chars = grep {!m/[0O1Iil]/}, flat 0..9, 'A'..'Z', 'a'..'z';
+my $blob1= @chars.roll(10000).join;
 my $blob2 = '"' x 10000;
 
 sub ShowBlob($) {
