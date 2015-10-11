@@ -1,4 +1,4 @@
-services: sqlite3   # TODO: more databases
+services: sqlite3
 language: perl6
 perl6:
     - latest
