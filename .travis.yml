@@ -3,3 +3,13 @@ language: perl6
 perl6:
     - latest
 
+before_install:
+    # mysql
+    - mysql -e "CREATE DATABASE zavolaj;" -uroot
+    - mysql -e "CREATE USER 'testuser'@'localhost' IDENTIFIED BY 'testpass';" -uroot
+    - mysql -e "GRANT ALL PRIVILEGES ON zavolaj.* TO 'testuser'@'localhost';" -uroot
+    # Pg
+    - psql -c 'create database travis_ci_test;' -U postgres
+    - export PGDATABASE=travis_ci_test
+    - export PGUSER=postgres
+
