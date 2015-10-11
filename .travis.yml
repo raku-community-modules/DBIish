@@ -2,3 +2,5 @@ language: perl6
 perl6:
     - latest
 
+before_install:
+    - mysql -e "create database IF NOT EXISTS test;" -uroot
