@@ -3,8 +3,6 @@
 use NativeCall;
 use DBDish;     # roles for drivers
 
-#module DBDish:auth<mberends>:ver<0.0.1>;
-
 #------------ mysql library functions in alphabetical order ------------
 
 sub mysql_affected_rows( OpaquePointer $mysql_client )
@@ -105,7 +103,6 @@ class DBDish::mysql::StatementHandle does DBDish::StatementHandle {
     submethod BUILD(:$!mysql_client, :$!statement) { }
     
     method execute(*@params is copy) {
-        # warn "in DBDish::mysql::StatementHandle.execute()";
         my $statement = '';
         my @chunks = $!statement.split('?', @params + 1);
         my $last-chunk = @chunks.pop;
@@ -125,7 +122,7 @@ class DBDish::mysql::StatementHandle does DBDish::StatementHandle {
             }
         }
         $statement ~= $last-chunk;
-        # note "in DBDish::mysql::StatementHandle.execute statement=$statement";
+
         $!result_set = Mu;
         my $status = mysql_query( $!mysql_client, $statement ); # 0 means OK
         $.mysql_warning_count = mysql_warning_count( $!mysql_client );
@@ -145,6 +142,7 @@ class DBDish::mysql::StatementHandle does DBDish::StatementHandle {
             =>  [q[\'], q[\"], q[\\\\], '\0',   '\r', '\n']
         );
     }
+
     method quote(Str $x) {
         q['] ~ self.escape($x) ~ q['];
     }
@@ -174,7 +172,6 @@ class DBDish::mysql::StatementHandle does DBDish::StatementHandle {
         }
 
         if defined $!result_set {
-            # warn "fetching a row";
             self!reset_errstr();
 
             my $native_row = mysql_fetch_row($!result_set); # can return NULL
@@ -191,6 +188,7 @@ class DBDish::mysql::StatementHandle does DBDish::StatementHandle {
         }
         return @row_array;
     }
+
     method column_names {
         unless @!column_names {
             unless defined $!result_set {
@@ -226,7 +224,6 @@ class DBDish::mysql::Connection does DBDish::Connection {
     has $!mysql_client;
     submethod BUILD(:$!mysql_client) { }
     method prepare( Str $statement ) {
-        # warn "in DBDish::mysql::Connection.prepare()";
         my $statement_handle = DBDish::mysql::StatementHandle.new(
             mysql_client => $!mysql_client,
             statement    => $statement,
@@ -259,7 +256,6 @@ class DBDish::mysql:auth<mberends>:ver<0.0.1> {
 
 #------------------ methods to be called from DBIish ------------------
     method connect(Str :$user, Str :$password, :$RaiseError, *%params ) {
-        # warn "in DBDish::mysql.connect('$user',*,'$params')";
         my ( $mysql_client, $mysql_error );
         unless defined $mysql_client {
             $mysql_client = mysql_init( OpaquePointer );
@@ -286,8 +282,6 @@ class DBDish::mysql:auth<mberends>:ver<0.0.1> {
         return $connection;
     }
 }
-
-# warn "module DBDish::mysql.pm has loaded";
 
 =begin pod
 
