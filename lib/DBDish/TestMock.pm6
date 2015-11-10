@@ -3,7 +3,6 @@ use v6;
 use DBDish;
 
 need DBDish::TestMock::Connection;
-need DBDish::TestMock::StatementHandle;
 
 unit class DBDish::TestMock;
 

@@ -86,158 +86,28 @@ sub sqlite3_finalize(OpaquePointer) returns Int is native('libsqlite3') { ... }
 sub sqlite3_column_count(OpaquePointer) returns Int is native('libsqlite3') { ... }
 sub sqlite3_column_name(OpaquePointer, Int) returns Str is native('libsqlite3') { ... }
 
+unit class DBDish::SQLite:auth<mberends>:ver<0.0.1>;
 
-class DBDish::SQLite::StatementHandle does DBDish::Role::StatementHandle {
-    has $!conn;
-    has $.statement;
-    has $!statement_handle;
-    has $.dbh;
-    has Int $!row_status;
-    has @!mem_rows;
-    has @!column_names;
+has $.Version = 0.01;
+has $.errstr;
+method !errstr() is rw { $!errstr }
+method connect(:$RaiseError, *%params) {
+    my $dbname = %params<dbname> // %params<database>;
+    die 'No "dbname" or "database" given' unless defined $dbname;
 
-    method !handle-error($status) {
-        return if $status == SQLITE_OK;
-        self!set_errstr(join ' ', SQLITE($status), sqlite3_errmsg($!conn));
-    }
-
-    submethod BUILD(:$!conn, :$!statement, :$!statement_handle, :$!dbh) { }
-
-    method execute(*@params) {
-        sqlite3_reset($!statement_handle) if $!statement_handle.defined;
-        @!mem_rows = ();
-        my @strings;
-        for @params.kv -> $idx, $v {
-            if $v ~~ Str {
-                explicitly-manage($v);
-                @!mem_rows.push: $v;
-            }
-            self!handle-error(sqlite3_bind($!statement_handle, $idx + 1, $v));
-            push @strings, $v;
-        }
-        $!row_status = sqlite3_step($!statement_handle);
-        if $!row_status != SQLITE_ROW and $!row_status != SQLITE_DONE {
-            self!handle-error($!row_status);
-        }
-        self.rows;
-    }
-
-    method rows() {
-        die 'Cannot determine rows of closed connection' unless $!conn.DEFINITE;
-        my $rows = sqlite3_changes($!conn);
-        $rows == 0 ?? '0E0' !! $rows;
-    }
-
-    method column_names {
-        unless @!column_names {
-                my Int $count = sqlite3_column_count($!statement_handle);
-                @!column_names.push: sqlite3_column_name($!statement_handle, $_)
-                    for ^$count;
-        }
-        @!column_names;
-    }
-
-    method fetchrow {
-        my @row;
-        die 'fetchrow_array without prior execute' unless $!row_status.defined;
-        return @row if $!row_status == SQLITE_DONE;
-        my Int $count = sqlite3_column_count($!statement_handle);
-        for ^$count {
-            @row.push: sqlite3_column_text($!statement_handle, $_);
-        }
-        $!row_status = sqlite3_step($!statement_handle);
-
-        @row || Nil;
-    }
-
-    method finish() {
-        sqlite3_finalize($!statement_handle) if $!statement_handle.defined;
-        $!row_status = Int;;
-        $!dbh._remove_sth(self);
-        True;
-    }
-}
-
-class DBDish::SQLite::Connection does DBDish::Role::Connection {
-    has $!conn;
-    has @!sths;
-    method BUILD(:$!conn) { }
-    method !handle-error($status) {
-        return if $status == SQLITE_OK;
-        self!set_errstr(join ' ', SQLITE($status), sqlite3_errmsg($!conn));
-    }
-    method prepare(Str $statement, $attr?) {
-        my @stmt := CArray[OpaquePointer].new;
-        @stmt[0]  = OpaquePointer;
-        my $status = sqlite3_prepare_v2(
-                $!conn,
-                $statement,
-                -1,
-                @stmt,
-                CArray[OpaquePointer]
+    my @conn := CArray[OpaquePointer].new;
+    @conn[0]  = OpaquePointer;
+    my $status = sqlite3_open($dbname, @conn);
+    if $status == SQLITE_OK {
+        return DBDish::SQLite::Connection.bless(
+                :conn(@conn[0]),
+                :$RaiseError,
         );
-        my $statement_handle = @stmt[0];
-        self!handle-error($status);
-        return Nil unless $status == SQLITE_OK;
-        my $sth = DBDish::SQLite::StatementHandle.bless(
-            :$!conn,
-            :$statement,
-            :$statement_handle,
-            :$.RaiseError,
-            :dbh(self),
-        );
-        @!sths.push: $sth;
-        $sth;
     }
-
-    method _remove_sth($sth) {
-        @!sths.=grep(* !=== $sth);
-    }
-
-    method rows() {
-        die 'Cannot determine rows of closed connection' unless $!conn.DEFINITE;
-        my $rows = sqlite3_changes($!conn);
-        $rows == 0 ?? '0E0' !! $rows;
-    }
-
-    method do(Str $sql, *@args) {
-        my $sth = self.prepare($sql);
-        $sth.execute(@args);
-        my $res = $sth.rows || '0e0';
-        $sth.finish;
-        return $sth;
-    }
-    method disconnect() {
-        .finish for @!sths;
-        self!handle-error(sqlite3_close($!conn));
-        return not self.errstr;
+    else {
+        $!errstr = SQLITE($status);
+        die $!errstr if $RaiseError;
     }
 }
-
-class DBDish::SQLite:auth<mberends>:ver<0.0.1> {
-    has $.Version = 0.01;
-    has $.errstr;
-    method !errstr() is rw { $!errstr }
-    method connect(:$RaiseError, *%params) {
-        my $dbname = %params<dbname> // %params<database>;
-        die 'No "dbname" or "database" given' unless defined $dbname;
-
-        my @conn := CArray[OpaquePointer].new;
-        @conn[0]  = OpaquePointer;
-        my $status = sqlite3_open($dbname, @conn);
-        if $status == SQLITE_OK {
-            return DBDish::SQLite::Connection.bless(
-                    :conn(@conn[0]),
-                    :$RaiseError,
-            );
-        }
-        else {
-            $!errstr = SQLITE($status);
-            die $!errstr if $RaiseError;
-        }
-    }
-}
-
-
 
 # vim: ft=perl6
