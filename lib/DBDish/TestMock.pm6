@@ -9,7 +9,7 @@ my @data = (
 
 my @column_names = <col1 col2 col3>;
 
-class DBDish::TestMock::StatementHandle does DBDish::StatementHandle {
+class DBDish::TestMock::StatementHandle does DBDish::Role::StatementHandle {
     has Int $!current_idx = 0;
 
     method execute(*@)  { $!current_idx = 0; @data.elems }
@@ -21,7 +21,7 @@ class DBDish::TestMock::StatementHandle does DBDish::StatementHandle {
     method finish       { True }
 }
 
-class DBDish::TestMock::Connection does DBDish::Connection {
+class DBDish::TestMock::Connection does DBDish::Role::Connection {
     method prepare($) { DBDish::TestMock::StatementHandle.new }
     method disconnect { True }
 }

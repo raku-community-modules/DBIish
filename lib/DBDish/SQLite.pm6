@@ -87,7 +87,7 @@ sub sqlite3_column_count(OpaquePointer) returns Int is native('libsqlite3') { ..
 sub sqlite3_column_name(OpaquePointer, Int) returns Str is native('libsqlite3') { ... }
 
 
-class DBDish::SQLite::StatementHandle does DBDish::StatementHandle {
+class DBDish::SQLite::StatementHandle does DBDish::Role::StatementHandle {
     has $!conn;
     has $.statement;
     has $!statement_handle;
@@ -158,7 +158,7 @@ class DBDish::SQLite::StatementHandle does DBDish::StatementHandle {
     }
 }
 
-class DBDish::SQLite::Connection does DBDish::Connection {
+class DBDish::SQLite::Connection does DBDish::Role::Connection {
     has $!conn;
     has @!sths;
     method BUILD(:$!conn) { }

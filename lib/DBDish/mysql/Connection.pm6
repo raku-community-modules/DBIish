@@ -1,7 +1,7 @@
 
 use v6;
 
-unit class DBDish::mysql::Connection does DBDish::Connection;
+unit class DBDish::mysql::Connection does DBDish::Role::Connection;
 
 has $!mysql_client;
 

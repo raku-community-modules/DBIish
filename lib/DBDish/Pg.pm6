@@ -197,7 +197,7 @@ my class PgTokenizer::Actions {
 }
 
 
-class DBDish::Pg::StatementHandle does DBDish::StatementHandle {
+class DBDish::Pg::StatementHandle does DBDish::Role::StatementHandle {
     has $!pg_conn;
     has Str $!statement_name;
     has $!statement;
@@ -347,7 +347,7 @@ class DBDish::Pg::StatementHandle does DBDish::StatementHandle {
     }
 }
 
-class DBDish::Pg::Connection does DBDish::Connection {
+class DBDish::Pg::Connection does DBDish::Role::Connection {
     has $!pg_conn;
     has $.AutoCommit is rw = 1;
     has $.in_transaction is rw;
