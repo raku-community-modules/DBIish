@@ -1,18 +1,20 @@
 #!/usr/bin/env perl6
 
 use v6;
-
-use lib 'lib';
 use DBIish;
+use NativeCall;
 
-BEGIN {
-	# Windows support
-	if $*DISTRO.is-win {
-		# libpq.dll on windows depends on libeay32.dll which in this path
-		my constant PG-HOME   = 'C:\Program Files\PostgreSQL\9.3';
-		%*ENV<Path>          ~= (PG-HOME).fmt( ';%s\bin' );
-		%*ENV<DBIISH_PG_LIB>  = (PG-HOME).fmt( '%s\lib\libpq.dll' );
-	}
+# Windows support
+if $*DISTRO.is-win {
+	# libpq.dll on windows depends on libeay32.dll which in this path
+	my constant PG-HOME   = 'C:\Program Files\PostgreSQL\9.3';
+	my $path              = sprintf( 'Path=%s;%s\bin', %*ENV<Path>, PG-HOME );
+	%*ENV<DBIISH_PG_LIB>  = (PG-HOME).fmt( '%s\lib\libpq.dll' );
+
+	# Since %*ENV<Path> = ... does not actually own process environment
+	# Weird magic but needed atm :)
+	sub _putenv(Str) is native('msvcrt') { ... }
+	_putenv( $path);
 }
 
 my $dbh = DBIish.connect("Pg", :database<postgres>, :user<postgres>, :password<sa>, :RaiseError);
