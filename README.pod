@@ -10,7 +10,7 @@ DBIish - a simple database interface for Rakudo Perl 6
     my $dbh = DBIish.connect("SQLite", :database<example-db.sqlite3>, :RaiseError);
 
     my $sth = $dbh.do(q:to/STATEMENT/);
-        DROP TABLE nom
+        DROP TABLE IF EXISTS nom
         STATEMENT
 
     $sth = $dbh.do(q:to/STATEMENT/);
