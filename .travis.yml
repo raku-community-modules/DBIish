@@ -1,5 +1,9 @@
-services: sqlite3
+services:
+    - postgresql
+    - mysql
+
 language: perl6
+
 perl6:
     - latest
 
