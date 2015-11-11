@@ -3,7 +3,7 @@
 use NativeCall;
 use DBDish;     # roles for drivers
 
-my constant lib = 'libpq';
+my constant lib = %*ENV<DBIISH_PG_LIB> || 'libpq';
 
 #module DBDish:auth<mberends>:ver<0.0.1>;
 
