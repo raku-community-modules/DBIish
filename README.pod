@@ -61,8 +61,9 @@ a subset of the functionality).
 It is based on Martin Berends' MiniDBI project, but unlike MiniDBI, DBDish
 aims to provide an interface that takes advantage of Perl 6 idioms
 
-Unlike perl5 DBI, it provide a fetchrow_typedhash method on DBD::StatementHandle
-that returns a hash with Perl6 typed value (work only with Pg for now)
+Unlike Perl 5's DBI, it provides a `fetchrow_typedhash` method on
+DBD::StatementHandle that returns a hash with Perl6 typed value (works
+only with Pg for now).
 
 =head1 INSTALLATION
 
