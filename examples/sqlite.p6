@@ -1,4 +1,4 @@
-#!/usr/bin/perl6 env
+#!/usr/bin/env perl6
 
 use v6;
 
