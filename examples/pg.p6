@@ -6,10 +6,10 @@ use lib 'lib';
 use DBIish;
 
 # Windows support
-%*ENV<DBIISH_PG_LIB> = "C:/Program Files/PostgreSQL/9.4/lib/libpq.dll"
+%*ENV<DBIISH_PG_LIB> = 'C:\Program Files\PostgreSQL\9.4\lib\libpq.dll'
 	if $*DISTRO.is-win;
 
-my $dbh = DBIish.connect("pg", :database<postgres>, :user<postgres>, :password<sa>, :RaiseError);
+my $dbh = DBIish.connect("Pg", :database<postgres>, :user<postgres>, :password<sa>, :RaiseError);
 
 my $sth = $dbh.do(q:to/STATEMENT/);
 	DROP TABLE IF EXISTS nom
