@@ -19,6 +19,8 @@ method fetchrow-hash() {
     hash self.column_names Z=> self.fetchrow;
 }
 
+method fetchrow_typedhash { die "Your selected backend does not support/implement typed values" }
+
 method fetchrow_hashref { $.fetchrow-hash }
 
 method fetchall-hash {
