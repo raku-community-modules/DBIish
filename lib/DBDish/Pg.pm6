@@ -3,7 +3,7 @@
 use NativeCall;
 use DBDish;     # roles for drivers
 
-my constant lib = 'libpq';
+constant LIB = %*ENV<DBIISH_PG_LIB> || 'libpq';
 
 #module DBDish:auth<mberends>:ver<0.0.1>;
 
@@ -11,12 +11,12 @@ my constant lib = 'libpq';
 
 sub PQexec (OpaquePointer $conn, str $statement)
     returns OpaquePointer
-    is native(lib)
+    is native(LIB)
     { ... }
 
 sub PQprepare (OpaquePointer $conn, str $statement_name, str $query, int32 $n_params, OpaquePointer $paramTypes)
     returns OpaquePointer
-    is native(lib)
+    is native(LIB)
     { ... }
 
 sub PQexecPrepared(
@@ -29,85 +29,85 @@ sub PQexecPrepared(
         int32 $resultFormat
     )
     returns OpaquePointer
-    is native(lib)
+    is native(LIB)
     { ... }
 
 sub PQnparams (OpaquePointer)
     returns int32
-    is native(lib)
+    is native(LIB)
     { ... }
 
 sub PQdescribePrepared (OpaquePointer, str)
     returns OpaquePointer
-    is native(lib)
+    is native(LIB)
     { ... }
 
 
 sub PQresultStatus (OpaquePointer $result)
     returns int32
-    is native(lib)
+    is native(LIB)
     { ... }
 
 sub PQerrorMessage (OpaquePointer $conn)
     returns str
-    is native(lib)
+    is native(LIB)
     { ... }
 
 sub PQresultErrorMessage (OpaquePointer $result)
     returns str
-    is native(lib)
+    is native(LIB)
     { ... }
 
 sub PQconnectdb (str $conninfo)
     returns OpaquePointer
-    is native(lib)
+    is native(LIB)
     { ... }
 
 sub PQstatus (OpaquePointer $conn)
     returns int32
-    is native(lib)
+    is native(LIB)
     { ... }
 
 sub PQnfields (OpaquePointer $result)
     returns int32
-    is native(lib)
+    is native(LIB)
     { ... }
 
 sub PQntuples (OpaquePointer $result)
     returns int32
-    is native(lib)
+    is native(LIB)
     { ... }
 
 sub PQcmdTuples (OpaquePointer $result)
     returns str
-    is native(lib)
+    is native(LIB)
     { ... }
 
 sub PQgetvalue (OpaquePointer $result, int32 $row, int32 $col)
     returns Str
-    is native(lib)
+    is native(LIB)
     { ... }
 
 sub PQgetisnull (OpaquePointer $result, int32 $row, int32 $col)
     returns int32
-    is native(lib)
+    is native(LIB)
     { ... }
 
 sub PQfname (OpaquePointer $result, int32 $col)
     returns str
-    is native(lib)
+    is native(LIB)
     { ... }
 
 sub PQclear (OpaquePointer $result)
-    is native(lib)
+    is native(LIB)
     { ... }
 
 sub PQfinish(OpaquePointer) 
-    is native(lib)
+    is native(LIB)
     { ... }
 
 sub PQftype(OpaquePointer, int32)
-    is native(lib)
+    is native(LIB)
     returns int32
     { ... }
 
@@ -198,7 +198,7 @@ my class PgTokenizer::Actions {
 }
 
 
-class DBDish::Pg::StatementHandle does DBDish::StatementHandle {
+class DBDish::Pg::StatementHandle does DBDish::Role::StatementHandle {
     has $!pg_conn;
     has Str $!statement_name;
     has $!statement;
@@ -368,7 +368,7 @@ class DBDish::Pg::StatementHandle does DBDish::StatementHandle {
     }
 }
 
-class DBDish::Pg::Connection does DBDish::Connection {
+class DBDish::Pg::Connection does DBDish::Role::Connection {
     has $!pg_conn;
     has $.AutoCommit is rw = 1;
     has $.in_transaction is rw;
