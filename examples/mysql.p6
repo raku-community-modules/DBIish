@@ -10,7 +10,7 @@ use DBIish;
 %*ENV<DBIISH_MYSQL_LIB> = "C:/Program Files/MySQL/MySQL Server 5.6/lib/libmysql.dll"
 	if $*DISTRO.is-win;
 
-my $dbh = DBIish.connect("mysql", :database<test>, :user<root>, :password<~simtix>, :RaiseError);
+my $dbh = DBIish.connect("mysql", :database<test>, :user<root>, :password<sa>, :RaiseError);
 
 my $sth = $dbh.do(q:to/STATEMENT/);
 	DROP TABLE IF EXISTS nom
