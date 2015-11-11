@@ -136,6 +136,7 @@ constant %oid-to-type-name = (
 
 ).hash;
 
+
 constant CONNECTION_OK     = 0;
 constant CONNECTION_BAD    = 1;
 
@@ -327,6 +328,26 @@ class DBDish::Pg::StatementHandle does DBDish::StatementHandle {
         return $results_ref;
     }
 
+    #Try to map pg type to perl type
+    method fetchrow_typedhash {
+        my Str @values = self.fetchrow_array;
+        return Any if !@values.defined;
+        my @names = self.column_names;
+        my @types = self.column_oids;
+        my %hash;
+        my %p = 'f' => False, 't' => True;
+        for 0..(@values.elems-1) -> $i {
+            given (%oid-to-type-name{@types[$i]}) {
+                %hash{@names[$i]} = @values[$i] when 'Str';
+                %hash{@names[$i]} = @values[$i].Num when 'Num';
+                %hash{@names[$i]} = @values[$i].Int when 'Int';
+                %hash{@names[$i]} = %p{@values[$i]} when 'Bool';
+                %hash{@names[$i]} = @values[$i].Real when 'Real';
+            }
+        }
+        return %hash;
+    }
+    
     method finish() {
         if defined($!result) {
             PQclear($!result);

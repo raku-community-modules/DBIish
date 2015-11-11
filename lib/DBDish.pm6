@@ -59,6 +59,7 @@ role DBDish::StatementHandle does DBDish::ErrorHandling {
     }
 
     method fetchrow_hashref { $.fetchrow-hash }
+    method fetchrow_typedhash { die "Your selected backend does not support/implement typed values" }
 
     method fetchall-hash {
         my @names := self.column_names;
