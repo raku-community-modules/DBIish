@@ -114,6 +114,12 @@ method _row(:$hash) {
                 when 'Real' {
                   $value = $res.Real
                 }
+                when 'Array<Int>' {
+                  $value = $ret;
+                }
+                when 'Array<Str>' {
+                  $value = $ret;
+                }
                 default {
                   $value = $res;
                 }

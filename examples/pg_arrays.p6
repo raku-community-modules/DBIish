@@ -42,7 +42,7 @@ $sth = $dbh.do(q:to/STATEMENT/);
     VALUES (
       'Bill',
       '{10000, 10000, 10000, 10000}',
-      '{{"meeting", "lunch"}, {"training", "presentation"}}'
+      '{{"meeting", "lunch"}, {"training day", "presentation"}}'
     );
 STATEMENT
 
@@ -62,9 +62,14 @@ STATEMENT
 
 $sth.execute;
 
-my $arrayref = $sth.fetchall_arrayref();
-say $arrayref.elems;
-say $arrayref.perl;
+my %h = $sth.fetchrow_typedhash;
+say %h;
+
+#my $arrayref = $sth.fetchall_arrayref();
+#say $arrayref.elems;
+#say $arrayref.perl;
+
+
 
 # Cleanup
 $sth.finish;
