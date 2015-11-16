@@ -1,17 +1,19 @@
 #!/usr/bin/env perl6
 
-#use Grammar::Tracer;
+use Grammar::Tracer;
 #use Grammar::Debugger;
 
 my grammar ArrayListGrammar {
-  token TOP         { ^ <array> $ }
+  rule TOP         { ^ <array> $ }
   rule array        { '{' (<element> ','?)+ '}' }
   rule element      { <array> | <number> | <string> }
   rule number       { (\d+) }
-  rule string       { '"' $<value>=(\w+) '"' | $<value>=(\w+) }
+  rule string       { '"' $<value>=( [\w|\s]+ ) '"' | $<value>=( \w+ ) }
 };
 
-my $t = ArrayListGrammar.parse( '{1,"2",{1,2}}' );
+my $text = q~{meeting,lunch},{"training day",presentation}}~;
+#my $t = ArrayListGrammar.parse( '{1,"2",{1,2}}' );
+my $t = ArrayListGrammar.parse( $text );
 die "Failed to parse" unless $t.defined;
 
 

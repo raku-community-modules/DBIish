@@ -114,11 +114,8 @@ method _row(:$hash) {
                 when 'Real' {
                   $value = $res.Real
                 }
-                when 'Array<Int>' {
-                  $value = $ret;
-                }
-                when 'Array<Str>' {
-                  $value = $ret;
+                when 'Array<Int>' | 'Array<Str>' {
+                  $value = _pg-to-array( @values[$i] );
                 }
                 default {
                   $value = $res;
@@ -198,6 +195,60 @@ method fetchall_hashref(Str $key) {
 method column_p6types {
    my @types = self.column_oids;
    return @types.map:{%oid-to-type-name{$_}};
+}
+
+my grammar PgArrayGrammar {
+    token TOP         { ^ <array> $ }
+    rule array        { '{' (<element> ','?)+ '}' }
+    rule element      { <array> | <number> | <string> }
+    rule number       { (\d+) }
+    rule string       { '"' $<value>=( [\w|\s]+ ) '"' | $<value>=( \w+ ) }
+};
+
+sub _to-array(Match $match) {
+    my @array;
+    for $match.<array>.values -> $element {
+        if $element.values[0]<array>.defined {
+            # An array
+            push @array, _to-array( $element.values[0] );
+        } elsif $element.values[0]<number>.defined {
+            # Number
+            push @array, +$element.values[0]<number>;
+        } else {
+            # Must be a String
+            push @array, ~$element.values[0]<string><value>;
+        }
+    }
+    return @array;
+}
+
+sub _pg-to-array(Str $text) {
+    my $match = PgArrayGrammar.parse( $text );
+    die "Failed to parse" unless $match.defined;
+    return _to-array($match);
+}
+
+#Try to map pg type to perl type
+method fetchrow_typedhash {
+    my Str @values = self.fetchrow_array;
+    return Any if !@values.defined;
+    my @names = self.column_names;
+    my @types = self.column_oids;
+    my %hash;
+    my %p = 'f' => False, 't' => True;
+    for 0..(@values.elems-1) -> $i {
+        given (%oid-to-type-name{@types[$i]}) {
+            %hash{@names[$i]} = @values[$i] when 'Str';
+            %hash{@names[$i]} = _pg-to-array( @values[$i] ) when 'Array<Str>';
+            %hash{@names[$i]} = _pg-to-array( @values[$i] ) when 'Array<Int>';
+            %hash{@names[$i]} = @values[$i].Num when 'Num';
+            %hash{@names[$i]} = @values[$i].Int when 'Int';
+            %hash{@names[$i]} = %p{@values[$i]} when 'Bool';
+            %hash{@names[$i]} = @values[$i].Real when 'Real';
+        }
+    }
+    return %hash;
+>>>>>>> 87d311f... Implement postgresql arrays conversion to Perl 6 types
 }
 
 method true_false(Str $s) {
