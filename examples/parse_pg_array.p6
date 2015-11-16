@@ -4,44 +4,33 @@
 #use Grammar::Debugger;
 
 my grammar ArrayListGrammar {
-  token TOP  { ^ <array> $ }
-  rule array { '{' ($<value>=<element> ','?)+ '}' }
-  rule element { $<value>=[<array> | <number> | <string>] }
-  rule number { $<value>=(\d+) }
-  rule string { '"' $<value>=(\w+) '"' | $<value>=(\w+) }
+  token TOP         { ^ <array> $ }
+  rule array        { '{' (<element> ','?)+ '}' }
+  rule element      { <array> | <number> | <string> }
+  rule number       { (\d+) }
+  rule string       { '"' $<value>=(\w+) '"' | $<value>=(\w+) }
 };
 
-my class ArrayListActions {
+my $t = ArrayListGrammar.parse( '{1,"2",{1,2}}' );
+die "Failed to parse" unless $t.defined;
 
-  method TOP($/) {
-    #make $/;
-    make $/<value>;
+
+sub _to-list($t) {
+  my @array;
+  for $t.<array>.values -> $element {
+    if $element.values[0]<array>.defined {
+      # An array
+      push @array, _to-list( $element.values[0] );
+    } elsif $element.values[0]<number>.defined {
+      # Number
+      push @array, +$element.values[0]<number>;
+    } else {
+      # Must be a String
+      push @array, ~$element.values[0]<string><value>;
+    }
   }
 
-  #method element($/) {
-    #push @array, $<value>;
-  #}
-
-  method array($/) {
-    state @a;
-    say "Adding " ~ $<value>;
-    push @a, $<value>;
-    make @a;
-  }
-
-  method number($/) {
-    say "number: " ~ $<value>;
-    make +$<value>;
-  }
-
-  method string($/) {
-    say "string: " ~ $<value>;
-    make ~$<value>;
-  }
-
+  return @array;
 }
 
-my $t = ArrayListGrammar.parse( '{1,2,3}', :actions(ArrayListActions.new) );
-die "Failed to parse" unless $t.defined;
-say $t.ast.perl;
-
+say _to-list($t).perl;
