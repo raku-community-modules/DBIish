@@ -26,14 +26,15 @@ my $dbh = DBIish.connect(
 );
 
 my $sth = $dbh.do(q:to/STATEMENT/);
-	DROP TABLE IF EXISTS sal_emp;
+  DROP TABLE IF EXISTS sal_emp;
 STATEMENT
 
 $sth = $dbh.do(q:to/STATEMENT/);
   CREATE TABLE sal_emp (
-    name            text,
-    pay_by_quarter  integer[],
-    schedule        text[][]
+    name               text,
+    pay_by_quarter     integer[],
+    schedule           text[][],
+    salary_by_month    float[]
   );
 STATEMENT
 
@@ -42,7 +43,8 @@ $sth = $dbh.do(q:to/STATEMENT/);
     VALUES (
       'Bill',
       '{10000, 10000, 10000, 10000}',
-      '{{"meeting", "lunch"}, {"training day", "presentation"}}'
+      '{{"meeting", "lunch"}, {"training day", "presentation"}}',
+      '{511.123, 622.345,1}'
     );
 STATEMENT
 
@@ -56,7 +58,7 @@ STATEMENT
 # $sth.execute('BEOM', 'Medium size orange juice', 2, 1.20);
 
 $sth = $dbh.prepare(q:to/STATEMENT/);
-	SELECT name, pay_by_quarter, schedule
+	SELECT name, pay_by_quarter, schedule, salary_by_month
 	FROM sal_emp
 STATEMENT
 
@@ -68,8 +70,6 @@ say %h;
 #my $arrayref = $sth.fetchall_arrayref();
 #say $arrayref.elems;
 #say $arrayref.perl;
-
-
 
 # Cleanup
 $sth.finish;

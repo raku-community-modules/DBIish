@@ -142,19 +142,20 @@ constant %oid-to-type-name is export = (
        701  => 'Num',   # float8
       1000  => 'Bool',  # _bool
       1001  => 'Buf',   # _bytea
-      1005  => 'Int',   # _int2
-      1009  => 'Array<Str>',  # Array(_text)
-      1007  => 'Array<Int>',  # Array(_int2)
-      1015  => 'Str',   # _varchar
-      1021  => 'Num',   # _float4
-      1022  => 'Num',   # _float8
-      1043  => 'Str',   # varchar
+      1005  => 'Array<Int>',     # Array(int2)
+      1007  => 'Array<Int>',     # Array(int4)
+      1009  => 'Array<Str>',     # Array(text)
+      1015  => 'Str',            # _varchar
+      
+      1021  => 'Array<Num>',     # Array(float4)
+      1022  => 'Array<Num>',     # Array(float4)
+      1028  => 'Array<Int>',     # Array<oid>
+      1043  => 'Str',            # varchar
       1114  => 'Str',   # Timestamp
+      1263  => 'Array<Str>',     # Array<varchar>
       1700  => 'Real',  # numeric
       2950  => 'Str',   # uuid
       2951  => 'Str',   # _uuid
-
-
 ).hash;
 
 
