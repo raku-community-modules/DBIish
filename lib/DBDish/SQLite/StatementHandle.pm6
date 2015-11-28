@@ -15,7 +15,7 @@ has Int $!row_status;
 has @!mem_rows;
 has @!column_names;
 
-method !handle-error($status) {
+method !handle-error(Int $status) {
     return if $status == SQLITE_OK;
     self!set_errstr(join ' ', SQLITE($status), sqlite3_errmsg($!conn));
 }
