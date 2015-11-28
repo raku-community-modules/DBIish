@@ -72,7 +72,7 @@ sub sqlite3_prepare_v2 (
 sub sqlite3_prepare (
         OpaquePointer $handle,
         Str           $statement,
-        Int           $statement_length,
+        int32           $statement_length,
         CArray[OpaquePointer] $statement_handle,
         CArray[OpaquePointer] $pz_tail
     )
