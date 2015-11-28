@@ -13,7 +13,7 @@ has @!sths;
 
 method BUILD(:$!conn) { }
 
-method !handle-error($status) {
+method !handle-error(Int $status) {
     return if $status == SQLITE_OK;
     self!set_errstr(join ' ', SQLITE($status), sqlite3_errmsg($!conn));
 }
@@ -21,13 +21,23 @@ method !handle-error($status) {
 method prepare(Str $statement, $attr?) {
     my @stmt := CArray[OpaquePointer].new;
     @stmt[0]  = OpaquePointer;
-    my $status = sqlite3_prepare_v2(
+    my $status;
+    if sqlite3_libversion_number() >= 3003009 {
+        $status = sqlite3_prepare_v2(
             $!conn,
             $statement,
             -1,
             @stmt,
             CArray[OpaquePointer]
-    );
+        ); 
+    } else {
+        $status = sqlite3_prepare(
+            $!conn,
+            $statement,
+            -1,
+            @stmt,
+            CArray[OpaquePointer])
+    }
     my $statement_handle = @stmt[0];
     self!handle-error($status);
     return Nil unless $status == SQLITE_OK;

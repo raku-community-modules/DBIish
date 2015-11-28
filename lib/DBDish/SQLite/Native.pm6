@@ -45,13 +45,13 @@ sub sqlite3_errmsg(OpaquePointer $handle)
     { ... }
 
 sub sqlite3_open(Str $filename, CArray[OpaquePointer] $handle)
-    returns Int
+    returns int32
     is native(LIB)
     is export
     { ... }
 
 sub sqlite3_close(OpaquePointer)
-    returns Int
+    returns int32
     is native(LIB)
     is export
     { ... }
@@ -60,28 +60,42 @@ sub sqlite3_close(OpaquePointer)
 sub sqlite3_prepare_v2 (
         OpaquePointer $handle,
         Str           $statement,
-        Int           $statement_length,
+        int32           $statement_length,
         CArray[OpaquePointer] $statement_handle,
         CArray[OpaquePointer] $pz_tail
     )
-    returns Int
+    returns int32
     is native(LIB)
     is export
     { ... }
 
+sub sqlite3_prepare (
+        OpaquePointer $handle,
+        Str           $statement,
+        int32           $statement_length,
+        CArray[OpaquePointer] $statement_handle,
+        CArray[OpaquePointer] $pz_tail
+    )
+    returns int32
+    is native(LIB)
+    is export
+    { ... }
+    
 sub sqlite3_step(OpaquePointer $statement_handle)
-    returns Int
+    returns int32
     is native(LIB)
     is export
     { ... }
+  
 
-sub sqlite3_bind_blob(OpaquePointer $stmt, int, OpaquePointer, Int, OpaquePointer) returns Int is native(LIB) is export { ... };
-sub sqlite3_bind_double(OpaquePointer $stmt, Int, Num) returns Int is native(LIB) is export { ... };
-sub sqlite3_bind_int64(OpaquePointer $stmt, Int, Int) returns Int is native(LIB) is export { ... };
-sub sqlite3_bind_null(OpaquePointer $stmt, Int) returns Int is native(LIB) is export { ... };
-sub sqlite3_bind_text(OpaquePointer $stmt, Int, Str, Int, OpaquePointer) returns Int is native(LIB) is export { ... };
+sub sqlite3_libversion_number() returns int32 is native(LIB) is export { ... };
+sub sqlite3_bind_blob(OpaquePointer $stmt, int32, OpaquePointer, int32, OpaquePointer) returns int32 is native(LIB) is export { ... };
+sub sqlite3_bind_double(OpaquePointer $stmt, int32, num64) returns int32 is native(LIB) is export { ... };
+sub sqlite3_bind_int64(OpaquePointer $stmt, int32, int64) returns int32 is native(LIB) is export { ... };
+sub sqlite3_bind_null(OpaquePointer $stmt, int32) returns Int is native(LIB) is export { ... };
+sub sqlite3_bind_text(OpaquePointer $stmt, int32, Str, int32, OpaquePointer) returns int32 is native(LIB) is export { ... };
 
-sub sqlite3_changes(OpaquePointer $handle) returns Int is native(LIB) is export { ... };
+sub sqlite3_changes(OpaquePointer $handle) returns int32 is native(LIB) is export { ... };
 
 proto sub sqlite3_bind($, $, $) {*}
 multi sub sqlite3_bind($stmt, Int $n, Buf:D $b)  is export { sqlite3_bind_blob($stmt, $n, $b, $b.bytes, OpaquePointer) }
@@ -90,8 +104,13 @@ multi sub sqlite3_bind($stmt, Int $n, Int:D $i)  is export { sqlite3_bind_int64(
 multi sub sqlite3_bind($stmt, Int $n, Any:U)     is export { sqlite3_bind_null($stmt, $n) }
 multi sub sqlite3_bind($stmt, Int $n, Str:D $d)  is export { sqlite3_bind_text($stmt, $n, $d, -1,  OpaquePointer) }
 
-sub sqlite3_reset(OpaquePointer) returns Int is native(LIB) is export  { ... }
-sub sqlite3_column_text(OpaquePointer, Int) returns Str is native(LIB) is export  { ... }
-sub sqlite3_finalize(OpaquePointer) returns Int is native(LIB) is export { ... }
-sub sqlite3_column_count(OpaquePointer) returns Int is native(LIB) is export { ... }
-sub sqlite3_column_name(OpaquePointer, Int) returns Str is native(LIB) is export { ... }
+sub sqlite3_reset(OpaquePointer) returns int32 is native(LIB) is export  { ... }
+
+sub sqlite3_column_text(OpaquePointer, int32) returns Str is native(LIB) is export  { ... }
+sub sqlite3_column_double(OpaquePointer, int32) returns num64 is native(LIB) is export { ... }
+sub sqlite3_column_int64(OpaquePointer, int32) returns int64 is native(LIB) is export { ... }
+
+sub sqlite3_finalize(OpaquePointer) returns int32 is native(LIB) is export { ... }
+sub sqlite3_column_count(OpaquePointer) returns int32 is native(LIB) is export { ... }
+sub sqlite3_column_name(OpaquePointer, int32) returns Str is native(LIB) is export { ... }
+sub sqlite3_column_type(OpaquePointer, int32) returns int32 is native(LIB) is export { ... }
