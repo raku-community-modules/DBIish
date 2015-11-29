@@ -15,12 +15,19 @@ method finish() { ... }
 method fetchrow() { ... }
 method execute(*@) { ... }
 
+method	_row(:$hash) { ... }
+method	allrows(:$hash) { ... }
+
 method column_p6types { die "The selected backend does not support/implement typed value" }
 # Used by fetch* typedhash
 method true_false { return True }
 
-method fetchrow-hash() {
+method fetchrow-hash() is DEPRECATED("row(:hash)") {
     hash self.column_names Z=> self.fetchrow;
+}
+
+method row(:$hash) {
+  gather { while my $row = self._row(:hash($hash)) { take $row }};
 }
 
 method fetchall_typedhash {
@@ -58,9 +65,9 @@ method typed_value(Str $typename, Str $value) {
         }
 }
 
-method fetchrow_hashref { $.fetchrow-hash }
+method fetchrow_hashref is DEPRECATED("row(:hash)") { $.fetchrow-hash }
 
-method fetchall-hash {
+method fetchall-hash is DEPRECATED("row(:hash)") {
     my @names := self.column_names;
     my %res = @names Z=> [] xx *;
     for self.fetchall-array -> @a {
@@ -79,7 +86,7 @@ method fetchall-AoH {
     };
 }
 
-method fetchall-array {
+method fetchall-array is DEPRECATED("allrows(:hash)"){
     (0 xx *).flatmap: {
         my $r = self.fetchrow;
         last unless $r;
@@ -87,14 +94,14 @@ method fetchall-array {
     };
 }
 
-method fetchrow_array { self.fetchrow }
+method fetchrow_array is DEPRECATED("row()") { self.fetchrow }
 
-method fetchrow_arrayref {
+method fetchrow_arrayref is DEPRECATED("row()") {
     $.fetchrow;
 }
 
-method fetch() {
+method fetch() is DEPRECATED("row()") {
     $.fetchrow;
 }
 
-method fetchall_arrayref { [ self.fetchall-array.eager ] }
+method fetchall_arrayref is DEPRECATED("allrows()") { [ self.fetchall-array.eager ] }

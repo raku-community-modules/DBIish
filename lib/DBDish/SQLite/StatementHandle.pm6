@@ -14,6 +14,7 @@ has $.dbh;
 has Int $!row_status;
 has @!mem_rows;
 has @!column_names;
+has $!finished = False;
 
 method !handle-error(Int $status) {
     return if $status == SQLITE_OK;
@@ -23,7 +24,10 @@ method !handle-error(Int $status) {
 submethod BUILD(:$!conn, :$!statement, :$!statement_handle, :$!dbh) { }
 
 method execute(*@params) {
+    die "Finish was previously called on the StatementHandle" if $!finished;
+    say "Reset $!statement_handle";
     sqlite3_reset($!statement_handle) if $!statement_handle.defined;
+    say "Reset Done";
     @!mem_rows = ();
     my @strings;
     for @params.kv -> $idx, $v {
@@ -56,6 +60,38 @@ method column_names {
     @!column_names;
 }
 
+
+method _row (:$hash) {
+    my @row;
+    my %hash;
+    say "Piko";
+    die 'row without prior execute' unless $!row_status.defined;
+    return Any if $!row_status == SQLITE_DONE;
+    my Int $count = sqlite3_column_count($!statement_handle);
+    for ^$count  -> $col {
+        my $value;
+        say sqlite3_column_type($!statement_handle, $col);
+        given sqlite3_column_type($!statement_handle, $col) {
+            when SQLITE_INTEGER {
+                 $value = sqlite3_column_int64($!statement_handle, $col);
+            }
+            when SQLITE_FLOAT {
+                 $value = sqlite3_column_double($!statement_handle, $col);
+            }
+            default { 
+                $value = sqlite3_column_text($!statement_handle, $col);
+            }
+        }
+        $hash ?? (%hash{sqlite3_column_name($!statement_handle, $col)} = $value) !! @row.push: $value;
+    }
+    $!row_status = sqlite3_step($!statement_handle);
+
+    $hash ?? %hash !! @row;
+}
+
+method allrows {
+}
+
 method fetchrow {
     my @row;
     die 'fetchrow_array without prior execute' unless $!row_status.defined;
@@ -73,5 +109,6 @@ method finish {
     sqlite3_finalize($!statement_handle) if $!statement_handle.defined;
     $!row_status = Int;;
     $!dbh._remove_sth(self);
+    $!finished = True;
     True;
 }

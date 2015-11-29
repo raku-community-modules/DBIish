@@ -76,6 +76,48 @@ method rows() {
     }
 }
 
+method _row(:$hash) {
+    my @row_array;
+    my %ret_hash;
+    return Any if $!current_row >= $!row_count;
+
+    unless defined $!field_count {
+        $!field_count = PQnfields($!result);
+    }
+    my @names = self.column_names if $hash;
+    my @types = self.column_p6types;
+    if defined $!result {
+        self!reset_errstr;
+        my $afield = False;
+        for ^$!field_count {
+            FIRST {
+                $afield = True;
+            }
+            my $res := PQgetvalue($!result, $!current_row, $_);
+            if $res eq '' {
+                $res := Str if PQgetisnull($!result, $!current_row, $_)
+            }
+            my $value;
+            given (@types[$_]) {
+                $value = $res when 'Str';
+                $value = $res.Num when 'Num';
+                $value = $res.Int when 'Int';
+                $value = self.true_false($res) when 'Bool';
+                $value = $res.Real when 'Real';
+            }
+            $hash ?? (%ret_hash{@names[$_]} = $value) !! @row_array.push($value);
+        }
+        $!current_row++;
+        self!handle-errors;
+
+        if ! $afield { self.finish; }
+    }
+    $hash ?? return %ret_hash !! return @row_array;
+}
+
+method allrows(:$hash) {
+}
+
 method fetchrow() {
     my @row_array;
     return () if $!current_row >= $!row_count;

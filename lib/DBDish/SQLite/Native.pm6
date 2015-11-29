@@ -36,6 +36,15 @@ enum SQLITE is export (
     SQLITE_DONE      =>   101, #  sqlite3_step() has finished executing
 );
 
+
+enum SQLITE_TYPE is export (
+    SQLITE_INTEGER => 1,
+    SQLITE_FLOAT   => 2,
+    SQLITE_TEXT    => 3,
+    SQLITE_BLOB    => 4,
+    SQLITE_NULL    => 5
+);
+
 constant LIB = %*ENV<DBIISH_SQLITE_LIB> || 'libsqlite3';
 
 sub sqlite3_errmsg(OpaquePointer $handle)
@@ -92,7 +101,7 @@ sub sqlite3_libversion_number() returns int32 is native(LIB) is export { ... };
 sub sqlite3_bind_blob(OpaquePointer $stmt, int32, OpaquePointer, int32, OpaquePointer) returns int32 is native(LIB) is export { ... };
 sub sqlite3_bind_double(OpaquePointer $stmt, int32, num64) returns int32 is native(LIB) is export { ... };
 sub sqlite3_bind_int64(OpaquePointer $stmt, int32, int64) returns int32 is native(LIB) is export { ... };
-sub sqlite3_bind_null(OpaquePointer $stmt, int32) returns Int is native(LIB) is export { ... };
+sub sqlite3_bind_null(OpaquePointer $stmt, int32) returns int32 is native(LIB) is export { ... };
 sub sqlite3_bind_text(OpaquePointer $stmt, int32, Str, int32, OpaquePointer) returns int32 is native(LIB) is export { ... };
 
 sub sqlite3_changes(OpaquePointer $handle) returns int32 is native(LIB) is export { ... };

@@ -130,9 +130,26 @@ if $sth.^can('fetchall_arrayref') {
         $ok &&= magic_cmp($arrayref[$i], @ref[$i]);
     }
     ok $ok, "selected data matches what was written"; # test 18
-    $sth.finish;
+    #$sth.finish;
 }
 else { skip 'fetchall_arrayref not implemented', 2 }
+
+say "Reexecute";
+
+$sth.execute();
+
+say "fetch Row";
+my @results = $sth.row();
+say @results.perl;
+ok @results[1] ~~ Str, "Test the type of a Str fields";
+ok @results[2] ~~ Int, "Test the type of an Int fields";
+ok @results[3] ~~ Num, "Test the type of a Float fields";
+
+my %results = $sth.row(:hash);
+
+ok %results<name> ~~ Str, "HASH: Test the type of a Str fields";
+ok %results<quantity> ~~ Int, "HASH: Test the type of a Str fields";
+ok %results<price> ~~ Num, "HASH: Test the type of a Str fields";
 
 ok $sth = $dbh.prepare("SELECT * FROM nom WHERE name='TAFM';"),
 'prepare new select for fetchrow_hashref test'; #test 19
