@@ -44,8 +44,8 @@ DBIish - a simple database interface for Rakudo Perl 6
 
     $sth.execute();
 
-    my $arrayref = $sth.fetchall_arrayref();
-    say $arrayref.elems; # 3
+    my @rows = $sth.allrows();
+    say @rows.elems; # 3
 
     $sth.finish;
 
@@ -63,9 +63,25 @@ a subset of the functionality).
 It is based on Martin Berends' MiniDBI project, but unlike MiniDBI, DBDish
 aims to provide an interface that takes advantage of Perl 6 idioms
 
-Unlike Perl 5's DBI, it provides a C<fetchrow_typedhash> and C<fetchall_typedhash> 
-methods on DBD::StatementHandle that returns a hash with Perl6 typed value by oposition
-to everything in Str (implemented only in Pg for now).
+=head2 Fetching data
+
+It provide nearly all the perl5 DBI fetch* method to fetch values.
+However it's recommanded to use the C<row> and C<allrows> method
+
+=head3 row
+
+C<row> take the <hash> adverbe if you to have the values on a hash form instead of a plain array
+
+Example:
+    my %value = $sth.row(:hash);
+
+=head3 allrows
+
+C<allrows> offer you two adverbes if you want to fetch the values on a hash form.
+
+Example:
+    my @datas = $sth.allrows(:array-of-hash);
+    my %datas = $sth.allrows(:hash-of-array);
 
 =head1 INSTALLATION
 
