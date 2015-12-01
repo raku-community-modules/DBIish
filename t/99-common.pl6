@@ -5,7 +5,7 @@
 #use Test;     # "use" dies in a runtime EVAL
 #use DBIish;
 diag "Testing MiniDBD::$*mdriver";
-plan 48;
+plan 58;
 
 sub magic_cmp(@a, @b) {
     my $res =  @a[0] eq @b[0]
@@ -134,22 +134,52 @@ if $sth.^can('fetchall_arrayref') {
 }
 else { skip 'fetchall_arrayref not implemented', 2 }
 
-say "Reexecute";
-
 $sth.execute();
 
-say "fetch Row";
 my @results = $sth.row();
-say @results.perl;
-ok @results[1] ~~ Str, "Test the type of a Str fields";
-ok @results[2] ~~ Int, "Test the type of an Int fields";
-ok @results[3] ~~ Num, "Test the type of a Float fields";
+ok @results[1] ~~ Str, "Test the type of a Str field";
+ok @results[2] ~~ Int, "Test the type of an Int field";
+ok @results[3] ~~ Num, "Test the type of a Float field";
 
 my %results = $sth.row(:hash);
 
-ok %results<name> ~~ Str, "HASH: Test the type of a Str fields";
-ok %results<quantity> ~~ Int, "HASH: Test the type of a Str fields";
-ok %results<price> ~~ Num, "HASH: Test the type of a Str fields";
+ok %results<name> ~~ Str, "HASH: Test the type of a Str field";
+ok %results<quantity> ~~ Int, "HASH: Test the type of a Int field";
+ok %results<price> ~~ Num, "HASH: Test the type of a Float field";
+
+$sth.execute();
+
+@results = $sth.allrows();
+ok @results.elems == 3, "Test allrows, get 3 elems";
+my @ref =
+        [ 'BUBH', 'Hot beef burrito', 1, 4.95, 4.95 ],
+        [ 'TAFM', 'Mild fish taco', 1, 4.85, 4.85 ],
+        [ 'BEOM', 'Medium size orange juice', 2, 1.20, 2.40 ];
+my $ok = True;
+for ^3 -> $i {
+  $ok &&= magic_cmp(@ref[$i], @results[$i]);
+}
+ok $ok, "Selected data still matches";
+
+$sth.execute();
+%results = $sth.allrows(:hash-of-array);
+
+my %ref = (name => ['BUBH', 'TAFM', 'BEOM'], 
+           description => ['Hot beef burrito', 'Mild fish taco', 'Medium size orange juice'],
+           quantity => [1, 1, 2], 
+           price => [4.95e0, 4.85e0, 1.20e0],
+           amount => [4.95e0, 4.85e0, 2.40e0]);
+todo "Figure what is wrong with is-deeply";
+is-deeply %results, %ref, "Test allrows(:hash-of-array)";
+
+$sth.execute();
+@results = $sth.allrows(:array-of-hash);
+@ref = ([name => 'BUBH', description => 'Hot beef burrito', quantity => 1, price => 4.95e0, amount => 4.95e0],
+           [name => 'TAFM', description => 'Mild fish taco', quantity => 1, price => 4.85e0, amount => 4.85e0],
+           [name => 'BEOM', description => 'Medium size orange juice', quantity => 2, price => 1.20e0, amount => 2.40e0]
+           );
+todo "Figure what is wrong with is-deeply";
+is-deeply @results, @ref;
 
 ok $sth = $dbh.prepare("SELECT * FROM nom WHERE name='TAFM';"),
 'prepare new select for fetchrow_hashref test'; #test 19

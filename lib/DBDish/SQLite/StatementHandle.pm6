@@ -25,9 +25,7 @@ submethod BUILD(:$!conn, :$!statement, :$!statement_handle, :$!dbh) { }
 
 method execute(*@params) {
     die "Finish was previously called on the StatementHandle" if $!finished;
-    say "Reset $!statement_handle";
     sqlite3_reset($!statement_handle) if $!statement_handle.defined;
-    say "Reset Done";
     @!mem_rows = ();
     my @strings;
     for @params.kv -> $idx, $v {
@@ -64,13 +62,11 @@ method column_names {
 method _row (:$hash) {
     my @row;
     my %hash;
-    say "Piko";
     die 'row without prior execute' unless $!row_status.defined;
     return Any if $!row_status == SQLITE_DONE;
     my Int $count = sqlite3_column_count($!statement_handle);
     for ^$count  -> $col {
         my $value;
-        say sqlite3_column_type($!statement_handle, $col);
         given sqlite3_column_type($!statement_handle, $col) {
             when SQLITE_INTEGER {
                  $value = sqlite3_column_int64($!statement_handle, $col);
@@ -89,8 +85,6 @@ method _row (:$hash) {
     $hash ?? %hash !! @row;
 }
 
-method allrows {
-}
 
 method fetchrow {
     my @row;

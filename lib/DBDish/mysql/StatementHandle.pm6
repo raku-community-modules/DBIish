@@ -77,6 +77,13 @@ method rows() {
     } 
 }
 
+method _row(:$hash) {
+    if $hash {
+        return hash self.column_names Z=> self.fetchrow;
+    }
+    fetchrow();
+}
+
 method fetchrow() {
     my @row_array;
 

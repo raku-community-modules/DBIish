@@ -115,8 +115,6 @@ method _row(:$hash) {
     $hash ?? return %ret_hash !! return @row_array;
 }
 
-method allrows(:$hash) {
-}
 
 method fetchrow() {
     my @row_array;

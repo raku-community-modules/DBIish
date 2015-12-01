@@ -16,7 +16,6 @@ method fetchrow() { ... }
 method execute(*@) { ... }
 
 method	_row(:$hash) { ... }
-method	allrows(:$hash) { ... }
 
 method column_p6types { die "The selected backend does not support/implement typed value" }
 # Used by fetch* typedhash
@@ -27,10 +26,35 @@ method fetchrow-hash() is DEPRECATED("row(:hash)") {
 }
 
 method row(:$hash) {
-  gather { while my $row = self._row(:hash($hash)) { take $row }};
+     self._row(:hash($hash));
 }
 
-method fetchall_typedhash {
+method allrows(:$array-of-hash, :$hash-of-array) {
+    my @rows;
+    die "You can't use array-of-hash with hash-of-array" if $array-of-hash and $hash-of-array;
+    if $array-of-hash {
+        while self.row(:hash) -> %row {
+            @rows.push(%row);
+        }
+        return @rows;
+    }
+    if $hash-of-array {
+        my @names := self.column_names;
+        my %rows = @names Z=> [] xx *;
+        while self.row -> @a {
+            for @a Z @names -> ($v, $n) {
+                %rows{$n}.push: $v;
+            }
+        }
+        return %rows;
+    }
+    while self.row -> @r {
+         @rows.push(@r);
+    }
+    return @rows;
+}
+
+method fetchall_typedhash is DEPRECATED("allrows(:hash-of-array)"){
     my @names = self.column_names;
     my @types = self.column_p6types;
     my %res = @names Z=> [] xx *;
@@ -43,7 +67,7 @@ method fetchall_typedhash {
     return %res;
 }
 
-method fetchrow_typedhash {
+method fetchrow_typedhash is DEPRECATED("row(:hash)") {
     my Str @values = self.fetchrow_array;
     return Any if !@values.defined;
     my @names = self.column_names;
@@ -78,7 +102,7 @@ method fetchall-hash is DEPRECATED("row(:hash)") {
     return %res;
 }
 
-method fetchall-AoH {
+method fetchall-AoH is DEPRECATED("allrows(:array-of-hash)") {
     (0 xx *).flatmap: {
         my $h = self.fetchrow-hash;
         last unless $h;
@@ -86,7 +110,7 @@ method fetchall-AoH {
     };
 }
 
-method fetchall-array is DEPRECATED("allrows(:hash)"){
+method fetchall-array is DEPRECATED("allrows()"){
     (0 xx *).flatmap: {
         my $r = self.fetchrow;
         last unless $r;
