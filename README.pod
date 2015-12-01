@@ -73,6 +73,7 @@ However it's recommanded to use the C<row> and C<allrows> method
 C<row> take the <hash> adverbe if you to have the values on a hash form instead of a plain array
 
 Example:
+
     my %value = $sth.row(:hash);
 
 =head3 allrows
@@ -80,6 +81,7 @@ Example:
 C<allrows> offer you two adverbes if you want to fetch the values on a hash form.
 
 Example:
+
     my @datas = $sth.allrows(:array-of-hash);
     my %datas = $sth.allrows(:hash-of-array);
 
