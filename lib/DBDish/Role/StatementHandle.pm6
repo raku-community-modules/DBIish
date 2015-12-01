@@ -120,11 +120,11 @@ method fetchall-array {
 
 method fetchrow_array { self.fetchrow }
 
-method fetchrow_arrayref ("row()") {
+method fetchrow_arrayref {
     $.fetchrow;
 }
 
-method fetch() ("row()") {
+method fetch() {
     $.fetchrow;
 }
 
