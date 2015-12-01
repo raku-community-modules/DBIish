@@ -92,7 +92,7 @@ sub sqlite3_libversion_number() returns int32 is native(LIB) is export { ... };
 sub sqlite3_bind_blob(OpaquePointer $stmt, int32, OpaquePointer, int32, OpaquePointer) returns int32 is native(LIB) is export { ... };
 sub sqlite3_bind_double(OpaquePointer $stmt, int32, num64) returns int32 is native(LIB) is export { ... };
 sub sqlite3_bind_int64(OpaquePointer $stmt, int32, int64) returns int32 is native(LIB) is export { ... };
-sub sqlite3_bind_null(OpaquePointer $stmt, int32) returns Int is native(LIB) is export { ... };
+sub sqlite3_bind_null(OpaquePointer $stmt, int32) returns int32 is native(LIB) is export { ... };
 sub sqlite3_bind_text(OpaquePointer $stmt, int32, Str, int32, OpaquePointer) returns int32 is native(LIB) is export { ... };
 
 sub sqlite3_changes(OpaquePointer $handle) returns int32 is native(LIB) is export { ... };
