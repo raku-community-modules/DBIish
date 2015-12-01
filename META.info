@@ -21,7 +21,9 @@
         "DBDish::mysql::StatementHandle"    : "lib/mysql/SQLite/StatementHandle.pm6",
         "DBDish::Role::Connection"    : "lib/DBDish/Role/Connection.pm6",
         "DBDish::Role::ErrorHandling"    : "lib/DBDish/Role/ErrorHandling.pm6",
-        "DBDish::Role::StatementHandle"    : "lib/DBDish/Role/StatementHandle.pm6"
+        "DBDish::Role::StatementHandle"    : "lib/DBDish/Role/StatementHandle.pm6",
+        "DBDish::TestMock::StatementHandle"    : "lib/DBDish/TestMock/StatementHandle.pm6",
+        "DBDish::TestMock::Connection"    : "lib/DBDish/TestMock/Connection.pm6"
     },
     "source-url"    : "git://github.com/perl6/DBIish.git"
 }
