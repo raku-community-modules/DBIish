@@ -18,7 +18,7 @@
         "DBDish::SQLite::StatementHandle"    : "lib/DBDish/SQLite/StatementHandle.pm6",
         "DBDish::mysql::Connection"    : "lib/DBDish/mysql/Connection.pm6",
         "DBDish::mysql::Native"    : "lib/DBDish/mysql/Native.pm6",
-        "DBDish::mysql::StatementHandle"    : "lib/mysql/SQLite/StatementHandle.pm6",
+        "DBDish::mysql::StatementHandle"    : "lib/DBDish/mysql/StatementHandle.pm6",
         "DBDish::Role::Connection"    : "lib/DBDish/Role/Connection.pm6",
         "DBDish::Role::ErrorHandling"    : "lib/DBDish/Role/ErrorHandling.pm6",
         "DBDish::Role::StatementHandle"    : "lib/DBDish/Role/StatementHandle.pm6",
