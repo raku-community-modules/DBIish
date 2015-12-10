@@ -62,7 +62,7 @@ sub mysql_insert_id( OpaquePointer $mysql_client )
     { ... }
 
 sub mysql_num_rows( OpaquePointer $result_set )
-    returns Int
+    returns ulonglong
     is native(LIB)
     is export
     { ... }
@@ -74,7 +74,7 @@ sub mysql_query( OpaquePointer $mysql_client, str $sql_command )
     { ... }
 
 sub mysql_real_connect( OpaquePointer $mysql_client, Str $host, Str $user,
-    Str $password, Str $database, int32 $port, Str $socket, Int $flag )
+    Str $password, Str $database, int32 $port, Str $socket, ulong $flag )
     returns OpaquePointer
     is native(LIB)
     is export
@@ -98,7 +98,7 @@ sub mysql_stmt_init( OpaquePointer $mysql_client )
     is export
     { ... }
 
-sub mysql_stmt_prepare( OpaquePointer $mysql_stmt, Str, Int $length )
+sub mysql_stmt_prepare( OpaquePointer $mysql_stmt, Str, ulong $length )
     returns OpaquePointer
     is native(LIB)
     is export
