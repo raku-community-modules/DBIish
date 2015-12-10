@@ -78,10 +78,42 @@ method rows() {
 }
 
 method _row(:$hash) {
-    if $hash {
-        return hash self.column_names Z=> self.fetchrow;
+    my @row_array;
+    my %hash;
+
+    unless defined $!result_set {
+        $!result_set  = mysql_use_result( $!mysql_client);
+        $!field_count = mysql_field_count($!mysql_client);
     }
-    fetchrow();
+
+    if defined $!result_set {
+        self!reset_errstr();
+
+        my $native_row = mysql_fetch_row($!result_set); # can return NULL
+        my $errstr     = mysql_error( $!mysql_client );
+        
+        if $errstr ne '' { self!set_errstr($errstr); }
+        
+        if $native_row {
+            loop ( my $i=0; $i < $!field_count; $i++ ) {
+                my MYSQL_FIELD $field_info = mysql_fetch_field($!result_set).unref;
+                my $value = do given %mysql-type-conv{$field_info.type} {
+                   when 'Int' {
+                     $native_row[$i].Int;
+                   }
+                   when 'Num' {
+                     $native_row[$i].Num;
+                   }
+                   default {
+                     $native_row[$i];
+                   }
+                };
+                $hash ?? (%hash{$field_info.name} = $value) !! @row_array.push($value);
+            }
+        }
+        else { self.finish; }
+    }
+    return $hash ?? %hash !! @row_array;
 }
 
 method fetchrow() {
@@ -117,8 +149,8 @@ method column_names {
             $!field_count = mysql_field_count($!mysql_client);
         }
         loop ( my $i=0; $i < $!field_count; $i++ ) {
-            my $field_info  = mysql_fetch_field($!result_set);
-            my $column_name = $field_info[0];
+            my MYSQL_FIELD $field_info = mysql_fetch_field($!result_set).unref;
+            my $column_name = $field_info.name;
             @!column_names.push($column_name);    
         }
     }
