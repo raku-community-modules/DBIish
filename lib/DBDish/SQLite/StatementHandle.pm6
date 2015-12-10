@@ -1,9 +1,10 @@
 
 use v6;
 
+use NativeCall;
 need DBDish::Role::StatementHandle;
 use DBDish::SQLite::Native;
-use NativeCall;
+
 
 unit class DBDish::SQLite::StatementHandle does DBDish::Role::StatementHandle;
 
