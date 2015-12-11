@@ -33,7 +33,7 @@ use Test;
 plan 87;
 
 use DBIish;
-use DBIish::mysql;
+use DBDish::mysql;
 
 # The file 'lib.pl' customizes the testing environment per DBD, but all
 # this test script currently needs is the variables listed here.
