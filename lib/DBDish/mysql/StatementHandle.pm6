@@ -97,7 +97,7 @@ method _row(:$hash) {
         
         if $native_row {
             loop ( my $i=0; $i < $!field_count; $i++ ) {
-                my MYSQL_FIELD $field_info = mysql_fetch_field($!result_set).unref;
+                my MYSQL_FIELD $field_info = mysql_fetch_field($!result_set).deref;
                 my $value = do given %mysql-type-conv{$field_info.type} {
                    when 'Int' {
                      $native_row[$i].Int;
@@ -150,7 +150,7 @@ method column_names {
             $!field_count = mysql_field_count($!mysql_client);
         }
         loop ( my $i=0; $i < $!field_count; $i++ ) {
-            my MYSQL_FIELD $field_info = mysql_fetch_field($!result_set).unref;
+            my MYSQL_FIELD $field_info = mysql_fetch_field($!result_set).deref;
             my $column_name = $field_info.name;
             @!column_names.push($column_name);    
         }
