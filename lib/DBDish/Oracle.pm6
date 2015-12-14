@@ -150,7 +150,6 @@ sub OCIAttrGet_ub4 (
 sub OCIBindByName_Str (
         OCIStmt             $stmtp,
         CArray[OCIBind]     $bindpp,
-        #CArray              $bindpp,
         #OCIBind             $bindpp is rw,
         OCIError            $errhp,
         OraText             $placeholder is encoded('utf8'),
@@ -158,13 +157,15 @@ sub OCIBindByName_Str (
         Str                 $valuep is encoded('utf8'),
         sb4                 $value_sz,
         ub2                 $dty,
-        sb2                 $indp is rw,
+        #sb2                 $indp is rw,
+        Pointer[sb2]        $indp,
         Pointer[ub2]        $alenp,
-        # FIXME: because this doesn't work
         #ub2                 $alenp is rw,
         Pointer[ub2]        $rcodep,
+        #ub2                 $rcodep is rw,
         ub4                 $maxarr_len,
         Pointer[ub4]        $curelep,
+        #ub4                 $curelep is rw,
         ub4                 $mode,
     )
     returns sword
@@ -176,21 +177,23 @@ sub OCIBindByName_Str (
 sub OCIBindByName_Int (
         OCIStmt             $stmtp,
         CArray[OCIBind]     $bindpp,
-        #CArray              $bindpp,
         #OCIBind             $bindpp is rw,
         OCIError            $errhp,
         OraText             $placeholder is encoded('utf8'),
         sb4                 $placeh_len,
-        long                $valuep is rw,
+        #sword               $valuep is rw,
+        Pointer[sword]      $valuep,
         sb4                 $value_sz,
         ub2                 $dty,
-        sb2                 $indp is rw,
+        #sb2                 $indp is rw,
+        Pointer[sb2]        $indp,
         Pointer[ub2]        $alenp,
-        # FIXME: because this doesn't work
         #ub2                 $alenp is rw,
         Pointer[ub2]        $rcodep,
+        #ub2                 $rcodep is rw,
         ub4                 $maxarr_len,
         Pointer[ub4]        $curelep,
+        #ub4                 $curelep is rw,
         ub4                 $mode,
     )
     returns sword
@@ -202,21 +205,23 @@ sub OCIBindByName_Int (
 sub OCIBindByName_Real (
         OCIStmt             $stmtp,
         CArray[OCIBind]     $bindpp,
-        #CArray              $bindpp,
         #OCIBind             $bindpp is rw,
         OCIError            $errhp,
         OraText             $placeholder is encoded('utf8'),
         sb4                 $placeh_len,
-        num64               $valuep is rw,
+        num32               $valuep is rw,
+        #Pointer[num64]      $valuep,
         sb4                 $value_sz,
         ub2                 $dty,
-        sb2                 $indp is rw,
+        #sb2                 $indp is rw,
+        Pointer[sb2]        $indp,
         Pointer[ub2]        $alenp,
-        # FIXME: because this doesn't work
         #ub2                 $alenp is rw,
         Pointer[ub2]        $rcodep,
+        #ub2                 $rcodep is rw,
         ub4                 $maxarr_len,
         Pointer[ub4]        $curelep,
+        #ub4                 $curelep is rw,
         ub4                 $mode,
     )
     returns sword
@@ -467,36 +472,48 @@ class DBDish::Oracle::StatementHandle does DBDish::StatementHandle {
 #        $!current_row = 0;
 #        die "Wrong number of arguments to method execute: got @params.elems(), expected $!param_count" if @params != $!param_count;
 
+        my sb4 $value_sz;
+        my ub2 $dty;
+
+        my ub2 $alen = 0;
+        my $alenp = Pointer[ub2].new($alen);
+        my ub2 $rcode = 0;
+        my $rcodep = Pointer[ub2].new($rcode);
+        my ub4 $maxarr_len = 0;
+        my ub4 $curele = 0;
+        my $curelep = Pointer[ub4].new($curele);
+
+        my @in-binds;
+
         # bind placeholder values
         for @params.kv -> $k, $v {
-            my @bindpp := CArray[OCIBind].new;
-            @bindpp[0]  = OCIBind;
-            #my OCIBind $bindpp;
+            #my OCIBind $bindp;
+            #my $bindpp := Pointer[OCIBind].new($bindp);
+            my $bindpp = CArray[OCIBind].new;
+            $bindpp[0] = OCIBind;
+            #my OCIBind $bindpp .= new;
 
             my OraText $placeholder = ":p$k";
             my sb4 $placeh_len = $placeholder.encode('utf8').bytes;
 
-            my sb4 $value_sz;
-            my ub2 $dty;
             # -1 tells OCI to set the value to NULL
-            my sb2 $indp = $v.chars == 0
+            my sb2 $ind = $v.chars == 0
                 ?? -1
                 !! 0;
-            my Pointer[ub2] $alenp;
-            my Pointer[ub2] $rcodep;
-            my ub4 $maxarr_len  = 0;
-            my Pointer[ub4] $curelep;
+            my $indp = Pointer[sb2].new($ind);
+
             my $errcode;
             if $v ~~ Int {
                 $dty = SQLT_INT;
-                my long $valuep = $v;
+                my sword $value = $v;
+                my $valuep := Pointer[sword].new($value);
+                @in-binds.push($bindpp, $valuep, $indp);
                 # see multi sub defition for the C data type
-                $value_sz = nativesizeof(long);
-                #warn "binding '$placeholder' ($placeh_len): '$valuep' ($value_sz) as OCI type '$dty' Perl type '$v.^name()' NULL '$indp'\n";
-                #$method = &OCIBindByName_Int;
+                $value_sz = nativesizeof(sword);
+                warn "binding '$placeholder' ($placeh_len): '$value' ($value_sz) as OCI type '$dty' Perl type '$v.^name()' NULL '$ind'\n";
                 $errcode = OCIBindByName_Int(
                     $!stmthp,
-                    @bindpp,
+                    $bindpp,
                     $!errhp,
                     $placeholder,
                     $placeh_len,
@@ -513,14 +530,15 @@ class DBDish::Oracle::StatementHandle does DBDish::StatementHandle {
             }
             elsif $v ~~ Real {
                 $dty = SQLT_FLT;
-                my num64 $valuep = $v.Num;
+                my num32 $value = $v.Num;
+                my $valuep := Pointer[num64].new($value);
+                @in-binds.push($bindpp, $valuep, $indp);
                 # see multi sub defition for the C data type
-                $value_sz = nativesizeof(num64);
-                #warn "binding '$placeholder' ($placeh_len): '$valuep' ($value_sz) as OCI type '$dty' Perl type '$v.^name()' NULL '$indp'\n";
-                #$method = &OCIBindByName_Real;
+                $value_sz = nativesizeof(num32);
+                warn "binding '$placeholder' ($placeh_len): '$valuep' ($value_sz) as OCI type '$dty' Perl type '$v.^name()' NULL '$ind'\n";
                 $errcode = OCIBindByName_Real(
                     $!stmthp,
-                    @bindpp,
+                    $bindpp,
                     $!errhp,
                     $placeholder,
                     $placeh_len,
@@ -539,12 +557,12 @@ class DBDish::Oracle::StatementHandle does DBDish::StatementHandle {
                 $dty = SQLT_CHR;
                 my Str $valuep = $v;
                 explicitly-manage($valuep);
+                @in-binds.push($bindpp, $valuep, $indp);
                 $value_sz = $v.encode('utf8').bytes;
-                #warn "binding '$placeholder' ($placeh_len): '$valuep' ($value_sz) as OCI type '$dty' Perl type '$v.^name()' NULL '$indp'\n";
-                #$method = &OCIBindByName_Str;
+                warn "binding '$placeholder' ($placeh_len): '$valuep' ($value_sz) as OCI type '$dty' Perl type '$v.^name()' NULL '$ind'\n";
                 $errcode = OCIBindByName_Str(
                     $!stmthp,
-                    @bindpp,
+                    $bindpp,
                     $!errhp,
                     $placeholder,
                     $placeh_len,
@@ -1073,4 +1091,3 @@ The Oracle OCI Documentation, C Library.
 L<http://docs.oracle.com/cd/E11882_01/appdev.112/e10646/oci02bas.htm#LNOCI16208>
 
 =end pod
-
