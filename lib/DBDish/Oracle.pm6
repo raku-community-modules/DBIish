@@ -181,9 +181,8 @@ sub OCIBindByName_Int (
         OCIError            $errhp,
         OraText             $placeholder is encoded('utf8'),
         sb4                 $placeh_len,
-        #sword               $valuep is rw,
         # use long to have the maximum precision supported by the platform
-        Pointer[long]       $valuep,
+        CArray[long]        $valuep,
         sb4                 $value_sz,
         ub2                 $dty,
         #sb2                 $indp is rw,
@@ -210,8 +209,9 @@ sub OCIBindByName_Real (
         OCIError            $errhp,
         OraText             $placeholder is encoded('utf8'),
         sb4                 $placeh_len,
-        num32               $valuep is rw,
-        #Pointer[num64]      $valuep,
+        # num32 did result in ORA-01438: value larger than specified precision
+        # allowed for this column
+        CArray[num64]       $valuep,
         sb4                 $value_sz,
         ub2                 $dty,
         #sb2                 $indp is rw,
@@ -507,9 +507,10 @@ class DBDish::Oracle::StatementHandle does DBDish::StatementHandle {
             if $v ~~ Int {
                 $dty = SQLT_INT;
                 my long $value = $v;
-                my $valuep := Pointer[long].new($value);
+                my $valuep = CArray[long].new;
+                $valuep[0] = $value;
                 @in-binds.push($bindpp, $valuep, $indp);
-                # see multi sub defition for the C data type
+                # see multi sub definition for the C data type
                 $value_sz = nativesizeof(long);
                 warn "binding '$placeholder' ($placeh_len): '$value' ($value_sz) as OCI type '$dty' Perl type '$v.^name()' NULL '$ind'\n";
                 $errcode = OCIBindByName_Int(
@@ -531,11 +532,12 @@ class DBDish::Oracle::StatementHandle does DBDish::StatementHandle {
             }
             elsif $v ~~ Real {
                 $dty = SQLT_FLT;
-                my num32 $value = $v.Num;
-                my $valuep := Pointer[num64].new($value);
+                my num64 $value = $v.Num;
+                my $valuep = CArray[num64].new;
+                $valuep[0] = $value;
                 @in-binds.push($bindpp, $valuep, $indp);
-                # see multi sub defition for the C data type
-                $value_sz = nativesizeof(num32);
+                # see multi sub definition for the C data type
+                $value_sz = nativesizeof(num64);
                 warn "binding '$placeholder' ($placeh_len): '$valuep' ($value_sz) as OCI type '$dty' Perl type '$v.^name()' NULL '$ind'\n";
                 $errcode = OCIBindByName_Real(
                     $!stmthp,
