@@ -31,18 +31,18 @@ enum mysql-field-type is export (
 );
 
 constant %mysql-type-conv is export = (
-  MYSQL_TYPE_DECIMAL => 'Int', MYSQL_TYPE_TINY => 'Int', #Tiny is used for Bool
-  MYSQL_TYPE_SHORT => 'Int',  MYSQL_TYPE_LONG => 'Int',
-  MYSQL_TYPE_FLOAT => 'Num',  MYSQL_TYPE_DOUBLE => 'Num',
-  MYSQL_TYPE_NULL,
-  MYSQL_TYPE_TIMESTAMP => 'Int',
-  MYSQL_TYPE_LONGLONG => 'Int', MYSQL_TYPE_INT24 => 'Int',
-  MYSQL_TYPE_DATE => 'Str',   MYSQL_TYPE_TIME => 'Str',
-  MYSQL_TYPE_DATETIME => 'Str', MYSQL_TYPE_YEAR => 'Int',
-  MYSQL_TYPE_NEWDATE => 'Str', MYSQL_TYPE_VARCHAR => 'Str',
-  MYSQL_TYPE_BIT => 'Int',
-  MYSQL_TYPE_NEWDECIMAL => 'Int',
-  MYSQL_TYPE_ENUM => 'Str'
+  MYSQL_TYPE_DECIMAL.value => 'Num', MYSQL_TYPE_TINY.value => 'Int', #Tiny is used for Bool
+  MYSQL_TYPE_SHORT.value => 'Int',  MYSQL_TYPE_LONG.value => 'Int',
+  MYSQL_TYPE_FLOAT.value => 'Num',  MYSQL_TYPE_DOUBLE.value => 'Num',
+  MYSQL_TYPE_NULL.value => 'Str',
+  MYSQL_TYPE_TIMESTAMP.value => 'Int',
+  MYSQL_TYPE_LONGLONG.value => 'Int', MYSQL_TYPE_INT24.value => 'Int',
+  MYSQL_TYPE_DATE.value => 'Str',   MYSQL_TYPE_TIME.value => 'Str',
+  MYSQL_TYPE_DATETIME.value => 'Str', MYSQL_TYPE_YEAR.value => 'Int',
+  MYSQL_TYPE_NEWDATE.value => 'Str', MYSQL_TYPE_VARCHAR.value => 'Str',
+  MYSQL_TYPE_BIT.value => 'Int',
+  MYSQL_TYPE_NEWDECIMAL.value => 'Num',
+  MYSQL_TYPE_ENUM.value => 'Str'
  # Meh the default will be Str
 ).hash;
 
