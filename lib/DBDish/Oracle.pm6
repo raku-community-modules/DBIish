@@ -182,7 +182,8 @@ sub OCIBindByName_Int (
         OraText             $placeholder is encoded('utf8'),
         sb4                 $placeh_len,
         #sword               $valuep is rw,
-        Pointer[sword]      $valuep,
+        # use long to have the maximum precision supported by the platform
+        Pointer[long]       $valuep,
         sb4                 $value_sz,
         ub2                 $dty,
         #sb2                 $indp is rw,
@@ -505,11 +506,11 @@ class DBDish::Oracle::StatementHandle does DBDish::StatementHandle {
             my $errcode;
             if $v ~~ Int {
                 $dty = SQLT_INT;
-                my sword $value = $v;
-                my $valuep := Pointer[sword].new($value);
+                my long $value = $v;
+                my $valuep := Pointer[long].new($value);
                 @in-binds.push($bindpp, $valuep, $indp);
                 # see multi sub defition for the C data type
-                $value_sz = nativesizeof(sword);
+                $value_sz = nativesizeof(long);
                 warn "binding '$placeholder' ($placeh_len): '$value' ($value_sz) as OCI type '$dty' Perl type '$v.^name()' NULL '$ind'\n";
                 $errcode = OCIBindByName_Int(
                     $!stmthp,
