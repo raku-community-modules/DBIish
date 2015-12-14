@@ -538,6 +538,7 @@ class DBDish::Oracle::StatementHandle does DBDish::StatementHandle {
             elsif $v ~~ Str {
                 $dty = SQLT_CHR;
                 my Str $valuep = $v;
+                explicitly-manage($valuep);
                 $value_sz = $v.encode('utf8').bytes;
                 #warn "binding '$placeholder' ($placeh_len): '$valuep' ($value_sz) as OCI type '$dty' Perl type '$v.^name()' NULL '$indp'\n";
                 #$method = &OCIBindByName_Str;
