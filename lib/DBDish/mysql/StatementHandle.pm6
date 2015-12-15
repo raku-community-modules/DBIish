@@ -160,11 +160,13 @@ method column_names {
         unless defined $!result_set {
             $!result_set  = mysql_use_result( $!mysql_client);
             $!field_count = mysql_field_count($!mysql_client);
+            @!column_mysqltype = ();
         }
         loop ( my $i=0; $i < $!field_count; $i++ ) {
             my MYSQL_FIELD $field_info = mysql_fetch_field($!result_set).deref;
             my $column_name = $field_info.name;
-            @!column_names.push($column_name);    
+            @!column_names.push($column_name);
+            @!column_mysqltype.push($field_info.type);
         }
     }
     @!column_names;
