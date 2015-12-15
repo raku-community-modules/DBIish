@@ -1,4 +1,5 @@
 {
+    "perl"	    : "6",
     "name"          : "DBIish",
     "version"       : "*",
     "description"   : "Database connectivity for Perl 6",

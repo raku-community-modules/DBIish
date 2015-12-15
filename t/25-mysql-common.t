@@ -2,7 +2,7 @@
 
 use Test;
 use DBIish;
-use DBDish::mysql;
+#use DBDish::mysql;
 
 # Define the only database specific values used by the common tests.
 my $*mdriver = 'mysql';

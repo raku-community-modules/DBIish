@@ -65,25 +65,29 @@ aims to provide an interface that takes advantage of Perl 6 idioms
 
 =head2 Fetching data
 
-It provide nearly all the perl5 DBI fetch* method to fetch values.
-However it's recommanded to use the C<row> and C<allrows> method
+DBIish provides nearly all the perl5 DBI fetch* method to fetch values from the C<StatementHandle> object.
+However it's recommanded to use the C<row> and C<allrows> method. They provide you typed value when possible
 
 =head3 row
 
-C<row> take the <hash> adverbe if you to have the values on a hash form instead of a plain array
+C<row> take the C<hash> adverb if you want to have the values in a hash form instead of a plain array
 
 Example:
 
-    my %value = $sth.row(:hash);
+    my @values = $sth.row();
+    my %values = $sth.row(:hash);
 
 =head3 allrows
 
-C<allrows> offer you two adverbes if you want to fetch the values on a hash form.
+C<allrows> returns all the row as an array of arrays.
+If you want to fetch the values in a hash form, use one of the two adverbs C<array-of-hash>
+and C<hash-of-array>
 
 Example:
 
-    my @datas = $sth.allrows(:array-of-hash);
-    my %datas = $sth.allrows(:hash-of-array);
+    my @datas = $sth.allrows(); # [[1, 2, 3], [4, 5, 6]]
+    my @datas = $sth.allrows(:array-of-hash); # [ ( a => 1, b => 2), ( a => 3, b => 4) ]
+    my %datas = $sth.allrows(:hash-of-array); # a => [1, 3], b => [2, 4]
 
 =head1 INSTALLATION
 

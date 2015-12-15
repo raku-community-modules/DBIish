@@ -4,7 +4,7 @@
 
 #use Test;     # "use" dies in a runtime EVAL
 #use DBIish;
-diag "Testing MiniDBD::$*mdriver";
+diag "Testing DBDish::$*mdriver";
 plan 58;
 
 sub magic_cmp(@a, @b) {
