@@ -1,9 +1,10 @@
 
 use v6;
 
+use NativeCall;
 need DBDish::Role::StatementHandle;
 use DBDish::SQLite::Native;
-use NativeCall;
+
 
 unit class DBDish::SQLite::StatementHandle does DBDish::Role::StatementHandle;
 
@@ -14,6 +15,7 @@ has $.dbh;
 has Int $!row_status;
 has @!mem_rows;
 has @!column_names;
+has $!finished = False;
 
 method !handle-error(Int $status) {
     return if $status == SQLITE_OK;
@@ -23,6 +25,7 @@ method !handle-error(Int $status) {
 submethod BUILD(:$!conn, :$!statement, :$!statement_handle, :$!dbh) { }
 
 method execute(*@params) {
+    die "Finish was previously called on the StatementHandle" if $!finished;
     sqlite3_reset($!statement_handle) if $!statement_handle.defined;
     @!mem_rows = ();
     my @strings;
@@ -56,6 +59,34 @@ method column_names {
     @!column_names;
 }
 
+
+method _row (:$hash) {
+    my @row;
+    my %hash;
+    die 'row without prior execute' unless $!row_status.defined;
+    return Any if $!row_status == SQLITE_DONE;
+    my Int $count = sqlite3_column_count($!statement_handle);
+    for ^$count  -> $col {
+        my $value;
+        given sqlite3_column_type($!statement_handle, $col) {
+            when SQLITE_INTEGER {
+                 $value = sqlite3_column_int64($!statement_handle, $col);
+            }
+            when SQLITE_FLOAT {
+                 $value = sqlite3_column_double($!statement_handle, $col);
+            }
+            default { 
+                $value = sqlite3_column_text($!statement_handle, $col);
+            }
+        }
+        $hash ?? (%hash{sqlite3_column_name($!statement_handle, $col)} = $value) !! @row.push: $value;
+    }
+    $!row_status = sqlite3_step($!statement_handle);
+
+    $hash ?? %hash !! @row;
+}
+
+
 method fetchrow {
     my @row;
     die 'fetchrow_array without prior execute' unless $!row_status.defined;
@@ -73,5 +104,6 @@ method finish {
     sqlite3_finalize($!statement_handle) if $!statement_handle.defined;
     $!row_status = Int;;
     $!dbh._remove_sth(self);
+    $!finished = True;
     True;
 }

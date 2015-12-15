@@ -1,6 +1,7 @@
 
 use v6;
 
+use NativeCall;
 need DBDish::Role::StatementHandle;
 use DBDish::mysql::Native;
 
@@ -11,6 +12,7 @@ has $!statement;
 has $!result_set;
 has $!affected_rows;
 has @!column_names;
+has @!column_mysqltype;
 has $!field_count;
 has $.mysql_warning_count is rw = 0;
 
@@ -36,7 +38,9 @@ method execute(*@params is copy) {
         }
     }
     $statement ~= $last-chunk;
-
+    if defined( $!result_set ) {
+        mysql_free_result($!result_set);
+    }
     $!result_set = Mu;
     my $status = mysql_query( $!mysql_client, $statement ); # 0 means OK
     $.mysql_warning_count = mysql_warning_count( $!mysql_client );
@@ -77,6 +81,54 @@ method rows() {
     } 
 }
 
+method _row(:$hash) {
+    my @row_array;
+    my %hash;
+    my @names;
+    my @types;
+
+    unless defined $!result_set {
+        $!result_set  = mysql_use_result( $!mysql_client);
+        $!field_count = mysql_field_count($!mysql_client);
+        @!column_names = ();
+        @!column_mysqltype = ();
+        loop ( my $i=0; $i < $!field_count; $i++ ) {
+            my MYSQL_FIELD $field_info = mysql_fetch_field($!result_set).deref;
+            my $column_name = $field_info.name;
+            @!column_names.push($column_name);
+            @!column_mysqltype.push($field_info.type);
+        }
+    }
+
+    if defined $!result_set {
+        self!reset_errstr();
+
+        my $native_row = mysql_fetch_row($!result_set); # can return NULL
+        my $errstr     = mysql_error( $!mysql_client );
+        
+        if $errstr ne '' { self!set_errstr($errstr);}
+        
+        if $native_row {
+            loop ( my $i=0; $i < $!field_count; $i++ ) {
+                my $value = do given %mysql-type-conv{@!column_mysqltype[$i]} {
+                   when 'Int' {
+                     $native_row[$i].Int;
+                   }
+                   when 'Num' {
+                     $native_row[$i].Num;
+                   }
+                   default {
+                     $native_row[$i];
+                   }
+                };
+                $hash ?? (%hash{@!column_names[$i]} = $value) !! @row_array.push($value);
+            }
+        }
+        else { self.finish; }
+    }
+    return $hash ?? %hash !! @row_array;
+}
+
 method fetchrow() {
     my @row_array;
 
@@ -108,11 +160,13 @@ method column_names {
         unless defined $!result_set {
             $!result_set  = mysql_use_result( $!mysql_client);
             $!field_count = mysql_field_count($!mysql_client);
+            @!column_mysqltype = ();
         }
         loop ( my $i=0; $i < $!field_count; $i++ ) {
-            my $field_info  = mysql_fetch_field($!result_set);
-            my $column_name = $field_info[0];
-            @!column_names.push($column_name);    
+            my MYSQL_FIELD $field_info = mysql_fetch_field($!result_set).deref;
+            my $column_name = $field_info.name;
+            @!column_names.push($column_name);
+            @!column_mysqltype.push($field_info.type);
         }
     }
     @!column_names;
@@ -128,7 +182,7 @@ method finish() {
     if defined( $!result_set ) {
         mysql_free_result($!result_set);
         $!result_set   = Mu;
-        @!column_names = Mu;
+        @!column_names = ();
     }
     return Bool::True;
 }

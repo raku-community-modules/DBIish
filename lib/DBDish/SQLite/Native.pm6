@@ -36,6 +36,15 @@ enum SQLITE is export (
     SQLITE_DONE      =>   101, #  sqlite3_step() has finished executing
 );
 
+
+enum SQLITE_TYPE is export (
+    SQLITE_INTEGER => 1,
+    SQLITE_FLOAT   => 2,
+    SQLITE_TEXT    => 3,
+    SQLITE_BLOB    => 4,
+    SQLITE_NULL    => 5
+);
+
 constant LIB = %*ENV<DBIISH_SQLITE_LIB> || 'libsqlite3';
 
 sub sqlite3_errmsg(OpaquePointer $handle)
