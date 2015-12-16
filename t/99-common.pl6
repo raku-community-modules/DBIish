@@ -228,7 +228,7 @@ $sth.execute();
 todo "Figure what is wrong with is-deeply";
 is-deeply @results, @ref;
 
-ok $sth = $dbh.prepare("SELECT * FROM nom WHERE name='TAFM';"),
+ok $sth = $dbh.prepare("SELECT * FROM nom WHERE name = 'TAFM'"),
 'prepare new select for fetchrow_hashref test'; #test 31
 ok $sth.execute(), 'execute prepared statement for fetchrow_hashref'; #test 32
 
@@ -266,14 +266,14 @@ else { skip 'fetchrow_arrayref not implemented', 2 }
 # Output _looks_ identical.
 
 ok $sth = $dbh.prepare("INSERT INTO nom (name, description, quantity, price)
-                         VALUES ('PICO', 'Delish pina colada', '5', '7.9');"),
+                         VALUES ('PICO', 'Delish pina colada', '5', '7.9')"),
                          'insert new value for fetchrow_arrayref test'; #test 38
 
 ok $sth.execute(), 'new insert statement executed'; #test 39
 is $sth.?rows, 1, "insert reports 1 row affected"; #test 40
 $sth.finish;
 
-ok $sth = $dbh.prepare("SELECT * FROM nom WHERE quantity='5';"),
+ok $sth = $dbh.prepare("SELECT * FROM nom WHERE quantity='5'"),
 'prepare new select for fetchrow_arrayref test'; #test 41
 ok $sth.execute(), 'execute prepared statement for fetchrow_arrayref'; #test 42
 
