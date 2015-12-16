@@ -9,6 +9,7 @@ my constant lib = 'libclntsh';
 
 #------------ Oracle library to NativeCall data type mapping ------------
 
+constant sb1            = int8;
 constant sb2            = int16;
 constant sb4            = int32;
 constant sb8            = int64;
@@ -110,7 +111,7 @@ sub OCIStmtPrepare2 (
 sub OCIAttrGet_Str(
         Pointer[void]           $trgthndlp,
         ub4                     $trghndltyp,
-        CArray[Pointer[Str]]    $attributep is encoded('utf8'),
+        CArray[CArray[int8]]    $attributep,
         CArray[ub4]             $sizep,
         ub4                     $attrtype,
         OCIError                $errhp,
@@ -146,6 +147,32 @@ sub OCIAttrGet_ub4 (
     is symbol('OCIAttrGet')
     { ... }
 
+sub OCIAttrGet_sb1 (
+        Pointer[void]   $trgthndlp,
+        ub4             $trghndltyp,
+        sb1             $attributep is rw,
+        CArray[ub4]     $sizep,
+        ub4             $attrtype,
+        OCIError        $errhp,
+    )
+    returns sword
+    is native(lib)
+    is symbol('OCIAttrGet')
+    { ... }
+
+sub OCIAttrGet_sb2 (
+        Pointer[void]   $trgthndlp,
+        ub4             $trghndltyp,
+        sb2             $attributep is rw,
+        CArray[ub4]     $sizep,
+        ub4             $attrtype,
+        OCIError        $errhp,
+    )
+    returns sword
+    is native(lib)
+    is symbol('OCIAttrGet')
+    { ... }
+
 # strings
 sub OCIBindByName_Str (
         OCIStmt             $stmtp,
@@ -158,7 +185,7 @@ sub OCIBindByName_Str (
         sb4                 $value_sz,
         ub2                 $dty,
         #sb2                 $indp is rw,
-        Pointer[sb2]        $indp,
+        CArray[sb2]         $indp,
         Pointer[ub2]        $alenp,
         #ub2                 $alenp is rw,
         Pointer[ub2]        $rcodep,
@@ -186,7 +213,7 @@ sub OCIBindByName_Int (
         sb4                 $value_sz,
         ub2                 $dty,
         #sb2                 $indp is rw,
-        Pointer[sb2]        $indp,
+        CArray[sb2]         $indp,
         Pointer[ub2]        $alenp,
         #ub2                 $alenp is rw,
         Pointer[ub2]        $rcodep,
@@ -215,7 +242,7 @@ sub OCIBindByName_Real (
         sb4                 $value_sz,
         ub2                 $dty,
         #sb2                 $indp is rw,
-        Pointer[sb2]        $indp,
+        CArray[sb2]         $indp,
         Pointer[ub2]        $alenp,
         #ub2                 $alenp is rw,
         Pointer[ub2]        $rcodep,
@@ -235,12 +262,13 @@ sub OCIDefineByPos2_Str (
         CArray[OCIDefine]       $defnpp,
         OCIError                $errhp,
         ub4                     $position,
-        CArray[Pointer[Str]]    $valuep is encoded('utf8'),
+        CArray[int8]            $valuep,
         sb8                     $value_sz,
         ub2                     $dty,
-        sb2                     $indp is rw, # sb2 only for non-array binds
-        ub4                     $rlenp is rw,
-        ub2                     $rcodep is rw,
+        # sb2 only for non-array binds
+        CArray[sb2]             $indp,
+        CArray[ub4]             $rlenp,
+        CArray[ub2]             $rcodep,
         ub4                     $mode,
     )
     returns sword
@@ -253,12 +281,13 @@ sub OCIDefineByPos2_Int (
         CArray[OCIDefine]   $defnpp,
         OCIError            $errhp,
         ub4                 $position,
-        long                $valuep is rw,
+        CArray[long]        $valuep,
         sb8                 $value_sz,
         ub2                 $dty,
-        sb2                 $indp is rw, # sb2 only for non-array binds
-        ub4                 $rlenp is rw,
-        ub2                 $rcodep is rw,
+        # sb2 only for non-array binds
+        CArray[sb2]             $indp,
+        CArray[ub4]             $rlenp,
+        CArray[ub2]             $rcodep,
         ub4                 $mode,
     )
     returns sword
@@ -271,12 +300,13 @@ sub OCIDefineByPos2_Real (
         CArray[OCIDefine]   $defnpp,
         OCIError            $errhp,
         ub4                 $position,
-        num64               $valuep is rw,
+        CArray[num64]       $valuep,
         sb8                 $value_sz,
         ub2                 $dty,
-        sb2                 $indp is rw, # sb2 only for non-array binds
-        ub4                 $rlenp is rw,
-        ub2                 $rcodep is rw,
+        # sb2 only for non-array binds
+        CArray[sb2]         $indp,
+        CArray[ub4]         $rlenp,
+        CArray[ub2]         $rcodep,
         ub4                 $mode,
     )
     returns sword
@@ -329,6 +359,7 @@ constant OCI_COMMIT_ON_SUCCESS  = 0x00000020;
 
 constant OCI_SUCCESS            = 0;
 constant OCI_ERROR              = -1;
+constant OCI_NO_DATA            = 100;
 
 constant OCI_HTYPE_ENV          = 1;
 constant OCI_HTYPE_ERROR        = 2;
@@ -343,9 +374,12 @@ constant OCI_NTV_SYNTAX         = 1;
 constant OCI_ATTR_DATA_SIZE     = 1;
 constant OCI_ATTR_DATA_TYPE     = 2;
 constant OCI_ATTR_NAME          = 4;
+constant OCI_ATTR_PRECISION     = 5;
+constant OCI_ATTR_SCALE         = 6;
 constant OCI_ATTR_ROW_COUNT     = 9;
 constant OCI_ATTR_PARAM_COUNT   = 18;
 constant OCI_ATTR_STMT_TYPE     = 24;
+constant OCI_ATTR_ROWS_FETCHED  = 197;
 
 constant OCI_STMT_UNKNOWN       = 0;
 constant OCI_STMT_SELECT        = 1;
@@ -445,7 +479,10 @@ class DBDish::Oracle::StatementHandle does DBDish::StatementHandle {
     has $.dbh;
     has $!result;
 #    has $!affected_rows;
-#    has @!column_names;
+    has @!column_names;
+    has Int $!field_count;
+    has %!parmd;
+    has @!out-binds;
     has Int $!row_count;
 #    has $!current_row = 0;
 #
@@ -474,7 +511,6 @@ class DBDish::Oracle::StatementHandle does DBDish::StatementHandle {
 #        die "Wrong number of arguments to method execute: got @params.elems(), expected $!param_count" if @params != $!param_count;
 
         my sb4 $value_sz;
-        my ub2 $dty;
 
         my ub2 $alen = 0;
         my $alenp = Pointer[ub2].new($alen);
@@ -488,11 +524,8 @@ class DBDish::Oracle::StatementHandle does DBDish::StatementHandle {
 
         # bind placeholder values
         for @params.kv -> $k, $v {
-            #my OCIBind $bindp;
-            #my $bindpp := Pointer[OCIBind].new($bindp);
             my $bindpp = CArray[OCIBind].new;
             $bindpp[0] = OCIBind;
-            #my OCIBind $bindpp .= new;
 
             my OraText $placeholder = ":p$k";
             my sb4 $placeh_len = $placeholder.encode('utf8').bytes;
@@ -501,87 +534,89 @@ class DBDish::Oracle::StatementHandle does DBDish::StatementHandle {
             my sb2 $ind = $v.chars == 0
                 ?? -1
                 !! 0;
-            my $indp = Pointer[sb2].new($ind);
+            my $indp = CArray[sb2].new;
+            $indp[0] = $ind;
 
             my $errcode;
-            if $v ~~ Int {
-                $dty = SQLT_INT;
-                my long $value = $v;
-                my $valuep = CArray[long].new;
-                $valuep[0] = $value;
-                @in-binds.push($bindpp, $valuep, $indp);
-                # see multi sub definition for the C data type
-                $value_sz = nativesizeof(long);
-                warn "binding '$placeholder' ($placeh_len): '$value' ($value_sz) as OCI type '$dty' Perl type '$v.^name()' NULL '$ind'\n";
-                $errcode = OCIBindByName_Int(
-                    $!stmthp,
-                    $bindpp,
-                    $!errhp,
-                    $placeholder,
-                    $placeh_len,
-                    $valuep,
-                    $value_sz,
-                    $dty,
-                    $indp,
-                    $alenp,
-                    $rcodep,
-                    $maxarr_len,
-                    $curelep,
-                    OCI_DEFAULT,
-                );
-            }
-            elsif $v ~~ Real {
-                $dty = SQLT_FLT;
-                my num64 $value = $v.Num;
-                my $valuep = CArray[num64].new;
-                $valuep[0] = $value;
-                @in-binds.push($bindpp, $valuep, $indp);
-                # see multi sub definition for the C data type
-                $value_sz = nativesizeof(num64);
-                warn "binding '$placeholder' ($placeh_len): '$valuep' ($value_sz) as OCI type '$dty' Perl type '$v.^name()' NULL '$ind'\n";
-                $errcode = OCIBindByName_Real(
-                    $!stmthp,
-                    $bindpp,
-                    $!errhp,
-                    $placeholder,
-                    $placeh_len,
-                    $valuep,
-                    $value_sz,
-                    $dty,
-                    $indp,
-                    $alenp,
-                    $rcodep,
-                    $maxarr_len,
-                    $curelep,
-                    OCI_DEFAULT,
-                );
-            }
-            elsif $v ~~ Str {
-                $dty = SQLT_CHR;
-                my Str $valuep = $v;
-                explicitly-manage($valuep);
-                @in-binds.push($bindpp, $valuep, $indp);
-                $value_sz = $v.encode('utf8').bytes;
-                warn "binding '$placeholder' ($placeh_len): '$valuep' ($value_sz) as OCI type '$dty' Perl type '$v.^name()' NULL '$ind'\n";
-                $errcode = OCIBindByName_Str(
-                    $!stmthp,
-                    $bindpp,
-                    $!errhp,
-                    $placeholder,
-                    $placeh_len,
-                    $valuep,
-                    $value_sz,
-                    $dty,
-                    $indp,
-                    $alenp,
-                    $rcodep,
-                    $maxarr_len,
-                    $curelep,
-                    OCI_DEFAULT,
-                );
-            }
-            else {
-                die "unhandled type: $v";
+            given $v {
+                when Int {
+                    my long $value = $v;
+                    my $valuep = CArray[long].new;
+                    $valuep[0] = $value;
+                    @in-binds.push($bindpp, $valuep, $indp);
+                    # see multi sub definition for the C data type
+                    $value_sz = nativesizeof(long);
+                    #warn "binding '$placeholder' ($placeh_len): '$value' ($value_sz) as OCI type 'SQLT_INT' Perl type '$v.^name()' NULL '$ind'\n";
+                    $errcode = OCIBindByName_Int(
+                        $!stmthp,
+                        $bindpp,
+                        $!errhp,
+                        $placeholder,
+                        $placeh_len,
+                        $valuep,
+                        $value_sz,
+                        SQLT_INT,
+                        $indp,
+                        $alenp,
+                        $rcodep,
+                        $maxarr_len,
+                        $curelep,
+                        OCI_DEFAULT,
+                    );
+                }
+                # match after Int to handle Num and Rat and all other (custom)
+                # types that do Real
+                when Real {
+                    my num64 $value = $v.Num;
+                    my $valuep = CArray[num64].new;
+                    $valuep[0] = $value;
+                    @in-binds.push($bindpp, $valuep, $indp);
+                    # see multi sub definition for the C data type
+                    $value_sz = nativesizeof(num64);
+                    #warn "binding '$placeholder' ($placeh_len): '$valuep' ($value_sz) as OCI type 'SQLT_FLT' Perl type '$v.^name()' NULL '$ind'\n";
+                    $errcode = OCIBindByName_Real(
+                        $!stmthp,
+                        $bindpp,
+                        $!errhp,
+                        $placeholder,
+                        $placeh_len,
+                        $valuep,
+                        $value_sz,
+                        SQLT_FLT,
+                        $indp,
+                        $alenp,
+                        $rcodep,
+                        $maxarr_len,
+                        $curelep,
+                        OCI_DEFAULT,
+                    );
+                }
+                when Str {
+                    my Str $valuep = $v;
+                    explicitly-manage($valuep);
+                    @in-binds.push($bindpp, $valuep, $indp);
+                    $value_sz = $v.encode('utf8').bytes;
+                    #warn "binding '$placeholder' ($placeh_len): '$valuep' ($value_sz) as OCI type 'SQLT_CHR' Perl type '$v.^name()' NULL '$ind'\n";
+                    $errcode = OCIBindByName_Str(
+                        $!stmthp,
+                        $bindpp,
+                        $!errhp,
+                        $placeholder,
+                        $placeh_len,
+                        $valuep,
+                        $value_sz,
+                        SQLT_CHR,
+                        $indp,
+                        $alenp,
+                        $rcodep,
+                        $maxarr_len,
+                        $curelep,
+                        OCI_DEFAULT,
+                    );
+                }
+                default {
+                    die "unhandled type: {$v.^name}";
+                }
             }
             if $errcode ne OCI_SUCCESS {
                 my $errortext = get_errortext($!errhp);
@@ -627,6 +662,8 @@ class DBDish::Oracle::StatementHandle does DBDish::StatementHandle {
 
         unless defined $!row_count {
             my ub4 $row_count;
+            # FIXME: this returns the number of rows already fetched,
+            #        not the number of rows available!
             my $errcode = OCIAttrGet_ub4($!stmthp, OCI_HTYPE_STMT, $row_count, Pointer, OCI_ATTR_ROW_COUNT, $!errhp);
             if $errcode ne OCI_SUCCESS {
                 my $errortext = get_errortext($!errhp);
@@ -635,201 +672,307 @@ class DBDish::Oracle::StatementHandle does DBDish::StatementHandle {
             $!row_count = $row_count;
         }
 
+        #warn "row_count: $!row_count";
+
         if defined $!row_count {
             return ($!row_count == 0) ?? "0E0" !! $!row_count;
         }
     }
 
-    method fetchrow() {
+    method !parmd {
+        # caching
+        unless %!parmd {
+            for 1 .. self.field_count -> $field_index {
+                my @parmdpp := CArray[Pointer].new;
+                @parmdpp[0] = Pointer;
+                my $errcode = OCIParamGet($!stmthp, OCI_HTYPE_STMT, $!errhp, @parmdpp, $field_index);
+                # that might be required for some queries
+                # if $errcode eq OCI_ERROR {
+                #     warn "no parameter for position $field_index, skipping";
+                #     next;
+                # }
+                if $errcode ne OCI_SUCCESS {
+                    my $errortext = get_errortext($!errhp);
+                    die "parmd get for column $field_index failed ($errcode): '$errortext'";
+                }
+                %!parmd{$field_index} = @parmdpp[0];
+                #warn "parmd for column $field_index fetched";
+            }
+        }
+
+        return %!parmd;
+    }
+
+    method fetchrow {
         die "Can't fetch without execute first"
             unless $!state >= 1;
 
-        state @row;
+        my ub2 $rcode = 0;
+        my $rcodep = CArray[ub2].new;
+        $rcodep[0] = $rcode;
+
         # only declare the first time a row is fetched
-        unless @row.elems {
+        unless @!out-binds.elems {
+            # OCIDefineByPos2 docs state that position is 1-based,
+            # 0 selects rowids
+            #warn "SQL: $!statement";
+            my %parmd = self!parmd;
             for 1 .. self.field_count -> $field_index {
-                my @parmdpp := CArray[Pointer].new;
-                @parmdpp[0]  = Pointer;
-                my $errcode = OCIParamGet($!stmthp, OCI_HTYPE_STMT, $!errhp, @parmdpp, $field_index);
-                if $errcode ne OCI_SUCCESS {
-                    my $errortext = get_errortext($!errhp);
-                    die "param get failed ($errcode): '$errortext'";
-                }
+                #warn "binding out-value for column $field_index";
+                my $parmdp = %parmd{$field_index};
 
                 # retrieve the data type
                 my ub2 $dty;
-                $errcode = OCIAttrGet_ub2(@parmdpp[0], OCI_DTYPE_PARAM, $dty, Pointer, OCI_ATTR_DATA_TYPE, $!errhp);
+                my $errcode = OCIAttrGet_ub2($parmdp, OCI_DTYPE_PARAM, $dty, Pointer, OCI_ATTR_DATA_TYPE, $!errhp);
                 #warn "DATA TYPE: $dty";
 
-                # retrieve the column name
-                my CArray[Pointer[Str]] $col_namepp.=new;
-                $col_namepp[0] = Pointer[Str].new;
+                if $dty eq SQLT_NUM {
+                    my sb2 $precision;
+                    $errcode = OCIAttrGet_sb2($parmdp, OCI_DTYPE_PARAM, $precision, Pointer, OCI_ATTR_PRECISION, $!errhp);
+                    #warn "PRECISION: $precision";
 
-                my @col_name_len := CArray[ub4].new;
-                @col_name_len[0] = 0;
+                    my sb1 $scale;
+                    $errcode = OCIAttrGet_sb1($parmdp, OCI_DTYPE_PARAM, $scale, Pointer, OCI_ATTR_SCALE, $!errhp);
+                    #warn "SCALE: $scale";
 
-                $errcode = OCIAttrGet_Str(@parmdpp[0], OCI_DTYPE_PARAM, $col_namepp, @col_name_len, OCI_ATTR_NAME, $!errhp);
-                my Str $col_name = $col_namepp[0].deref;
-
-                # not needed, NativeCall can handle null-terminated strings itself
-                #my $col_name_len = @col_name_len[0];
-
-                #warn "COLUMN: $col_name";
+                    # to not have to handle Oracles binary NUMBER format
+                    if $scale > 0 {
+                        $dty = SQLT_FLT;
+                    }
+                    # numeric columns that result of a calculation
+                    # default to float to not lose precision
+                    elsif $precision == 0 && $scale == 0 {
+                        $dty = SQLT_FLT;
+                    }
+                    else {
+                        $dty = SQLT_INT;
+                    }
+                    #warn "DATA TYPE NUM: $dty";
+                }
 
                 # retrieve the data length
                 my ub4 $datalen;
-                $errcode = OCIAttrGet_ub4(@parmdpp[0], OCI_DTYPE_PARAM, $datalen, Pointer, OCI_ATTR_DATA_SIZE, $!errhp);
+                $errcode = OCIAttrGet_ub4($parmdp, OCI_DTYPE_PARAM, $datalen, Pointer, OCI_ATTR_DATA_SIZE, $!errhp);
                 #warn "DATA LENGTH: $datalen";
 
                 # bind select list items
-                my CArray[OCIDefine] $defnpp.=new;
+                #my CArray[OCIDefine] $defnpp.=new;
+                my $defnpp = CArray[OCIDefine].new;
                 $defnpp[0] = OCIDefine.new;
-                my sb2 $indp;
-                my ub4 $rlenp;
-                my ub2 $rcodep;
-                if $dty == SQLT_CHR {
-                    warn "defining #$field_index '$col_name'($datalen) as CHR($dty)";
-                    my CArray[Pointer] $valuep.=new;
-                    $valuep[0] = Pointer[Str].new;
-                    #my Str $valuep;# = ' ' x (($datalen+1) * 2);
-                    my sb8 $value_sz = $datalen + 1;
-                    $errcode = OCIDefineByPos2_Str(
-                        $!stmthp,
-                        $defnpp,
-                        $!errhp,
-                        $field_index,
-                        $valuep,
-                        $value_sz,
-                        #$dty,
-                        SQLT_STR,
-                        $indp,
-                        $rlenp,
-                        $rcodep,
-                        OCI_DEFAULT,
-                    );
-                    @row.push($valuep);
-                }
-                elsif $dty == SQLT_INT, SQLT_NUM {
-                    warn "defining #$field_index '$col_name'($datalen) as INT|NUM($dty)";
-                    my long $valuep = 0;
-                    my sb8 $value_sz = nativesizeof(long);
-                    $errcode = OCIDefineByPos2_Int(
-                        $!stmthp,
-                        $defnpp,
-                        $!errhp,
-                        $field_index,
-                        $valuep,
-                        $value_sz,
-                        $dty,
-                        $indp,
-                        $rlenp,
-                        $rcodep,
-                        OCI_DEFAULT,
-                    );
-                    @row.push($valuep);
-                }
-                elsif $dty == SQLT_FLT {
-                    warn "defining #$field_index '$col_name'($datalen) as FLT($dty)";
-                    my num64 $valuep = 0;
-                    my sb8 $value_sz = nativesizeof(num64);
-                    $errcode = OCIDefineByPos2_Real(
-                        $!stmthp,
-                        $defnpp,
-                        $!errhp,
-                        $field_index,
-                        $valuep,
-                        $value_sz,
-                        $dty,
-                        $indp,
-                        $rlenp,
-                        $rcodep,
-                        OCI_DEFAULT,
-                    );
-                    @row.push($valuep);
-                }
-                else {
-                    die "unhandled type: $dty";
+
+                my ub4 $rlen = 0;
+                my $rlenp = CArray[sb4].new;
+                $rlenp[0] = $rlen;
+                # http://docs.oracle.com/database/121/LNOCI/oci02bas.htm#LNOCI16231
+                my sb2 $ind = 0;
+                my $indp = CArray[sb2].new;
+                $indp[0] = $ind;
+
+                given $dty {
+                    when SQLT_CHR {
+                        #warn "defining #$field_index '$col_name'($datalen) as CHR($dty)";
+                        my $valuep = CArray[int8].new;
+                        $valuep[$_] = 0
+                            for ^$datalen;
+                        my sb8 $value_sz = $datalen;
+
+                        @!out-binds.push({defnpp => $defnpp, valuep => $valuep, dty => $dty, indp => $indp, rlenp => $rlenp});
+                        $errcode = OCIDefineByPos2_Str(
+                            $!stmthp,
+                            $defnpp,
+                            $!errhp,
+                            $field_index,
+                            $valuep,
+                            $value_sz,
+                            $dty,
+                            $indp,
+                            $rlenp,
+                            $rcodep,
+                            OCI_DEFAULT,
+                        );
+                    }
+                    when SQLT_INT {
+                        #warn "defining #$field_index '$col_name'($datalen) as INT|NUM($dty)";
+                        my long $value = 0;
+                        my $valuep = CArray[long].new;
+                        $valuep[0] = $value;
+                        my sb8 $value_sz = nativesizeof(long);
+                        @!out-binds.push({defnpp => $defnpp, valuep => $valuep, dty => $dty, indp => $indp, rlenp => $rlenp});
+                        $errcode = OCIDefineByPos2_Int(
+                            $!stmthp,
+                            $defnpp,
+                            $!errhp,
+                            $field_index,
+                            $valuep,
+                            $value_sz,
+                            $dty,
+                            $indp,
+                            $rlenp,
+                            $rcodep,
+                            OCI_DEFAULT,
+                        );
+                    }
+                    when SQLT_FLT {
+                        #warn "defining #$field_index '$col_name'($datalen) as FLT($dty)";
+                        my num64 $value;
+                        my $valuep = CArray[num64].new;
+                        $valuep[0] = $value;
+                        my sb8 $value_sz = nativesizeof(num64);
+                        @!out-binds.push({defnpp => $defnpp, valuep => $valuep, dty => $dty, indp => $indp, rlenp => $rlenp});
+                        $errcode = OCIDefineByPos2_Real(
+                            $!stmthp,
+                            $defnpp,
+                            $!errhp,
+                            $field_index,
+                            $valuep,
+                            $value_sz,
+                            $dty,
+                            $indp,
+                            $rlenp,
+                            $rcodep,
+                            OCI_DEFAULT,
+                        );
+                    }
+                    default {
+                        die "unhandled type: $dty";
+                    }
                 }
                 if $errcode ne OCI_SUCCESS {
                     my $errortext = get_errortext($!errhp);
                     die "define failed ($errcode): '$errortext'";
                 }
             }
-            warn 'defining complete';
+            #warn 'defining complete';
         }
 
         my $errcode = OCIStmtFetch2($!stmthp, $!errhp, 1, OCI_DEFAULT, 0, OCI_DEFAULT);
+
+        # no data is no exception
+        return ()
+            if $errcode eq OCI_NO_DATA;
+
         if $errcode ne OCI_SUCCESS {
             my $errortext = get_errortext($!errhp);
             die "fetch failed ($errcode): '$errortext'";
         }
-        say @row.perl;
 
+        #my ub4 $row_count;
+        #$errcode = OCIAttrGet_ub4($!stmthp, OCI_HTYPE_STMT, $row_count, Pointer, OCI_ATTR_ROWS_FETCHED, $!errhp);
+        #if $errcode ne OCI_SUCCESS {
+        #    my $errortext = get_errortext($!errhp);
+        #    die "statement type get failed ($errcode): '$errortext'";
+        #}
+        #warn "ROWS FETCHED: $row_count";
 
-#        return if $!current_row >= $!row_count;
-#
-#        if defined $!result {
-#            self!reset_errstr;
+        my @row;
 
-#            for ^$!field_count {
-#                @row_array.push(PQgetvalue($!result, $!current_row, $_));
-#            }
-#            $!current_row++;
-#            self!handle-errors;
-#
-#            if ! @row_array { self.finish; }
-#        }
+        # now unpack the returned data
+        for @!out-binds -> $col {
+            #say $col.gist;
+            # http://docs.oracle.com/database/121/LNOCI/oci02bas.htm#LNOCI16231
+            given $col<indp>[0] {
+                when -2 {
+                    die "the length of the item is greater than the length of the output variable";
+                }
+                # null
+                when -1 {
+                    given $col<dty> {
+                        when SQLT_CHR {
+                            @row.push(Str);
+                        }
+                        when SQLT_INT {
+                            @row.push(Int);
+                        }
+                        when SQLT_FLT {
+                            @row.push(Rat);
+                        }
+                        default {
+                            die "unhandled datatype $col<dty>";
+                        }
+                    }
+                }
+                when 0 {
+                    #say "$col<dty> $col<valuep>";
+                    given $col<dty> {
+                        when SQLT_CHR {
+                            my @textary;
+                            @textary[$_] = $col<valuep>[$_]
+                                for ^$col<rlenp>[0];
+                            @row.push(Buf.new(@textary).decode());
+                        }
+                        when SQLT_INT {
+                            @row.push($col<valuep>[0].Int);
+                        }
+                        when SQLT_FLT {
+                            @row.push($col<valuep>[0].Rat);
+                        }
+                        default {
+                            die "unhandled datatype $col<dty>";
+                        }
+                    }
+                    #say "$col<dty> $col<valuep> { @row[*-1].^name }";
+                }
+                default {
+                    die "the length of the item is greater than the length of the output variable, length returned was $col<indp>";
+                }
+            }
+        }
+
+        #say @row.gist;
         return @row;
     }
 
     method field_count {
-        # cache field count
-        state Int $field_count;
         # TODO: what should be returned before the statement has been executed?
-        unless $field_count.defined {
-            # TODO: because 2015.07.2: 'Natively typed state variables not yet implemented'
+        unless $!field_count.defined {
+            # TODO: because 2015.11: 'Natively typed state variables not yet implemented'
             my ub4 $field_count_native;
             my $errcode = OCIAttrGet_ub4($!stmthp, OCI_HTYPE_STMT, $field_count_native,
                                   Pointer, OCI_ATTR_PARAM_COUNT, $!errhp);
-            $field_count = $field_count_native;
+            $!field_count = $field_count_native;
             # FIXME: error handling
         }
-        return $field_count;
+        return $!field_count;
     }
 
-#    method column_names {
-#        $!field_count = PQnfields($!result);
-#        unless @!column_names {
-#            for ^$!field_count {
-#                my $column_name = PQfname($!result, $_);
-#                @!column_names.push($column_name);
-#            }
-#        }
-#        @!column_names
-#    }
-#
-#    # for debugging only so far
-#    method column_oids {
-#        $!field_count = PQnfields($!result);
-#        my @res;
-#        for ^$!field_count {
-#            @res.push: PQftype($!result, $_);
-#        }
-#        @res;
-#    }
-#
-#    method fetchall_hashref(Str $key) {
-#        my %results;
-#
-#        return if $!current_row >= $!row_count;
-#
-#        while my $row = self.fetchrow_hashref {
-#            %results{$row{$key}} = $row;
-#        }
-#
-#        my $results_ref = %results;
-#        return $results_ref;
-#    }
+    method column_names {
+       unless @!column_names {
+            my %parmd = self!parmd;
+            #say $!statement;
+            for 1 .. self.field_count -> $field_index {
+                my $parmdp = %parmd{$field_index};
+
+                # retrieve the column name
+                #my CArray[Pointer[Str]] $col_namepp.=new;
+                #$col_namepp[0] = Pointer[Str].new;
+                #my Str $col_name;
+                my CArray[CArray[int8]] $col_namep .= new;
+                $col_namep[0] = CArray[int8].new;
+
+                my @col_name_len := CArray[ub4].new;
+                @col_name_len[0] = 0;
+
+                my $errcode = OCIAttrGet_Str($parmdp, OCI_DTYPE_PARAM, $col_namep, @col_name_len, OCI_ATTR_NAME, $!errhp);
+
+                #my Str $col_name = $col_namepp[0].deref;
+
+                # not needed, NativeCall can handle null-terminated strings itself
+                my $col_name_len = @col_name_len[0];
+                #warn "COLUMN LEN: $col_name_len";
+                my @textary;
+                @textary[$_] = $col_namep[0][$_]
+                    for ^$col_name_len;
+                my Str $col_name = Buf.new(@textary).decode();
+
+                #warn "COLUMN $field_index: $col_name";
+
+                # Oracle returns the column names uppercase if they wheren't
+                # quoted in the DDL statement
+                @!column_names.push($col_name.lc);
+            }
+        }
+        return @!column_names;
+    }
 
     method finish() {
         if defined($!result) {
@@ -839,16 +982,6 @@ class DBDish::Oracle::StatementHandle does DBDish::StatementHandle {
         }
         return Bool::True;
     }
-
-#    method !get_row {
-#        my @data;
-#        for ^$!field_count {
-#            @data.push(PQgetvalue($!result, $!current_row, $_));
-#        }
-#        $!current_row++;
-#
-#        return @data;
-#    }
 }
 
 class DBDish::Oracle::Connection does DBDish::Connection {
@@ -915,43 +1048,6 @@ class DBDish::Oracle::Connection does DBDish::Connection {
         return $sth.execute(@bind);
     }
 
-#    method selectrow_arrayref(Str $statement, $attr?, *@bind is copy) {
-#        my $sth = self.prepare($statement, $attr);
-#        $sth.execute(@bind);
-#        return $sth.fetchrow_arrayref;
-#    }
-#
-#    method selectrow_hashref(Str $statement, $attr?, *@bind is copy) {
-#        my $sth = self.prepare($statement, $attr);
-#        $sth.execute(@bind);
-#        return $sth.fetchrow_hashref;
-#    }
-#
-#    method selectall_arrayref(Str $statement, $attr?, *@bind is copy) {
-#        my $sth = self.prepare($statement, $attr);
-#        $sth.execute(@bind);
-#        return $sth.fetchall_arrayref;
-#    }
-#
-#    method selectall_hashref(Str $statement, Str $key, $attr?, *@bind is copy) {
-#        my $sth = self.prepare($statement, $attr);
-#        $sth.execute(@bind);
-#        return $sth.fetchall_hashref($key);
-#    }
-#
-#    method selectcol_arrayref(Str $statement, $attr?, *@bind is copy) {
-#        my @results;
-#
-#        my $sth = self.prepare($statement, $attr);
-#        $sth.execute(@bind);
-#        while (my $row = $sth.fetchrow_arrayref) {
-#            @results.push($row[0]);
-#        }
-#
-#        my $aref = @results;
-#        return $aref;
-#    }
-#
     method commit {
         if $!AutoCommit {
             warn "Commit ineffective while AutoCommit is on";
