@@ -5,7 +5,7 @@
 #use Test;     # "use" dies in a runtime EVAL
 #use DBIish;
 diag "Testing DBDish::$*mdriver";
-plan 59;
+plan 60;
 
 %*query<drop_table> //= "DROP TABLE IF EXISTS nom";
 %*query<create_table> //= "
