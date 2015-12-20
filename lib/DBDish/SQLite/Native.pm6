@@ -45,7 +45,7 @@ enum SQLITE_TYPE is export (
     SQLITE_NULL    => 5
 );
 
-constant LIB = %*ENV<DBIISH_SQLITE_LIB> || 'libsqlite3';
+constant LIB = %*ENV<DBIISH_SQLITE_LIB> || ('libsqlite3' , 0);
 
 sub sqlite3_errmsg(OpaquePointer $handle)
     returns Str
