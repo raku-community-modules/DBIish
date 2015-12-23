@@ -1,6 +1,6 @@
 use v6;
 
-use  NativeCall;
+use NativeCall;
 
 need DBDish::Role::Connection;
 need DBDish::Oracle::StatementHandle;

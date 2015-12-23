@@ -2,9 +2,8 @@ use v6;
 
 use NativeCall;
 
-unit module DBDish::Pg::Native;
+unit module DBDish::Oracle::Native;
 
-#constant LIB = %*ENV<DBIISH_PG_LIB> || 'libpq';
 my constant lib = 'libclntsh';
 
 #------------ Oracle library to NativeCall data type mappings -----------

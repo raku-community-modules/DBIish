@@ -64,9 +64,6 @@ our sub oracle-replace-placeholder(Str $query) is export {
 }
 
 has $.Version = 0.01;
-#has $!errstr;
-#method !errstr() is rw { $!errstr }
-#method errstr() { $!errstr }
 
 #sub quote-and-escape($s) {
 #    "'" ~ $s.trans([q{'}, q{\\]}] => [q{\\\'}, q{\\\\}])
