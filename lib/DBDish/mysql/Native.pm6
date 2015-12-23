@@ -5,7 +5,7 @@ use NativeCall;
 
 unit module DBDish::mysql::Native;
 
-constant LIB = %*ENV<DBIISH_MYSQL_LIB> || 'libmysqlclient';
+constant LIB = %*ENV<DBIISH_MYSQL_LIB> || 'mysqlclient';
 
 #From mysql_com.h
 enum mysql-field-type is export (
