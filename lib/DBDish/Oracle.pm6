@@ -85,7 +85,7 @@ method connect(*%params) {
     # create the environment handle
     my @envhpp := CArray[Pointer].new;
     @envhpp[0]  = Pointer;
-    my Pointer $ctxp,
+    my Pointer $ctxp;
 
     my sword $errcode = OCIEnvNlsCreate(
         @envhpp,
