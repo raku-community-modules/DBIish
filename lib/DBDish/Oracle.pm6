@@ -1,4 +1,4 @@
-# DBDish::Oracle.pm6
+use v6;
 
 use NativeCall;
 use DBDish;     # roles for drivers
@@ -8,6 +8,25 @@ need DBDish::Oracle::Connection;
 need DBDish::Oracle::StatementHandle;
 
 unit class DBDish::Oracle:auth<mberends>:ver<0.0.1>;
+
+=begin pod
+
+=head1 NAME
+
+DBDish::Oracle - Database driver for Oracle
+
+=head1 DESCRIPTION
+
+This module uses L<NativeCall> and the Oracle InstantClient version 12.1
+to connect to Oracle databases, execute queries etc.
+Currently only connecting using a tnsnames.ora entry is supported.
+
+=head1 SEE ALSO
+
+The Oracle OCI Documentation, C Library:
+L<http://docs.oracle.com/cd/E11882_01/appdev.112/e10646/oci02bas.htm#LNOCI16208>
+
+=end pod
 
 #-----------------------------------------------------------------------
 
@@ -144,25 +163,3 @@ method connect(*%params) {
         );
     return $connection;
 }
-
-=begin pod
-
-=head1 DESCRIPTION
-# 'zavolaj' is a Native Call Interface for Rakudo/Parrot. 'DBIish' and
-# 'DBDish::Oracle' are Perl 6 modules that use 'zavolaj' to use the
-# standard libclntsh library.  There is a long term Parrot based
-# project to develop a new, comprehensive DBI architecture for Parrot
-# and Perl 6.  DBIish is not that, it is a naive rewrite of the
-# similarly named Perl 5 modules.  Hence the 'Mini' part of the name.
-
-=head1 CLASSES
-The DBDish::Oracle module contains the same classes and methods as every
-database driver.  Therefore read the main documentation of usage in
-L<doc:DBIish> and internal architecture in L<doc:DBDish>.  Below are
-only notes about code unique to the DBDish::Oracle implementation.
-
-=head1 SEE ALSO
-The Oracle OCI Documentation, C Library.
-L<http://docs.oracle.com/cd/E11882_01/appdev.112/e10646/oci02bas.htm#LNOCI16208>
-
-=end pod
