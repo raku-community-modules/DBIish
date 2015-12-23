@@ -38,7 +38,7 @@ my $drh = DBIish.install_driver($*mdriver);
 ok $drh, 'Install driver'; # test 1
 my $drh_version;
 $drh_version = $drh.Version;
-ok $drh_version > 0, "MiniDBD::$*mdriver version $drh_version"; # test 2
+ok $drh_version > 0, "DBDish::$*mdriver version $drh_version"; # test 2
 
 # Connect to the data sourcequantity*price AS amount FROM nom
 my $dbh;
