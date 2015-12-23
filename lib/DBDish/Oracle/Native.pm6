@@ -4,7 +4,7 @@ use NativeCall;
 
 unit module DBDish::Oracle::Native;
 
-my constant lib = 'libclntsh';
+my constant lib = ('clntsh', v12.1);
 
 #------------ Oracle library to NativeCall data type mappings -----------
 
@@ -12,7 +12,6 @@ constant sb1          is export = int8;
 constant sb2          is export = int16;
 constant sb4          is export = int32;
 constant sb8          is export = int64;
-constant size_t       is export = long;
 constant sword        is export = int32;
 constant ub2          is export = uint16;
 constant ub4          is export = uint32;
