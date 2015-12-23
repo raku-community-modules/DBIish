@@ -150,7 +150,7 @@ else { skip '$sth.bind_param_array() and $sth.execute_array() not implemented', 
 ok $sth = $dbh.prepare( "
     SELECT name, description, quantity, price, quantity*price AS amount
     FROM nom
-    ORDER BY name
+    ORDER BY COALESCE(name,'A')
 "), "prepare a select command without parameters"; # test 27
 
 ok $sth.execute(), "execute a prepared select statement without parameters"; # test 28
