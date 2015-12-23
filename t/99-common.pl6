@@ -16,6 +16,7 @@ plan 60;
         price       numeric(5,2)
     )
 ";
+%*query<select_null> //= "SELECT NULL";
 
 sub magic_cmp(@a, @b) {
     my $res =  @a[0] eq @b[0]
@@ -253,7 +254,7 @@ if $sth.can('colum_names') {
 else { skip 'fetchrow_arrayref not implemented', 2 }
 
 {
-    ok $sth = $dbh.prepare('SELECT NULL'), 'can prepare statement "SELECT NULL"';
+    ok $sth = $dbh.prepare(%*query<select_null>), "can prepare statement '%*query<select_null>'";
     $sth.execute;
     my ($v) = $sth.fetchrow;
     $sth.finish;

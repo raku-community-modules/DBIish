@@ -31,6 +31,7 @@ END;
         price       NUMBER(5,2)
     )
 ";
+%*query<select_null> = "SELECT NULL FROM DUAL";
 
 my $dbh;
 
