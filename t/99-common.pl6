@@ -5,7 +5,7 @@
 #use Test;     # "use" dies in a runtime EVAL
 #use DBIish;
 diag "Testing DBDish::$*mdriver";
-plan 60;
+plan 70;
 
 %*query<drop_table> //= "DROP TABLE IF EXISTS nom";
 %*query<create_table> //= "
@@ -155,24 +155,21 @@ ok $sth = $dbh.prepare( "
 
 ok $sth.execute(), "execute a prepared select statement without parameters"; # test 28
 
-if $sth.^can('fetchall_arrayref') {
-    my $arrayref = $sth.fetchall_arrayref();
-    is $arrayref.elems, 6, "fetchall_arrayref returns 6 rows"; # test 29
-    my @ref =
-        [ Any, Any, 1 ],
-        [ Any, Any, Any, 4.85 ],
-        [ 'BEOM', 'Medium size orange juice', '2', '1.20', '2.40' ],
-        [ 'BUBH', 'Hot beef burrito', '1', '4.95', '4.95' ],
-        [ 'ONE' ],
-        [ 'TAFM', 'Mild fish taco', '1', '4.85', '4.85' ];
-    my $ok = True;
-    for ^3 -> $i {
-        $ok &&= magic_cmp($arrayref[$i], @ref[$i]);
-    }
-    ok $ok, "selected data matches what was written"; # test 30
-    $sth.finish;
+my @ref =
+    [ Str, Str, 1 , Rat, Rat],
+    [ Str, Str, Int, 4.85, Rat ],
+    [ 'BEOM', 'Medium size orange juice', 2, 1.2, 2.4 ],
+    [ 'BUBH', 'Hot beef burrito', 1, 4.95, 4.95 ],
+    [ 'ONE', Str, Int, Rat, Rat ],
+    [ 'TAFM', 'Mild fish taco', 1, 4.85, 4.85 ];
+
+my $arrayref = $sth.fetchall_arrayref();
+is $arrayref.elems, 6, "fetchall_arrayref returns 6 rows"; # test 29
+my $ok = True;
+for ^6 -> $i {
+    $ok &&= magic_cmp($arrayref[$i], @ref[$i]);
 }
-else { skip 'fetchall_arrayref not implemented', 2 }
+ok $ok, "selected data matches what was written"; # test 30
 
 $sth.execute();
 
@@ -192,13 +189,10 @@ ok %results<price> ~~ Num, "HASH: Test the type of a Float like field";
 $sth.execute();
 
 @results = $sth.allrows();
-ok @results.elems == 3, "Test allrows, get 3 elems";
-my @ref =
-        [ 'BUBH', 'Hot beef burrito', 1, 4.95, 4.95 ],
-        [ 'TAFM', 'Mild fish taco', 1, 4.85, 4.85 ],
-        [ 'BEOM', 'Medium size orange juice', 2, 1.20, 2.40 ];
-my $ok = True;
-for ^3 -> $i {
+ok @results.elems == 6, "Test allrows, get 6 rows";
+
+$ok = True;
+for ^6 -> $i {
   $ok &&= magic_cmp(@ref[$i], @results[$i]);
 }
 ok $ok, "Selected data still matches";
@@ -206,11 +200,13 @@ ok $ok, "Selected data still matches";
 $sth.execute();
 %results = $sth.allrows(:hash-of-array);
 
-my %ref = (name => ['BUBH', 'TAFM', 'BEOM'],
-           description => ['Hot beef burrito', 'Mild fish taco', 'Medium size orange juice'],
-           quantity => [1, 1, 2],
-           price => [4.95e0, 4.85e0, 1.20e0],
-           amount => [4.95e0, 4.85e0, 2.40e0]);
+my %ref = (
+    name        => @ref.map({ .[0] }).Array,
+    description => @ref.map({ .[1] }).Array,
+    quantity    => @ref.map({ .[2] }).Array,
+    price       => @ref.map({ .[3] }).Array,
+    amount      => @ref.map({ .[4] }).Array
+);
 todo "Figure what is wrong with is-deeply";
 is-deeply %results, %ref, "Test allrows(:hash-of-array)";
 
@@ -222,12 +218,16 @@ is-deeply %results, %ref, "Test allrows(:hash-of-array)";
 
 $sth.execute();
 @results = $sth.allrows(:array-of-hash);
-@ref = ({name => 'BUBH', description => 'Hot beef burrito', quantity => 1, price => 4.95e0, amount => 4.95e0},
-           {name => 'TAFM', description => 'Mild fish taco', quantity => 1, price => 4.85e0, amount => 4.85e0},
-           {name => 'BEOM', description => 'Medium size orange juice', quantity => 2, price => 1.20e0, amount => 2.40e0}
-           );
+my @ref-aoh = (
+    { name => Str, description => Str, quantity => 1, price => Rat, amount => Rat },
+    { name => Str, description => Str, quantity => Int, price => 4.85, amount => Rat },
+    { name => 'BEOM', description => 'Medium size orange juice', quantity => 2, price => 1.2, amount => 2.4 },
+    { name => 'BUBH', description => 'Hot beef burrito', quantity => 1, price => 4.95, amount => 4.95 },
+    { name => 'ONE', description => Str, quantity => Int, price => Rat, amount => Rat },
+    { name => 'TAFM', description => 'Mild fish taco', quantity => 1, price => 4.85, amount => 4.85 },
+);
 todo "Figure what is wrong with is-deeply";
-is-deeply @results, @ref;
+is-deeply @results, @ref-aoh;
 
 ok $sth = $dbh.prepare("SELECT * FROM nom WHERE name = 'TAFM'"),
 'prepare new select for fetchrow_hashref test'; #test 31
