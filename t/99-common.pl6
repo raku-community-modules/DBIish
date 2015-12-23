@@ -18,11 +18,9 @@ plan 70;
 ";
 %*query<select_null> //= "SELECT NULL";
 
+#! compare rows of the nom table
 sub magic_cmp(@a, @b) {
-    my $res =  @a[0] eq @b[0]
-            && @a[1] eq @b[1]
-            && @a[2] == @b[2]
-            && @a[3] == @b[3];
+    my $res =  @a ~~ @b;
     unless $res {
         diag "     Got: @a[]";
         diag "Expected: @b[]";
