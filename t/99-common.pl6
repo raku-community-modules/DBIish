@@ -174,11 +174,17 @@ my %ref = (name => ['BUBH', 'TAFM', 'BEOM'],
 todo "Figure what is wrong with is-deeply";
 is-deeply %results, %ref, "Test allrows(:hash-of-array)";
 
+# use Data::Dump;
+# say "============EXPECTED==========";
+# say Dump(%ref);
+# say "============GOT===============";
+# say Dump(%results);
+
 $sth.execute();
 @results = $sth.allrows(:array-of-hash);
-@ref = ([name => 'BUBH', description => 'Hot beef burrito', quantity => 1, price => 4.95e0, amount => 4.95e0],
-           [name => 'TAFM', description => 'Mild fish taco', quantity => 1, price => 4.85e0, amount => 4.85e0],
-           [name => 'BEOM', description => 'Medium size orange juice', quantity => 2, price => 1.20e0, amount => 2.40e0]
+@ref = ({name => 'BUBH', description => 'Hot beef burrito', quantity => 1, price => 4.95e0, amount => 4.95e0},
+           {name => 'TAFM', description => 'Mild fish taco', quantity => 1, price => 4.85e0, amount => 4.85e0},
+           {name => 'BEOM', description => 'Medium size orange juice', quantity => 2, price => 1.20e0, amount => 2.40e0}
            );
 todo "Figure what is wrong with is-deeply";
 is-deeply @results, @ref;

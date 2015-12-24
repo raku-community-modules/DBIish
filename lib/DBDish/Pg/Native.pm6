@@ -148,6 +148,7 @@ constant %oid-to-type-name is export = (
       1021  => 'Num',   # _float4
       1022  => 'Num',   # _float8
       1043  => 'Str',   # varchar
+      1114  => 'Str',   # Timestamp
       1700  => 'Real',  # numeric
       2950  => 'Str',   # uuid
       2951  => 'Str',   # _uuid
