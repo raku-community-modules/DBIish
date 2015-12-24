@@ -17,9 +17,6 @@ method execute(*@) { ... }
 
 method	_row(:$hash) { ... }
 
-method column_p6types { die "The selected backend does not support/implement typed value" }
-# Used by fetch* typedhash
-method true_false { return True }
 
 method fetchrow-hash() {
     hash self.column_names Z=> self.fetchrow;
@@ -54,40 +51,6 @@ method allrows(:$array-of-hash, :$hash-of-array) {
     return @rows;
 }
 
-method fetchall_typedhash is DEPRECATED("allrows(:hash-of-array)"){
-    my @names = self.column_names;
-    my @types = self.column_p6types;
-    my %res = @names Z=> [] xx *;
-    for self.fetchall-array -> @a {
-        my $i = 0;
-        for @a Z @names -> ($v, $n) {
-            %res{$n}.push: self.typed_value(@types[$i++], $v);
-        }
-    }
-    return %res;
-}
-
-method fetchrow_typedhash is DEPRECATED("row(:hash)") {
-    my Str @values = self.fetchrow_array;
-    return Any if !@values.defined;
-    my @names = self.column_names;
-    my @types = self.column_p6types;
-    my %hash;
-    for 0..(@values.elems-1) -> $i {
-        %hash{@names[$i]} = self.typed_value(@types[$i], @values[$i]);
-    }
-    return %hash;
-}
-
-method typed_value(Str $typename, Str $value) {
-    given ($typename) {
-            return $value when 'Str';
-            return $value.Num when 'Num';
-            return $value.Int when 'Int';
-            return self.true_false($value) when 'Bool';
-            return $value.Real when 'Real';
-        }
-}
 
 method fetchrow_hashref { $.fetchrow-hash }
 
