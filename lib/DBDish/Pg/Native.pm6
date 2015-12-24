@@ -5,7 +5,7 @@ use NativeCall;
 
 unit module DBDish::Pg::Native;
 
-constant LIB = %*ENV<DBIISH_PG_LIB> || 'libpq';
+constant LIB = %*ENV<DBIISH_PG_LIB> || ('pq', v5);
 
 #------------ Pg library functions in alphabetical order ------------
 
