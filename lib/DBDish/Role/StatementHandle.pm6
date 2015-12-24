@@ -52,16 +52,6 @@ method allrows(:$array-of-hash, :$hash-of-array) {
 }
 
 
-method typed_value(Str $typename, Str $value) {
-    given ($typename) {
-            return $value when 'Str';
-            return $value.Num when 'Num';
-            return $value.Int when 'Int';
-            return self.true_false($value) when 'Bool';
-            return $value.Real when 'Real';
-        }
-}
-
 method fetchrow_hashref { $.fetchrow-hash }
 
 method fetchall-hash {
