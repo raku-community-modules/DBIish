@@ -99,11 +99,24 @@ method _row(:$hash) {
             }
             my $value;
             given (@types[$_]) {
-                $value = $res when 'Str';
-                $value = $res.Num when 'Num';
-                $value = $res.Int when 'Int';
-                $value = self.true_false($res) when 'Bool';
-                $value = $res.Real when 'Real';
+                when 'Str' {
+                  $value = $res
+                }
+                when 'Num' {
+                  $value = $res.Num
+                }
+                when 'Int' {
+                  $value = $res.Int
+                }
+                when 'Bool' {
+                  $value = self.true_false($res)
+                }
+                when 'Real' {
+                  $value = $res.Real
+                }
+                default {
+                  $value = $res;
+                }
             }
             $hash ?? (%ret_hash{@names[$_]} = $value) !! @row_array.push($value);
         }
