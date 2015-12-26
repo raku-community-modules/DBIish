@@ -8,7 +8,7 @@ A role that handles the errors from connection handles and statement handles
 =head3 Attributes
 =head4 C<PrintError is rw>
 Errors are printed to the standard error handle if this is True
-=head4 C<RaisErrors is rw = True>
+=head4 C<RaiseErrors is rw = True>
 Errors raise exceptions if this is True
 =head3 Methods
 =head4 errstr
