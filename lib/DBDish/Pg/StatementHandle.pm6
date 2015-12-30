@@ -114,6 +114,15 @@ method _row(:$hash) {
                 when 'Real' {
                   $value = $res.Real
                 }
+                when 'Array<Int>' {
+                  $value = _pg-to-array( $res, 'Int' );
+                }
+                when 'Array<Str>' {
+                  $value = _pg-to-array( $res, 'Str' );
+                }
+                when 'Array<Num>' {
+                  $value = _pg-to-array( $res, 'Num' );
+                }
                 default {
                   $value = $res;
                 }
@@ -193,6 +202,57 @@ method column_p6types {
    my @types = self.column_oids;
    return @types.map:{%oid-to-type-name{$_}};
 }
+
+my grammar PgArrayGrammar {
+    rule array        { '{' (<element> ','?)* '}' }
+    rule TOP         { ^ <array> $ }
+    rule element      { <array> | <float> | <integer> | <string> }
+    token float        { (\d+ '.' \d+) }
+    token integer      { (\d+) }
+    rule string       { '"' $<value>=( [\w|\s]+ ) '"' | $<value>=( \w+ ) }
+};
+
+sub _to-type($value, Str $type where $_ eq any([ 'Str', 'Num', 'Int' ])) {
+  return $value unless $value.defined;
+  if $type eq 'Str' {
+      # String
+      return ~$value;
+  } elsif $type eq 'Num' {
+      # Floating point number
+      return Num($value);
+  } else {
+      # Must be Int
+      return Int($value);
+  }
+}
+
+sub _to-array(Match $match, Str $type where $_ eq any([ 'Str', 'Num', 'Int' ])) {
+    my @array;
+    for $match.<array>.values -> $element {
+      if $element.values[0]<array>.defined {
+          # An array
+          push @array, _to-array( $element.values[0], $type );
+      } elsif $element.values[0]<float>.defined {
+          # Floating point number
+          push @array, _to-type( $element.values[0]<float>, $type );
+      } elsif $element.values[0]<integer>.defined {
+          # Integer
+          push @array, _to-type( $element.values[0]<integer>, $type );
+      } else {
+          # Must be a String
+          push @array, _to-type( $element.values[0]<string><value>, $type );
+      }
+    }
+
+    return @array;
+}
+
+sub _pg-to-array(Str $text, Str $type where $_ eq any([ 'Str', 'Num', 'Int' ])) {
+    my $match = PgArrayGrammar.parse( $text );
+    die "Failed to parse" unless $match.defined;
+    return _to-array($match, $type);
+}
+
 
 method true_false(Str $s) {
     return $s eq 't';
