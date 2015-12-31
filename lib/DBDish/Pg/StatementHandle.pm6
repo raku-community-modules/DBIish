@@ -254,6 +254,23 @@ sub _pg-to-array(Str $text, Str $type where $_ eq any([ 'Str', 'Num', 'Int' ])) 
 }
 
 
+method pg-array-str(@data) {
+  my @tmp;
+  for @data -> $c {
+    if  $c ~~ Array {
+      @tmp.push(to_pg_array($c));
+    } else {
+      if $c ~~ Numeric {
+        @tmp.push($c);
+      } else {
+         my $t = $c.subst('"', '\\"');
+         @tmp.push('"'~$t~'"');
+      }
+    }
+  }
+  return '{' ~ @tmp.join(',') ~ '}';
+}
+
 method true_false(Str $s) {
     return $s eq 't';
 }
