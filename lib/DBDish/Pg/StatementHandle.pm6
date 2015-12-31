@@ -258,7 +258,7 @@ method pg-array-str(@data) {
   my @tmp;
   for @data -> $c {
     if  $c ~~ Array {
-      @tmp.push(to_pg_array($c));
+      @tmp.push(self.pg-array-str($c));
     } else {
       if $c ~~ Numeric {
         @tmp.push($c);
