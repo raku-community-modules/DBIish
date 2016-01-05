@@ -1,5 +1,5 @@
 use v6;
-
+no precompilation;
 use NativeCall;
 
 need DBDish::Role::StatementHandle;
