@@ -114,8 +114,8 @@ method _row(:$hash) {
                    when 'Int' {
                      $native_row[$i].Int;
                    }
-                   when 'Num' {
-                     $native_row[$i].Num;
+                   when 'Rat' {
+                     $native_row[$i].Rat;
                    }
                    default {
                      $native_row[$i];
