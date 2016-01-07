@@ -100,17 +100,11 @@ method _row(:$hash) {
                 when 'Str' {
                   $value = $is-null ?? Str !! $res;
                 }
-                when 'Num' {
-                  $value = $is-null ?? Num !! $res.Num;
-                }
                 when 'Int' {
                   $value = $is-null ?? Int !! $res.Int;
                 }
                 when 'Bool' {
                   $value = $is-null ?? Bool !! self.true_false($res);
-                }
-                when 'Real' {
-                  $value = $is-null ?? Real !! $res.Real;
                 }
                 when 'Array<Int>' {
                   $value := _pg-to-array( $res, 'Int' );
@@ -118,8 +112,8 @@ method _row(:$hash) {
                 when 'Array<Str>' {
                   $value := _pg-to-array( $res, 'Str' );
                 }
-                when 'Array<Num>' {
-                  $value := _pg-to-array( $res, 'Num' );
+                when 'Array<Rat>' {
+                  $value = _pg-to-array( $res, 'Rat' );
                 }
                 default {
                   $value = $res;
@@ -210,21 +204,21 @@ my grammar PgArrayGrammar {
     rule string       { '"' $<value>=( [\w|\s]+ ) '"' | $<value>=( \w+ ) }
 };
 
-sub _to-type($value, Str $type where $_ eq any([ 'Str', 'Num', 'Int' ])) {
+sub _to-type($value, Str $type where $_ eq any([ 'Str', 'Rat', 'Int' ])) {
   return $value unless $value.defined;
   if $type eq 'Str' {
       # String
       return ~$value;
-  } elsif $type eq 'Num' {
+  } elsif $type eq 'Rat' {
       # Floating point number
-      return Num($value);
+      return Rat($value);
   } else {
       # Must be Int
       return Int($value);
   }
 }
 
-sub _to-array(Match $match, Str $type where $_ eq any([ 'Str', 'Num', 'Int' ])) {
+sub _to-array(Match $match, Str $type where $_ eq any([ 'Str', 'Rat', 'Int' ])) {
     my @array;
     for $match.<array>.values -> $element {
       if $element.values[0]<array>.defined {
@@ -245,7 +239,7 @@ sub _to-array(Match $match, Str $type where $_ eq any([ 'Str', 'Num', 'Int' ])) 
     return @array;
 }
 
-sub _pg-to-array(Str $text, Str $type where $_ eq any([ 'Str', 'Num', 'Int' ])) {
+sub _pg-to-array(Str $text, Str $type where $_ eq any([ 'Str', 'Rat', 'Int' ])) {
     my $match = PgArrayGrammar.parse( $text );
     die "Failed to parse" unless $match.defined;
     return _to-array($match, $type);
