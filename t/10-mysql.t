@@ -1,19 +1,19 @@
-# DBIish/t/10-mysql.t
+=begin pod
 
-# Before running the tests, prepare the database with something like:
+Before running the tests, prepare the database with something like:
 
-#   $ mysql -u root -p
-#   CREATE DATABASE zavolaj;
-#   CREATE USER 'testuser'@'localhost' IDENTIFIED BY 'testpass';
-#   GRANT SELECT         ON   mysql.* TO 'testuser'@'localhost';
-#   GRANT CREATE         ON zavolaj.* TO 'testuser'@'localhost';
-#   GRANT DROP           ON zavolaj.* TO 'testuser'@'localhost';
-#   GRANT INSERT         ON zavolaj.* TO 'testuser'@'localhost';
-#   GRANT DELETE         ON zavolaj.* TO 'testuser'@'localhost';
-#   GRANT LOCK TABLES    ON zavolaj.* TO 'testuser'@'localhost';
-#   GRANT SELECT         ON zavolaj.* TO 'testuser'@'localhost';
-#   # or maybe otherwise
-#   GRANT ALL PRIVILEGES ON zavolaj.* TO 'testuser'@'localhost';
+$ mysql -u root -p
+CREATE DATABASE dbdishmysqltest;
+CREATE USER 'testuser'@'localhost' IDENTIFIED BY 'testpass';
+GRANT SELECT         ON   mysql.* TO 'testuser'@'localhost';
+GRANT CREATE         ON dbdishmysqltest.* TO 'testuser'@'localhost';
+GRANT DROP           ON dbdishmysqltest.* TO 'testuser'@'localhost';
+GRANT INSERT         ON dbdishmysqltest.* TO 'testuser'@'localhost';
+GRANT DELETE         ON dbdishmysqltest.* TO 'testuser'@'localhost';
+GRANT LOCK TABLES    ON dbdishmysqltest.* TO 'testuser'@'localhost';
+GRANT SELECT         ON dbdishmysqltest.* TO 'testuser'@'localhost';
+# or maybe otherwise
+GRANT ALL PRIVILEGES ON dbdishmysqltest.* TO 'testuser'@'localhost';
 
 # This '10-mysql.t' test script is a Perl 6 adaptation of the Perl 5
 # based test suite for DBD::mysql version 4.014.  It is experimental and
@@ -28,6 +28,8 @@
 # As yet uncommented Perl 5 code is enclosed in Pod 6 '=begin pod' and
 # '=end pod' markers.
 
+=end pod
+
 use Test;
 
 plan 87;
@@ -40,7 +42,7 @@ use DBIish;
 my $mdriver       = 'mysql';
 my $host          = 'localhost';
 my $port          = 3306;
-my $database      = 'zavolaj';
+my $database      = 'dbdishmysqltest';
 my $test_user     = 'testuser';
 my $test_password = 'testpass';
 my $table         = 't1';
