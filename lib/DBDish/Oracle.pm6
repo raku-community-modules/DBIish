@@ -19,6 +19,7 @@ DBDish::Oracle - Database driver for Oracle
 
 This module uses L<NativeCall> and the Oracle InstantClient version 12.1
 to connect to Oracle databases, execute queries etc.
+UTF-8 encoding is used for all strings, called AL32UTF8 by Oracle.
 Currently only connecting using a tnsnames.ora entry is supported.
 
 =head1 SEE ALSO
