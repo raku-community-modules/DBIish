@@ -27,7 +27,7 @@ method execute(*@params is copy) {
         my $param = @params.shift;
         if $param.defined {
             if $param ~~ Real {
-                $statement ~= $param 
+                $statement ~= $param
             }
             else {
                 $statement ~= self.quote($param.Str);
@@ -75,10 +75,10 @@ method rows() {
 
         if $errstr ne '' { self!set_errstr($errstr); }
     }
-    
+
     if defined $!affected_rows {
         return $!affected_rows;
-    } 
+    }
 }
 
 method _row(:$hash) {
@@ -150,9 +150,9 @@ method fetchrow() {
 
         my $native_row = mysql_fetch_row($!result_set); # can return NULL
         my $errstr     = mysql_error( $!mysql_client );
-        
+
         if $errstr ne '' { self!set_errstr($errstr); }
-        
+
         if $native_row {
             loop ( my $i=0; $i < $!field_count; $i++ ) {
                 @row_array.push($native_row[$i]);
@@ -186,7 +186,7 @@ method mysql_insertid() {
 }
 
 method finish() {
-    self.fetchrow if !defined $!result_set; 
+    self.fetchrow if !defined $!result_set;
     if defined( $!result_set ) {
         mysql_free_result($!result_set);
         $!result_set   = Mu;

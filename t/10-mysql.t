@@ -59,7 +59,7 @@ my $table         = 't1';
 #$drh= DBI->install_driver($mdriver);
 #ok $drh, 'Install driver';
 #cmp_ok ref $drh, 'eq', 'DBI::dr', 'DBI::dr set';
-#ok $drh->{Version}, "Version $drh->{Version}"; 
+#ok $drh->{Version}, "Version $drh->{Version}";
 #print "Driver version is ", $drh->{Version}, "\n";my $mdriver = 'mysql';
 my $drh;
 $drh = DBIish.install_driver($mdriver);
@@ -83,7 +83,7 @@ my $dbh = try {
         exit;
 
     }}
-   
+
     DBIish.connect($mdriver, :user($test_user), :password($test_password),
         :$host, :$port, :$database,
         RaiseError => 1, PrintError => 1, AutoCommit => 0
@@ -127,7 +127,7 @@ lives-ok({$dbh.do("DROP TABLE $table")}, "dropping created $table"); # test 8
 #ok $dbh->do($create), "create table $table";
 #ok $dbh->do("LOCK TABLES $table WRITE"), "lock table $table";
 #ok $dbh->do("INSERT INTO $table VALUES(1, 'Alligator Descartes')"), "Insert ";
-#ok $dbh->do("DELETE FROM $table WHERE id = 1"), "Delete"; 
+#ok $dbh->do("DELETE FROM $table WHERE id = 1"), "Delete";
 #EVAL {$sth= $dbh->prepare("SELECT * FROM $table WHERE id = 1")};
 #ok !$@, "Prepare of select";
 #ok defined($sth), "Prepare of select";
@@ -191,7 +191,7 @@ is($sth.mysql_warning_count, 1, "...returns an error"); # test 22
 #ok($dbh->do("CREATE TABLE $table (id INT(4), name VARCHAR(64))"), "creating table");
 #ok($dbh->do("INSERT INTO $table VALUES(1, 'Alligator Descartes')"), "loading data");
 #ok($dbh->do("DELETE FROM $table WHERE id = 1"), "deleting from table $table");
-#ok (my $sth= $dbh->prepare("SELECT * FROM $table WHERE id = 1")); 
+#ok (my $sth= $dbh->prepare("SELECT * FROM $table WHERE id = 1"));
 #ok($sth->execute());
 #ok(not $sth->fetchrow_arrayref());
 #ok($sth->finish());
@@ -199,7 +199,7 @@ is($sth.mysql_warning_count, 1, "...returns an error"); # test 22
 
 #-----------------------------------------------------------------------
 # from perl5 DBD/mysql/t/31insertid.t
-#plan tests => 18; 
+#plan tests => 18;
 #ok $dbh->do("DROP TABLE IF EXISTS $table");
 #my $create = <<EOT;
 #CREATE TABLE $table (
@@ -299,19 +299,19 @@ $sth.PrintError = Bool::True;
 
 #-----------------------------------------------------------------------
 # from perl5 DBD/mysql/t/35limit.t
-#plan tests => 111; 
+#plan tests => 111;
 #ok($dbh->do("DROP TABLE IF EXISTS $table"), "making slate clean");
 #ok($dbh->do("CREATE TABLE $table (id INT(4), name VARCHAR(64))"), "creating table");
 #ok(($sth = $dbh->prepare("INSERT INTO $table VALUES (?,?)")));
 #print "PERL testing insertion of values from previous prepare of insert statement:\n";
-#for (my $i = 0 ; $i < 100; $i++) { 
+#for (my $i = 0 ; $i < 100; $i++) {
 #  my @chars = grep !/[0O1Iil]/, 0..9, 'A'..'Z', 'a'..'z';
 #  my $random_chars = join '', map { $chars[rand @chars] } 0 .. 16;
 ## save these values for later testing
 #  $testInsertVals->{$i} = $random_chars;
 #  ok(($rows = $sth->execute($i, $random_chars)));
 #}
-#print "PERL rows : " . $rows . "\n"; 
+#print "PERL rows : " . $rows . "\n";
 #print "PERL testing prepare of select statement with LIMIT placeholders:\n";
 #ok($sth = $dbh->prepare("SELECT * FROM $table LIMIT ?, ?"));
 #print "PERL testing exec of bind vars for LIMIT\n";
@@ -344,7 +344,7 @@ is($array_ref.elems, 50,"limit 50 works"); # test 52
 
 #-----------------------------------------------------------------------
 # from perl5 DBD/mysql/t/35prepare.t
-#plan tests => 49; 
+#plan tests => 49;
 #ok($dbh->do("DROP TABLE IF EXISTS t1"), "Making slate clean");
 #ok($dbh->do("CREATE TABLE t1 (id INT(4), name VARCHAR(64))"),
 #  "Creating table");
@@ -363,7 +363,7 @@ is($array_ref.elems, 50,"limit 50 works"); # test 52
 #ok(($rows = $sth->execute()), "Inserting second row");
 #ok($rows == 1, "One row should have been inserted");
 #ok($sth->finish, "Finishing up with statement handle");
-#ok($sth= $dbh->prepare("SELECT id, name FROM t1 WHERE id = 1"), 
+#ok($sth= $dbh->prepare("SELECT id, name FROM t1 WHERE id = 1"),
 #  "Testing prepare of query");
 #ok($sth->execute(), "Testing execute of query");
 #ok($ret_ref = $sth->fetchall_arrayref(),
@@ -372,7 +372,7 @@ is($array_ref.elems, 50,"limit 50 works"); # test 52
 #  "Preparing insert, this time using placeholders");
 #my $testInsertVals = {};
 #for (my $i = 0 ; $i < 10; $i++)
-#{ 
+#{
 #  my @chars = grep !/[0O1Iil]/, 0..9, 'A'..'Z', 'a'..'z';
 #  my $random_chars= join '', map { $chars[rand @chars] } 0 .. 16;
 #   # save these values for later testing
@@ -392,7 +392,7 @@ is($array_ref.elems, 50,"limit 50 works"); # test 52
 #ok($sth= $dbh->prepare("DROP TABLE IF EXISTS t1"),
 #  "Testing prepare of dropping table");
 #ok($sth->execute(), "Executing drop table");
-# Bug #20153: Fetching all data from a statement handle does not mark it 
+# Bug #20153: Fetching all data from a statement handle does not mark it
 # as finished
 #ok($sth= $dbh->prepare("SELECT 1"), "Prepare - Testing bug #20153");
 #ok($sth->execute(), "Execute - Testing bug #20153");
@@ -483,9 +483,9 @@ ok(!($sth.fetchrow_arrayref()),"Not Fetch - Testing bug #20153"); # test 81
 #ok ($sth = $dbh->prepare("SELECT * FROM $table ORDER BY id"));
 #ok($sth->execute);
 #ok ($sth->bind_columns(undef, \$id, \$name));
-#$ref = $sth->fetch ; 
-#is $id,  -1, 'id set to -1'; 
-#cmp_ok $name, 'eq', 'abc', 'name eq abc'; 
+#$ref = $sth->fetch ;
+#is $id,  -1, 'id set to -1';
+#cmp_ok $name, 'eq', 'abc', 'name eq abc';
 #$ref = $sth->fetch;
 #is $id, 1, 'id set to 1';
 #cmp_ok $name, 'eq', 'Alligator Descartes', '$name set to Alligator Descartes';
@@ -537,10 +537,10 @@ ok ($sth.execute($numericVal, $charVal)),"insert with number for numeric"; # tes
 #  { RaiseError => 1, AutoCommit => 1}) or ServerError();};
 #if ($@) {
 #    plan skip_all => "ERROR: $DBI::errstr. Can't continue test";
-#} 
+#}
 #plan tests => 13;
 #ok $dbh->do("DROP TABLE IF EXISTS $table"), "drop table $table";
-#my $create= <<EOT; 
+#my $create= <<EOT;
 #CREATE TABLE $table (
 #    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
 #    num INT(3))
@@ -585,7 +585,7 @@ ok ($sth.execute($numericVal, $charVal)),"insert with number for numeric"; # tes
 #        printf("%08lx %s\n", $i*32, unpack("H64", $b));
 #    }
 #}
-#my $charset= 'DEFAULT CHARSET=utf8'; 
+#my $charset= 'DEFAULT CHARSET=utf8';
 #plan tests => 14;
 #if ($dbh->get_info($GetInfoType{SQL_DBMS_VER}) lt "4.1") {
 #    $charset= '';
@@ -595,7 +595,7 @@ ok ($sth.execute($numericVal, $charVal)),"insert with number for numeric"; # tes
 #my $create = <<EOT;
 #CREATE TABLE $table (
 #    id INT(3) NOT NULL DEFAULT 0,
-#    name BLOB ) $charset 
+#    name BLOB ) $charset
 #EOT
 #ok ($dbh->do($create));
 #my ($blob, $qblob) = "";
@@ -780,7 +780,7 @@ SKIP: {
   $info = $sth->fetchall_arrayref({});
 
   is(scalar @$info, 5, "five tables expected");
-  
+
   # Check that tables() finds and escapes the tables named with quotes
   $info = [ $dbh->tables(undef, undef, $base . 'a%') ];
   like($info->[0], qr/\.`t_dbd_mysql_a'b`$/, "table with single quote");
@@ -913,7 +913,7 @@ EVAL {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
 if ($@) {
     plan skip_all => "ERROR: $DBI::errstr. Can't continue test";
 }
-plan tests => 7; 
+plan tests => 7;
 
 $dbh->{mysql_server_prepare}= 0;
 
@@ -975,7 +975,7 @@ EVAL {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
 if ($@) {
     plan skip_all => "ERROR: $DBI::errstr. Can't continue test";
 }
-plan tests => 25; 
+plan tests => 25;
 
 $dbh->{mysql_server_prepare}= 0;
 
@@ -1018,7 +1018,7 @@ $ref = $sth->{'NAME'};
 
 ok $ref, "\$sth->{NAME} defined";
 
-cmp_ok $$ref[0], 'eq', 'id', "$$ref[0] eq 'id'"; 
+cmp_ok $$ref[0], 'eq', 'id', "$$ref[0] eq 'id'";
 
 cmp_ok $$ref[1], 'eq', 'name', "$$ref[1] eq 'name'";
 
@@ -1073,10 +1073,10 @@ my ($dbh, $sth);
 EVAL {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
                       { RaiseError => 1, PrintError => 1, AutoCommit => 0 });};
 if ($@) {
-    plan skip_all => 
+    plan skip_all =>
         "ERROR: $DBI::errstr. Can't continue test";
 }
-plan tests => 10; 
+plan tests => 10;
 
 ok $dbh->do("DROP TABLE IF EXISTS $table"), "DROP TABLE IF EXISTS $table";
 
@@ -1126,10 +1126,10 @@ my ($dbh, $sth, $aref);
 EVAL {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
                       { RaiseError => 1, PrintError => 1, AutoCommit => 0 });};
 if ($@) {
-    plan skip_all => 
+    plan skip_all =>
         "ERROR: $DBI::errstr. Can't continue test";
 }
-plan tests => 30; 
+plan tests => 30;
 
 ok $dbh->do("DROP TABLE IF EXISTS $table");
 
@@ -1137,7 +1137,7 @@ my $create= <<EOT;
 CREATE TABLE $table (
   id INT(4) NOT NULL DEFAULT 0,
   name varchar(64) NOT NULL DEFAULT ''
-) 
+)
 EOT
 
 ok $dbh->do($create), "CREATE TABLE $table";
@@ -1176,7 +1176,7 @@ ok ($sth = $dbh->prepare("SELECT * FROM $table WHERE id >= 2"));
 
 ok $sth->execute;
 
-is $sth->rows, 2, 'rows should be 2'; 
+is $sth->rows, 2, 'rows should be 2';
 
 ok ($aref= $sth->fetchall_arrayref);
 
@@ -1188,7 +1188,7 @@ ok ($sth = $dbh->prepare("SELECT * FROM $table"));
 
 ok $sth->execute;
 
-is $sth->rows, 3, 'rows should be 3'; 
+is $sth->rows, 3, 'rows should be 3';
 
 ok ($aref= $sth->fetchall_arrayref);
 
@@ -1222,12 +1222,12 @@ if ($@) {
     plan skip_all => "ERROR: $@. Can't continue test";
 }
 
-# 
-# DROP/CREATE PROCEDURE will give syntax error 
+#
+# DROP/CREATE PROCEDURE will give syntax error
 # for versions < 5.0
 #
 if ($dbh->get_info($GetInfoType{SQL_DBMS_VER}) lt "4.1") {
-    plan skip_all => 
+    plan skip_all =>
         "SKIP TEST: You must have MySQL version 4.1 and greater for this test to run";
 }
 plan tests => 3;
@@ -1266,7 +1266,7 @@ EVAL {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
 if ($@) {
     plan skip_all => "ERROR: $@. Can't continue test";
 }
-plan tests => 21; 
+plan tests => 21;
 
 ok(defined $dbh, "connecting");
 
@@ -1335,7 +1335,7 @@ EVAL {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
                       { RaiseError => 1, PrintError => 1, AutoCommit => 0 });};
 print "err perl $@\n";
 if ($@) {
-    plan skip_all => 
+    plan skip_all =>
         "ERROR: $DBI::errstr. Can't continue test";
 }
 plan tests => 20;
@@ -1343,7 +1343,7 @@ plan tests => 20;
 ok(defined $dbh, "Connected to database");
 
 SKIP: {
-skip "New Data types not supported by server", 19 
+skip "New Data types not supported by server", 19
   if $dbh->get_info($GetInfoType{SQL_DBMS_VER}) lt "5.0";
 
 ok($dbh->do(qq{DROP TABLE IF EXISTS t1}), "making slate clean");
@@ -1407,10 +1407,10 @@ my ($dbh, $sth);
 EVAL {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
                       { RaiseError => 1, PrintError => 1, AutoCommit => 0 });};
 if ($@) {
-    plan skip_all => 
+    plan skip_all =>
         "ERROR: $DBI::errstr. Can't continue test";
 }
-plan tests => 11; 
+plan tests => 11;
 
 my ($rows, $errstr, $ret_ref);
 ok $dbh->do("drop table if exists $table"), "drop table $table";
@@ -1424,7 +1424,7 @@ ok $sth->bind_param(1,10000,DBI::SQL_INTEGER), "bind param 10000 col1";
 ok $sth->execute(), 'execute';
 
 ok $sth->bind_param(1,10001,DBI::SQL_INTEGER), "bind param 10001 col1";
-  
+
 ok $sth->execute(), 'execute';
 
 ok ($sth= $dbh->prepare("DROP TABLE $table"));
@@ -1433,7 +1433,7 @@ ok $sth->execute();
 
 ok $sth->finish;
 
-ok $dbh->disconnect; 
+ok $dbh->disconnect;
 #-----------------------------------------------------------------------
 #!perl
 # vim: ft=perl
@@ -1565,8 +1565,8 @@ ok $dbh->do("drop table if exists $table");
 
 my $create= <<EOT;
 create table $table (
-    a int not null, 
-    b double, 
+    a int not null,
+    b double,
     primary key (a))
 EOT
 
@@ -1583,7 +1583,7 @@ ok $sth->execute();
 ok $sth->bind_param(1,10001,DBI::SQL_INTEGER);
 
 ok $sth->bind_param(2,.3333333,DBI::SQL_DOUBLE);
-  
+
 ok $sth->execute();
 
 ok $dbh->do("DROP TABLE $table");
@@ -1613,10 +1613,10 @@ my $dbh;
 EVAL {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
                       { RaiseError => 1, PrintError => 1, AutoCommit => 0 });};
 if ($@) {
-    plan skip_all => 
+    plan skip_all =>
         "ERROR: $DBI::errstr. Can't continue test";
 }
-plan tests => 29; 
+plan tests => 29;
 
 ok $dbh->do("DROP TABLE IF EXISTS $table"), "drop table if exists $table";
 
@@ -1671,14 +1671,14 @@ ok $dbh->do("DROP TABLE $table"), "drop $table";
 ok $dbh->disconnect;
 #!perl -w
 #
-#   $Id: 50commit.t 11645 2008-08-15 11:36:38Z capttofu $ 
+#   $Id: 50commit.t 11645 2008-08-15 11:36:38Z capttofu $
 #
 #   This is testing the transaction support.
 #
 
 
 use DBI;
-use Test::More; 
+use Test::More;
 use lib 't', '.';
 require 'lib.pl';
 
@@ -1688,7 +1688,7 @@ my $dbh;
 EVAL {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
                       { RaiseError => 1, PrintError => 1, AutoCommit => 0 });};
 if ($@) {
-    plan skip_all => 
+    plan skip_all =>
         "ERROR: $DBI::errstr. Can't continue test";
 }
 
@@ -1722,7 +1722,7 @@ $have_transactions = have_transactions($dbh);
 my $engine= $have_transactions ? 'InnoDB' : 'MyISAM';
 
 if ($have_transactions) {
-  plan tests => 21; 
+  plan tests => 21;
 
   ok $dbh->do("DROP TABLE IF EXISTS $table"), "drop table if exists $table";
   my $create =<<EOT;
@@ -1781,7 +1781,7 @@ EOT
 
 }
 else {
-  plan tests => 13; 
+  plan tests => 13;
 
   ok $dbh->do("DROP TABLE IF EXISTS $table"), "drop table if exists $table";
   my $create =<<EOT;
@@ -1833,7 +1833,7 @@ EOT
   EVAL { $result = $dbh->rollback; };
   $SIG{__WARN__} = 'DEFAULT';
 
-  ok $got_warning, "Should be warning defined upon rollback of non-trx table"; 
+  ok $got_warning, "Should be warning defined upon rollback of non-trx table";
 
   ok $dbh->do("DROP TABLE $table");
   ok $dbh->disconnect();
@@ -1856,10 +1856,10 @@ my $dbh;
 EVAL {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
                       { RaiseError => 1, PrintError => 1, AutoCommit => 0 });};
 if ($@) {
-    plan skip_all => 
+    plan skip_all =>
         "ERROR: $DBI::errstr. Can't continue test";
 }
-plan tests => 25; 
+plan tests => 25;
 
 ok $dbh->do("DROP TABLE IF EXISTS $table"), "drop table if exists $table";
 
@@ -1936,7 +1936,7 @@ use DBI;
 use DBI::Const::GetInfoType;
 use Carp qw(croak);
 use Test::More;
-use vars qw($table $test_dsn $test_user $test_password); 
+use vars qw($table $test_dsn $test_user $test_password);
 use vars qw($COL_NULLABLE $COL_KEY);
 use lib 't', '.';
 require 'lib.pl';
@@ -1948,11 +1948,11 @@ if ($@) {
     plan skip_all => "ERROR: $@. Can't continue test";
 }
 
-# 
+#
 # DROP/CREATE PROCEDURE will give syntax error for these versions
 #
 if ($dbh->get_info($GetInfoType{SQL_DBMS_VER}) lt "5.0") {
-    plan skip_all => 
+    plan skip_all =>
         "SKIP TEST: You must have MySQL version 5.0 and greater for this test to run";
 }
 plan tests => 15;
@@ -1984,7 +1984,7 @@ cmp_ok $dbh->quote($blob), 'eq', $quoted_blob, 'testing quoting of blob';
 $dbh->{mysql_enable_utf8}=1;
 
 my $query = <<EOI;
-INSERT INTO $table (name, bincol, shape, binutf) 
+INSERT INTO $table (name, bincol, shape, binutf)
     VALUES (?,?, GeomFromText('Point(132865 501937)'), ?)
 EOI
 
@@ -2057,10 +2057,10 @@ my ($dbh, $sth);
 EVAL {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
                       { RaiseError => 1, PrintError => 1, AutoCommit => 0 });};
 if ($@) {
-    plan skip_all => 
+    plan skip_all =>
         "ERROR: $@. Can't continue test";
 }
-plan tests => 21; 
+plan tests => 21;
 
 sub size {
   my($p, $pt);
@@ -2136,7 +2136,7 @@ for (my $i = 0;  $i < $COUNT_PREPARE;  $i++) {
     $size = size();
     if (defined($prev_size))
     {
-      if ($size == $prev_size) { 
+      if ($size == $prev_size) {
         $ok++;
       }
       else {
@@ -2252,13 +2252,13 @@ EVAL {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
 if ($@) {
     plan skip_all => "ERROR: $@. Can't continue test";
 }
-plan tests => 19; 
+plan tests => 19;
 
 ok $dbh->do("drop table if exists $table");
 
 my $create= <<EOT;
 create table $table (
-    a int, 
+    a int,
     primary key (a)
 )
 EOT
@@ -2275,7 +2275,7 @@ ok $sth->bind_param(1,10000,DBI::SQL_INTEGER);
 ok $sth->execute();
 
 ok $sth->bind_param(1,10001,DBI::SQL_INTEGER);
-  
+
 ok $sth->execute();
 
 ok $dbh->do("DROP TABLE $table");
@@ -2295,7 +2295,7 @@ ok $sth->execute();
 ok $sth->bind_param(1,10001,DBI::SQL_INTEGER);
 
 ok $sth->bind_param(2,.3333333,DBI::SQL_DOUBLE);
-  
+
 ok $sth->execute();
 
 ok $sth->finish;
@@ -2359,10 +2359,10 @@ $imp_data = $dbh->take_imp_data;
 ok $imp_data, "Didn't get imp_data";
 
 my $imp_data_length= length($imp_data);
-cmp_ok $imp_data_length, '>=', 80, 
+cmp_ok $imp_data_length, '>=', 80,
     "test that our imp_data is greater than or equal to 80, actual $imp_data_length";
 
-is $drh->{Kids}, 0, 
+is $drh->{Kids}, 0,
     'our Driver should have 0 Kid(s) after calling take_imp_data';
 
 {
@@ -2424,7 +2424,7 @@ CREATE TABLE $table (
         id int(4) NOT NULL default 0,
         name varchar(64) NOT NULL default '' );
 EOT
-    
+
     ok $dbh->do($create);
 
     ok $dbh->do("DROP TABLE $table");
@@ -2502,7 +2502,7 @@ EVAL {$dbh = DBI->connect($test_dsn, $test_user, $test_password,
 if ($@) {
   plan skip_all => "ERROR: $DBI::errstr. Can't continue test";
 }
-plan tests => 12; 
+plan tests => 12;
 
 ok $dbh->do("DROP TABLE IF EXISTS $table");
 
@@ -2557,7 +2557,7 @@ EVAL {$dbh= DBI->connect($test_dsn, $test_user, $test_password,
 if ($@) {
     plan skip_all => "ERROR: $@. Can't continue test";
 }
-plan tests => 24; 
+plan tests => 24;
 
 ok (defined $dbh, "Connected to database with multi statement support");
 
@@ -2627,16 +2627,16 @@ EVAL {$dbh = DBI->connect($test_dsn, $test_user, $test_password,
   { RaiseError => 1, AutoCommit => 1})};
 
 if ($@) {
-    plan skip_all => 
+    plan skip_all =>
         "ERROR: $DBI::errstr. Can't continue test";
 }
 
-# 
-# DROP/CREATE PROCEDURE will give syntax error 
+#
+# DROP/CREATE PROCEDURE will give syntax error
 # for versions < 5.0
 #
 if ($dbh->get_info($GetInfoType{SQL_DBMS_VER}) lt "5.0") {
-    plan skip_all => 
+    plan skip_all =>
         "SKIP TEST: You must have MySQL version 5.0 and greater for this test to run";
 }
 plan tests => 29;
@@ -2705,7 +2705,7 @@ is $sth->{NUM_OF_FIELDS}, 1, "num_of_fields == 1";
 
 my $resultset;
 ok ($resultset = $sth->fetchrow_arrayref());
-  
+
 ok defined $resultset;
 
 is @$resultset, 1, "1 row in resultset";
