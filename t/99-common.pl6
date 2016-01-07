@@ -18,12 +18,14 @@ plan 70;
 ";
 %*query<select_null> //= "SELECT NULL";
 
+use Data::Dump;
+
 #! compare rows of the nom table
 sub magic_cmp(@a, @b) {
     my $res =  @a ~~ @b;
     unless $res {
-        diag "     Got: @a[]";
-        diag "Expected: @b[]";
+        diag "     Got: {Dump(@a)}";
+        diag "Expected: {Dump(@b)}";
     }
     $res;
 }
@@ -222,8 +224,10 @@ my @ref-aoh = (
     { name => 'ONE', description => Str, quantity => Int, price => Rat, amount => Rat },
     { name => 'TAFM', description => 'Mild fish taco', quantity => 1, price => 4.85, amount => 4.85 },
 );
-todo "Figure what is wrong with is-deeply";
-is-deeply @results, @ref-aoh;
+
+diag "ref-aoh: {Dump(@ref-aoh)}";
+
+ok magic_cmp(@results, @ref-aoh), 'types and values match';
 
 ok $sth = $dbh.prepare("SELECT * FROM nom WHERE name = 'TAFM'"),
 'prepare new select for fetchrow_hashref test'; #test 31

@@ -3,7 +3,9 @@
     "name"          : "DBIish",
     "version"       : "*",
     "description"   : "Database connectivity for Perl 6",
-    "depends"       : [],
+    "depends"       : [
+        "Data::Dump"
+    ],
     "provides" : {
         "DBIish"    : "lib/DBIish.pm6",
         "DBDish"    : "lib/DBDish.pm6",
