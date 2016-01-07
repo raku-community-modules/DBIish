@@ -2,41 +2,37 @@
 use v6;
 use Test;
 use DBIish;
+use lib 't/lib';
+use Test::DBDish;
 
-# Define the only database specific values used by the common tests.
-my ( $*mdriver, %*opts, %*query ) = 'Oracle';
-# DBDish::Oracle doesn't allow to pass host and port at the moment
-#%*opts<host>     = 'localhost';
-#%*opts<port>     = 1521;
-%*opts<database> = 'XE';
-%*opts<username> = 'TESTUSER';
-%*opts<password> = 'Testpass';
+my $test-dbdish = Test::DBDish.new(
+    dbd => 'Oracle',
+    opts => {
+        database => 'XE',
+        username => 'TESTUSER',
+        password => 'Testpass',
+    },
+    drop-table-sql => "
+        BEGIN
+           EXECUTE IMMEDIATE 'DROP TABLE nom';
+        EXCEPTION
+           WHEN OTHERS THEN
+              IF SQLCODE != -942 THEN
+                 RAISE;
+              END IF;
+        END;",
+    create-table-sql => "
+            CREATE TABLE nom (
+                name        VARCHAR2(4),
+                description VARCHAR2(30),
+                quantity    NUMBER(20),
+                price       NUMBER(5,2)
+            )
+        ",
+    select-null-query => "SELECT NULL FROM DUAL",
+);
 
-# from http://stackoverflow.com/questions/1799128/oracle-if-table-exists
-%*query<drop_table> = "
-BEGIN
-   EXECUTE IMMEDIATE 'DROP TABLE nom';
-EXCEPTION
-   WHEN OTHERS THEN
-      IF SQLCODE != -942 THEN
-         RAISE;
-      END IF;
-END;
-";
-%*query<create_table> = "
-    CREATE TABLE nom (
-        name        VARCHAR2(4),
-        description VARCHAR2(30),
-        quantity    NUMBER(20),
-        price       NUMBER(5,2)
-    )
-";
-%*query<select_null> = "SELECT NULL FROM DUAL";
-
-my $dbh;
-
-# Detect and report possible errors from EVAL of the common test script
-warn $! if "ok 99-common.pl6" ne EVAL slurp 't/99-common.pl6';
+$test-dbdish.run-tests;
 
 =begin pod
 
