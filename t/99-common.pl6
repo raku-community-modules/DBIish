@@ -174,15 +174,13 @@ $sth.execute();
 my @results = $sth.row();
 ok @results[1] ~~ Str, "Test the type of a Str field";
 ok @results[2] ~~ Int, "Test the type of an Int field";
-todo "What type do we want to return for numeric?";
-ok @results[3] ~~ Num, "Test the type of a Float like field";
+ok @results[3] ~~ Rat, "Test the type of a Float like field";
 
 my %results = $sth.row(:hash);
 
 ok %results<name> ~~ Str, "HASH: Test the type of a Str field";
 ok %results<quantity> ~~ Int, "HASH: Test the type of a Int field";
-todo "What type do we want to return for numeric?";
-ok %results<price> ~~ Num, "HASH: Test the type of a Float like field";
+ok %results<price> ~~ Rat, "HASH: Test the type of a Float like field";
 
 $sth.execute();
 
