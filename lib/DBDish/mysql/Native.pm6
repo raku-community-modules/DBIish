@@ -40,6 +40,7 @@ constant %mysql-type-conv is export = (
   MYSQL_TYPE_DATE.value => 'Str',   MYSQL_TYPE_TIME.value => 'Str',
   MYSQL_TYPE_DATETIME.value => 'Str', MYSQL_TYPE_YEAR.value => 'Int',
   MYSQL_TYPE_NEWDATE.value => 'Str', MYSQL_TYPE_VARCHAR.value => 'Str',
+  MYSQL_TYPE_VAR_STRING.value => 'Str',
   MYSQL_TYPE_BIT.value => 'Int',
   MYSQL_TYPE_NEWDECIMAL.value => 'Rat',
   MYSQL_TYPE_ENUM.value => 'Str'
