@@ -1,7 +1,7 @@
 *.pir
 Makefile
 blib/
-minidbi-test.sqlite3
+dbdish-sqlite-test.sqlite3
 *.moarvm
 *.jar
 *~

@@ -5,7 +5,7 @@ use DBIish;
 
 # Define the only database specific values used by the common tests.
 my ( $*mdriver, %*opts, %*query ) = 'SQLite';
-%*opts<database> = 'minidbi-test.sqlite3';
+%*opts<database> = 'dbdish-sqlite-test.sqlite3';
 my $dbh;
 
 # Detect and report possible errors from EVAL of the common test script
