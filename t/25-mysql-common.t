@@ -9,7 +9,7 @@ my $*mdriver = 'mysql';
 my %*opts = ().hash;
 %*opts<host>       = 'localhost';
 %*opts<port>       = 3306;
-%*opts<database>   = 'zavolaj';
+%*opts<database>   = 'dbdishmysqltest';
 %*opts<user>       = 'testuser';
 %*opts<password>   = 'testpass';
 my %*query;
