@@ -94,25 +94,23 @@ method _row(:$hash) {
                 $afield = True;
             }
             my $res := PQgetvalue($!result, $!current_row, $_);
-            if $res eq '' {
-                $res := Str if PQgetisnull($!result, $!current_row, $_)
-            }
+            my $is-null = PQgetisnull($!result, $!current_row, $_);
             my $value;
             given (@types[$_]) {
                 when 'Str' {
-                  $value = $res
+                  $value = $is-null ?? Str !! $res;
                 }
                 when 'Num' {
-                  $value = $res.Num
+                  $value = $is-null ?? Num !! $res.Num;
                 }
                 when 'Int' {
-                  $value = $res.Int
+                  $value = $is-null ?? Int !! $res.Int;
                 }
                 when 'Bool' {
-                  $value = self.true_false($res)
+                  $value = $is-null ?? Bool !! self.true_false($res);
                 }
                 when 'Real' {
-                  $value = $res.Real
+                  $value = $is-null ?? Real !! $res.Real;
                 }
                 when 'Array<Int>' {
                   $value := _pg-to-array( $res, 'Int' );
