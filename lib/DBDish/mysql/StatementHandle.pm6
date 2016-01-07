@@ -105,21 +105,29 @@ method _row(:$hash) {
 
         my $native_row = mysql_fetch_row($!result_set); # can return NULL
         my $errstr     = mysql_error( $!mysql_client );
-        
+
         if $errstr ne '' { self!set_errstr($errstr);}
-        
+
         if $native_row {
             loop ( my $i=0; $i < $!field_count; $i++ ) {
-                my $value = do given %mysql-type-conv{@!column_mysqltype[$i]} {
-                   when 'Int' {
-                     $native_row[$i].Int;
-                   }
-                   when 'Rat' {
-                     $native_row[$i].Rat;
-                   }
-                   default {
-                     $native_row[$i];
-                   }
+                die "unhandled data type @!column_mysqltype[$i]"
+                    unless %mysql-type-conv{@!column_mysqltype[$i]}:exists;
+                my $type = %mysql-type-conv{@!column_mysqltype[$i]};
+                my Bool $is-null = $native_row[$i] ~~ Any;
+                my $value = do given $type {
+                    when 'Int' {
+                        $is-null ?? Int !! $native_row[$i].Int;
+                    }
+                    when 'Rat' {
+                        $is-null ?? Rat !! $native_row[$i].Rat;
+                    }
+                    when 'Str' {
+                        $is-null ?? Str !! $native_row[$i].Str;
+                    }
+                    default {
+                        warn "unhandled type $type";
+                        $native_row[$i];
+                    }
                 };
                 $hash ?? (%hash{@!column_names[$i]} = $value) !! @row_array.push($value);
             }
