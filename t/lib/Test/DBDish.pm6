@@ -180,14 +180,12 @@ method run-tests {
     my @results = $sth.row();
     ok @results[1] ~~ Str, "Test the type of a Str field";
     ok @results[2] ~~ Int, "Test the type of an Int field";
-    todo "What type do we want to return for numeric?";
     ok @results[3] ~~ Rat, "Test the type of a Float like field";
 
     my %results = $sth.row(:hash);
 
     ok %results<name> ~~ Str, "HASH: Test the type of a Str field";
     ok %results<quantity> ~~ Int, "HASH: Test the type of a Int field";
-    todo "What type do we want to return for numeric?";
     ok %results<price> ~~ Rat, "HASH: Test the type of a Float like field";
 
     $sth.execute();
@@ -233,7 +231,7 @@ method run-tests {
 
     diag "ref-aoh: {Dump(@ref-aoh)}";
 
-    todo "Figure what is wrong with is-deeply";
+    todo "Figure what is wrong with the types in @ref-aoh";
     ok self!magic-cmp(@results, @ref-aoh), 'types and values match';
 
     ok $sth = $dbh.prepare("SELECT * FROM nom WHERE name = 'TAFM'"),
