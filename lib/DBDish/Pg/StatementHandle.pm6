@@ -115,13 +115,13 @@ method _row(:$hash) {
                   $value = $res.Real
                 }
                 when 'Array<Int>' {
-                  $value = _pg-to-array( $res, 'Int' );
+                  $value := _pg-to-array( $res, 'Int' );
                 }
                 when 'Array<Str>' {
-                  $value = _pg-to-array( $res, 'Str' );
+                  $value := _pg-to-array( $res, 'Str' );
                 }
                 when 'Array<Num>' {
-                  $value = _pg-to-array( $res, 'Num' );
+                  $value := _pg-to-array( $res, 'Num' );
                 }
                 default {
                   $value = $res;
