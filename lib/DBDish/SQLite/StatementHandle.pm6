@@ -64,7 +64,7 @@ method _row (:$hash) {
     my @row;
     my %hash;
     die 'row without prior execute' unless $!row_status.defined;
-    return Any if $!row_status == SQLITE_DONE;
+    return $hash ?? Hash !! Array if $!row_status == SQLITE_DONE;
     my Int $count = sqlite3_column_count($!statement_handle);
     for ^$count  -> $col {
         my $value;

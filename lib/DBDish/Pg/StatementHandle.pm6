@@ -79,7 +79,7 @@ method rows() {
 method _row(:$hash) {
     my @row_array;
     my %ret_hash;
-    return Any if $!current_row >= $!row_count;
+    return $hash ?? Hash !! Array if $!current_row >= $!row_count;
 
     unless defined $!field_count {
         $!field_count = PQnfields($!result);
