@@ -19,3 +19,4 @@ before_install:
     - psql -c 'create database travis_ci_test;' -U postgres
     - export PGDATABASE=travis_ci_test
     - export PGUSER=postgres
+    - panda installdeps .
