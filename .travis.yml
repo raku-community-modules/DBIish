@@ -7,7 +7,7 @@ language: perl6
 perl6:
     - latest
 sudo: false
-instal:
+install:
     - rakudobrew build-panda
     - panda installdeps .
 before_install:
