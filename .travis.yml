@@ -6,7 +6,10 @@ language: perl6
 
 perl6:
     - latest
-
+sudo: false
+instal:
+    - rakudobrew build-panda
+    - panda installdeps .
 before_install:
     # mysql
     - mysql -e "CREATE DATABASE zavolaj;" -uroot
