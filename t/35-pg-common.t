@@ -6,6 +6,12 @@ use lib 't/lib';
 use Test::DBDish;
 use Test::Config::Pg;
 
+if not $*ENV<PGDATABASE>:exists {
+   plan 1;
+   skip "'PGDATABASE' not set, skipping";
+   exit;
+}
+
 my $test-dbdish = Test::DBDish.new(
     dbd => 'Pg',
     opts => config_pg_connect,
