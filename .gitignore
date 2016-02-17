@@ -5,3 +5,5 @@ minidbi-test.sqlite3
 *.moarvm
 *.jar
 *~
+*.swp
+lib/.precomp

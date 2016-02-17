@@ -1,11 +1,12 @@
-
 use v6;
 
-use NativeCall;
-
 unit module DBDish::Pg::Native;
+use NativeCall :ALL :EXPORT;
 
-constant LIB = %*ENV<DBIISH_PG_LIB> || ('pq', v5);
+sub MyLibName {
+    %*ENV<DBIISH_PG_LIB> || guess_library_name(('pq', v5));
+}
+constant LIB = &MyLibName;
 
 #------------ Pg library functions in alphabetical order ------------
 
@@ -146,7 +147,7 @@ constant %oid-to-type-name is export = (
       1007  => 'Array<Int>',     # Array(int4)
       1009  => 'Array<Str>',     # Array(text)
       1015  => 'Str',            # _varchar
-      
+
       1021  => 'Array<Num>',     # Array(float4)
       1022  => 'Array<Num>',     # Array(float4)
       1028  => 'Array<Int>',     # Array<oid>
