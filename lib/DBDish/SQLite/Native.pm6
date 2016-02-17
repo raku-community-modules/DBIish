@@ -1,6 +1,6 @@
 
 use v6;
-use NativeCall;
+use NativeCall :ALL;
 
 unit module DBDish::SQLite::Native;
 
@@ -45,7 +45,10 @@ enum SQLITE_TYPE is export (
     SQLITE_NULL    => 5
 );
 
-constant LIB = %*ENV<DBIISH_SQLITE_LIB> || ('sqlite3', 0);
+sub MyLibName {
+    %*ENV<DBIISH_SQLITE_LIB> || guess_library_name(('sqlite3', v0));
+}
+constant LIB = &MyLibName;
 
 sub sqlite3_errmsg(OpaquePointer $handle)
     returns Str

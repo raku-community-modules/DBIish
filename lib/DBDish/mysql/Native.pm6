@@ -1,11 +1,13 @@
-
 use v6;
 
-use NativeCall;
+use NativeCall :ALL;
 
 unit module DBDish::mysql::Native;
 
-constant LIB = %*ENV<DBIISH_MYSQL_LIB> || 'mysqlclient';
+sub MyLibName {
+    %*ENV<DBIISH_MYSQL_LIB> || guess_library_name(('mysqlclient', v18));
+}
+constant LIB = &MyLibName;
 
 #From mysql_com.h
 enum mysql-field-type is export (
