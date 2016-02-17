@@ -1,6 +1,9 @@
+use v6;
 # DBIish.pm6
+use DBDish; # Assure DBDish namespace exists
 
 class DBIish:auth<mberends>:ver<0.1.0> {
+    my %installed;
     has $!err;
     has $!errstr;
     method connect($driver, :$RaiseError=0, :$PrintError=0, :$AutoCommit=1, *%opts ) {
@@ -10,10 +13,13 @@ class DBIish:auth<mberends>:ver<0.1.0> {
         return $connection;
     }
     method install_driver( $drivername ) {
-        my $module = "DBDish::$drivername";
-        require ::($module);
-        ::($module).new;
-
+	my $d = %installed{$drivername} //= do {
+	    my $module = "DBDish::$drivername";
+	    require ::($module);
+	    ::DBDish::($drivername).new;
+	}
+	without $d { .throw };
+	$d;
     }
     # TODO: revise error reporting to conform better to Perl 5 DBI
     method err() {
