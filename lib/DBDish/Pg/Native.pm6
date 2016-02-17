@@ -1,9 +1,7 @@
-
 use v6;
 
-use NativeCall;
-
 unit module DBDish::Pg::Native;
+use NativeCall :ALL :EXPORT;
 
 constant LIB = %*ENV<DBIISH_PG_LIB> || ('pq', v5);
 
