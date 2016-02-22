@@ -1,6 +1,6 @@
 use v6;
 
-unit module DBDish;
+unit package DBDish;
 #need DBDish::Role::Connection;
 #need DBDish::Role::StatementHandle;
 
