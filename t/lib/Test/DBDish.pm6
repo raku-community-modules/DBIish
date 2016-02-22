@@ -160,11 +160,11 @@ method run-tests {
     ok $sth.execute(), "execute a prepared select statement without parameters"; # test 28
 
     my @ref =
-        [ Str, Str, 1 , Rat, Rat],
-        [ Str, Str, Int, 4.85, Rat ],
+        [ Str, Str, 1 , Str, Str],
+        [ Str, Str, Str, "4.85", Str ],
         [ 'BEOM', 'Medium size orange juice', 2, 1.2, 2.4 ],
         [ 'BUBH', 'Hot beef burrito', 1, 4.95, 4.95 ],
-        [ 'ONE', Str, Int, Rat, Rat ],
+        [ 'ONE', Str, Str, Str, Str ],
         [ 'TAFM', 'Mild fish taco', 1, 4.85, 4.85 ];
 
     my $arrayref = $sth.fetchall_arrayref();
@@ -180,13 +180,13 @@ method run-tests {
     my @results = $sth.row();
     ok @results[1] ~~ Str, "Test the type of a Str field";
     ok @results[2] ~~ Int, "Test the type of an Int field";
-    ok @results[3] ~~ Rat, "Test the type of a Float like field";
+    ok @results[3] ~~ Str, "Test the type of a Float like field";
 
     my %results = $sth.row(:hash);
 
     ok %results<name> ~~ Str, "HASH: Test the type of a Str field";
-    ok %results<quantity> ~~ Int, "HASH: Test the type of a Int field";
-    ok %results<price> ~~ Rat, "HASH: Test the type of a Float like field";
+    ok %results<quantity> ~~ Str, "HASH: Test the type of a Int field";
+    ok %results<price> ~~ Num, "HASH: Test the type of a Float like field";
 
     $sth.execute();
 
