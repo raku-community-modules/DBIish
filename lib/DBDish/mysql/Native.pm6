@@ -44,7 +44,9 @@ constant %mysql-type-conv is export = (
   MYSQL_TYPE_NEWDATE.value => 'Str', MYSQL_TYPE_VARCHAR.value => 'Str',
   MYSQL_TYPE_BIT.value => 'Int',
   MYSQL_TYPE_NEWDECIMAL.value => 'Num',
-  MYSQL_TYPE_ENUM.value => 'Str'
+  MYSQL_TYPE_ENUM.value => 'Str',
+  MYSQL_TYPE_VAR_STRING.value  => 'Str',
+  MYSQL_TYPE_STRING.value   => 'Str',
  # Meh the default will be Str
 ).hash;
 
