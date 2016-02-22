@@ -124,6 +124,9 @@ method _row(:$hash) {
                     when 'Str' {
                         $is-null ?? Str !! $native_row[$i].Str;
                     }
+                    when 'Num' {
+                        $is-null ?? Num !! $native_row[$i].Num;
+                    }
                     default {
                         warn "unhandled type $type";
                         $native_row[$i];
