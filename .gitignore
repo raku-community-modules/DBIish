@@ -6,3 +6,5 @@ dbdish-sqlite-test.sqlite3
 *.jar
 *~
 .precomp
+*.swp
+lib/.precomp

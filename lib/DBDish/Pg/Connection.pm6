@@ -1,13 +1,11 @@
-
 use v6;
 
-use  NativeCall;
-
 need DBDish::Role::Connection;
-need DBDish::Pg::StatementHandle;
-use DBDish::Pg::Native;
 
 unit class DBDish::Pg::Connection does DBDish::Role::Connection;
+use DBDish::Pg::Native;
+import NativeCall;
+need DBDish::Pg::StatementHandle;
 
 has $!pg_conn;
 has $.AutoCommit is rw = 1;

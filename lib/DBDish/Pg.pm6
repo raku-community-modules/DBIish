@@ -1,13 +1,9 @@
+use v6;
 # DBDish::Pg.pm6
 
-use NativeCall;
-use DBDish;     # roles for drivers
-
+unit class DBDish::Pg:auth<mberends>:ver<0.0.1>;
 use DBDish::Pg::Native;
 need DBDish::Pg::Connection;
-need DBDish::Pg::StatementHandle;
-
-unit class DBDish::Pg:auth<mberends>:ver<0.0.1>;
 
 my grammar PgTokenizer {
     token double_quote_normal { <-[\\"]>+ }

@@ -1,11 +1,13 @@
-
 use v6;
 
-use NativeCall;
+use NativeCall :ALL;
 
 unit module DBDish::mysql::Native;
 
-constant LIB = %*ENV<DBIISH_MYSQL_LIB> || ('mysqlclient', v18);
+sub MyLibName {
+    %*ENV<DBIISH_MYSQL_LIB> || guess_library_name(('mysqlclient', v18));
+}
+constant LIB = &MyLibName;
 
 #From mysql_com.h
 enum mysql-field-type is export (
@@ -31,18 +33,17 @@ enum mysql-field-type is export (
 );
 
 constant %mysql-type-conv is export = (
-  MYSQL_TYPE_DECIMAL.value => 'Rat', MYSQL_TYPE_TINY.value => 'Int', #Tiny is used for Bool
+  MYSQL_TYPE_DECIMAL.value => 'Num', MYSQL_TYPE_TINY.value => 'Int', #Tiny is used for Bool
   MYSQL_TYPE_SHORT.value => 'Int',  MYSQL_TYPE_LONG.value => 'Int',
-  MYSQL_TYPE_FLOAT.value => 'Rat',  MYSQL_TYPE_DOUBLE.value => 'Rat',
+  MYSQL_TYPE_FLOAT.value => 'Num',  MYSQL_TYPE_DOUBLE.value => 'Num',
   MYSQL_TYPE_NULL.value => 'Str',
   MYSQL_TYPE_TIMESTAMP.value => 'Int',
   MYSQL_TYPE_LONGLONG.value => 'Int', MYSQL_TYPE_INT24.value => 'Int',
   MYSQL_TYPE_DATE.value => 'Str',   MYSQL_TYPE_TIME.value => 'Str',
   MYSQL_TYPE_DATETIME.value => 'Str', MYSQL_TYPE_YEAR.value => 'Int',
   MYSQL_TYPE_NEWDATE.value => 'Str', MYSQL_TYPE_VARCHAR.value => 'Str',
-  MYSQL_TYPE_VAR_STRING.value => 'Str',
   MYSQL_TYPE_BIT.value => 'Int',
-  MYSQL_TYPE_NEWDECIMAL.value => 'Rat',
+  MYSQL_TYPE_NEWDECIMAL.value => 'Num',
   MYSQL_TYPE_ENUM.value => 'Str'
  # Meh the default will be Str
 ).hash;
