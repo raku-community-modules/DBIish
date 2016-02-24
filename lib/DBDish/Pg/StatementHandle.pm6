@@ -6,7 +6,7 @@ unit class DBDish::Pg::StatementHandle does DBDish::Role::StatementHandle;
 use NativeCall;
 use DBDish::Pg::Native;
 
-has $!pg_conn;
+has PGconn $!pg_conn;
 has Str $!statement_name;
 has $!statement;
 has $!param_count;
@@ -49,8 +49,8 @@ method execute(*@params is copy) {
 
     $!result = PQexecPrepared($!pg_conn, $!statement_name, @params.elems,
             @param_values,
-            OpaquePointer, # ParamLengths, NULL pointer == all text
-            OpaquePointer, # ParamFormats, NULL pointer == all text
+            Pointer[int], # ParamLengths, NULL pointer == all text
+            Pointer[int], # ParamFormats, NULL pointer == all text
             0,             # Resultformat, 0 == text
     );
 

@@ -1,29 +1,35 @@
 use v6;
 
 unit module DBDish::Pg::Native;
-use NativeCall :ALL :EXPORT;
+use NativeCall :ALL;
 
 sub MyLibName {
     %*ENV<DBIISH_PG_LIB> || guess_library_name(('pq', v5));
 }
 constant LIB = &MyLibName;
 
+#------------ My Visible Pointers
+
+class PGconn is export is repr('CPointer') { };
+class PGresult	is export is repr('CPointer') { };
+class Oid	is export is repr('CPointer') { };
+
 #------------ Pg library functions in alphabetical order ------------
 
-sub PQexec (OpaquePointer $conn, str $statement)
-    returns OpaquePointer
+sub PQexec (PGconn $conn, str $statement)
+    returns PGresult
     is native(LIB)
     is export
     { ... }
 
-sub PQprepare (OpaquePointer $conn, str $statement_name, str $query, int32 $n_params, OpaquePointer $paramTypes)
-    returns OpaquePointer
+sub PQprepare (PGconn $conn, str $statement_name, str $query, int32 $n_params, Oid $paramTypes)
+    returns PGresult
     is native(LIB)
     is export
     { ... }
 
 sub PQexecPrepared(
-        OpaquePointer $conn,
+        PGconn $conn,
         str $statement_name,
         int32 $n_params,
         CArray[Str] $param_values,
@@ -31,7 +37,7 @@ sub PQexecPrepared(
         CArray[int32] $param_formats,
         int32 $resultFormat
     )
-    returns OpaquePointer
+    returns PGresult
     is native(LIB)
     is export
     { ... }
@@ -42,90 +48,90 @@ sub PQnparams (OpaquePointer)
     is export
     { ... }
 
-sub PQdescribePrepared (OpaquePointer, str)
+sub PQdescribePrepared (PGconn, str)
     returns OpaquePointer
     is native(LIB)
     is export
     { ... }
 
 
-sub PQresultStatus (OpaquePointer $result)
+sub PQresultStatus (PGresult $result)
     returns int32
     is native(LIB)
     is export
     { ... }
 
-sub PQerrorMessage (OpaquePointer $conn)
+sub PQerrorMessage (PGconn $conn)
     returns str
     is native(LIB)
     is export
     { ... }
 
-sub PQresultErrorMessage (OpaquePointer $result)
+sub PQresultErrorMessage (PGresult $result)
     returns str
     is native(LIB)
     is export
     { ... }
 
 sub PQconnectdb (str $conninfo)
-    returns OpaquePointer
+    returns PGconn
     is native(LIB)
     is export
     { ... }
 
-sub PQstatus (OpaquePointer $conn)
+sub PQstatus (PGconn $conn)
     returns int32
     is native(LIB)
     is export
     { ... }
 
-sub PQnfields (OpaquePointer $result)
+sub PQnfields (PGresult $result)
     returns int32
     is native(LIB)
     is export
     { ... }
 
-sub PQntuples (OpaquePointer $result)
+sub PQntuples (PGresult $result)
     returns int32
     is native(LIB)
     is export
     { ... }
 
-sub PQcmdTuples (OpaquePointer $result)
+sub PQcmdTuples (PGresult $result)
     returns str
     is native(LIB)
     is export
     { ... }
 
-sub PQgetvalue (OpaquePointer $result, int32 $row, int32 $col)
+sub PQgetvalue (PGresult $result, int32 $row, int32 $col)
     returns Str
     is native(LIB)
     is export
     { ... }
 
-sub PQgetisnull (OpaquePointer $result, int32 $row, int32 $col)
+sub PQgetisnull (PGresult $result, int32 $row, int32 $col)
     returns int32
     is native(LIB)
     is export
     { ... }
 
-sub PQfname (OpaquePointer $result, int32 $col)
+sub PQfname (PGresult $result, int32 $col)
     returns str
     is native(LIB)
     is export
     { ... }
 
-sub PQclear (OpaquePointer $result)
+sub PQclear (PGresult $result)
     is native(LIB)
     is export
     { ... }
 
-sub PQfinish(OpaquePointer) 
+sub PQfinish(PGconn)
     is native(LIB)
     is export
     { ... }
 
-sub PQftype(OpaquePointer, int32)
+sub PQftype(PGresult, int32)
     is native(LIB)
     is export
     returns int32

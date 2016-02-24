@@ -6,7 +6,7 @@ unit class DBDish::Pg::Connection does DBDish::Role::Connection;
 use DBDish::Pg::Native;
 need DBDish::Pg::StatementHandle;
 
-has $!pg_conn;
+has PGconn $!pg_conn;
 has $.AutoCommit is rw = 1;
 has $.in_transaction is rw;
 
@@ -20,8 +20,7 @@ method prepare(Str $statement, $attr?) {
             $!pg_conn,
             $statement_name,
             $munged,
-            0,
-            OpaquePointer
+            0, Oid
     );
     my $status = PQresultStatus($result);
     unless status-is-ok($status) {
@@ -32,7 +31,7 @@ method prepare(Str $statement, $attr?) {
     my $info = PQdescribePrepared($!pg_conn, $statement_name);
     my $param_count = PQnparams($info);
 
-    my $statement_handle = DBDish::Pg::StatementHandle.bless(
+    my $statement_handle = DBDish::Pg::StatementHandle.new(
         :$!pg_conn,
         :$statement,
         :$.RaiseError,

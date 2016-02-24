@@ -83,7 +83,7 @@ method connect(*%params) {
     my $status = PQstatus($pg_conn);
     my $connection;
     if $status eq CONNECTION_OK {
-        $connection = DBDish::Pg::Connection.bless(
+        $connection = DBDish::Pg::Connection.new(
             :$pg_conn,
             :RaiseError(%params<RaiseError>),
         );

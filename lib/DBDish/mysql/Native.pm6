@@ -9,6 +9,9 @@ sub MyLibName {
 }
 constant LIB = &MyLibName;
 
+class MYSQL is export is repr('CPointer') { };
+class MYSQL_STMT is export is repr('CPointer') { };
+
 #From mysql_com.h
 enum mysql-field-type is export (
   MYSQL_TYPE_DECIMAL => 0, MYSQL_TYPE_TINY => 1,
@@ -74,18 +77,18 @@ class MYSQL_FIELD is repr('CStruct') is export {
 
 #------------ mysql library functions in alphabetical order ------------
 
-sub mysql_affected_rows( OpaquePointer $mysql_client )
+sub mysql_affected_rows( MYSQL $mysql_client )
     returns int32
     is native(LIB)
     is export
     { ... }
 
-sub mysql_close( OpaquePointer $mysql_client )
+sub mysql_close( MYSQL $mysql_client )
     is native(LIB)
     is export
     { ... }
 
-sub mysql_error( OpaquePointer $mysql_client)
+sub mysql_error( MYSQL $mysql_client)
     returns str
     is native(LIB)
     is export
@@ -103,7 +106,7 @@ sub mysql_fetch_row( OpaquePointer $result_set )
     is export
     { ... }
 
-sub mysql_field_count( OpaquePointer $mysql_client )
+sub mysql_field_count( MYSQL $mysql_client )
     returns uint32
     is native(LIB)
     is export
@@ -114,13 +117,13 @@ sub mysql_free_result( OpaquePointer $result_set )
     is export
     { ... }
 
-sub mysql_init( OpaquePointer $mysql_client )
-    returns OpaquePointer
+sub mysql_init( MYSQL $mysql_client )
+    returns MYSQL
     is native(LIB)
     is export
     { ... }
 
-sub mysql_insert_id( OpaquePointer $mysql_client )
+sub mysql_insert_id( MYSQL $mysql_client )
     returns uint64
     is native(LIB)
     is export
@@ -132,33 +135,33 @@ sub mysql_num_rows( OpaquePointer $result_set )
     is export
     { ... }
 
-sub mysql_query( OpaquePointer $mysql_client, str $sql_command )
+sub mysql_query( MYSQL $mysql_client, str $sql_command )
     returns int32
     is native(LIB)
     is export
     { ... }
 
-sub mysql_real_connect( OpaquePointer $mysql_client, Str $host, Str $user,
+sub mysql_real_connect( MYSQL $mysql_client, Str $host, Str $user,
     Str $password, Str $database, int32 $port, Str $socket, ulong $flag )
+    returns MYSQL
+    is native(LIB)
+    is export
+    { ... }
+
+sub mysql_use_result( MYSQL $mysql_client )
     returns OpaquePointer
     is native(LIB)
     is export
     { ... }
 
-sub mysql_use_result( OpaquePointer $mysql_client )
-    returns OpaquePointer
-    is native(LIB)
-    is export
-    { ... }
-
-sub mysql_warning_count( OpaquePointer $mysql_client )
+sub mysql_warning_count( MYSQL $mysql_client )
     returns uint32
     is native(LIB)
     is export
     { ... }
 
-sub mysql_stmt_init( OpaquePointer $mysql_client )
-    returns OpaquePointer
+sub mysql_stmt_init( MYSQL $mysql_client )
+    returns MYSQL_STMT
     is native(LIB)
     is export
     { ... }
@@ -169,7 +172,7 @@ sub mysql_stmt_prepare( OpaquePointer $mysql_stmt, Str, ulong $length )
     is export
     { ... }
 
-sub mysql_ping(OpaquePointer $mysql_client)
+sub mysql_ping(MYSQL $mysql_client)
     returns int32
     is native(LIB)
     is export

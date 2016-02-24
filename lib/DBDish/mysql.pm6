@@ -10,13 +10,13 @@ has $.Version = 0.01;
 method connect(Str :$user, Str :$password, :$RaiseError, *%params ) {
     my ( $mysql_client, $mysql_error );
     unless defined $mysql_client {
-        $mysql_client = mysql_init( OpaquePointer );
+        $mysql_client = mysql_init( MYSQL );
         $mysql_error  = mysql_error( $mysql_client );
     }
     my $host     = %params<host>     // 'localhost';
     my $port     = (%params<port>     // 0).Int;
     my $database = %params<database> // 'mysql';
-    my $socket   = %params<socket> // OpaquePointer;
+    my $socket   = %params<socket> // Str;
     # real_connect() returns either the same client pointer or null
     my $result   = mysql_real_connect( $mysql_client, $host,
         $user, $password, $database, $port, $socket, 0 );
