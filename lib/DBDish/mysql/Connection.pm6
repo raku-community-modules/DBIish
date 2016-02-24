@@ -1,13 +1,10 @@
-
 use v6;
-use NativeCall;
 
-need DBDish::Role::Connection;
-need DBDish::mysql::StatementHandle;
-use DBDish::mysql::Native;
-
+need DBDish;
 
 unit class DBDish::mysql::Connection does DBDish::Role::Connection;
+use DBDish::mysql::Native;
+need DBDish::mysql::StatementHandle;
 
 has $!mysql_client;
 

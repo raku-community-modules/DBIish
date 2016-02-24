@@ -1,11 +1,10 @@
-
 use v6;
-use NativeCall;
 
-need DBDish::Role::StatementHandle;
-use DBDish::Pg::Native;
+need DBDish;
 
 unit class DBDish::Pg::StatementHandle does DBDish::Role::StatementHandle;
+use NativeCall;
+use DBDish::Pg::Native;
 
 has $!pg_conn;
 has Str $!statement_name;

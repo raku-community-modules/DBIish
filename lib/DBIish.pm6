@@ -1,6 +1,5 @@
 use v6;
 # DBIish.pm6
-use DBDish; # Assure DBDish namespace exists
 
 class DBIish:auth<mberends>:ver<0.1.0> {
     my %installed;
@@ -15,8 +14,8 @@ class DBIish:auth<mberends>:ver<0.1.0> {
     method install_driver( $drivername ) {
 	my $d = %installed{$drivername} //= do {
 	    my $module = "DBDish::$drivername";
-	    require ::($module);
-	    ::DBDish::($drivername).new;
+	    my \M = (require ::($module));
+	    M.new;
 	}
 	without $d { .throw };
 	$d;

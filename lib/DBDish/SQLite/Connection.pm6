@@ -1,13 +1,11 @@
-
 use v6;
 
-use NativeCall;
-need DBDish::Role::Connection;
-need DBDish::SQLite::StatementHandle;
-use DBDish::SQLite::Native;
-
+need DBDish;
 
 unit class DBDish::SQLite::Connection does DBDish::Role::Connection;
+need DBDish::SQLite::StatementHandle;
+use DBDish::SQLite::Native;
+use NativeCall;
 
 has $!conn;
 has @!sths;
@@ -30,7 +28,7 @@ method prepare(Str $statement, $attr?) {
             -1,
             @stmt,
             CArray[OpaquePointer]
-        ); 
+        );
     } else {
         $status = sqlite3_prepare(
             $!conn,

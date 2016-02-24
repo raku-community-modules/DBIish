@@ -1,10 +1,9 @@
 use v6;
 
-need DBDish::Role::Connection;
+need DBDish;
 
 unit class DBDish::Pg::Connection does DBDish::Role::Connection;
 use DBDish::Pg::Native;
-import NativeCall;
 need DBDish::Pg::StatementHandle;
 
 has $!pg_conn;

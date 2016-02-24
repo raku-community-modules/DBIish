@@ -1,14 +1,8 @@
 # DBDish::mysql.pm6
 
-use NativeCall;
-use DBDish;     # roles for drivers
+unit class DBDish::mysql:auth<mberends>:ver<0.0.1>;
 use DBDish::mysql::Native;
 need DBDish::mysql::Connection;
-need DBDish::mysql::StatementHandle;
-
-#-----------------------------------------------------------------------
-
-unit class DBDish::mysql:auth<mberends>:ver<0.0.1>;
 
 has $.Version = 0.01;
 
