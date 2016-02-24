@@ -161,8 +161,8 @@ method run-tests {
     #fetch stuff return Str
     my @ref =
         [ Str, Str, "1" , Str, Str],
-        [ Str, Str, Str, "4.85", Str ],
-        [ 'BEOM', 'Medium size orange juice', "2", "1.2", "2.4" ],
+        [ Str, Str, Str, 4.85, Str ],
+        [ 'BEOM', 'Medium size orange juice', "2", "1.20", "2.40" ],
         [ 'BUBH', 'Hot beef burrito', "1", "4.95", "4.95" ],
         [ 'ONE', Str, Str, Str, Str ],
         [ 'TAFM', 'Mild fish taco', "1", "4.85", "4.85" ];
