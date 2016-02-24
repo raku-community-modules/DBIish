@@ -101,6 +101,7 @@ method _row(:$hash) {
     }
 
     if defined $!result_set {
+        #Todo; Null should probably be handled watching the field_info
         self!reset_errstr();
 
         my $native_row = mysql_fetch_row($!result_set); # can return NULL
@@ -123,9 +124,6 @@ method _row(:$hash) {
                     }
                     when 'Str' {
                         $is-null ?? Str !! $native_row[$i].Str;
-                    }
-                    when 'Num' {
-                        $is-null ?? Num !! $native_row[$i].Num;
                     }
                     default {
                         warn "unhandled type $type";

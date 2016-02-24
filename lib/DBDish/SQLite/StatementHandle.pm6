@@ -74,6 +74,7 @@ method _row (:$hash) {
             }
             when SQLITE_FLOAT {
                  $value = sqlite3_column_double($!statement_handle, $col);
+                 $value = $value.Rat;
             }
             default { 
                 $value = sqlite3_column_text($!statement_handle, $col);

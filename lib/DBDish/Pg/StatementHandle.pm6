@@ -106,6 +106,9 @@ method _row(:$hash) {
                 when 'Bool' {
                   $value = $is-null ?? Bool !! self.true_false($res);
                 }
+                when 'Rat' {
+                  $value = $is-null ?? Rat !! $res.Rat;
+                }
                 when 'Array<Int>' {
                   $value := _pg-to-array( $res, 'Int' );
                 }
