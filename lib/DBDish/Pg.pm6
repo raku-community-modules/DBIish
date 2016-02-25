@@ -78,32 +78,31 @@ method connect(*%params) {
         my $translated = %keymap{ $key } // $key;
         take "$translated={quote-and-escape $value}"
     }
-    my $conninfo = ~@connection_parameters;
-    my $pg_conn = PQconnectdb($conninfo);
-    my $status = PQstatus($pg_conn);
+    my $pg_conn = PGconn.new(~@connection_parameters);
+    my $status = $pg_conn.PQstatus;
     my $connection;
-    if $status eq CONNECTION_OK {
+    if $status == CONNECTION_OK {
         $connection = DBDish::Pg::Connection.new(
             :$pg_conn,
             :RaiseError(%params<RaiseError>),
         );
     }
     else {
-        $!errstr = PQerrorMessage($pg_conn);
+        $!errstr = $pg_conn.PQerrorMessage;
         if %params<RaiseError> { die $!errstr; }
     }
-    return $connection;
+    $connection;
 }
 
 =begin pod
 
 =head1 DESCRIPTION
-# 'zavolaj' is a Native Call Interface for Rakudo/Parrot. 'DBIish' and
-# 'DBDish::Pg' are Perl 6 modules that use 'zavolaj' to use the
-# standard libpq library.  There is a long term Parrot based
-# project to develop a new, comprehensive DBI architecture for Parrot
-# and Perl 6.  DBIish is not that, it is a naive rewrite of the
-# similarly named Perl 5 modules.  Hence the 'Mini' part of the name.
+# 'DBIish' and # 'DBDish::Pg' are Perl 6 modules that use Rakudo's
+# NativeCall to use the standard libpq library.
+# There is a long term Rakudo based project to develop a new,
+# comprehensive DBI architecture for Rakudo and Perl 6.
+# DBIish is not that, it is a naive rewrite of the similarly named Perl 5 modules.
+# Hence the 'Mini' part of the name.
 
 =head1 CLASSES
 The DBDish::Pg module contains the same classes and methods as every

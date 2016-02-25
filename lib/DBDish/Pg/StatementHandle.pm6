@@ -19,15 +19,14 @@ has $!field_count;
 has $!current_row = 0;
 
 method !handle-errors {
-    my $status = PQresultStatus($!result);
-    if status-is-ok($status) {
+    if $!result.is-ok {
         self!reset_errstr;
-        return True;
+        True;
     }
     else {
-        self!set_errstr(PQresultErrorMessage($!result));
+        self!set_errstr($!result.PQresultErrorMessage);
         die self.errstr if $.RaiseError;
-        return Nil;
+        Nil;
     }
 }
 
@@ -36,42 +35,39 @@ method !munge_statement {
     $!statement.subst(:g, '?', { '$' ~ ++$count});
 }
 
-submethod BUILD(:$!statement, :$!pg_conn, :$!statement_name, :$!param_count,
-       :$!dbh) {
-}
+submethod BUILD(:$!statement, :$!pg_conn, :$!statement_name, :$!param_count, :$!dbh) { }
+
 method execute(*@params is copy) {
     $!current_row = 0;
     die "Wrong number of arguments to method execute: got @params.elems(), expected $!param_count" if @params != $!param_count;
     my @param_values := CArray[Str].new;
     for @params.kv -> $k, $v {
-        @param_values[$k] = $v.Str;
+        @param_values[$k] = ~$v;
     }
 
-    $!result = PQexecPrepared($!pg_conn, $!statement_name, @params.elems,
-            @param_values,
-            Pointer[int], # ParamLengths, NULL pointer == all text
-            Pointer[int], # ParamFormats, NULL pointer == all text
-            0,             # Resultformat, 0 == text
+    $!result = $!pg_conn.PQexecPrepared($!statement_name, @params.elems, @param_values,
+        Pointer, # ParamLengths, NULL pointer == all text
+        Pointer, # ParamFormats, NULL pointer == all text
+        0,       # Resultformat, 0 == text
     );
 
     self!handle-errors;
-    $!row_count = PQntuples($!result);
+    $!row_count = $!result.PQntuples;
 
     my $rows = self.rows;
-    return ($rows == 0) ?? "0E0" !! $rows;
+    $rows == 0 ?? "0E0" !! $rows;
 }
 
 # do() and execute() return the number of affected rows directly or:
 # rows() is called on the statement handle $sth.
 method rows() {
-    unless defined $!affected_rows {
-        $!affected_rows = PQcmdTuples($!result);
-
+    without $!affected_rows {
+        $!affected_rows = $!result.PQcmdTuples;
         self!handle-errors;
     }
 
-    if defined $!affected_rows {
-        return +$!affected_rows;
+    with $!affected_rows {
+	+$_;
     }
 }
 
@@ -81,7 +77,7 @@ method _row(:$hash) {
     return $hash ?? Hash !! Array if $!current_row >= $!row_count;
 
     unless defined $!field_count {
-        $!field_count = PQnfields($!result);
+        $!field_count = $!result.PQnfields;
     }
     my @names = self.column_names if $hash;
     my @types = self.column_p6types;
@@ -92,9 +88,9 @@ method _row(:$hash) {
             FIRST {
                 $afield = True;
             }
-            my $res := PQgetvalue($!result, $!current_row, $_);
+            my $res := $!result.PQgetvalue($!current_row, $_);
             if $res eq '' {
-                $res := Str if PQgetisnull($!result, $!current_row, $_)
+                $res := Str if $!result.PQgetisnull($!current_row, $_)
             }
             my $value;
             given (@types[$_]) {
@@ -133,7 +129,7 @@ method _row(:$hash) {
 
         if ! $afield { self.finish; }
     }
-    $hash ?? return %ret_hash !! return @row_array;
+    $hash ?? %ret_hash !! @row_array;
 }
 
 
@@ -142,16 +138,16 @@ method fetchrow() {
     return () if $!current_row >= $!row_count;
 
     unless defined $!field_count {
-        $!field_count = PQnfields($!result);
+        $!field_count = $!result.PQnfields;
     }
 
-    if defined $!result {
+    if $!result {
         self!reset_errstr;
 
         for ^$!field_count {
-            my $res := PQgetvalue($!result, $!current_row, $_);
+            my $res := $!result.PQgetvalue($!current_row, $_);
             if $res eq '' {
-                $res := Str if PQgetisnull($!result, $!current_row, $_)
+                $res := Str if $!result.PQgetisnull($!current_row, $_)
             }
             @row_array.push($res)
         }
@@ -160,14 +156,14 @@ method fetchrow() {
 
         if ! @row_array { self.finish; }
     }
-    return @row_array;
+    @row_array;
 }
 
 method column_names {
-    $!field_count = PQnfields($!result);
+    $!field_count = $!result.PQnfields;
     unless @!column_names {
         for ^$!field_count {
-            my $column_name = PQfname($!result, $_);
+            my $column_name = $!result.PQfname($_);
             @!column_names.push($column_name);
         }
     }
@@ -176,11 +172,9 @@ method column_names {
 
 # for debugging only so far
 method column_oids {
-    $!field_count = PQnfields($!result);
+    $!field_count = $!result.PQnfields;
     my @res;
-    for ^$!field_count {
-        @res.push: PQftype($!result, $_);
-    }
+    @res.push: $!result.PQftype($_) for ^$!field_count;
     @res;
 }
 
@@ -194,21 +188,21 @@ method fetchall_hashref(Str $key) {
     }
 
     my $results_ref = %results;
-    return $results_ref;
+    $results_ref;
 }
 
 method column_p6types {
    my @types = self.column_oids;
-   return @types.map:{%oid-to-type-name{$_}};
+   @types.map:{%oid-to-type-name{$_}};
 }
 
 my grammar PgArrayGrammar {
-    rule array        { '{' (<element> ','?)* '}' }
+    rule array       { '{' (<element> ','?)* '}' }
     rule TOP         { ^ <array> $ }
-    rule element      { <array> | <float> | <integer> | <string> }
-    token float        { (\d+ '.' \d+) }
-    token integer      { (\d+) }
-    rule string       { '"' $<value>=( [\w|\s]+ ) '"' | $<value>=( \w+ ) }
+    rule element     { <array> | <float> | <integer> | <string> }
+    token float      { (\d+ '.' \d+) }
+    token integer    { (\d+) }
+    rule string      { '"' $<value>=( [\w|\s]+ ) '"' | $<value>=( \w+ ) }
 };
 
 sub _to-type($value, Str $type where $_ eq any([ 'Str', 'Num', 'Int' ])) {
@@ -243,13 +237,13 @@ sub _to-array(Match $match, Str $type where $_ eq any([ 'Str', 'Num', 'Int' ])) 
       }
     }
 
-    return @array;
+    @array;
 }
 
 sub _pg-to-array(Str $text, Str $type where $_ eq any([ 'Str', 'Num', 'Int' ])) {
     my $match = PgArrayGrammar.parse( $text );
     die "Failed to parse" unless $match.defined;
-    return _to-array($match, $type);
+    _to-array($match, $type);
 }
 
 
@@ -267,29 +261,29 @@ method pg-array-str(@data) {
       }
     }
   }
-  return '{' ~ @tmp.join(',') ~ '}';
+  '{' ~ @tmp.join(',') ~ '}';
 }
 
 method true_false(Str $s) {
-    return $s eq 't';
+    $s eq 't';
 }
 
 
 method finish() {
-    if defined($!result) {
-        PQclear($!result);
+    if $!result {
+        $!result.PQclear;
         $!result       = Any;
         @!column_names = ();
     }
-    return Bool::True;
+    Bool::True;
 }
 
 method !get_row {
     my @data;
     for ^$!field_count {
-        @data.push(PQgetvalue($!result, $!current_row, $_));
+        @data.push: $!result.PQgetvalue($!current_row, $_);
     }
     $!current_row++;
 
-    return @data;
+    @data;
 }

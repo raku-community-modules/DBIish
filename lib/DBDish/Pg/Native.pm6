@@ -10,132 +10,51 @@ constant LIB = &MyLibName;
 
 #------------ My Visible Pointers
 
-class PGconn is export is repr('CPointer') { };
-class PGresult	is export is repr('CPointer') { };
-class Oid	is export is repr('CPointer') { };
+class PGresult	is export is repr('CPointer') {
+    method PQclear is native(LIB) { * }
+    method PQcmdTuples(--> str) is native(LIB) { * }
+    method PQfname(int32 --> str) is native(LIB) { * }
+    method PQftype(int32 --> int32) is native(LIB) { * };
+    method PQgetisnull(int32, int32 --> int32) is native(LIB) { * }
+    method PQgetvalue(int32, int32 --> str) is native(LIB) { * }
+    method PQnfields(--> int32) is native(LIB) { * }
+    method PQnparams(--> int32) is native(LIB) { * }
+    method PQntuples(--> int32) is native(LIB) { * }
+    method PQresultErrorMessage(--> str) is native(LIB) { * }
+    method PQresultStatus(--> int32) is native(LIB) { * }
 
-#------------ Pg library functions in alphabetical order ------------
+    method is-ok {
+	self.PQresultStatus ~~ (0 .. 4);
+    }
+}
 
-sub PQexec (PGconn $conn, str $statement)
-    returns PGresult
-    is native(LIB)
-    is export
-    { ... }
+class Oid is export is repr('CPointer') { }
 
-sub PQprepare (PGconn $conn, str $statement_name, str $query, int32 $n_params, Oid $paramTypes)
-    returns PGresult
-    is native(LIB)
-    is export
-    { ... }
-
-sub PQexecPrepared(
-        PGconn $conn,
+class PGconn is export is repr('CPointer') {
+    method PQexec(--> PGresult) is native(LIB) { * }
+    method PQexecPrepared(
         str $statement_name,
         int32 $n_params,
         CArray[Str] $param_values,
         CArray[int32] $param_length,
         CArray[int32] $param_formats,
         int32 $resultFormat
-    )
-    returns PGresult
-    is native(LIB)
-    is export
-    { ... }
+    ) returns PGresult is native(LIB) { * }
 
-sub PQnparams (OpaquePointer)
-    returns int32
-    is native(LIB)
-    is export
-    { ... }
+    method PQerrorMessage(--> str) is native(LIB) { * }
+    method PQdescribePrepared(str --> PGresult) is native(LIB) { * }
+    method PQstatus(--> int32) is native(LIB) { * }
+    method PQprepare(str $sth_name, str $query, int32 $n_params, Oid $paramTypes --> PGresult)
+	is native(LIB) { * }
+    method PQfinish is native(LIB) { * }
 
-sub PQdescribePrepared (PGconn, str)
-    returns OpaquePointer
-    is native(LIB)
-    is export
-    { ... }
+    method new(Str $conninfo) { # Our constructor
+	sub PQconnectdb(str --> PGconn) is native(LIB) { * };
+	PQconnectdb($conninfo);
+    }
+}
 
-
-sub PQresultStatus (PGresult $result)
-    returns int32
-    is native(LIB)
-    is export
-    { ... }
-
-sub PQerrorMessage (PGconn $conn)
-    returns str
-    is native(LIB)
-    is export
-    { ... }
-
-sub PQresultErrorMessage (PGresult $result)
-    returns str
-    is native(LIB)
-    is export
-    { ... }
-
-sub PQconnectdb (str $conninfo)
-    returns PGconn
-    is native(LIB)
-    is export
-    { ... }
-
-sub PQstatus (PGconn $conn)
-    returns int32
-    is native(LIB)
-    is export
-    { ... }
-
-sub PQnfields (PGresult $result)
-    returns int32
-    is native(LIB)
-    is export
-    { ... }
-
-sub PQntuples (PGresult $result)
-    returns int32
-    is native(LIB)
-    is export
-    { ... }
-
-sub PQcmdTuples (PGresult $result)
-    returns str
-    is native(LIB)
-    is export
-    { ... }
-
-sub PQgetvalue (PGresult $result, int32 $row, int32 $col)
-    returns Str
-    is native(LIB)
-    is export
-    { ... }
-
-sub PQgetisnull (PGresult $result, int32 $row, int32 $col)
-    returns int32
-    is native(LIB)
-    is export
-    { ... }
-
-sub PQfname (PGresult $result, int32 $col)
-    returns str
-    is native(LIB)
-    is export
-    { ... }
-
-sub PQclear (PGresult $result)
-    is native(LIB)
-    is export
-    { ... }
-
-sub PQfinish(PGconn)
-    is native(LIB)
-    is export
-    { ... }
-
-sub PQftype(PGresult, int32)
-    is native(LIB)
-    is export
-    returns int32
-    { ... }
+constant Null => Pointer;
 
 # from pg_type.h
 constant %oid-to-type-name is export = (
@@ -165,7 +84,6 @@ constant %oid-to-type-name is export = (
       2951  => 'Str',   # _uuid
 ).hash;
 
-
 constant CONNECTION_OK         is export = 0;
 constant CONNECTION_BAD        is export = 1;
 
@@ -174,7 +92,3 @@ constant PGRES_COMMAND_OK  = 1;
 constant PGRES_TUPLES_OK   = 2;
 constant PGRES_COPY_OUT    = 3;
 constant PGRES_COPY_IN     = 4;
-
-sub status-is-ok($status)    is export { $status ~~ (0..4) }
-
-#-----------------------------------------------------------------------
