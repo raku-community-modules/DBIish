@@ -80,7 +80,7 @@ method _row(:$hash) {
     }
     my @names = self.column_names if $hash;
     my @types = self.column_p6types;
-    if defined $!result {
+    if $!result {
         self!reset_errstr;
         my $afield = False;
         for ^$!field_count {
@@ -88,9 +88,7 @@ method _row(:$hash) {
                 $afield = True;
             }
             my $res := $!result.PQgetvalue($!current_row, $_);
-            if $res eq '' {
-                $res := Str if $!result.PQgetisnull($!current_row, $_)
-            }
+            my $is-null = $!result.PQgetisnull($!current_row, $_);
             my $value;
             given (@types[$_]) {
                 when 'Str' {
@@ -102,14 +100,23 @@ method _row(:$hash) {
                 when 'Bool' {
                   $value = $is-null ?? Bool !! self.true_false($res);
                 }
+                when 'Num' {
+                  $value = $is-null ?? Num !! $res.Num;
+                }
                 when 'Rat' {
                   $value = $is-null ?? Rat !! $res.Rat;
+                }
+                when 'Real' {
+                  $value = $is-null ?? Real !! $res.Real;
                 }
                 when 'Array<Int>' {
                   $value := _pg-to-array( $res, 'Int' );
                 }
                 when 'Array<Str>' {
                   $value := _pg-to-array( $res, 'Str' );
+                }
+                when 'Array<Num>' {
+                  $value := _pg-to-array( $res, 'Num' );
                 }
                 when 'Array<Rat>' {
                   $value = _pg-to-array( $res, 'Rat' );
@@ -201,11 +208,13 @@ my grammar PgArrayGrammar {
     rule string      { '"' $<value>=( [\w|\s]+ ) '"' | $<value>=( \w+ ) }
 };
 
-sub _to-type($value, Str $type where $_ eq any([ 'Str', 'Rat', 'Int' ])) {
+sub _to-type($value, Str $type where $_ eq any([ 'Str', 'Num', 'Rat', 'Int' ])) {
   return $value unless $value.defined;
   if $type eq 'Str' {
       # String
       return ~$value;
+  } elsif $type eq 'Num' {
+      return Num($value);
   } elsif $type eq 'Rat' {
       # Floating point number
       return Rat($value);
@@ -215,7 +224,7 @@ sub _to-type($value, Str $type where $_ eq any([ 'Str', 'Rat', 'Int' ])) {
   }
 }
 
-sub _to-array(Match $match, Str $type where $_ eq any([ 'Str', 'Rat', 'Int' ])) {
+sub _to-array(Match $match, Str $type where $_ eq any([ 'Str', 'Num', 'Rat', 'Int' ])) {
     my @array;
     for $match.<array>.values -> $element {
       if $element.values[0]<array>.defined {

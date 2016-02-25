@@ -6,7 +6,7 @@ use lib 't/lib';
 use Test::DBDish;
 use Test::Config::Pg;
 
-if not $*ENV<PGDATABASE>:exists {
+if not %*ENV<PGDATABASE>:exists {
    plan 1;
    skip "'PGDATABASE' not set, skipping";
    exit;
