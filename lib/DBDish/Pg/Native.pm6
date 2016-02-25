@@ -54,7 +54,8 @@ class PGconn is export is repr('CPointer') {
     }
 }
 
-constant Null => Pointer;
+constant Null is export = Pointer;
+constant ParamArray is export = CArray[Str];
 
 # from pg_type.h
 constant %oid-to-type-name is export = (

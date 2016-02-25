@@ -3,7 +3,6 @@ use v6;
 need DBDish;
 
 unit class DBDish::Pg::StatementHandle does DBDish::Role::StatementHandle;
-use NativeCall;
 use DBDish::Pg::Native;
 
 has PGconn $!pg_conn;
@@ -40,15 +39,15 @@ submethod BUILD(:$!statement, :$!pg_conn, :$!statement_name, :$!param_count, :$!
 method execute(*@params is copy) {
     $!current_row = 0;
     die "Wrong number of arguments to method execute: got @params.elems(), expected $!param_count" if @params != $!param_count;
-    my @param_values := CArray[Str].new;
+    my @param_values := ParamArray.new;
     for @params.kv -> $k, $v {
         @param_values[$k] = ~$v;
     }
 
     $!result = $!pg_conn.PQexecPrepared($!statement_name, @params.elems, @param_values,
-        Pointer, # ParamLengths, NULL pointer == all text
-        Pointer, # ParamFormats, NULL pointer == all text
-        0,       # Resultformat, 0 == text
+        Null, # ParamLengths, NULL pointer == all text
+        Null, # ParamFormats, NULL pointer == all text
+        0,    # Resultformat, 0 == text
     );
 
     self!handle-errors;
