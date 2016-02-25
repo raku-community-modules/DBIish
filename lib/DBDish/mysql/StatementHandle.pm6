@@ -114,7 +114,7 @@ method _row(:$hash) {
                 die "unhandled data type @!column_mysqltype[$i]"
                     unless %mysql-type-conv{@!column_mysqltype[$i]}:exists;
                 my $type = %mysql-type-conv{@!column_mysqltype[$i]};
-                my Bool $is-null = $native_row[$i] ~~ Any;
+                my Bool $is-null = ! defined $native_row[$i];
                 my $value = do given $type {
                     when 'Int' {
                         $is-null ?? Int !! $native_row[$i].Int;
