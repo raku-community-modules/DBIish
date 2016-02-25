@@ -265,11 +265,11 @@ method run-tests {
     if $sth.can('colum_names') {
         $sth.execute;
         my $arrayref = $sth.fetchrow_arrayref(); #'called fetchrow_arrayref'; #test 35
-        $sth.finish;
         is $arrayref.elems, 4, "fetchrow_arrayref returns 4 fields in a row"; #test 36
         ok self!magic-cmp([ 'TAFM', 'Mild fish taco', 1, 4.85 ], $arrayref), 'selected data matches test data'; #test 37
     }
     else { skip 'fetchrow_arrayref not implemented', 2 }
+    $sth.finish;
 
     {
         ok $sth = $dbh.prepare($.select-null-query), "can prepare statement '$.select-null-query'";
