@@ -1,8 +1,8 @@
 use v6;
 
-unit package DBDish;
-#need DBDish::Role::Connection;
-#need DBDish::Role::StatementHandle;
+unit module DBDish;
+need DBDish::Role::Connection;
+need DBDish::Role::StatementHandle;
 
 =begin pod
 =head1 DESCRIPTION

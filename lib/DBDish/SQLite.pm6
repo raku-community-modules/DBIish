@@ -1,11 +1,7 @@
-use DBDish;
-
-need DBDish::SQLite::Connection;
-need DBDish::SQLite::StatementHandle;
-use DBDish::SQLite::Native;
-use NativeCall;
-
 unit class DBDish::SQLite:auth<mberends>:ver<0.0.1>;
+use DBDish::SQLite::Native;
+need DBDish::SQLite::Connection;
+use NativeCall;
 
 has $.Version = 0.01;
 has $.errstr;

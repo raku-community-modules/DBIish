@@ -1,13 +1,12 @@
 use v6;
 
-need DBDish::Role::Connection;
+need DBDish;
 
 unit class DBDish::Pg::Connection does DBDish::Role::Connection;
 use DBDish::Pg::Native;
-import NativeCall;
 need DBDish::Pg::StatementHandle;
 
-has $!pg_conn;
+has PGconn $!pg_conn;
 has $.AutoCommit is rw = 1;
 has $.in_transaction is rw;
 
@@ -17,23 +16,20 @@ method prepare(Str $statement, $attr?) {
     state $statement_postfix = 0;
     my $statement_name = join '_', 'pg', $*PID, $statement_postfix++;
     my $munged = DBDish::Pg::pg-replace-placeholder($statement);
-    my $result = PQprepare(
-            $!pg_conn,
+    my $result = $!pg_conn.PQprepare(
             $statement_name,
             $munged,
-            0,
-            OpaquePointer
+            0, Oid
     );
-    my $status = PQresultStatus($result);
-    unless status-is-ok($status) {
-        self!set_errstr(PQresultErrorMessage($result));
+    unless $result.is-ok {
+        self!set_errstr($result.PQresultErrorMessage);
         die self.errstr if $.RaiseError;
         return Nil;
     }
-    my $info = PQdescribePrepared($!pg_conn, $statement_name);
-    my $param_count = PQnparams($info);
+    my $info = $!pg_conn.PQdescribePrepared($statement_name);
+    my $param_count = $info.PQnparams;
 
-    my $statement_handle = DBDish::Pg::StatementHandle.bless(
+    my $statement_handle = DBDish::Pg::StatementHandle.new(
         :$!pg_conn,
         :$statement,
         :$.RaiseError,
@@ -42,38 +38,38 @@ method prepare(Str $statement, $attr?) {
         :$result,
         :$param_count,
     );
-    return $statement_handle;
+    $statement_handle;
 }
 
 method do(Str $statement, *@bind is copy) {
     my $sth = self.prepare($statement);
     $sth.execute(@bind);
     my $rows = $sth.rows;
-    return ($rows == 0) ?? "0E0" !! $rows;
+    ($rows == 0) ?? "0E0" !! $rows;
 }
 
 method selectrow_arrayref(Str $statement, $attr?, *@bind is copy) {
     my $sth = self.prepare($statement, $attr);
     $sth.execute(@bind);
-    return $sth.fetchrow_arrayref;
+    $sth.fetchrow_arrayref;
 }
 
 method selectrow_hashref(Str $statement, $attr?, *@bind is copy) {
     my $sth = self.prepare($statement, $attr);
     $sth.execute(@bind);
-    return $sth.fetchrow_hashref;
+    $sth.fetchrow_hashref;
 }
 
 method selectall_arrayref(Str $statement, $attr?, *@bind is copy) {
     my $sth = self.prepare($statement, $attr);
     $sth.execute(@bind);
-    return $sth.fetchall_arrayref;
+    $sth.fetchall_arrayref;
 }
 
 method selectall_hashref(Str $statement, Str $key, $attr?, *@bind is copy) {
     my $sth = self.prepare($statement, $attr);
     $sth.execute(@bind);
-    return $sth.fetchall_hashref($key);
+    $sth.fetchall_hashref($key);
 }
 
 method selectcol_arrayref(Str $statement, $attr?, *@bind is copy) {
@@ -86,7 +82,7 @@ method selectcol_arrayref(Str $statement, $attr?, *@bind is copy) {
     }
 
     my $aref = @results;
-    return $aref;
+    $aref;
 }
 
 method commit {
@@ -94,7 +90,7 @@ method commit {
         warn "Commit ineffective while AutoCommit is on";
         return;
     };
-    PQexec($!pg_conn, "COMMIT");
+    $!pg_conn.PQexec("COMMIT");
     $.in_transaction = 0;
 }
 
@@ -103,15 +99,15 @@ method rollback {
         warn "Rollback ineffective while AutoCommit is on";
         return;
     };
-    PQexec($!pg_conn, "ROLLBACK");
+    $!pg_conn.PQexec("ROLLBACK");
     $.in_transaction = 0;
 }
 
 method ping {
-    PQstatus($!pg_conn) == CONNECTION_OK
+    $!pg_conn.PQstatus == CONNECTION_OK
 }
 
-method disconnect() {
-    PQfinish($!pg_conn);
+method disconnect {
+    $!pg_conn.PQfinish;
     True;
 }

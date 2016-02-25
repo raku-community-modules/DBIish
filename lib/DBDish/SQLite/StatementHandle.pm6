@@ -1,12 +1,10 @@
-
 use v6;
 
-use NativeCall;
-need DBDish::Role::StatementHandle;
-use DBDish::SQLite::Native;
-
+need DBDish;
 
 unit class DBDish::SQLite::StatementHandle does DBDish::Role::StatementHandle;
+use DBDish::SQLite::Native;
+use NativeCall;
 
 has $!conn;
 has $.statement;
