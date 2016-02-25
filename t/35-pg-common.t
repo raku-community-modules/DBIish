@@ -2,27 +2,27 @@
 use v6;
 use Test;
 use DBIish;
-
 use lib 't/lib';
+use Test::DBDish;
 use Test::Config::Pg;
 
-# Define the only database specific values used by the common tests.
+if not %*ENV<PGDATABASE>:exists {
+   plan 1;
+   skip "'PGDATABASE' not set, skipping";
+   exit;
+}
 
-my $*mdriver    = 'Pg';
-my %*opts;
-try %*opts      = config_pg_connect;
-diag $! if $!;
+my $test-dbdish = Test::DBDish.new(
+    dbd => 'Pg',
+    opts => config_pg_connect,
+    post_connect_cb => sub {
+        my $dbh = @_.shift;
 
-my $post_connect_cb =
-{
-    my $dbh = @_.shift;
+        $dbh.do( 'SET client_min_messages = warning' );
+    },
+);
 
-    $dbh.do( 'SET client_min_messages = warning' );
-};
-
-# Detect and report possible errors from EVAL of the common test script
-
-warn $! if "ok 99-common.pl6" ne EVAL slurp 't/99-common.pl6';
+$test-dbdish.run-tests;
 
 =begin pod
 
