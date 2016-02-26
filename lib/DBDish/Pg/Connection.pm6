@@ -16,11 +16,7 @@ method prepare(Str $statement, $attr?) {
     state $statement_postfix = 0;
     my $statement_name = join '_', 'pg', $*PID, $statement_postfix++;
     my $munged = DBDish::Pg::pg-replace-placeholder($statement);
-    my $result = $!pg_conn.PQprepare(
-            $statement_name,
-            $munged,
-            0, Oid
-    );
+    my $result = $!pg_conn.PQprepare($statement_name, $munged, 0, OidArray);
     unless $result.is-ok {
         self!set_errstr($result.PQresultErrorMessage);
         die self.errstr if $.RaiseError;
@@ -30,10 +26,10 @@ method prepare(Str $statement, $attr?) {
     my $param_count = $info.PQnparams;
 
     my $statement_handle = DBDish::Pg::StatementHandle.new(
+        :dbh(self),
         :$!pg_conn,
         :$statement,
         :$.RaiseError,
-        :dbh(self),
         :$statement_name,
         :$result,
         :$param_count,
@@ -81,8 +77,7 @@ method selectcol_arrayref(Str $statement, $attr?, *@bind is copy) {
         @results.push($row[0]);
     }
 
-    my $aref = @results;
-    $aref;
+    item @results;
 }
 
 method commit {

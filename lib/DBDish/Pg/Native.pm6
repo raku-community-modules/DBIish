@@ -8,7 +8,10 @@ sub MyLibName {
 }
 constant LIB = &MyLibName;
 
-#------------ My Visible Pointers
+#------------ My Visible Types
+
+constant Oid = uint32;
+constant OidArray is export = CArray[Oid];
 
 class PGresult	is export is repr('CPointer') {
     method PQclear is native(LIB) { * }
@@ -28,7 +31,6 @@ class PGresult	is export is repr('CPointer') {
     }
 }
 
-class Oid is export is repr('CPointer') { }
 
 class PGconn is export is repr('CPointer') {
     method PQexec(--> PGresult) is native(LIB) { * }
@@ -44,7 +46,7 @@ class PGconn is export is repr('CPointer') {
     method PQerrorMessage(--> str) is native(LIB) { * }
     method PQdescribePrepared(str --> PGresult) is native(LIB) { * }
     method PQstatus(--> int32) is native(LIB) { * }
-    method PQprepare(str $sth_name, str $query, int32 $n_params, Oid $paramTypes --> PGresult)
+    method PQprepare(str $sth_name, str $query, int32 $n_params, OidArray --> PGresult)
 	is native(LIB) { * }
     method PQfinish is native(LIB) { * }
 
@@ -65,10 +67,8 @@ constant %oid-to-type-name is export = (
         21  => 'Int',   # int2
         23  => 'Int',   # int4
         25  => 'Str',   # text
-#       700  => 'Num',   # float4
-#       701  => 'Num',   # float8
-       700  => 'Rat',   # float4
-       701  => 'Rat',   # float8
+       700  => 'Num',   # float4
+       701  => 'Num',   # float8
       1000  => 'Bool',  # _bool
       1001  => 'Buf',   # _bytea
       1005  => 'Array<Int>',     # Array(int2)
@@ -76,16 +76,13 @@ constant %oid-to-type-name is export = (
       1009  => 'Array<Str>',     # Array(text)
       1015  => 'Str',            # _varchar
 
-#      1021  => 'Array<Num>',     # Array(float4)
-#      1022  => 'Array<Num>',     # Array(float4)
-      1021  => 'Array<Rat>',     # Array(float4)
-      1022  => 'Array<Rat>',     # Array(float4)
+      1021  => 'Array<Num>',     # Array(float4)
+      1022  => 'Array<Num>',     # Array(float4)
       1028  => 'Array<Int>',     # Array<oid>
       1043  => 'Str',            # varchar
       1114  => 'Str',   # Timestamp
       1263  => 'Array<Str>',     # Array<varchar>
-#      1700  => 'Real',  # numeric
-      1700  => 'Rat',  # numeric
+      1700  => 'Rat',   # numeric
       2950  => 'Str',   # uuid
       2951  => 'Str',   # _uuid
 ).hash;
