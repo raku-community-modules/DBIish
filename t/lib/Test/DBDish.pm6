@@ -9,7 +9,7 @@ unit class Test::DBDish;
 has $.dbd is required;
 has %.opts is required;
 has $.post-connect-cb;
-has $.drop-table-sql = 'DROP TABLE IF EXISTS nom';
+has $.typed-nulls = True;
 has $.create-table-sql = '
     CREATE TABLE nom (
         name        varchar(4),
@@ -19,6 +19,8 @@ has $.create-table-sql = '
     )
 ';
 
+# Common queries
+has $.drop-table-sql = 'DROP TABLE IF EXISTS nom';
 has $.select-null-query = 'SELECT NULL';
 
 # compare rows of the nom table
@@ -37,7 +39,7 @@ method !hash-str(%h) {
 
 method run-tests {
     diag "Testing DBDish::$.dbd";
-    plan 70;
+    plan 73;
 
     # Verify that the driver loads before attempting a connect
     my $drh = DBIish.install_driver($.dbd);
@@ -159,60 +161,85 @@ method run-tests {
     " ), "prepare a select command without parameters"; # test 27
 
     ok $sth.execute(), "execute a prepared select statement without parameters"; # test 28
+
     #fetch stuff return Str
-    my @ref =
-        [ Str, Str, "1" , Str, Str],
-        [ Str, Str, Str, 4.85, Str ],
+    my @ref = [ Str, Str, "1", Str, Str],
+        [ Str, Str, Str, "4.85", Str ],
         [ 'BEOM', 'Medium size orange juice', "2", "1.20", "2.40" ],
         [ 'BUBH', 'Hot beef burrito', "1", "4.95", "4.95" ],
         [ 'ONE', Str, Str, Str, Str ],
         [ 'TAFM', 'Mild fish taco', "1", "4.85", "4.85" ];
-    #row and allrows return typed value
-    my @typed-ref =
+
+    my $arrayref = $sth.fetchall_arrayref();
+
+    is $arrayref.elems, 6, "fetchall_arrayref returns 6 rows"; # test 29
+    my $ok = True;
+    for ^6 -> $i {
+        $ok &&= $arrayref[$i] eqv @ref[$i];
+    }
+    todo "Will fail in sqlite, no real NUMERIC" if $.dbd ~~ /SQLite/;
+    ok $ok, "selected data matches what was written"; # test 30
+
+    # Re-execute the same statement
+    ok $sth.execute(), "statement can be re-executed";
+
+    # Test driver capabilities
+    if $sth.^can('column_names') {
+        ok (my @columns = $sth.column_names), 'called column_names'; #test 33
+	is @columns.elems, 5, 'column_names returns 5';
+        is @columns, [ 'name', 'description', 'quantity', 'price', 'amount'],
+	    'column_names matched test data'; #test 34
+    }
+    else { skip 'column_names not implemented', 2 }
+
+    if $sth.^can('column_types') {
+        my @columns = $sth.column_types; #'called column_types'; #test 35
+        is @columns.elems, 4, "column_types returns 4 fields in a row"; #test 36
+        ok @columns, [ Str, Str, Int, Rat ], 'column_types matches test data'; #test 37
+    }
+    else { skip 'column_types not implemented', 2 }
+
+    #row and allrows return typed value, when possible
+    my @typed-ref = $.typed-nulls ?? (
         [ Str, Str, 1 , Rat, Rat],
         [ Str, Str, Int, 4.85, Rat ],
         [ 'BEOM', 'Medium size orange juice', 2, 1.2, 2.4 ],
         [ 'BUBH', 'Hot beef burrito', 1, 4.95, 4.95 ],
         [ 'ONE', Str, Int, Rat, Rat ],
-        [ 'TAFM', 'Mild fish taco', 1, 4.85, 4.85 ];
+        [ 'TAFM', 'Mild fish taco', 1, 4.85, 4.85 ]
+    ) !! (
+        [ Any, Any, 1, Any, Any],
+        [ Any, Any, Any, 4.85, Any ],
+        [ 'BEOM', 'Medium size orange juice', 2, 1.2, 2.4 ],
+        [ 'BUBH', 'Hot beef burrito', 1, 4.95, 4.95 ],
+        [ 'ONE', Any, Any, Any, Any ],
+        [ 'TAFM', 'Mild fish taco', 1, 4.85, 4.85 ]
+    );
 
-    my $arrayref = $sth.fetchall_arrayref();
-    is $arrayref.elems, 6, "fetchall_arrayref returns 6 rows"; # test 29
-    my $ok = True;
-    for ^6 -> $i {
-        $ok &&= self!magic-cmp($arrayref[$i], @ref[$i]);
-    }
-    todo "Will fail in sqlite (ExplicitlyManaged)";
-    ok $ok, "selected data matches what was written"; # test 30
-
-    $sth.execute();
-
-    #FIXME, sqlite (for example) return NULL field as NULL type, we can't really use
+    #FIXME, sqlite (for example) return NULL field as Any type, we can't really use
     # the empty line for this. so we skip them.
-    $sth.row();$sth.row();
+    $sth.row(); $sth.row();
     my @results = $sth.row();
     ok @results[1] ~~ Str, "Test the type of a Str field";
     ok @results[2] ~~ Int, "Test the type of an Int field";
-    ok @results[3] ~~ Rat, "Test the type of a Float like field";
+    ok @results[3] ~~ Rat, "Test the type of a NUMERIC like field";
 
     my %results = $sth.row(:hash);
 
     ok %results<name> ~~ Str, "HASH: Test the type of a Str field";
     ok %results<quantity> ~~ Int, "HASH: Test the type of a Int field";
-    ok %results<price> ~~ Rat, "HASH: Test the type of a Float like field";
+    ok %results<price> ~~ Rat, "HASH: Test the type of a NUMERIC like field";
 
-    $sth.execute();
+    ok $sth.finish, "No more rows needed";
+    ok $sth.execute(),  "Can re-execute after finish";
 
-    @results = $sth.allrows();
+    ok (@results = $sth.allrows()),  "call allrows works";
     ok @results.elems == 6, "Test allrows, get 6 rows";
 
     $ok = True;
-    #FIXME, same that the previous concern with NULL
     for ^6 -> $i {
-      #$ok &&= self!magic-cmp(@results[$i], @typed-ref[$i]);
       $ok &&= @results[$i] eqv @typed-ref[$i];
     }
-    todo "WIll fail depending on how the drivers handle null result";
     ok $ok, "Selected data still matches";
 
     $sth.execute();
@@ -225,75 +252,53 @@ method run-tests {
         price       => @typed-ref.map({ .[3] }).Array,
         amount      => @typed-ref.map({ .[4] }).Array
     );
-    todo "Figure why the ref data get the NC-explicit role sometime";
     is-deeply %results, %ref, "Test allrows(:hash-of-array)";
-
-    # use Data::Dump;
-    # say "============EXPECTED==========";
-    # say Dump(%ref);
-    # say "============GOT===============";
-    # say Dump(%results);
 
     $sth.execute();
     @results = $sth.allrows(:array-of-hash);
-    my @ref-aoh = (
+    $sth.finish;
+    my @ref-aoh =  $.typed-nulls ?? (
         { name => Str, description => Str, quantity => 1, price => Rat, amount => Rat },
         { name => Str, description => Str, quantity => Int, price => 4.85, amount => Rat },
         { name => 'BEOM', description => 'Medium size orange juice', quantity => 2, price => 1.2, amount => 2.4 },
         { name => 'BUBH', description => 'Hot beef burrito', quantity => 1, price => 4.95, amount => 4.95 },
         { name => 'ONE', description => Str, quantity => Int, price => Rat, amount => Rat },
         { name => 'TAFM', description => 'Mild fish taco', quantity => 1, price => 4.85, amount => 4.85 },
+    ) !! (
+        { name => Any, description => Any, quantity => 1, price => Any, amount => Any },
+        { name => Any, description => Any, quantity => Any, price => 4.85, amount => Any },
+        { name => 'BEOM', description => 'Medium size orange juice', quantity => 2, price => 1.2, amount => 2.4 },
+        { name => 'BUBH', description => 'Hot beef burrito', quantity => 1, price => 4.95, amount => 4.95 },
+        { name => 'ONE', description => Any, quantity => Any, price => Any, amount => Any },
+        { name => 'TAFM', description => 'Mild fish taco', quantity => 1, price => 4.85, amount => 4.85 },
     );
 
     #diag "ref-aoh: {Dump(@ref-aoh)}";
 
-    todo "Figure why the ref data get the NC-explicit role sometime";
-    #ok self!magic-cmp(@results, @ref-aoh), 'types and values match';
     is-deeply @results, @ref-aoh, 'types and values match';
 
-    ok $sth = $dbh.prepare("SELECT * FROM nom WHERE name = 'TAFM'"),
-	'prepare new select for fetchrow_hashref test'; #test 31
-    ok $sth.execute(), 'execute prepared statement for fetchrow_hashref'; #test 32
-
-    if $sth.can('column_names') {
-        ok my $hashref = $sth.fetchrow_hashref(), 'called fetchrow_hashref'; #test 33
-        is self!hash-str($hashref), self!hash-str({ 'name' => 'TAFM', 'description' => 'Mild fish taco', 'quantity'
-        => 1, 'price' => '4.85' }), 'selected data matches test hashref'; #test 34
-    }
-    else { skip 'fetchrow_hashref not implemented', 2 }
-
-    if $sth.can('colum_names') {
-        $sth.execute;
-        my $arrayref = $sth.fetchrow_arrayref(); #'called fetchrow_arrayref'; #test 35
-        is $arrayref.elems, 4, "fetchrow_arrayref returns 4 fields in a row"; #test 36
-        ok self!magic-cmp([ 'TAFM', 'Mild fish taco', 1, 4.85 ], $arrayref), 'selected data matches test data'; #test 37
-    }
-    else { skip 'fetchrow_arrayref not implemented', 2 }
+    ok $sth = $dbh.prepare($.select-null-query), "can prepare '$.select-null-query'";
+    $sth.execute;
+    my ($v) = $sth.fetchrow;
     $sth.finish;
-
-    {
-        ok $sth = $dbh.prepare($.select-null-query), "can prepare statement '$.select-null-query'";
-        $sth.execute;
-        my ($v) = $sth.fetchrow;
-        $sth.finish;
-        nok $v.defined, 'NULL returns an undefined value'
-            or diag "NULL returned as $v.perl()";
-    }
+    nok $v.defined, 'NULL returns an undefined value'
+	or diag "NULL returned as $v.perl()";
 
     #TODO: I made piña colada (+U00F1) at first to test unicode. It gets properly
     # inserted and selected, but a comparison within arrayref fails.
     # Output _looks_ identical.
 
-    ok $sth = $dbh.prepare("INSERT INTO nom (name, description, quantity, price)
-                             VALUES ('PICO', 'Delish pina colada', '5', '7.9')"),
-                             'insert new value for fetchrow_arrayref test'; #test 38
+    ok $sth = $dbh.prepare("
+	INSERT INTO nom (name, description, quantity, price)
+        VALUES ('PICO', 'Delish pina colada', '5', '7.9')
+    " ), 'insert new value for fetchrow_arrayref test'; #test 38
 
     ok $sth.execute(), 'new insert statement executed'; #test 39
     is $sth.?rows, 1, "insert reports 1 row affected"; #test 40
     $sth.finish;
 
-    ok $sth = $dbh.prepare("SELECT * FROM nom WHERE quantity='5'"),
-    'prepare new select for fetchrow_arrayref test'; #test 41
+    ok $sth = $dbh.prepare("SELECT * FROM nom WHERE quantity= 5"),
+        'prepare new select for fetchrow_arrayref test'; #test 41
     ok $sth.execute(), 'execute prepared statement for fetchrow_arrayref'; #test 42
 
     if $sth.^can('fetchrow_arrayref') {
