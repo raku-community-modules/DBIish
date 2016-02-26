@@ -70,7 +70,7 @@ method do(Str $sql, *@args) {
 }
 
 method disconnect() {
-    .finish for @!sths;
+    .free for @!sths;
     self!handle-error(sqlite3_close($!conn));
     return not self.errstr;
 }

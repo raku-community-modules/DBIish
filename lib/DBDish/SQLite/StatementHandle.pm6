@@ -23,17 +23,14 @@ method !handle-error(Int $status) {
 submethod BUILD(:$!conn, :$!statement, :$!statement_handle, :$!dbh) { }
 
 method execute(*@params) {
-    die "Finish was previously called on the StatementHandle" if $!finished;
-    sqlite3_reset($!statement_handle) if $!statement_handle.defined;
+    self.finish if $!statement_handle;
     @!mem_rows = ();
-    my @strings;
     for @params.kv -> $idx, $v {
         if $v ~~ Str {
             explicitly-manage($v);
             @!mem_rows.push: $v;
         }
         self!handle-error(sqlite3_bind($!statement_handle, $idx + 1, $v));
-        push @strings, $v;
     }
     $!row_status = sqlite3_step($!statement_handle);
     if $!row_status != SQLITE_ROW and $!row_status != SQLITE_DONE {
@@ -99,10 +96,15 @@ method fetchrow {
     @row || Nil;
 }
 
-method finish {
+method free {
     sqlite3_finalize($!statement_handle) if $!statement_handle.defined;
-    $!row_status = Int;;
+    $!row_status = Int;
     $!dbh._remove_sth(self);
     $!finished = True;
+    True;
+}
+
+method finish {
+    sqlite3_reset($!statement_handle) if $!statement_handle;
     True;
 }
