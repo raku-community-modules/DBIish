@@ -5,9 +5,8 @@ need DBDish;
 unit class DBDish::SQLite::Connection does DBDish::Role::Connection;
 need DBDish::SQLite::StatementHandle;
 use DBDish::SQLite::Native;
-use NativeCall;
 
-has $!conn;
+has SQLite $!conn;
 has @!sths;
 
 method BUILD(:$!conn) { }
@@ -18,32 +17,16 @@ method !handle-error(Int $status) {
 }
 
 method prepare(Str $statement, $attr?) {
-    my @stmt := CArray[OpaquePointer].new;
-    @stmt[0]  = OpaquePointer;
-    my $status;
-    if sqlite3_libversion_number() >= 3003009 {
-        $status = sqlite3_prepare_v2(
-            $!conn,
-            $statement,
-            -1,
-            @stmt,
-            CArray[OpaquePointer]
-        );
-    } else {
-        $status = sqlite3_prepare(
-            $!conn,
-            $statement,
-            -1,
-            @stmt,
-            CArray[OpaquePointer])
-    }
-    my $statement_handle = @stmt[0];
+    my STMT $stmt .= new;
+    my $status = (sqlite3_libversion_number() >= 3003009)
+        ?? sqlite3_prepare_v2($!conn, $statement, -1, $stmt, Null)
+        !! sqlite3_prepare($!conn, $statement, -1, $stmt, Null);
     self!handle-error($status);
     return Nil unless $status == SQLITE_OK;
-    my $sth = DBDish::SQLite::StatementHandle.bless(
+    my $sth = DBDish::SQLite::StatementHandle.new(
         :$!conn,
         :$statement,
-        :$statement_handle,
+        :statement_handle($stmt),
         :$.RaiseError,
         :dbh(self),
     );
@@ -52,7 +35,7 @@ method prepare(Str $statement, $attr?) {
 }
 
 method _remove_sth($sth) {
-    @!sths.=grep(* !=== $sth);
+    @!sths .= grep(* !=== $sth);
 }
 
 method rows() {

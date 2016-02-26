@@ -50,19 +50,24 @@ sub MyLibName {
 }
 constant LIB = &MyLibName;
 
-sub sqlite3_errmsg(OpaquePointer $handle)
+constant Null is export = Pointer;
+class SQLite is export is repr('CPointer') { };
+class STMT is export is repr('CPointer') { };
+constant SQLITE_TRANSIENT = Pointer.new(-1);
+
+sub sqlite3_errmsg(SQLite $handle)
     returns Str
     is native(LIB)
     is export
     { ... }
 
-sub sqlite3_open(Str $filename, CArray[OpaquePointer] $handle)
+sub sqlite3_open(Str $filename, SQLite $handle is rw)
     returns int32
     is native(LIB)
     is export
     { ... }
 
-sub sqlite3_close(OpaquePointer)
+sub sqlite3_close(SQLite)
     returns int32
     is native(LIB)
     is export
@@ -70,11 +75,11 @@ sub sqlite3_close(OpaquePointer)
 
 
 sub sqlite3_prepare_v2 (
-        OpaquePointer $handle,
-        Str           $statement,
-        int32           $statement_length,
-        CArray[OpaquePointer] $statement_handle,
-        CArray[OpaquePointer] $pz_tail
+        SQLite,
+        Str  $statement is encoded('utf8'),
+        int32 $statement_length,
+        STMT $statement_handle is rw,
+        Pointer
     )
     returns int32
     is native(LIB)
@@ -82,47 +87,51 @@ sub sqlite3_prepare_v2 (
     { ... }
 
 sub sqlite3_prepare (
-        OpaquePointer $handle,
-        Str           $statement,
-        int32           $statement_length,
-        CArray[OpaquePointer] $statement_handle,
-        CArray[OpaquePointer] $pz_tail
+        SQLite,
+        Str $statement is encoded('utf8'),
+        int32 $statement_length,
+        STMT $statement_handle is rw,
+        Pointer
     )
     returns int32
     is native(LIB)
     is export
     { ... }
-    
-sub sqlite3_step(OpaquePointer $statement_handle)
+
+sub sqlite3_step(STMT $statement_handle)
     returns int32
     is native(LIB)
     is export
     { ... }
-  
+
 
 sub sqlite3_libversion_number() returns int32 is native(LIB) is export { ... };
-sub sqlite3_bind_blob(OpaquePointer $stmt, int32, OpaquePointer, int32, OpaquePointer) returns int32 is native(LIB) is export { ... };
-sub sqlite3_bind_double(OpaquePointer $stmt, int32, num64) returns int32 is native(LIB) is export { ... };
-sub sqlite3_bind_int64(OpaquePointer $stmt, int32, int64) returns int32 is native(LIB) is export { ... };
-sub sqlite3_bind_null(OpaquePointer $stmt, int32) returns int32 is native(LIB) is export { ... };
-sub sqlite3_bind_text(OpaquePointer $stmt, int32, Str, int32, OpaquePointer) returns int32 is native(LIB) is export { ... };
+sub sqlite3_bind_blob(STMT, int32, OpaquePointer, int32, OpaquePointer) returns int32 is native(LIB) is export { ... };
+sub sqlite3_bind_double(STMT, int32, num64) returns int32 is native(LIB) is export { ... };
+sub sqlite3_bind_int64(STMT, int32, int64) returns int32 is native(LIB) is export { ... };
+sub sqlite3_bind_null(STMT, int32) returns int32 is native(LIB) is export { ... };
+sub sqlite3_bind_text(STMT, int32, Str is encoded('utf8'), int32, Pointer) returns int32 is native(LIB) is export { ... };
 
-sub sqlite3_changes(OpaquePointer $handle) returns int32 is native(LIB) is export { ... };
+sub sqlite3_changes(SQLite) returns int32 is native(LIB) is export { ... };
 
-proto sub sqlite3_bind($, $, $) {*}
-multi sub sqlite3_bind($stmt, Int $n, Buf:D $b)  is export { sqlite3_bind_blob($stmt, $n, $b, $b.bytes, OpaquePointer) }
-multi sub sqlite3_bind($stmt, Int $n, Real:D $d) is export { sqlite3_bind_double($stmt, $n, $d.Num) }
-multi sub sqlite3_bind($stmt, Int $n, Int:D $i)  is export { sqlite3_bind_int64($stmt, $n, $i) }
-multi sub sqlite3_bind($stmt, Int $n, Any:U)     is export { sqlite3_bind_null($stmt, $n) }
-multi sub sqlite3_bind($stmt, Int $n, Str:D $d)  is export { sqlite3_bind_text($stmt, $n, $d, -1,  OpaquePointer) }
+proto sub sqlite3_bind(STMT, $, $) {*}
+multi sub sqlite3_bind(STMT $stmt, Int $n, Buf:D $b)  is export { sqlite3_bind_blob($stmt, $n, $b, $b.bytes, OpaquePointer) }
+multi sub sqlite3_bind(STMT $stmt, Int $n, Real:D $d) is export { sqlite3_bind_double($stmt, $n, $d.Num) }
+multi sub sqlite3_bind(STMT $stmt, Int $n, Int:D $i)  is export { sqlite3_bind_int64($stmt, $n, $i) }
+multi sub sqlite3_bind(STMT $stmt, Int $n, Any:U)     is export { sqlite3_bind_null($stmt, $n) }
+multi sub sqlite3_bind(STMT $stmt, Int $n, Str:D $d)  is export {
+    sqlite3_bind_text($stmt, $n, $d, -1, SQLITE_TRANSIENT)
+}
 
-sub sqlite3_reset(OpaquePointer) returns int32 is native(LIB) is export  { ... }
+sub sqlite3_reset(STMT) returns int32 is native(LIB) is export  { ... }
 
-sub sqlite3_column_text(OpaquePointer, int32) returns Str is native(LIB) is export  { ... }
-sub sqlite3_column_double(OpaquePointer, int32) returns num64 is native(LIB) is export { ... }
-sub sqlite3_column_int64(OpaquePointer, int32) returns int64 is native(LIB) is export { ... }
+sub sqlite3_column_text(STMT, int32) returns Str is native(LIB) is export  { ... }
+sub sqlite3_column_double(STMT, int32) returns num64 is native(LIB) is export { ... }
+sub sqlite3_column_int64(STMT, int32) returns int64 is native(LIB) is export { ... }
+sub sqlite3_column_blob(STMT, int32) returns Pointer is native(LIB) is export { ... }
+sub sqlite3_column_bytes(STMT, int32) returns int32 is native(LIB) is export { ... }
 
-sub sqlite3_finalize(OpaquePointer) returns int32 is native(LIB) is export { ... }
-sub sqlite3_column_count(OpaquePointer) returns int32 is native(LIB) is export { ... }
-sub sqlite3_column_name(OpaquePointer, int32) returns Str is native(LIB) is export { ... }
-sub sqlite3_column_type(OpaquePointer, int32) returns int32 is native(LIB) is export { ... }
+sub sqlite3_finalize(STMT) returns int32 is native(LIB) is export { ... }
+sub sqlite3_column_count(STMT) returns int32 is native(LIB) is export { ... }
+sub sqlite3_column_name(STMT, int32) returns Str is native(LIB) is export { ... }
+sub sqlite3_column_type(STMT, int32) returns int32 is native(LIB) is export { ... }

@@ -6,7 +6,7 @@ unit class DBDish::SQLite::StatementHandle does DBDish::Role::StatementHandle;
 use DBDish::SQLite::Native;
 use NativeCall;
 
-has $!conn;
+has SQLite $!conn;
 has $.statement;
 has $!statement_handle;
 has $.dbh;
@@ -27,7 +27,6 @@ method execute(*@params) {
     @!mem_rows = ();
     for @params.kv -> $idx, $v {
         if $v ~~ Str {
-            explicitly-manage($v);
             @!mem_rows.push: $v;
         }
         self!handle-error(sqlite3_bind($!statement_handle, $idx + 1, $v));
@@ -40,7 +39,7 @@ method execute(*@params) {
 }
 
 method rows {
-    die 'Cannot determine rows of closed connection' unless $!conn.DEFINITE;
+    die 'Cannot determine rows of closed connection' unless $!conn;
     my $rows = sqlite3_changes($!conn);
     $rows == 0 ?? '0E0' !! $rows;
 }
@@ -69,9 +68,18 @@ method _row (:$hash) {
             }
             when SQLITE_FLOAT {
                  $value = sqlite3_column_double($!statement_handle, $col);
-                 $value = $value.Rat;
+                 $value = $value.Rat; # FIXME
             }
-            default { 
+	    when SQLITE_BLOB {
+		 ...  # TODO WIP
+		 $value = sqlite3_column_blob($!statement_handle, $col);
+	    }
+	    when SQLITE_NULL {
+		 # SQLite can't determine the type of NULL column, so instead
+		 # of lyng, prefer an explicit Nil.
+		 $value = Nil;
+	    }
+            default {
                 $value = sqlite3_column_text($!statement_handle, $col);
             }
         }
