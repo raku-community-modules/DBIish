@@ -1,9 +1,8 @@
 # DBIish/t/35-Pg-common.t
 use v6;
 use Test;
-use DBIish;
 use lib 't/lib';
-use Test::DBDish;
+need Test::DBDish;
 use Test::Config::Pg;
 
 if not %*ENV<PGDATABASE>:exists {

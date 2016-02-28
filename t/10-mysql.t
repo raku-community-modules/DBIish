@@ -68,7 +68,7 @@ $drh = DBIish.install_driver($mdriver);
 ok $drh, 'Install driver'; # test 1
 my $drh_version;
 $drh_version = $drh.Version;
-ok $drh_version > 0, "DBDish::mysql version $drh_version"; # test 2
+ok $drh_version ~~ Version:D, "DBDish::mysql version $drh_version"; # test 2
 
 #-----------------------------------------------------------------------
 # from perl5 DBD/mysql/t/10connect.t
@@ -88,7 +88,7 @@ my $dbh = try {
 
     DBIish.connect($mdriver, :user($test_user), :password($test_password),
         :$host, :$port, :$database,
-        RaiseError => 1, PrintError => 1, AutoCommit => 0
+        :RaiseError, :PrintError, :AutoCommit(False)
     );
 }
 

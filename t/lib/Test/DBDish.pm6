@@ -39,19 +39,18 @@ method !hash-str(%h) {
 
 method run-tests {
     diag "Testing DBDish::$.dbd";
-    plan 73;
+    plan 74;
 
     # Verify that the driver loads before attempting a connect
     my $drh = DBIish.install_driver($.dbd);
     ok $drh, 'Install driver'; # test 1
-    my $drh_version;
-    $drh_version = $drh.Version;
-    ok $drh_version > 0, "DBDish::{$.dbd} version $drh_version"; # test 2
+    my $drh_version = $drh.Version;
+    ok $drh_version ~~ Version:D, "DBDish::{$.dbd} version $drh_version"; # test 2
 
-    # Connect to the data sourcequantity*price AS amount FROM nom
+    # Connect to the data source
     my $dbh;
     try {
-        $dbh = DBIish.connect( $.dbd, |%.opts, :RaiseError<1> );
+        $dbh = DBIish.connect( $.dbd, |%.opts, :RaiseError );
         CATCH {
             default {
                 diag "Connect failed with error $_";
@@ -64,38 +63,36 @@ method run-tests {
 
     try EVAL '$.post-connect-cb.($dbh)';
 
-    # Test .prepare() and .execute() a few times while setting things up.
     # Drop a table of the same name so that the following create can work.
-    my $sth = $dbh.prepare($.drop-table-sql);
-    my $rc = $sth.execute();
-    isnt $rc, Bool::True, "drop table gave an expected error " ~
-        "(did a previous test not clean up?)"; # test 4
-    $sth.finish;
+    my $rc = $dbh.do($!drop-table-sql);
+    ok $rc, "drop table if exists works"; # test 4
+
+    # TODO should check that after 'do' the statement was finished
 
     # Create a table
-    $sth = $dbh.prepare($.create-table-sql);
-    $rc = $sth.execute();
-    is $rc, '0E0', "do: create table nom"; # test 5
+    $rc = $dbh.do($.create-table-sql);
+    ok $rc, "do: create table nom returns True"; # test 5
+    ok +$rc == 0, "do: create table nom returns 0"; # test 6
     if $dbh.^can('err') {
-        is $dbh.err, 0, 'err after successful create should be 0'; # test 6
+        is $dbh.err, 0, 'err after successful create should be 0'; # test 7
     }
     else { skip 'err after successful create should be 0', 1 }
-    nok $dbh.errstr, "errstr after successful create should be false"; # test 7
+    nok $dbh.errstr, "errstr after successful create should be false"; # test 8
 
-    $sth.finish;
 
     # Insert rows using the various method calls
     ok $dbh.do( "
         INSERT INTO nom (name, description, quantity, price)
         VALUES ( 'BUBH', 'Hot beef burrito', 1, 4.95 )
-    "), "insert without parameters called from do"; # test 8
+    "), "insert without parameters called from do"; # test 9
 
     if $dbh.^can('rows') {
         is $dbh.rows, 1, "simple insert should report 1 row affected"; # test 9
     }
     else { skip '$dbh.rows not implemented', 1 }
 
-    ok $sth = $dbh.prepare( "
+    # Test .prepare() and .execute() a few times while setting things up.
+    ok my $sth = $dbh.prepare( "
         INSERT INTO nom (name)
         VALUES ( ? )
     "), "prepare an insert command with one string parameter"; # test 10

@@ -1,9 +1,8 @@
 # DBIish/t/45-oracle-common.t
 use v6;
 use Test;
-use DBIish;
 use lib 't/lib';
-use Test::DBDish;
+need Test::DBDish;
 
 my $test-dbdish = Test::DBDish.new(
     dbd => 'Oracle',
