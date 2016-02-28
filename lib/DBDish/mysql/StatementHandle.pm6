@@ -1,11 +1,9 @@
-
 use v6;
 
-use NativeCall;
 need DBDish::Role::StatementHandle;
-use DBDish::mysql::Native;
 
 unit class DBDish::mysql::StatementHandle does DBDish::Role::StatementHandle;
+use DBDish::mysql::Native;
 
 has $!mysql_client;
 has $!statement;
@@ -50,7 +48,7 @@ method execute(*@params is copy) {
     }
 
     my $rows = self.rows;
-    return ($rows == 0) ?? "0E0" !! $rows;
+    ($rows == 0) ?? "0E0" !! $rows;
 }
 
 method escape(Str $x) {
@@ -76,9 +74,7 @@ method rows() {
         if $errstr ne '' { self!set_errstr($errstr); }
     }
 
-    if defined $!affected_rows {
-        return $!affected_rows;
-    }
+    $!affected_rows;
 }
 
 method _row(:$hash) {
@@ -111,8 +107,6 @@ method _row(:$hash) {
 
         if $native_row {
             loop ( my $i=0; $i < $!field_count; $i++ ) {
-                die "unhandled data type @!column_mysqltype[$i]"
-                    unless %mysql-type-conv{@!column_mysqltype[$i]}:exists;
                 my $type = %mysql-type-conv{@!column_mysqltype[$i]};
                 my Bool $is-null = ! defined $native_row[$i];
                 my $value = do given $type {
@@ -122,6 +116,9 @@ method _row(:$hash) {
                     when 'Rat' {
                         $is-null ?? Rat !! $native_row[$i].Rat;
                     }
+		    when 'Num' {
+                        $is-null ?? Num !! $native_row[$i].Num;
+		    }
                     when 'Str' {
                         $is-null ?? Str !! $native_row[$i].Str;
                     }
@@ -161,7 +158,7 @@ method fetchrow() {
         }
         else { self.finish; }
     }
-    return @row_array;
+    @row_array;
 }
 
 method column_names {
@@ -193,5 +190,5 @@ method finish() {
         $!result_set   = Mu;
         @!column_names = ();
     }
-    return Bool::True;
+    True;
 }

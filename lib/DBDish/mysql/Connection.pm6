@@ -11,12 +11,11 @@ has $!mysql_client;
 submethod BUILD(:$!mysql_client) { }
 
 method prepare( Str $statement ) {
-    my $statement_handle = DBDish::mysql::StatementHandle.new(
+    DBDish::mysql::StatementHandle.new(
         mysql_client => $!mysql_client,
         statement    => $statement,
         RaiseError   => $.RaiseError
     );
-    return $statement_handle;
 }
 
 method mysql_insertid() {
