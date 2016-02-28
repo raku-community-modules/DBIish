@@ -1,13 +1,11 @@
 use v6;
+need DBDish;     # roles for drivers
 
+unit class DBDish::Oracle:auth<mberends>:ver<0.0.1> does DBDish::Driver;
 use NativeCall;
-use DBDish;     # roles for drivers
-
 use DBDish::Oracle::Native;
 need DBDish::Oracle::Connection;
 need DBDish::Oracle::StatementHandle;
-
-unit class DBDish::Oracle:auth<mberends>:ver<0.0.1>;
 
 =begin pod
 
@@ -82,8 +80,6 @@ our sub oracle-replace-placeholder(Str $query) is export {
     OracleTokenizer.parse($query, :actions(OracleTokenizer::Actions.new))
         and $/.ast;
 }
-
-has $.Version = 0.01;
 
 #sub quote-and-escape($s) {
 #    "'" ~ $s.trans([q{'}, q{\\]}] => [q{\\\'}, q{\\\\}])

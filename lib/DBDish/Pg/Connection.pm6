@@ -1,8 +1,7 @@
 use v6;
-
 need DBDish;
 
-unit class DBDish::Pg::Connection does DBDish::Role::Connection;
+unit class DBDish::Pg::Connection does DBDish::Connection;
 use DBDish::Pg::Native;
 need DBDish::Pg::StatementHandle;
 
@@ -35,13 +34,6 @@ method prepare(Str $statement, $attr?) {
         :$param_count,
     );
     $statement_handle;
-}
-
-method do(Str $statement, *@bind is copy) {
-    my $sth = self.prepare($statement);
-    $sth.execute(@bind);
-    my $rows = $sth.rows;
-    ($rows == 0) ?? "0E0" !! $rows;
 }
 
 method selectrow_arrayref(Str $statement, $attr?, *@bind is copy) {

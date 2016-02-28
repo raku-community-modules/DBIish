@@ -1,10 +1,10 @@
+use v6;
+need DBDish;
 # DBDish::mysql.pm6
 
-unit class DBDish::mysql:auth<mberends>:ver<0.0.1>;
+unit class DBDish::mysql:auth<mberends>:ver<0.0.2> does DBDish::Driver;
 use DBDish::mysql::Native;
 need DBDish::mysql::Connection;
-
-has $.Version = 0.01;
 
 #------------------ methods to be called from DBIish ------------------
 method connect(Str :$user, Str :$password, :$RaiseError, *%params ) {

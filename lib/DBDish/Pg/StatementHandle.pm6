@@ -1,8 +1,7 @@
 use v6;
-
 need DBDish;
 
-unit class DBDish::Pg::StatementHandle does DBDish::Role::StatementHandle;
+unit class DBDish::Pg::StatementHandle does DBDish::StatementHandle;
 use DBDish::Pg::Native;
 
 has PGconn $!pg_conn;
@@ -53,8 +52,7 @@ method execute(*@params is copy) {
     self!handle-errors;
     $!row_count = $!result.PQntuples;
 
-    my $rows = self.rows;
-    $rows == 0 ?? "0E0" !! $rows;
+    self.rows;
 }
 
 # do() and execute() return the number of affected rows directly or:
@@ -66,7 +64,7 @@ method rows() {
     }
 
     with $!affected_rows {
-	+$_;
+	$_ == 0 ?? '0E0' !! $_.Int;
     }
 }
 

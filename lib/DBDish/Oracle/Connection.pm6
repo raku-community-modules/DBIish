@@ -1,12 +1,12 @@
 use v6;
+need DBDish;
 
 use NativeCall;
 
-need DBDish::Role::Connection;
 need DBDish::Oracle::StatementHandle;
 use DBDish::Oracle::Native;
 
-unit class DBDish::Oracle::Connection does DBDish::Role::Connection;
+unit class DBDish::Oracle::Connection does DBDish::Connection;
 
 has $!envhp;
 has $!svchp;

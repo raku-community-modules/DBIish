@@ -1,11 +1,10 @@
 use v6;
 no precompilation;
+need DBDish;
+
+unit class DBDish::Oracle::StatementHandle does DBDish::StatementHandle;
 use NativeCall;
-
-need DBDish::Role::StatementHandle;
 use DBDish::Oracle::Native;
-
-unit class DBDish::Oracle::StatementHandle does DBDish::Role::StatementHandle;
 
 has $!statement;
 has $!statementtype;

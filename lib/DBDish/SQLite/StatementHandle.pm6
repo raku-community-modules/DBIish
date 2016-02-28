@@ -1,8 +1,7 @@
 use v6;
-
 need DBDish;
 
-unit class DBDish::SQLite::StatementHandle does DBDish::Role::StatementHandle;
+unit class DBDish::SQLite::StatementHandle does DBDish::StatementHandle;
 use DBDish::SQLite::Native;
 use NativeCall;
 

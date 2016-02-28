@@ -1,9 +1,12 @@
-unit class DBDish::SQLite:auth<mberends>:ver<0.0.1>;
+use v6;
+need DBDish;
+
+unit class DBDish::SQLite:auth<mberends>:ver<0.0.2> does DBDish::Driver;
 use DBDish::SQLite::Native;
 need DBDish::SQLite::Connection;
 
-has $.Version = 0.01;
 has $.errstr;
+
 method !errstr() is rw { $!errstr }
 method connect(:$RaiseError, *%params) {
     my $dbname = %params<dbname> // %params<database>;

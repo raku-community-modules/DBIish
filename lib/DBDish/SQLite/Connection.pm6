@@ -2,7 +2,7 @@ use v6;
 
 need DBDish;
 
-unit class DBDish::SQLite::Connection does DBDish::Role::Connection;
+unit class DBDish::SQLite::Connection does DBDish::Connection;
 need DBDish::SQLite::StatementHandle;
 use DBDish::SQLite::Native;
 
@@ -42,14 +42,6 @@ method rows() {
     die 'Cannot determine rows of closed connection' unless $!conn.DEFINITE;
     my $rows = sqlite3_changes($!conn);
     $rows == 0 ?? '0E0' !! $rows;
-}
-
-method do(Str $sql, *@args) {
-    my $sth = self.prepare($sql);
-    $sth.execute(@args);
-    my $res = $sth.rows || '0e0';
-    $sth.finish;
-    return $sth;
 }
 
 method disconnect() {

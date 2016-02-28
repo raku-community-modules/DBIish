@@ -1,8 +1,7 @@
 use v6;
+need DBDish;
 
-need DBDish::Role::StatementHandle;
-
-unit class DBDish::mysql::StatementHandle does DBDish::Role::StatementHandle;
+unit class DBDish::mysql::StatementHandle does DBDish::StatementHandle;
 use DBDish::mysql::Native;
 
 has $!mysql_client;

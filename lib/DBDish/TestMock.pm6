@@ -1,9 +1,7 @@
 use v6;
+need DBDish;
 
-use DBDish;
-
+unit class DBDish::TestMock does DBDish::Driver;
 need DBDish::TestMock::Connection;
-
-unit class DBDish::TestMock;
 
 method connect() { DBDish::TestMock::Connection.new }

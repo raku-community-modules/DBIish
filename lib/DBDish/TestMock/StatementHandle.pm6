@@ -1,9 +1,7 @@
-
 use v6;
+need DBDish;
 
-need DBDish::Role::StatementHandle;
-
-unit class DBDish::TestMock::StatementHandle does DBDish::Role::StatementHandle;
+unit class DBDish::TestMock::StatementHandle does DBDish::StatementHandle;
 
 my @data = (
        [<a b c>],

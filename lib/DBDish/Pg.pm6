@@ -1,7 +1,7 @@
 use v6;
-# DBDish::Pg.pm6
+need DBDish;
 
-unit class DBDish::Pg:auth<mberends>:ver<0.0.1>;
+unit class DBDish::Pg:auth<mberends>:ver<0.0.2> does DBDish::Driver;
 use DBDish::Pg::Native;
 need DBDish::Pg::Connection;
 
@@ -57,7 +57,6 @@ our sub pg-replace-placeholder(Str $query) is export {
         and $/.ast;
 }
 
-has $.Version = 0.01;
 has $!errstr;
 method !errstr() is rw { $!errstr }
 method errstr() { $!errstr }

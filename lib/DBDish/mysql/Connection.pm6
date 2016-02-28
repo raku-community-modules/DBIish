@@ -2,7 +2,7 @@ use v6;
 
 need DBDish;
 
-unit class DBDish::mysql::Connection does DBDish::Role::Connection;
+unit class DBDish::mysql::Connection does DBDish::Connection;
 use DBDish::mysql::Native;
 need DBDish::mysql::StatementHandle;
 
