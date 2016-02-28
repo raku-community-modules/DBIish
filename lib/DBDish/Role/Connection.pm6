@@ -19,8 +19,12 @@ unit role DBDish::Role::Connection does DBDish::Role::ErrorHandling;
 =end pod
 
 method do( Str $statement, *@params ) {
-    my $sth = self.prepare($statement) or return fail();
-    $sth.execute(@params);
+    with self.prepare($statement) {
+	$_.execute(@params);
+    }
+    else {
+	$_.fail;
+    }
 }
 
 =begin pod

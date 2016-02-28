@@ -23,7 +23,7 @@ method fetchrow-hash() {
 }
 
 method row(:$hash) {
-     self._row(:hash($hash));
+     self._row(:$hash);
 }
 
 method allrows(:$array-of-hash, :$hash-of-array) {
@@ -48,7 +48,7 @@ method allrows(:$array-of-hash, :$hash-of-array) {
     while self.row -> @r {
          @rows.push(@r);
     }
-    return @rows;
+    @rows;
 }
 
 
