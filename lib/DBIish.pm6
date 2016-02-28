@@ -1,13 +1,14 @@
 use v6;
 # DBIish.pm6
 
-class DBIish:auth<mberends>:ver<0.1.0> {
+unit class DBIish:auth<mberends>:ver<0.1.0>;
+    use DBDish;
+
     my %installed;
     has $!err;
     has $!errstr;
     method connect($driver, :$RaiseError=0, :$PrintError=0, :$AutoCommit=1, *%opts ) {
         my $d = self.install_driver( $driver );
-        # warn "calling DBDish::" ~ $drivername ~ ".connect($username,*,$params)";
         my $connection = $d.connect(:$RaiseError, :$PrintError, :$AutoCommit, |%opts );
         return $connection;
     }
@@ -15,6 +16,14 @@ class DBIish:auth<mberends>:ver<0.1.0> {
 	my $d = %installed{$drivername} //= do {
 	    my $module = "DBDish::$drivername";
 	    my \M = (require ::($module));
+	    # The DBDish namespace isn't formally reserved for DBDish's drivers,
+	    # and is a good place for related common code.
+	    # An assurance at driver load time is in place,
+	    unless M ~~ DBDish::Driver {
+		# This warn will be converted in a die after the Role is settled,
+		# it's an advice for authors for externally developed drivers
+		warn "$module dosn't DBDish::Driver role!";
+	    }
 	    M.new;
 	}
 	without $d { .throw };
@@ -28,7 +37,6 @@ class DBIish:auth<mberends>:ver<0.1.0> {
         # avoid returning an undefined value
         return $!errstr // ''; # // confuses a P5 syntax highlighter
     }
-}
 
 # The following list of SQL constants was produced by the following
 # adaptation of the EXPORT_TAGS suggestion in 'perldoc DBI':

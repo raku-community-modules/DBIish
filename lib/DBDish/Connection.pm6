@@ -2,15 +2,15 @@
 use v6;
 
 =begin pod
-=head2 role DBDish::Role::Connection
+=head2 role DBDish::Connection
 
-Does the C<DBDish::Role::ErrorHandling> role.
+Does the C<DBDish::ErrorHandling> role.
 
 =end pod
 
-need DBDish::Role::ErrorHandling;
+need DBDish::ErrorHandling;
 
-unit role DBDish::Role::Connection does DBDish::Role::ErrorHandling;
+unit role DBDish::Connection does DBDish::ErrorHandling;
 
 =begin pod
 =head4 instance variables

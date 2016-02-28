@@ -1,15 +1,14 @@
-
 use v6;
 
 =begin pod
-=head2 role DBDish::Role::StatementHandle
+=head2 role DBDish::StatementHandle
 The Connection C<prepare> method returns a StatementHandle object that
 mainly provides the C<execute> and C<finish> methods. It also has all the methods from C<DBDish::Role::ErrorHandling>.
 =end pod
 
-need DBDish::Role::ErrorHandling;
+need DBDish::ErrorHandling;
 
-unit role DBDish::Role::StatementHandle does DBDish::Role::ErrorHandling;
+unit role DBDish::StatementHandle does DBDish::ErrorHandling;
 
 method finish() { ... }
 method fetchrow() { ... }

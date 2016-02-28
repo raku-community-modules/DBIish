@@ -21,7 +21,7 @@ Resets the error string to the empty string.
 
 =end pod
 
-role DBDish::Role::ErrorHandling {
+role DBDish::ErrorHandling {
     has Bool $.PrintError is rw = False;
     has Bool $.RaiseError is rw = True;
     has $.errstr;
