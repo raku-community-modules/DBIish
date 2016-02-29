@@ -1,5 +1,5 @@
-
 use v6;
+
 use NativeCall :ALL;
 
 unit module DBDish::SQLite::Native;
@@ -53,7 +53,10 @@ constant LIB = &MyLibName;
 constant Null is export = Pointer;
 class SQLite is export is repr('CPointer') { };
 class STMT is export is repr('CPointer') { };
-constant SQLITE_TRANSIENT = Pointer.new(-1);
+# Can't use the following 'cus produces
+#  "Missing serialize REPR function for REPR CPointer"
+# at install time.
+#constant SQLITE_TRANSIENT = Pointer.new(-1);
 
 sub sqlite3_errmsg(SQLite $handle)
     returns Str
@@ -120,7 +123,7 @@ multi sub sqlite3_bind(STMT $stmt, Int $n, Real:D $d) is export { sqlite3_bind_d
 multi sub sqlite3_bind(STMT $stmt, Int $n, Int:D $i)  is export { sqlite3_bind_int64($stmt, $n, $i) }
 multi sub sqlite3_bind(STMT $stmt, Int $n, Any:U)     is export { sqlite3_bind_null($stmt, $n) }
 multi sub sqlite3_bind(STMT $stmt, Int $n, Str:D $d)  is export {
-    sqlite3_bind_text($stmt, $n, $d, -1, SQLITE_TRANSIENT)
+    sqlite3_bind_text($stmt, $n, $d, -1, Pointer.new(-1))
 }
 
 sub sqlite3_reset(STMT) returns int32 is native(LIB) is export  { ... }
