@@ -9,7 +9,7 @@ perl6:
 sudo: false
 install:
     - rakudobrew build-panda
-    - panda installdeps .
+    - panda install .
 before_install:
     # mysql
     - mysql -e "CREATE DATABASE dbdishmysqltest;" -uroot
@@ -19,7 +19,3 @@ before_install:
     - psql -c 'create database travis_ci_test;' -U postgres
     - export PGDATABASE=travis_ci_test
     - export PGUSER=postgres
-
-install:
-    - rakudobrew build-panda
-    - panda installdeps .
