@@ -3,17 +3,17 @@
 Before running the tests, prepare the database with something like:
 
 $ mysql -u root -p
-CREATE DATABASE dbdishmysqltest;
+CREATE DATABASE dbdishtest;
 CREATE USER 'testuser'@'localhost' IDENTIFIED BY 'testpass';
 GRANT SELECT         ON   mysql.* TO 'testuser'@'localhost';
-GRANT CREATE         ON dbdishmysqltest.* TO 'testuser'@'localhost';
-GRANT DROP           ON dbdishmysqltest.* TO 'testuser'@'localhost';
-GRANT INSERT         ON dbdishmysqltest.* TO 'testuser'@'localhost';
-GRANT DELETE         ON dbdishmysqltest.* TO 'testuser'@'localhost';
-GRANT LOCK TABLES    ON dbdishmysqltest.* TO 'testuser'@'localhost';
-GRANT SELECT         ON dbdishmysqltest.* TO 'testuser'@'localhost';
+GRANT CREATE         ON dbdishtest.* TO 'testuser'@'localhost';
+GRANT DROP           ON dbdishtest.* TO 'testuser'@'localhost';
+GRANT INSERT         ON dbdishtest.* TO 'testuser'@'localhost';
+GRANT DELETE         ON dbdishtest.* TO 'testuser'@'localhost';
+GRANT LOCK TABLES    ON dbdishtest.* TO 'testuser'@'localhost';
+GRANT SELECT         ON dbdishtest.* TO 'testuser'@'localhost';
 # or maybe otherwise
-GRANT ALL PRIVILEGES ON dbdishmysqltest.* TO 'testuser'@'localhost';
+GRANT ALL PRIVILEGES ON dbdishtest.* TO 'testuser'@'localhost';
 
 # This '10-mysql.t' test script is a Perl 6 adaptation of the Perl 5
 # based test suite for DBD::mysql version 4.014.  It is experimental and
@@ -42,7 +42,7 @@ use DBIish;
 my $mdriver       = 'mysql';
 my $host          = 'localhost';
 my $port          = 3306;
-my $database      = 'dbdishmysqltest';
+my $database      = 'dbdishtest';
 my $test_user     = 'testuser';
 my $test_password = 'testpass';
 my $table         = 't1';

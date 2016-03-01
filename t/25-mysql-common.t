@@ -1,16 +1,27 @@
 # DBIish/t/10-mysql-common.t
 use v6;
-use Test;
-use lib 't/lib';
-need Test::DBDish;
-my $test-dbdish = Test::DBDish.new(
-    dbd => 'mysql',
+need DBIish::CommonTesting;
+
+DBIish::CommonTesting.new(
+    :dbd<mysql>,
     opts => {
-	host => 'localhost',
-	port => 3306,
-	database => 'dbdishmysqltest',
-	user => 'testuser',
-	password => 'testpass',
+	:database<dbdishtest>,
+	:user<testuser>,
+	:password<testpass>,
     },
-);
-$test-dbdish.run-tests;
+).run-tests;
+
+=begin pod
+
+=head1 PREREQUISITES
+
+Your system should already have MySQL server installed and running.
+
+The tests by default use the database 'dbdishtest', user 'testuser' and
+password 'testpass', all this can be create with:
+
+    mysql -e "CREATE DATABASE dbdistest;" -uroot
+    mysql -e "CREATE USER 'testuser'@'localhost' IDENTIFIED BY 'testpass';" -uroot
+    mysql -e "GRANT ALL PRIVILEGES ON dbdishtest.* TO 'testuser'@'localhost';"
+
+=end pod

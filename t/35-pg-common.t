@@ -1,51 +1,40 @@
-# DBIish/t/35-Pg-common.t
+# DBIish/t/35-pg-common.t
 use v6;
-use Test;
-use lib 't/lib';
-need Test::DBDish;
-use Test::Config::Pg;
+need DBIish::CommonTesting;
 
-if not %*ENV<PGDATABASE>:exists {
-   plan 1;
-   skip "'PGDATABASE' not set, skipping";
-   exit;
-}
+my %opts;
+# If env var set, no parameter needed.
+%opts<database> = 'dbiishtests' unless %*ENV<PGDATABASE>;
+%opts<user> = 'postgres' unless %*ENV<PGUSER>;
 
-my $test-dbdish = Test::DBDish.new(
-    dbd => 'Pg',
-    opts => config_pg_connect,
+DBIish::CommonTesting.new(
+    :dbd<Pg>,
+    :%opts,
     post_connect_cb => sub {
-        my $dbh = @_.shift;
-
-        $dbh.do( 'SET client_min_messages = warning' );
-    },
-);
-
-$test-dbdish.run-tests;
+	# We want to see some messages
+        $^dbh.do( 'SET client_min_messages = warning' );
+    }
+).run-tests;
 
 =begin pod
 
 =head1 PREREQUISITES
 
-Your system should already have libpq-dev installed.
+Your system should already have PostgreSQL server installed and running.
 
-This uses the standard PG* environment variables to determine the
-connection arguments:
+DBDish uses the standard PG* environment variables to determine the
+connection arguments, the tests by default use a 'dbdishtest' database,
+that you can create with:
 
-    export PGDATABASE = 'public';   # mininum required
+    psql -c 'CREATE DATABASE dbdishtest;' -U postgres
+
+If you want to use a different database or other connection parameters,
+set the corresponding environment variable, for example:
+
+    export PGDATABASE = 'public';
 
 This will connect to the 'public' on 'localhost' at port 5432.
 
-The user should have connect, create table priv's on the database.
-
-=head1 SEE ALSO
-
-=over 4
-
-=item t/lib/Test/Config/Pg.pm
-
-Env var's used to configure connection.
-
-=back
+The user should have connect and create table priv's on the database.
 
 =end pod

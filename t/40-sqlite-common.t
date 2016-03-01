@@ -1,15 +1,13 @@
 # DBIish/t/40-SQLite-common.t
 use v6;
-use Test;
-use lib 't/lib';
-need Test::DBDish;
+need DBIish::CommonTesting;
 
-my $test-dbdish = Test::DBDish.new(
+my $TDB = IO::Path.new('dbdish-sqlite-test.sqlite3');
+DBIish::CommonTesting.new(
     dbd => 'SQLite',
     opts => {
-        database => 'dbdish-sqlite-test.sqlite3',
+        :database(~$TDB)
     },
     typed-nulls => False # TODO Is the driver who needs to provide the info
-);
-
-$test-dbdish.run-tests;
+).run-tests;
+$TDB.unlink;

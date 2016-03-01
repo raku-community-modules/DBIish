@@ -1,10 +1,8 @@
 # DBIish/t/45-oracle-common.t
 use v6;
-use Test;
-use lib 't/lib';
-need Test::DBDish;
+need DBIish::CommonTesting;
 
-my $test-dbdish = Test::DBDish.new(
+DBIish::CommonTesting.new(
     dbd => 'Oracle',
     opts => {
         database => 'XE',
@@ -29,9 +27,7 @@ my $test-dbdish = Test::DBDish.new(
             )
         ",
     select-null-query => "SELECT NULL FROM DUAL",
-);
-
-$test-dbdish.run-tests;
+).run-tests;
 
 =begin pod
 

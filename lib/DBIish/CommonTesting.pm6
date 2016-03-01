@@ -4,7 +4,7 @@ use Test;
 use Data::Dump;
 use DBIish;
 
-unit class Test::DBDish;
+unit class DBIish::CommonTesting;
 
 has $.dbd is required;
 has %.opts is required;
@@ -59,7 +59,7 @@ method run-tests {
             }
         }
     }
-    ok $dbh, "connect to %.opts<database>"; # test 3
+    ok $dbh, "connect to '{%.opts<database> || "default"}'"; # test 3
 
     try EVAL '$.post-connect-cb.($dbh)';
 
