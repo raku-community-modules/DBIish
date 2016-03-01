@@ -7,31 +7,35 @@ use DBDish::mysql::Native;
 need DBDish::mysql::Connection;
 
 #------------------ methods to be called from DBIish ------------------
-method connect(Str :$user, Str :$password, :$RaiseError, *%params ) {
-    my ( $mysql_client, $mysql_error );
-    unless defined $mysql_client {
-        $mysql_client = mysql_init( MYSQL );
-        $mysql_error  = mysql_error( $mysql_client );
-    }
-    my $host     = %params<host>     // 'localhost';
-    my $port     = (%params<port>     // 0).Int;
-    my $database = %params<database> // 'mysql';
-    my $socket   = %params<socket> // Str;
-    # real_connect() returns either the same client pointer or null
-    my $result   = mysql_real_connect( $mysql_client, $host,
-        $user, $password, $database, $port, $socket, 0 );
-    my $error = mysql_error( $mysql_client );
+method connect(*%params ) {
     my $connection;
-    if $error eq '' {
-        $connection = DBDish::mysql::Connection.new(
-            mysql_client => $mysql_client,
-            RaiseError => $RaiseError
-        );
+    my $mysql_client = mysql_init( MYSQL );
+    my $error  = mysql_error( $mysql_client );
+
+    unless $error {
+	%params<host>     //= 'localhost';
+	%params<port>     //= 3306;
+	%params<database> //= 'mysql';
+	%params<socket>   //= Str; # Undef
+
+	# real_connect() returns either the same client pointer or null
+	my $result   = mysql_real_connect( $mysql_client,
+	    |%params<host user password database port socket>,
+	0);
+
+	unless $error = mysql_error( $mysql_client ) {
+	    $connection = DBDish::mysql::Connection.new(
+		:$mysql_client,
+		RaiseError => %params<RaiseError>
+	    );
+	}
     }
-    else {
-        die "DBD::mysql connection failed: $error";
+    if $error {
+	# TODO proper Exception generaration
+	die "DBD::mysql connection failed: $error";
     }
-    return $connection;
+
+    $connection;
 }
 
 =begin pod

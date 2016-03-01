@@ -106,7 +106,7 @@ sub mysql_close( MYSQL $mysql_client )
     { ... }
 
 sub mysql_error( MYSQL $mysql_client)
-    returns str
+    returns Str
     is native(LIB)
     is export
     { ... }
