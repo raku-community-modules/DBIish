@@ -1,7 +1,7 @@
 use v6;
 # DBIish.pm6
 
-unit class DBIish:auth<mberends>:ver<0.1.0>;
+unit class DBIish:auth<mberends>:ver<0.1.1>;
     use DBDish;
 
     my %installed;

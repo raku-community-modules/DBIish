@@ -1,13 +1,14 @@
 {
     "perl"	    : "6",
     "name"          : "DBIish",
-    "version"       : "0.1.0",
+    "version"       : "0.1.1",
     "description"   : "Database connectivity for Perl 6",
     "test-depends"  : [
         "Data::Dump"
     ],
     "provides" : {
         "DBIish"                    : "lib/DBIish.pm6",
+	"DBIish::CommonTesting"     : "lib/DBIish/CommonTesting.pm6",
         "DBDish"                    : "lib/DBDish.pm6",
         "DBDish::Connection"        : "lib/DBDish/Connection.pm6",
         "DBDish::ErrorHandling"     : "lib/DBDish/ErrorHandling.pm6",
