@@ -8,7 +8,6 @@ has PGconn $!pg_conn;
 has Str $!statement_name;
 has $!statement;
 has $!param_count;
-has $.dbh;
 has $!result;
 has $!affected_rows;
 has @!column_names;
@@ -18,13 +17,9 @@ has $!current_row = 0;
 
 method !handle-errors {
     if $!result.is-ok {
-        self!reset_errstr;
-        True;
-    }
-    else {
-        self!set_errstr($!result.PQresultErrorMessage);
-        die self.errstr if $.RaiseError;
-        Nil;
+        self!reset-err;
+    } else {
+        self!set-err($!result, $!result.PQresultErrorMessage);
     }
 }
 
@@ -33,7 +28,9 @@ method !munge_statement {
     $!statement.subst(:g, '?', { '$' ~ ++$count});
 }
 
-submethod BUILD(:$!statement, :$!pg_conn, :$!statement_name, :$!param_count, :$!dbh) { }
+submethod BUILD(:$!parent!, :$!pg_conn, # Per protocol
+    :$!statement, :$!statement_name, :$!param_count
+) { }
 
 method execute(*@params is copy) {
     $!current_row = 0;
@@ -49,10 +46,12 @@ method execute(*@params is copy) {
         0,    # Resultformat, 0 == text
     );
 
-    self!handle-errors;
-    $!row_count = $!result.PQntuples;
-
-    self.rows;
+    with self!handle-errors {
+	$!row_count = $!result.PQntuples;
+	self.rows;
+    } else {
+	.fail;
+    }
 }
 
 # do() and execute() return the number of affected rows directly or:
@@ -79,7 +78,7 @@ method _row(:$hash) {
     my @names = self.column_names if $hash;
     my @types = self.column_p6types;
     if $!result {
-        self!reset_errstr;
+        self!reset-err;
         my $afield = False;
         for ^$!field_count {
             FIRST {
@@ -88,7 +87,7 @@ method _row(:$hash) {
             my $res := $!result.PQgetvalue($!current_row, $_);
             my $is-null = $!result.PQgetisnull($!current_row, $_);
             my $value;
-            given (@types[$_]) {
+            given @types[$_] {
                 when 'Str' {
                   $value = $is-null ?? Str !! $res;
                 }
@@ -117,7 +116,7 @@ method _row(:$hash) {
                   $value := _pg-to-array( $res, 'Num' );
                 }
                 when 'Array<Rat>' {
-                  $value = _pg-to-array( $res, 'Rat' );
+                  $value := _pg-to-array( $res, 'Rat' );
                 }
                 default {
                   $value = $res;
@@ -142,8 +141,8 @@ method fetchrow() {
         $!field_count = $!result.PQnfields;
     }
 
-    if $!result {
-        self!reset_errstr;
+    if $!result { # XXX
+        self!reset-err;
 
         for ^$!field_count {
             my $res := $!result.PQgetvalue($!current_row, $_);
@@ -207,19 +206,17 @@ my grammar PgArrayGrammar {
 };
 
 sub _to-type($value, Str $type where $_ eq any([ 'Str', 'Num', 'Rat', 'Int' ])) {
-  return $value unless $value.defined;
-  if $type eq 'Str' {
-      # String
-      return ~$value;
-  } elsif $type eq 'Num' {
-      return Num($value);
-  } elsif $type eq 'Rat' {
-      # Floating point number
-      return Rat($value);
-  } else {
-      # Must be Int
-      return Int($value);
-  }
+    if $value.defined {
+	given $type {
+	    when 'Str' { ~$value }     # String;
+	    when 'Num' { Num($value) } # SQL Floating point
+	    when 'Rat' { Rat($value) } # SQL Numeric
+	    default    { Int($value) } # Must be
+	}
+    }
+    else {
+	$value;
+    }
 }
 
 sub _to-array(Match $match, Str $type where $_ eq any([ 'Str', 'Num', 'Rat', 'Int' ])) {
@@ -275,10 +272,11 @@ method true_false(Str $s) {
 method finish() {
     if $!result {
         $!result.PQclear;
-        $!result       = Any;
-        @!column_names = ();
+        $!result        = Any;
+        $!affected_rows = Any;
+        @!column_names  = ();
     }
-    Bool::True;
+    True;
 }
 
 method !get_row {

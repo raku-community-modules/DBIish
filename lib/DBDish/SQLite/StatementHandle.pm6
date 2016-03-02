@@ -8,21 +8,23 @@ use NativeCall;
 has SQLite $!conn;
 has $.statement;
 has $!statement_handle;
-has $.dbh;
 has Int $!row_status;
 has @!mem_rows;
 has @!column_names;
 has $!finished = False;
 
-method !handle-error(Int $status) {
-    return if $status == SQLITE_OK;
-    self!set_errstr(join ' ', SQLITE($status), sqlite3_errmsg($!conn));
+method !handle-error($status) {
+    if $status == SQLITE_OK {
+	self!reset-err;
+    } else {
+	self!set-err(SQLITE($status), sqlite3_errmsg($!conn));
+    }
 }
 
-submethod BUILD(:$!conn, :$!statement, :$!statement_handle, :$!dbh) { }
+submethod BUILD(:$!conn!, :$!parent!, :$!statement, :$!statement_handle) { }
 
 method execute(*@params) {
-    self.finish if $!statement_handle;
+    self.finish if $!statement_handle; # XXX
     @!mem_rows = ();
     for @params.kv -> $idx, $v {
         if $v ~~ Str {
@@ -38,16 +40,15 @@ method execute(*@params) {
 }
 
 method rows {
-    die 'Cannot determine rows of closed connection' unless $!conn;
     my $rows = sqlite3_changes($!conn);
     $rows == 0 ?? '0E0' !! $rows;
 }
 
 method column_names {
     unless @!column_names {
-            my Int $count = sqlite3_column_count($!statement_handle);
-            @!column_names.push: sqlite3_column_name($!statement_handle, $_)
-                for ^$count;
+        my Int $count = sqlite3_column_count($!statement_handle);
+        @!column_names.push: sqlite3_column_name($!statement_handle, $_)
+            for ^$count;
     }
     @!column_names;
 }
@@ -69,15 +70,15 @@ method _row (:$hash) {
                  $value = sqlite3_column_double($!statement_handle, $col);
                  $value = $value.Rat; # FIXME
             }
-	    when SQLITE_BLOB {
-		 ...  # TODO WIP
-		 $value = sqlite3_column_blob($!statement_handle, $col);
-	    }
-	    when SQLITE_NULL {
-		 # SQLite can't determine the type of NULL column, so instead
-		 # of lyng, prefer an explicit Nil.
-		 $value = Nil;
-	    }
+            when SQLITE_BLOB {
+                 ...  # TODO WIP
+                 $value = sqlite3_column_blob($!statement_handle, $col);
+            }
+            when SQLITE_NULL {
+                 # SQLite can't determine the type of NULL column, so instead
+                 # of lyng, prefer an explicit Nil.
+                 $value = Nil;
+            }
             default {
                 $value = sqlite3_column_text($!statement_handle, $col);
             }
@@ -106,7 +107,7 @@ method fetchrow {
 method free {
     sqlite3_finalize($!statement_handle) if $!statement_handle.defined;
     $!row_status = Int;
-    $!dbh._remove_sth(self);
+    $!parent._remove_sth(self);
     $!finished = True;
     True;
 }

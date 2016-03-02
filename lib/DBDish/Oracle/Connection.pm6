@@ -13,7 +13,7 @@ has $!svchp;
 has $!errhp;
 has $.AutoCommit is rw;
 has $.in_transaction is rw;
-submethod BUILD(:$!envhp!, :$!svchp!, :$!errhp!, :$!AutoCommit = 1) { }
+submethod BUILD(:$!envhp!, :$!svchp!, :$!errhp!, :$!AutoCommit = 1, :$!parent!) { }
 
 method prepare(Str $statement, $attr?) {
     my $oracle_statement = DBDish::Oracle::oracle-replace-placeholder($statement);
@@ -61,7 +61,7 @@ method prepare(Str $statement, $attr?) {
         :$!errhp,
         :$stmthp,
         #:$.RaiseError,
-        :dbh(self),
+        :parent(self),
     );
     return $statement_handle;
 }

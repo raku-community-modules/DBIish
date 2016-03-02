@@ -151,11 +151,12 @@ method connect(*%params) {
     }
     my $svchp = @svchp[0];
 
-    my $connection = DBDish::Oracle::Connection.bless(
+    my $connection = DBDish::Oracle::Connection.new(
             :$envhp,
             :$svchp,
             :$errhp,
             :AutoCommit(%params<AutoCommit>),
+            :parent(self),
             #:RaiseError(%params<RaiseError>),
         );
     return $connection;

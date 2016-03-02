@@ -6,13 +6,15 @@ unit class DBDish::mysql:auth<mberends>:ver<0.0.2> does DBDish::Driver;
 use DBDish::mysql::Native;
 need DBDish::mysql::Connection;
 
+has $.errstr;
+
 #------------------ methods to be called from DBIish ------------------
-method connect(*%params ) {
+method connect(:$RaiseError, *%params ) {
     my $connection;
     my $mysql_client = mysql_init( MYSQL );
-    my $error  = mysql_error( $mysql_client );
+    $!errstr  = mysql_error( $mysql_client );
 
-    unless $error {
+    unless $!errstr {
 	%params<host>     //= 'localhost';
 	%params<port>     //= 3306;
 	%params<database> //= 'mysql';
@@ -23,19 +25,20 @@ method connect(*%params ) {
 	    |%params<host user password database port socket>,
 	0);
 
-	unless $error = mysql_error( $mysql_client ) {
+	unless $!errstr = mysql_error( $mysql_client ) {
 	    $connection = DBDish::mysql::Connection.new(
-		:$mysql_client,
-		RaiseError => %params<RaiseError>
+		:$mysql_client, :$RaiseError, :parent(self)
 	    );
 	}
     }
-    if $error {
-	# TODO proper Exception generaration
-	die "DBD::mysql connection failed: $error";
+    if $!errstr {
+	DBDish::mysql::Connection.conn-error(
+	    :$!errstr, :$RaiseError
+	);
+    } else {
+	@!Connections.unshift($connection);
+	$connection;
     }
-
-    $connection;
 }
 
 =begin pod

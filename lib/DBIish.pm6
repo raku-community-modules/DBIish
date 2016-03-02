@@ -4,16 +4,60 @@ use v6;
 unit class DBIish:auth<mberends>:ver<0.1.1>;
     use DBDish;
 
+    package GLOBAL::X::DBIish {
+	our class DriverNotFound is Exception {
+	    has $.bogus;
+	    method message { "DBIish: No DBDish driver found: $.bogus" };
+	}
+	our class LibraryMissing is Exception {
+	    has $.driver;
+	    has $.library;
+	    method message { "DBIish: DBDish::$.driver needs $.library, not found" }
+	}
+	our class NotADBIishDriver is Exception {
+	    has $.who;
+	    method message { "$.who is not a DBDish::Driver" };
+	}
+    }
+
     my %installed;
     has $!err;
     has $!errstr;
-    method connect($driver, :$RaiseError=0, :$PrintError=0, :$AutoCommit=1, *%opts ) {
-        my $d = self.install_driver( $driver );
+    method connect($driver,
+	:$RaiseError = True,
+	:$PrintError = False,
+	:$AutoCommit = True,
+	*%opts
+    ) {
+	# The first native call done by the driver can trigger an X::AdHoc
+	# to report missing libraries.
+	# I catch here to avoid the drivers the need of this logic.
+	CATCH {
+	    when $_.message ~~ m/
+		^ "Cannot locate native library "
+		( "'" <-[ ' ]> * "'" ) 
+	    / {
+		X::DBIish::LibraryMissing.new(:library($/[0]), :$driver).fail;
+	    }
+	    default {
+		.throw;
+	    };
+	}
+	#my $*DBI = self
+	my $d = self.install-driver( $driver );
         my $connection = $d.connect(:$RaiseError, :$PrintError, :$AutoCommit, |%opts );
-        return $connection;
+        $connection;
     }
-    method install_driver( $drivername ) {
+    method install-driver( $drivername ) {
 	my $d = %installed{$drivername} //= do {
+	    CATCH {
+		when X::CompUnit::UnsatisfiedDependency {
+		    X::DBIish::DriverNotFound.new(:bogus($drivername)).fail;
+		}
+		default {
+		    .throw;
+		}
+	    }
 	    my $module = "DBDish::$drivername";
 	    my \M = (require ::($module));
 	    # The DBDish namespace isn't formally reserved for DBDish's drivers,
@@ -26,8 +70,15 @@ unit class DBIish:auth<mberends>:ver<0.1.1>;
 	    }
 	    M.new;
 	}
-	without $d { .throw };
+	without $d { .throw; };
 	$d;
+    }
+    method install_driver($drivername) is hidden-from-backtrace {
+	warn "DBIish::install_driver is DEPRECATED, please use install-driver";
+	self.install-driver($drivername)
+    }
+    method installed-drivers {
+	%installed.pairs.cache;
     }
     # TODO: revise error reporting to conform better to Perl 5 DBI
     method err() {
@@ -35,7 +86,7 @@ unit class DBIish:auth<mberends>:ver<0.1.1>;
     }
     method errstr() {
         # avoid returning an undefined value
-        return $!errstr // ''; # // confuses a P5 syntax highlighter
+        return $!errstr // '';
     }
 
 # The following list of SQL constants was produced by the following

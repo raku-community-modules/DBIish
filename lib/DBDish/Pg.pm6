@@ -67,30 +67,27 @@ sub quote-and-escape($s) {
 }
 
 #------------------ methods to be called from DBIish ------------------
-method connect(*%params) {
-    my %keymap =
-        database => 'dbname',
-        ;
+method connect(:database(:$dbname), :$RaiseError, *%params) {
+
+    %params.push(:$dbname);
     my @connection_parameters = gather for %params.kv -> $key, $value {
         # Internal parameter, not for PostgreSQL usage.
         next if $key ~~ / <-lower> /;
-        my $translated = %keymap{ $key } // $key;
-        take "$translated={quote-and-escape $value}"
+        take "$key={quote-and-escape $value}"
     }
     my $pg_conn = PGconn.new(~@connection_parameters);
     my $status = $pg_conn.PQstatus;
-    my $connection;
     if $status == CONNECTION_OK {
-        $connection = DBDish::Pg::Connection.new(
-            :$pg_conn,
-            :RaiseError(%params<RaiseError>),
-        );
+        my $con = DBDish::Pg::Connection.new(:$pg_conn, :$RaiseError, :parent(self));
+        @!Connections.unshift($con);
+        $con;
     }
     else {
         $!errstr = $pg_conn.PQerrorMessage;
-        if %params<RaiseError> { die $!errstr; }
+        DBDish::Pg::Connection.conn-error(
+           :code($status), :$!errstr, :$RaiseError
+        )
     }
-    $connection;
 }
 
 =begin pod

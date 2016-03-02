@@ -13,7 +13,15 @@ has @!column_mysqltype;
 has $!field_count;
 has $.mysql_warning_count is rw = 0;
 
-submethod BUILD(:$!mysql_client, :$!statement) { }
+method !handle-errors {
+    if mysql_error( $!mysql_client ) -> $errstr {
+	self!set-err(-1, $errstr);
+    } else {
+	self!reset-err;
+    }
+}
+
+submethod BUILD(:$!mysql_client, :$!parent!, :$!statement) { }
 
 method execute(*@params is copy) {
     my $statement = '';
@@ -35,19 +43,18 @@ method execute(*@params is copy) {
         }
     }
     $statement ~= $last-chunk;
-    if defined( $!result_set ) {
+    if $!result_set { # XXX Must assert that not
         mysql_free_result($!result_set);
+	$!result_set = Mu;
     }
-    $!result_set = Mu;
-    my $status = mysql_query( $!mysql_client, $statement ); # 0 means OK
-    $.mysql_warning_count = mysql_warning_count( $!mysql_client );
-    self!reset_errstr();
-    if $status != 0 {
-        self!set_errstr(mysql_error( $!mysql_client ));
+    if my $status = mysql_query( $!mysql_client, $statement ) { # 0 means OK
+        self!set-err($status, mysql_error( $!mysql_client ));
+    } else {
+	self!reset-err();
+	$.mysql_warning_count = mysql_warning_count( $!mysql_client );
+	my $rows = self.rows;
+	($rows == 0) ?? "0E0" !! $rows;
     }
-
-    my $rows = self.rows;
-    ($rows == 0) ?? "0E0" !! $rows;
 }
 
 method escape(Str $x) {
@@ -66,13 +73,10 @@ method quote(Str $x) {
 # rows() is called on the statement handle $sth.
 method rows() {
     unless defined $!affected_rows {
-        self!reset_errstr();
+        self!reset-err;
         $!affected_rows = mysql_affected_rows($!mysql_client);
-        my $errstr      = mysql_error( $!mysql_client );
-
-        if $errstr ne '' { self!set_errstr($errstr); }
+	self!handle-errors;
     }
-
     $!affected_rows;
 }
 
@@ -82,7 +86,7 @@ method _row(:$hash) {
     my @names;
     my @types;
 
-    unless defined $!result_set {
+    unless $!result_set {
         $!result_set  = mysql_use_result( $!mysql_client);
         $!field_count = mysql_field_count($!mysql_client);
         @!column_names = ();
@@ -95,14 +99,12 @@ method _row(:$hash) {
         }
     }
 
-    if defined $!result_set {
+    if $!result_set {
         #Todo; Null should probably be handled watching the field_info
-        self!reset_errstr();
+        self!reset-err();
 
         my $native_row = mysql_fetch_row($!result_set); # can return NULL
-        my $errstr     = mysql_error( $!mysql_client );
-
-        if $errstr ne '' { self!set_errstr($errstr);}
+	self!handle-errors;
 
         if $native_row {
             loop ( my $i=0; $i < $!field_count; $i++ ) {
@@ -131,24 +133,22 @@ method _row(:$hash) {
         }
         else { self.finish; }
     }
-    return $hash ?? %hash !! @row_array;
+    $hash ?? %hash !! @row_array;
 }
 
 method fetchrow() {
     my @row_array;
 
-    unless defined $!result_set {
+    unless $!result_set {
         $!result_set  = mysql_use_result( $!mysql_client);
         $!field_count = mysql_field_count($!mysql_client);
     }
 
-    if defined $!result_set {
-        self!reset_errstr();
+    if $!result_set {
+        self!reset-err;
 
         my $native_row = mysql_fetch_row($!result_set); # can return NULL
-        my $errstr     = mysql_error( $!mysql_client );
-
-        if $errstr ne '' { self!set_errstr($errstr); }
+	self!handle-errors;
 
         if $native_row {
             loop ( my $i=0; $i < $!field_count; $i++ ) {
@@ -162,7 +162,7 @@ method fetchrow() {
 
 method column_names {
     unless @!column_names {
-        unless defined $!result_set {
+        unless $!result_set {
             $!result_set  = mysql_use_result( $!mysql_client);
             $!field_count = mysql_field_count($!mysql_client);
             @!column_mysqltype = ();
@@ -183,8 +183,8 @@ method mysql_insertid() {
 }
 
 method finish() {
-    self.fetchrow if !defined $!result_set;
-    if defined( $!result_set ) {
+    self.fetchrow if !defined $!result_set; # XXX I suspect unneeded
+    if $!result_set {
         mysql_free_result($!result_set);
         $!result_set   = Mu;
         @!column_names = ();

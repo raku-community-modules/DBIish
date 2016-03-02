@@ -13,7 +13,6 @@ has $!errhp;
 has $!stmthp;
 has Int $!state = 0; # execute (1) has to happen before fetch (2)
 #    has $!param_count;
-has $.dbh;
 has $!result;
 #    has $!affected_rows;
 has @!column_names;
@@ -41,7 +40,7 @@ has Int $!row_count;
 #        $!statement.subst(:g, '?', { '$' ~ ++$count});
 #    }
 #
-submethod BUILD(:$!statement!, :$!statementtype!, :$!svchp!, :$!errhp!, :$!stmthp!, :$!dbh!) { }
+submethod BUILD(:$!parent!, :$!statement!, :$!statementtype!, :$!svchp!, :$!errhp!, :$!stmthp!) { }
 
 method execute(*@params is copy) {
 #        $!current_row = 0;
@@ -173,7 +172,7 @@ method execute(*@params is copy) {
         $rowoff,
         Pointer,
         Pointer,
-        $!dbh.AutoCommit ?? OCI_COMMIT_ON_SUCCESS !! OCI_DEFAULT,
+        $!parent.AutoCommit ?? OCI_COMMIT_ON_SUCCESS !! OCI_DEFAULT,
     );
     # TODO: handle OCI_NO_DATA
     if $errcode ne OCI_SUCCESS {
@@ -181,7 +180,7 @@ method execute(*@params is copy) {
         # TODO: handle OCI_SUCCESS_WITH_INFO
         die "execute of '$!statement' failed ($errcode): '$errortext'";
     }
-    #warn "successfully executed $!dbh.AutoCommit()";
+    #warn "successfully executed $!parent.AutoCommit()";
 
     # for DDL statements, no further steps are necessary
     # if $!statementtype ~~ ( OCI_STMT_CREATE, OCI_STMT_DROP, OCI_STMT_ALTER );

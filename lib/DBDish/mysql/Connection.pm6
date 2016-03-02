@@ -6,15 +6,14 @@ unit class DBDish::mysql::Connection does DBDish::Connection;
 use DBDish::mysql::Native;
 need DBDish::mysql::StatementHandle;
 
-has $!mysql_client;
+has MYSQL $!mysql_client is required;
 
-submethod BUILD(:$!mysql_client) { }
+submethod BUILD(:$!mysql_client, :$!parent!) { }
 
 method prepare( Str $statement ) {
+    self!reset-err;
     DBDish::mysql::StatementHandle.new(
-        mysql_client => $!mysql_client,
-        statement    => $statement,
-        RaiseError   => $.RaiseError
+        :$!mysql_client, :parent(self), :$statement, :$!RaiseError
     );
 }
 

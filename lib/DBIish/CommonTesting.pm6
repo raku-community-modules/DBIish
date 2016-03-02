@@ -39,10 +39,10 @@ method !hash-str(%h) {
 
 method run-tests {
     diag "Testing DBDish::$.dbd";
-    plan 74;
+    plan 75;
 
     # Verify that the driver loads before attempting a connect
-    my $drh = DBIish.install_driver($.dbd);
+    my $drh = DBIish.install-driver($.dbd);
     ok $drh, 'Install driver'; # test 1
     my $drh_version = $drh.Version;
     ok $drh_version ~~ Version:D, "DBDish::{$.dbd} version $drh_version"; # test 2
@@ -52,14 +52,18 @@ method run-tests {
     try {
         $dbh = DBIish.connect( $.dbd, |%.opts, :RaiseError );
         CATCH {
-            default {
-                diag "Connect failed with error $_";
-                skip-rest 'connect failed -- maybe the prerequisites are not installed?';
-                exit;
-            }
+	    when X::DBIish::LibraryMissing | X::DBDish::ConnectionFailed {
+		diag "$_\nCan't continue.";
+	    }
+            default { .throw; }
         }
     }
+    without $dbh {
+	skip-rest 'prerequisites failed';
+	exit;
+    }
     ok $dbh, "connect to '{%.opts<database> || "default"}'"; # test 3
+    ok $dbh.drv.Connections.elems == 1, 'Driver has one connection';
 
     try EVAL '$.post-connect-cb.($dbh)';
 

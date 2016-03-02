@@ -6,6 +6,7 @@ need DBDish::StatementHandle;
 
 our role Driver {
     has $.Version = ::?CLASS.^ver;
+    has @.Connections;
     method connect(*%params --> DBDish::Connection) { ... };
 }
 

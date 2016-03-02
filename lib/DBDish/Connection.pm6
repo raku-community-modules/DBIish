@@ -18,12 +18,21 @@ unit role DBDish::Connection does DBDish::ErrorHandling;
 =head5 do
 =end pod
 
+# If need a hook in creation
+#method new(*%args) {
+#    my \new = ::?CLASS.bless(|%args);
+#    new;
+#}
+
+method drv { $.parent }
+
 method do( Str $statement, *@params ) {
     with self.prepare($statement) {
-	$_.execute(@params);
+	LEAVE { .finish }
+	.execute(@params);
     }
     else {
-	$_.fail;
+	.fail;
     }
 }
 

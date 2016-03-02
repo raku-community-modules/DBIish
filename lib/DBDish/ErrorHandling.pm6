@@ -1,3 +1,66 @@
+role DBDish::ErrorHandling {
+
+# Our exceptions
+    package GLOBAL::X::DBDish {
+	our class DBError is Exception {
+	    has $.driver-name;
+	    has $.native-message is required;
+	    has $.code;
+	    method message {
+		"$!driver-name: Error: $!native-message" ~
+		($!code ?? " ($!code)" !! '');
+	    }
+	}
+	our class LibraryNotFound is Exception {
+	    method message { "Can't load my native library" }
+	}
+	our class ConnectionFailed is Exception {
+	    has $.driver-name;
+	    has $.native-message is required;
+	    has $.code;
+	    method message {
+		"$!driver-name: Can't connect: $!native-message" ~
+		($!code ?? " ($!code)" !! '');
+	    }
+	}
+    }
+
+    has $.parent is required;
+    has Bool $.PrintError is rw = False;
+    has Bool $.RaiseError is rw = True;
+    has $.err is default(0);
+    has $.errstr is default('');
+
+    method driver-name {
+	state $dn = do {
+	    if self.DEFINITE {
+		($!parent ~~ DBDish::Driver) ?? $!parent.^name !! self.parent.^name;
+	    } else {
+		::?CLASS.^name.split('::').[^(*-1)].join('::');
+	    }
+	}
+	$dn;
+    }
+
+    method !reset-err( --> True) { $!err = Nil; $!errstr = Nil; }
+
+    method !set-err($code, $errstr) is hidden-from-backtrace {
+	given X::DBDish::DBError.new(
+	    :$code, :native-message($errstr), :$.driver-name
+	) {
+	    $!RaiseError and .throw or .fail;
+	}
+    }
+
+    # For report errors at connection time before a Connection can be made
+    method conn-error(::?CLASS:U: :$errstr!, :$code, :$RaiseError) {
+	given X::DBDish::ConnectionFailed.new(
+	    :$code, :native-message($errstr), :$.driver-name
+	) {
+	    $RaiseError and .throw or .fail;
+	}
+    }
+}
 
 =begin pod
 
@@ -20,15 +83,3 @@ exception, depending on the C<$.PrintError> and C<$.RaiseError> flags.
 Resets the error string to the empty string.
 
 =end pod
-
-role DBDish::ErrorHandling {
-    has Bool $.PrintError is rw = False;
-    has Bool $.RaiseError is rw = True;
-    has $.errstr;
-    method !set_errstr($err) is hidden-from-backtrace {
-        $!errstr = $err;
-        note $!errstr if self.PrintError;
-        die  $!errstr if self.RaiseError;
-    }
-    method !reset_errstr() { $!errstr = '' };
-}

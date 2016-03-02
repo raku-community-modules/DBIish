@@ -6,14 +6,17 @@ unit class DBDish::SQLite::Connection does DBDish::Connection;
 need DBDish::SQLite::StatementHandle;
 use DBDish::SQLite::Native;
 
-has SQLite $!conn;
+has SQLite $!conn is required;
 has @!sths;
 
-method BUILD(:$!conn) { }
+submethod BUILD(:$!conn, :$!parent!) { }
 
 method !handle-error(Int $status) {
-    return if $status == SQLITE_OK;
-    self!set_errstr(join ' ', SQLITE($status), sqlite3_errmsg($!conn));
+    if $status == SQLITE_OK {
+	self!reset-err;
+    } else {
+	self!set-err(SQLITE($status), sqlite3_errmsg($!conn));
+    }
 }
 
 method prepare(Str $statement, $attr?) {
@@ -22,13 +25,12 @@ method prepare(Str $statement, $attr?) {
         ?? sqlite3_prepare_v2($!conn, $statement, -1, $stmt, Null)
         !! sqlite3_prepare($!conn, $statement, -1, $stmt, Null);
     self!handle-error($status);
-    return Nil unless $status == SQLITE_OK;
     my $sth = DBDish::SQLite::StatementHandle.new(
         :$!conn,
+        :parent(self),
         :$statement,
         :statement_handle($stmt),
         :$.RaiseError,
-        :dbh(self),
     );
     @!sths.push: $sth;
     $sth;
@@ -47,5 +49,4 @@ method rows() {
 method disconnect() {
     .free for @!sths;
     self!handle-error(sqlite3_close($!conn));
-    return not self.errstr;
 }
