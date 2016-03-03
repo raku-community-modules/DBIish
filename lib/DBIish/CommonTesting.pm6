@@ -81,7 +81,7 @@ method run-tests {
         is $dbh.err, 0, 'err after successful create should be 0'; # test 7
     }
     else { skip 'err after successful create should be 0', 1 }
-    nok $dbh.errstr, "errstr after successful create should be false"; # test 8
+    is $dbh.errstr, '', 'errstr after successful create should be empty'; # test 8
 
 
     # Insert rows using the various method calls
@@ -295,7 +295,7 @@ method run-tests {
     " ), 'insert new value for fetchrow_arrayref test'; #test 38
 
     ok $sth.execute(), 'new insert statement executed'; #test 39
-    is $sth.?rows, 1, "insert reports 1 row affected"; #test 40
+    is $sth.rows, 1, "insert reports 1 row affected"; #test 40
     $sth.finish;
 
     ok $sth = $dbh.prepare("SELECT * FROM nom WHERE quantity= 5"),
