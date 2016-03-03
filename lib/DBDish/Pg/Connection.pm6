@@ -17,7 +17,7 @@ method prepare(Str $statement, $attr?) {
     my $munged = DBDish::Pg::pg-replace-placeholder($statement);
     my $result = $!pg_conn.PQprepare($statement_name, $munged, 0, OidArray);
     if $result.is-ok {
-	self!reset-err;
+	self.reset-err;
 	my $info = $!pg_conn.PQdescribePrepared($statement_name);
 	my $param_count = $info.PQnparams;
 

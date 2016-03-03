@@ -21,8 +21,11 @@ unit class DBIish:auth<mberends>:ver<0.1.1>;
     }
 
     my %installed;
-    has $!err;
-    has $!errstr;
+
+    my $err-handler = DBDish::ErrorHandling.new(:parent(Nil));
+    method err { $err-handler.err };
+    method errstr { $err-handler.errstr };
+
     method connect($driver,
 	:$RaiseError = True,
 	:$PrintError = False,
@@ -43,7 +46,6 @@ unit class DBIish:auth<mberends>:ver<0.1.1>;
 		.throw;
 	    };
 	}
-	#my $*DBI = self
 	my $d = self.install-driver( $driver );
         my $connection = $d.connect(:$RaiseError, :$PrintError, :$AutoCommit, |%opts );
         $connection;
@@ -68,7 +70,7 @@ unit class DBIish:auth<mberends>:ver<0.1.1>;
 		# it's an advice for authors for externally developed drivers
 		warn "$module dosn't DBDish::Driver role!";
 	    }
-	    M.new;
+	    M.new(:parent($err-handler), :RaiseError);
 	}
 	without $d { .throw; };
 	$d;
@@ -80,14 +82,7 @@ unit class DBIish:auth<mberends>:ver<0.1.1>;
     method installed-drivers {
 	%installed.pairs.cache;
     }
-    # TODO: revise error reporting to conform better to Perl 5 DBI
-    method err() {
-        return $!err; # currently always returns an undefined value
-    }
-    method errstr() {
-        # avoid returning an undefined value
-        return $!errstr // '';
-    }
+
 
 # The following list of SQL constants was produced by the following
 # adaptation of the EXPORT_TAGS suggestion in 'perldoc DBI':

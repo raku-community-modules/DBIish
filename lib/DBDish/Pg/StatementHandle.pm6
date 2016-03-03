@@ -17,7 +17,7 @@ has $!current_row = 0;
 
 method !handle-errors {
     if $!result.is-ok {
-        self!reset-err;
+        self.reset-err;
     } else {
         self!set-err($!result, $!result.PQresultErrorMessage);
     }
@@ -78,7 +78,7 @@ method _row(:$hash) {
     my @names = self.column_names if $hash;
     my @types = self.column_p6types;
     if $!result {
-        self!reset-err;
+        self.reset-err;
         my $afield = False;
         for ^$!field_count {
             FIRST {
@@ -142,7 +142,7 @@ method fetchrow() {
     }
 
     if $!result { # XXX
-        self!reset-err;
+        self.reset-err;
 
         for ^$!field_count {
             my $res := $!result.PQgetvalue($!current_row, $_);

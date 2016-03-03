@@ -13,7 +13,7 @@ submethod BUILD(:$!conn, :$!parent!) { }
 
 method !handle-error(Int $status) {
     if $status == SQLITE_OK {
-	self!reset-err;
+	self.reset-err;
     } else {
 	self!set-err(SQLITE($status), sqlite3_errmsg($!conn));
     }

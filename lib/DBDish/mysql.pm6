@@ -6,38 +6,33 @@ unit class DBDish::mysql:auth<mberends>:ver<0.0.2> does DBDish::Driver;
 use DBDish::mysql::Native;
 need DBDish::mysql::Connection;
 
-has $.errstr;
-
 #------------------ methods to be called from DBIish ------------------
 method connect(:$RaiseError, *%params ) {
     my $connection;
     my $mysql_client = mysql_init( MYSQL );
-    $!errstr  = mysql_error( $mysql_client );
+    my $errstr  = mysql_error( $mysql_client );
 
-    unless $!errstr {
-	%params<host>     //= 'localhost';
-	%params<port>     //= 3306;
-	%params<database> //= 'mysql';
-	%params<socket>   //= Str; # Undef
+    unless $errstr {
+        %params<host>     //= 'localhost';
+        %params<port>     //= 3306;
+        %params<database> //= 'mysql';
+        %params<socket>   //= Str; # Undef
 
-	# real_connect() returns either the same client pointer or null
-	my $result   = mysql_real_connect( $mysql_client,
-	    |%params<host user password database port socket>,
-	0);
+        # real_connect() returns either the same client pointer or null
+        my $result   = mysql_real_connect( $mysql_client,
+            |%params<host user password database port socket>,
+        0);
 
-	unless $!errstr = mysql_error( $mysql_client ) {
-	    $connection = DBDish::mysql::Connection.new(
-		:$mysql_client, :$RaiseError, :parent(self)
-	    );
-	}
+        unless $errstr = mysql_error( $mysql_client ) {
+            $connection = DBDish::mysql::Connection.new(
+                :$mysql_client, :$RaiseError, :parent(self)
+            );
+        }
     }
-    if $!errstr {
-	DBDish::mysql::Connection.conn-error(
-	    :$!errstr, :$RaiseError
-	);
+    if $errstr {
+        self!conn-error :$errstr, :$RaiseError;
     } else {
-	@!Connections.unshift($connection);
-	$connection;
+        $connection;
     }
 }
 

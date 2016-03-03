@@ -17,7 +17,7 @@ method !handle-errors {
     if mysql_error( $!mysql_client ) -> $errstr {
 	self!set-err(-1, $errstr);
     } else {
-	self!reset-err;
+	self.reset-err;
     }
 }
 
@@ -50,7 +50,7 @@ method execute(*@params is copy) {
     if my $status = mysql_query( $!mysql_client, $statement ) { # 0 means OK
         self!set-err($status, mysql_error( $!mysql_client ));
     } else {
-	self!reset-err();
+	self.reset-err;
 	$.mysql_warning_count = mysql_warning_count( $!mysql_client );
 	my $rows = self.rows;
 	($rows == 0) ?? "0E0" !! $rows;
@@ -73,7 +73,7 @@ method quote(Str $x) {
 # rows() is called on the statement handle $sth.
 method rows() {
     unless defined $!affected_rows {
-        self!reset-err;
+        self.reset-err;
         $!affected_rows = mysql_affected_rows($!mysql_client);
 	self!handle-errors;
     }
@@ -101,7 +101,7 @@ method _row(:$hash) {
 
     if $!result_set {
         #Todo; Null should probably be handled watching the field_info
-        self!reset-err();
+        self.reset-err;
 
         my $native_row = mysql_fetch_row($!result_set); # can return NULL
 	self!handle-errors;
@@ -145,7 +145,7 @@ method fetchrow() {
     }
 
     if $!result_set {
-        self!reset-err;
+        self.reset-err;
 
         my $native_row = mysql_fetch_row($!result_set); # can return NULL
 	self!handle-errors;

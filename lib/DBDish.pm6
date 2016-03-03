@@ -1,13 +1,26 @@
 use v6;
 
 unit module DBDish;
+need DBDish::ErrorHandling;
 need DBDish::Connection;
 need DBDish::StatementHandle;
 
-our role Driver {
+# For report errors at connection time before a Connection can be made
+class GLOBAL::X::DBDish::ConnectionFailed is X::DBDish::DBError {
+    has $.why = "Can't connect";
+}
+
+role Driver does DBDish::ErrorHandling {
     has $.Version = ::?CLASS.^ver;
     has @.Connections;
+
     method connect(*%params --> DBDish::Connection) { ... };
+
+    method !conn-error(:$errstr!, :$code, :$RaiseError = $.RaiseError) {
+	self!error-dispatch: X::DBDish::ConnectionFailed.new(
+	    :$code, :native-message($errstr), :$.driver-name
+	);
+    }
 }
 
 =begin pod

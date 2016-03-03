@@ -1,4 +1,3 @@
-
 use v6;
 
 =begin pod
@@ -18,13 +17,15 @@ unit role DBDish::Connection does DBDish::ErrorHandling;
 =head5 do
 =end pod
 
-# If need a hook in creation
-#method new(*%args) {
-#    my \new = ::?CLASS.bless(|%args);
-#    new;
-#}
 
 method drv { $.parent }
+
+method new(*%args) {
+    my \new = ::?CLASS.bless(|%args);
+    new.reset-err;
+    new.drv.Connections.unshift(new);
+    new;
+}
 
 method do( Str $statement, *@params ) {
     with self.prepare($statement) {

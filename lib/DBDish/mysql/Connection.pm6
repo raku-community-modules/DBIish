@@ -11,7 +11,7 @@ has MYSQL $!mysql_client is required;
 submethod BUILD(:$!mysql_client, :$!parent!) { }
 
 method prepare( Str $statement ) {
-    self!reset-err;
+    self.reset-err;
     DBDish::mysql::StatementHandle.new(
         :$!mysql_client, :parent(self), :$statement, :$!RaiseError
     );

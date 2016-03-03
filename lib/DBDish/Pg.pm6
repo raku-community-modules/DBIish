@@ -57,10 +57,6 @@ our sub pg-replace-placeholder(Str $query) is export {
         and $/.ast;
 }
 
-has $!errstr;
-method !errstr() is rw { $!errstr }
-method errstr() { $!errstr }
-
 sub quote-and-escape($s) {
     "'" ~ $s.trans([q{'}, q{\\]}] => [q{\\\'}, q{\\\\}])
         ~ "'"
@@ -78,15 +74,10 @@ method connect(:database(:$dbname), :$RaiseError, *%params) {
     my $pg_conn = PGconn.new(~@connection_parameters);
     my $status = $pg_conn.PQstatus;
     if $status == CONNECTION_OK {
-        my $con = DBDish::Pg::Connection.new(:$pg_conn, :$RaiseError, :parent(self));
-        @!Connections.unshift($con);
-        $con;
+        DBDish::Pg::Connection.new(:$pg_conn, :$RaiseError, :parent(self));
     }
     else {
-        $!errstr = $pg_conn.PQerrorMessage;
-        DBDish::Pg::Connection.conn-error(
-           :code($status), :$!errstr, :$RaiseError
-        )
+        self!conn-error: :code($status) :$RaiseError :errstr($pg_conn.PQerrorMessage);
     }
 }
 
@@ -98,7 +89,6 @@ method connect(:database(:$dbname), :$RaiseError, *%params) {
 # There is a long term Rakudo based project to develop a new,
 # comprehensive DBI architecture for Rakudo and Perl 6.
 # DBIish is not that, it is a naive rewrite of the similarly named Perl 5 modules.
-# Hence the 'Mini' part of the name.
 
 =head1 CLASSES
 The DBDish::Pg module contains the same classes and methods as every

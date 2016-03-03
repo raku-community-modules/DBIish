@@ -1,64 +1,62 @@
 role DBDish::ErrorHandling {
 
-# Our exceptions
+    # Our exceptions
     package GLOBAL::X::DBDish {
-	our class DBError is Exception {
-	    has $.driver-name;
-	    has $.native-message is required;
-	    has $.code;
-	    method message {
-		"$!driver-name: Error: $!native-message" ~
-		($!code ?? " ($!code)" !! '');
-	    }
-	}
-	our class LibraryNotFound is Exception {
-	    method message { "Can't load my native library" }
-	}
-	our class ConnectionFailed is Exception {
-	    has $.driver-name;
-	    has $.native-message is required;
-	    has $.code;
-	    method message {
-		"$!driver-name: Can't connect: $!native-message" ~
-		($!code ?? " ($!code)" !! '');
-	    }
-	}
+        our class DBError is Exception {
+            has $.driver-name;
+            has $.native-message is required;
+            has $.code;
+            has $.why = 'Error';
+            method message {
+                "$!driver-name: $.why: $!native-message" ~
+                ($!code ?? " ($!code)" !! '');
+            }
+        }
     }
 
     has $.parent is required;
     has Bool $.PrintError is rw = False;
     has Bool $.RaiseError is rw = True;
-    has $.err is default(0);
-    has $.errstr is default('');
+    has Exception $!last-exception;
 
-    method driver-name {
-	state $dn = do {
-	    if self.DEFINITE {
-		($!parent ~~ DBDish::Driver) ?? $!parent.^name !! self.parent.^name;
-	    } else {
-		::?CLASS.^name.split('::').[^(*-1)].join('::');
-	    }
-	}
-	$dn;
+    method set-last-exception($e) {
+        $!last-exception = $e;
+        if $!parent.^can('set-last-exception') {
+            $!parent.set-last-exception($e);
+        }
     }
 
-    method !reset-err( --> True) { $!err = Nil; $!errstr = Nil; }
+    method err( --> Int)  {
+        with $!last-exception {
+            .?code || -1;
+        }
+        else { 0 }
+    }
+
+    method errstr(--> Str) {
+        with $!last-exception {
+            .message;
+        }
+        else { '' }
+    }
+
+    method driver-name(--> Str) {
+        $ = do {
+            self.^can('connect') ?? self.^name !! $!parent.driver-name;
+        }
+    }
+
+    method reset-err(--> True) { self.set-last-exception(Nil); }
+
+    method !error-dispatch(X::DBDish::DBError $_) {
+        self.set-last-exception($_);
+        $!RaiseError and .throw or .fail;
+    }
 
     method !set-err($code, $errstr) is hidden-from-backtrace {
-	given X::DBDish::DBError.new(
-	    :$code, :native-message($errstr), :$.driver-name
-	) {
-	    $!RaiseError and .throw or .fail;
-	}
-    }
-
-    # For report errors at connection time before a Connection can be made
-    method conn-error(::?CLASS:U: :$errstr!, :$code, :$RaiseError) {
-	given X::DBDish::ConnectionFailed.new(
-	    :$code, :native-message($errstr), :$.driver-name
-	) {
-	    $RaiseError and .throw or .fail;
-	}
+        self!error-dispatch: X::DBDish::DBError.new(
+            :$code, :native-message($errstr), :$.driver-name
+        );
     }
 }
 
@@ -76,10 +74,10 @@ Errors raise exceptions if this is True
 =head3 Methods
 =head4 errstr
 Returns the string representation of the last error
-=head4 !set_errstr
+=head4 !set_err
 Private method that sets the error string, and prints and/or raises an
 exception, depending on the C<$.PrintError> and C<$.RaiseError> flags.
-=head4 !reset_errstr
+=head4 !reset_err
 Resets the error string to the empty string.
 
 =end pod

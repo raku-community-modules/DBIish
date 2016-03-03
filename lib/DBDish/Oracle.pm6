@@ -118,7 +118,9 @@ method connect(*%params) {
 
     if $errcode ne OCI_SUCCESS {
         my $errortext = get_errortext( $envhp, OCI_HTYPE_ENV );
-        die "OCIEnvNlsCreate failed: '$errortext'";
+        self!conn-error(
+            :code($errcode), :errstr("OCIEnvNlsCreate failed: '$errortext'")
+        );
     }
 
     # allocate the error handle
@@ -126,7 +128,7 @@ method connect(*%params) {
     @errhpp[0]  = Pointer;
     $errcode = OCIHandleAlloc($envhp, @errhpp, OCI_HTYPE_ERROR, 0, Pointer );
     if $errcode ne OCI_SUCCESS {
-        die "OCIHandleAlloc failed: '$errcode'";
+        self!conn-error(:code($errcode), :errstr("OCIHandleAlloc failed"));
     }
     my $errhp = @errhpp[0];
 
@@ -147,7 +149,7 @@ method connect(*%params) {
     );
     if $errcode ne OCI_SUCCESS {
         my $errortext = get_errortext($errhp);
-        die "OCILogon2 failed: '$errortext'";
+        self!conn-error(:code($errcode), :errstr("OCILogon2 failed: '$errortext'"));
     }
     my $svchp = @svchp[0];
 
