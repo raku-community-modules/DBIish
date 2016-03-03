@@ -4,7 +4,7 @@ need DBIish::CommonTesting;
 
 my %opts;
 # If env var set, no parameter needed.
-%opts<database> = 'dbdishtests' unless %*ENV<PGDATABASE>;
+%opts<database> = 'dbdishtest' unless %*ENV<PGDATABASE>;
 %opts<user> = 'postgres' unless %*ENV<PGUSER>;
 
 DBIish::CommonTesting.new(
