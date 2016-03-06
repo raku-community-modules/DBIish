@@ -15,8 +15,8 @@ constant OidArray is export = CArray[Oid];
 
 class PGresult	is export is repr('CPointer') {
     method PQclear is native(LIB) { * }
-    method PQcmdTuples(--> str) is native(LIB) { * }
-    method PQfname(int32 --> str) is native(LIB) { * }
+    method PQcmdTuples(--> Str) is native(LIB) { * }
+    method PQfname(int32 --> Str) is native(LIB) { * }
     method PQftype(int32 --> int32) is native(LIB) { * };
     method PQgetisnull(int32, int32 --> int32) is native(LIB) { * }
     method PQgetvalue(int32, int32 --> Str) is native(LIB) { * }
@@ -90,8 +90,8 @@ constant %oid-to-type-name is export = (
 constant CONNECTION_OK         is export = 0;
 constant CONNECTION_BAD        is export = 1;
 
-constant PGRES_EMPTY_QUERY = 0;
-constant PGRES_COMMAND_OK  = 1;
-constant PGRES_TUPLES_OK   = 2;
-constant PGRES_COPY_OUT    = 3;
-constant PGRES_COPY_IN     = 4;
+constant PGRES_EMPTY_QUERY is export = 0;
+constant PGRES_COMMAND_OK  is export = 1;
+constant PGRES_TUPLES_OK   is export = 2;
+constant PGRES_COPY_OUT    is export = 3;
+constant PGRES_COPY_IN     is export = 4;
