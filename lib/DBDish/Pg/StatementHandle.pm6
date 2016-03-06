@@ -19,7 +19,7 @@ method !handle-errors {
     if $!result.is-ok {
         self.reset-err;
     } else {
-        self!set-err($!result, $!result.PQresultErrorMessage);
+        self!set-err($!result, $!result.PQerrorMessage);
     }
 }
 
@@ -46,25 +46,26 @@ method execute(*@params is copy) {
         0,    # Resultformat, 0 == text
     );
 
+    $!affected_rows = Nil;
     with self!handle-errors {
-	$!row_count = $!result.PQntuples;
-	self.rows;
+        $!Executed++;
+        if $!result.PQresultStatus == PGRES_TUPLES_OK { # NOT WAS DML
+            $!row_count = $!result.PQntuples;
+            $!affected_rows = $!row_count;
+        } else {
+            $!affected_rows = $!result.PQcmdTuples.Int; # DML
+        }
+        self.rows;
     } else {
-	.fail;
+        .fail;
     }
 }
 
 # do() and execute() return the number of affected rows directly or:
 # rows() is called on the statement handle $sth.
 method rows() {
-    without $!affected_rows {
-        $!affected_rows = $!result.PQcmdTuples;
-        self!handle-errors;
-    }
-
-    with $!affected_rows {
-	$_ == 0 ?? '0E0' !! $_.Int;
-    }
+    self.finish if !$!Finished && $!result.PQresultStatus == PGRES_COMMAND_OK; # DML
+    $_ == 0 ?? '0E0' !! $_ with $!affected_rows;
 }
 
 method _row(:$hash) {
@@ -127,7 +128,7 @@ method _row(:$hash) {
         $!current_row++;
         self!handle-errors;
 
-        if ! $afield { self.finish; }
+        self.finish unless $afield;
     }
     $hash ?? %ret_hash !! @row_array;
 }
@@ -207,15 +208,15 @@ my grammar PgArrayGrammar {
 
 sub _to-type($value, Str $type where $_ eq any([ 'Str', 'Num', 'Rat', 'Int' ])) {
     if $value.defined {
-	given $type {
-	    when 'Str' { ~$value }     # String;
-	    when 'Num' { Num($value) } # SQL Floating point
-	    when 'Rat' { Rat($value) } # SQL Numeric
-	    default    { Int($value) } # Must be
-	}
+        given $type {
+            when 'Str' { ~$value }     # String;
+            when 'Num' { Num($value) } # SQL Floating point
+            when 'Rat' { Rat($value) } # SQL Numeric
+            default    { Int($value) } # Must be
+        }
     }
     else {
-	$value;
+        $value;
     }
 }
 
@@ -272,11 +273,10 @@ method true_false(Str $s) {
 method finish() {
     if $!result {
         $!result.PQclear;
-        $!result        = Any;
-        $!affected_rows = Any;
+        $!result        = Nil;
         @!column_names  = ();
     }
-    True;
+    $!Finished = True;
 }
 
 method !get_row {

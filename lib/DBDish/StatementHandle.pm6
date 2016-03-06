@@ -10,12 +10,14 @@ need DBDish::ErrorHandling;
 
 unit role DBDish::StatementHandle does DBDish::ErrorHandling;
 
-method finish() { ... }
+has Int $.Executed = 0;
+has Bool $.Finished = False;
+
+method finish(--> Bool) { ... }
 method fetchrow() { ... }
 method execute(*@) { ... }
 
 method	_row(:$hash) { ... }
-
 
 method fetchrow-hash() {
     hash self.column_names Z=> self.fetchrow;

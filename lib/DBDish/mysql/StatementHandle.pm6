@@ -14,10 +14,10 @@ has $!field_count;
 has $.mysql_warning_count is rw = 0;
 
 method !handle-errors {
-    if mysql_error( $!mysql_client ) -> $errstr {
-	self!set-err(-1, $errstr);
+    if mysql_errno( $!mysql_client ) -> $code {
+        self!set-err($code, mysql_error( $!mysql_client ));
     } else {
-	self.reset-err;
+        self.reset-err;
     }
 }
 
@@ -183,11 +183,10 @@ method mysql_insertid() {
 }
 
 method finish() {
-    self.fetchrow if !defined $!result_set; # XXX I suspect unneeded
     if $!result_set {
         mysql_free_result($!result_set);
-        $!result_set   = Mu;
+        $!result_set   = Nil;
         @!column_names = ();
     }
-    True;
+    $!Finished = True; # Per protocol
 }

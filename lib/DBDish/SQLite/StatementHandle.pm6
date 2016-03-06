@@ -36,6 +36,7 @@ method execute(*@params) {
     if $!row_status != SQLITE_ROW and $!row_status != SQLITE_DONE {
         self!handle-error($!row_status);
     }
+    $!Executed++;
     self.rows;
 }
 
@@ -114,5 +115,5 @@ method free {
 
 method finish {
     sqlite3_reset($!statement_handle) if $!statement_handle;
-    True;
+    $!Finished = True;
 }
