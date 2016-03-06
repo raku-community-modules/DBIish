@@ -10,17 +10,17 @@ has $.dbd is required;
 has %.opts is required;
 has $.post-connect-cb;
 has $.typed-nulls = True;
-has $.create-table-sql = '
+has $.create-table-sql = q|
     CREATE TABLE nom (
         name        varchar(4),
         description varchar(30),
         quantity    bigint,
         price       numeric(5,2)
     )
-';
+|;
 
 # Common queries
-has $.drop-table-sql = 'DROP TABLE IF EXISTS nom';
+has $.drop-table-sql    = 'DROP TABLE IF EXISTS nom';
 has $.select-null-query = 'SELECT NULL';
 
 # compare rows of the nom table
@@ -39,13 +39,13 @@ method !hash-str(%h) {
 
 method run-tests {
     diag "Testing DBDish::$.dbd";
-    plan 75;
+    plan 88;
 
     # Verify that the driver loads before attempting a connect
     my $drh = DBIish.install-driver($.dbd);
-    ok $drh, 'Install driver'; # test 1
-    my $drh_version = $drh.Version;
-    ok $drh_version ~~ Version:D, "DBDish::{$.dbd} version $drh_version"; # test 2
+    ok $drh, 'Install driver';
+    my $drh-version = $drh.Version;
+    ok $drh-version ~~ Version:D, "DBDish::{$.dbd} version $drh-version";
 
     # Connect to the data source
     my $dbh;
@@ -62,36 +62,36 @@ method run-tests {
 	skip-rest 'prerequisites failed';
 	exit;
     }
-    ok $dbh, "connect to '{%.opts<database> || "default"}'"; # test 3
+    ok $dbh, "connect to '{%.opts<database> || "default"}'";
     ok $dbh.drv.Connections.elems == 1, 'Driver has one connection';
 
     try EVAL '$.post-connect-cb.($dbh)';
 
     # Drop a table of the same name so that the following create can work.
     my $rc = $dbh.do($!drop-table-sql);
-    ok $rc, "drop table if exists works"; # test 4
+    ok $rc, "drop table if exists works";
 
     # TODO should check that after 'do' the statement was finished
 
     # Create a table
     $rc = $dbh.do($.create-table-sql);
-    ok $rc, "do: create table nom returns True"; # test 5
-    ok +$rc == 0, "do: create table nom returns 0"; # test 6
+    ok $rc, "do: create table nom returns True";
+    ok +$rc == 0, "do: create table nom returns 0";
     if $dbh.^can('err') {
-        is $dbh.err, 0, 'err after successful create should be 0'; # test 7
+        is $dbh.err, 0, 'err after successful create should be 0';
     }
     else { skip 'err after successful create should be 0', 1 }
-    is $dbh.errstr, '', 'errstr after successful create should be empty'; # test 8
+    is $dbh.errstr, '', 'errstr after successful create should be empty';
 
 
     # Insert rows using the various method calls
     ok $dbh.do( "
         INSERT INTO nom (name, description, quantity, price)
         VALUES ( 'BUBH', 'Hot beef burrito', 1, 4.95 )
-    "), "insert without parameters called from do"; # test 9
+    "), "insert without parameters called from do";
 
     if $dbh.^can('rows') {
-        is $dbh.rows, 1, "simple insert should report 1 row affected"; # test 9
+        is $dbh.rows, 1, "simple insert should report 1 row affected";
     }
     else { skip '$dbh.rows not implemented', 1 }
 
@@ -99,54 +99,71 @@ method run-tests {
     ok my $sth = $dbh.prepare( "
         INSERT INTO nom (name)
         VALUES ( ? )
-    "), "prepare an insert command with one string parameter"; # test 10
-    ok $rc = $sth.execute('ONE'), "execute one with one string parameter"; # test 11
-    is $rc, 1, "execute one with one string parameter should return 1 row affected"; # test 12
+    "), "prepare an insert command with one string parameter";
+
+    ok not $sth.Executed,   'Not executed yet';
+    ok not $sth.Finished,   'Not finished yet';
+
+    ok $rc = $sth.execute('ONE'), "execute one with one string parameter";
+
+    ok $sth.Executed,	    'Was executed';
+    ok $sth.Finished,	    'execute on DML statement should leave finished';
+
+    is $rc, 1, "execute one with one string parameter should return 1 row affected";
     if $sth.^can('rows') {
-        is $sth.rows, 1, '$sth.rows for execute one with one string parameter should report 1 row affected'; # test 13
+        is $sth.rows, 1, '$sth.rows for execute one with one string parameter should report 1 row affected';
     }
     else { skip '$sth.rows not implemented', 1 }
 
     ok $sth = $dbh.prepare( "
         INSERT INTO nom (quantity)
         VALUES ( ? )
-    "), "prepare an insert command with one integer parameter"; # test 14
-    ok $rc = $sth.execute(1), "execute one with one integer parameter"; # test 15
-    is $rc, 1, "execute one with one integer parameter should return 1 row affected"; # test 16
+    "), "prepare an insert command with one integer parameter";
+
+    ok not $sth.Executed,   'New statement sould not be marked executed yet';
+    ok $rc = $sth.execute(1), "execute one with one integer parameter";
+    ok $sth.Finished,	    'execute on DML statement should leave finished';
+
+    is $rc, 1, "execute one with one integer parameter should return 1 row affected";
     if $sth.^can('rows') {
-        is $sth.rows, 1, '$sth.rows for execute one with one integer parameter should report 1 row affected'; # test 17
+        is $sth.rows, 1, '$sth.rows for execute one with one integer parameter should report 1 row affected';
     }
     else { skip '$sth.rows not implemented', 1 }
 
     ok $sth = $dbh.prepare( "
         INSERT INTO nom (price)
         VALUES ( ? )
-    " ), "prepare an insert command with one float parameter"; # test 18
-    ok $rc = $sth.execute(4.85), "execute one with one float parameter"; # test 19
-    is $rc, 1, "execute one with one float parameter should return 1 row affected"; # test 20
+    " ), "prepare an insert command with one float parameter";
+    ok $rc = $sth.execute(4.85), "execute one with one float parameter";
+    is $rc, 1, "execute one with one float parameter should return 1 row affected";
     if $sth.^can('rows') {
-        is $sth.rows, 1, '$sth.rows for execute one with one float parameter should report 1 row affected'; # test 21
+        is $sth.rows, 1, '$sth.rows for execute one with one float parameter should report 1 row affected';
     }
     else { skip '$sth.rows not implemented', 1 }
 
     ok $sth = $dbh.prepare( "
         INSERT INTO nom (name, description, quantity, price)
         VALUES ( ?, ?, ?, ? )
-    " ), "prepare an insert command with parameters"; # test 22
+    " ), "prepare an insert command with parameters";
+
 
     ok $sth.execute('TAFM', 'Mild fish taco', 1, 4.85 ) &&
        $sth.execute('BEOM', 'Medium size orange juice', 2, 1.20 ),
-       "execute twice with parameters"; # test 23
+       "execute twice with parameters";
+
+    is $sth.Executed, 2,    'Was executed twice';
+    ok $sth.Finished,	    'Multiple execute finished';
+
     if $dbh.^can('rows') {
-        is $sth.rows, 1, "each insert with parameters also reports 1 row affected"; # test 24
+        is $sth.rows, 1, "each insert with parameters also reports 1 row affected";
     }
     else { skip '$dbh.rows not implemented', 1 }
 
-    if $sth.^can('bind_param_array') {
+    if $sth.^can('bind-param-array') {
         my @tuple_status;
-        ok $sth.bind_param_array( 1, [ 'BEOM', 'Medium size orange juice', 2, 1.20 ] ),
-           "bind_param_array"; # test 25
-        ok $sth.execute_array(  { ArrayTupleStatus => @tuple_status } ); # test 26
+        ok $sth.bind-param-array( 1, [ 'BEOM', 'Medium size orange juice', 2, 1.20 ] ),
+           "bind_param_array";
+        ok $sth.execute-array(  { ArrayTupleStatus => @tuple_status } );
     }
     else { skip '$sth.bind_param_array() and $sth.execute_array() not implemented', 2 }
 
@@ -155,13 +172,20 @@ method run-tests {
     # Delete some rows
 
     # Select data using various method calls
-    ok $sth = $dbh.prepare( "
+    ok $sth = $dbh.prepare("
         SELECT name, description, quantity, price, quantity*price AS amount
         FROM nom
         ORDER BY COALESCE(name,'A')
-    " ), "prepare a select command without parameters"; # test 27
+    "), "prepare a select command without parameters";
 
-    ok $sth.execute(), "execute a prepared select statement without parameters"; # test 28
+    ok not $sth.Executed,    'SELECT statement sould not be marked executed yet';
+    ok $rc = $sth.execute(), 'execute a prepared select statement without parameters';
+    ok $sth.Executed,        'SELECT statement sould now be marked executed';
+
+    # TODO Different drivers returns different values, should implement the
+    # capabilities announce.
+    todo 'Will probably fails for the lack of proper capabilities annuonce';
+    is $rc, 6,		    'In an ideal world should returns rows available';
 
     #fetch stuff return Str
     my @ref = [ Str, Str, "1", Str, Str],
@@ -171,34 +195,38 @@ method run-tests {
         [ 'ONE', Str, Str, Str, Str ],
         [ 'TAFM', 'Mild fish taco', "1", "4.85", "4.85" ];
 
-    my $arrayref = $sth.fetchall_arrayref();
+    my @array = $sth.fetchall-array;
 
-    is $arrayref.elems, 6, "fetchall_arrayref returns 6 rows"; # test 29
+    todo 'NYI in SQLite' if $.dbd eq 'SQLite';
+    is $sth.rows, 6,	'$sth.rows after fetch-array should report all';
+
+    is @array.elems, 6, 'fetchall-array returns 6 rows';
+
     my $ok = True;
     for ^6 -> $i {
-        $ok &&= $arrayref[$i] eqv @ref[$i];
+        $ok &&= @array[$i] eqv @ref[$i];
     }
     todo "Will fail in sqlite, no real NUMERIC" if $.dbd ~~ /SQLite/;
-    ok $ok, "selected data matches what was written"; # test 30
+    ok $ok, 'selected data be fetchall-array matches';
 
     # Re-execute the same statement
     ok $sth.execute(), "statement can be re-executed";
 
     # Test driver capabilities
     if $sth.^can('column_names') {
-        ok (my @columns = $sth.column_names), 'called column_names'; #test 33
+        ok (my @columns = $sth.column_names), 'called column_names';
 	is @columns.elems, 5, 'column_names returns 5';
-        is @columns, [ 'name', 'description', 'quantity', 'price', 'amount'],
-	    'column_names matched test data'; #test 34
+        is @columns, [ <name description quantity price amount> ],
+	    'column_names matched test data';
     }
-    else { skip 'column_names not implemented', 2 }
+    else { skip 'column_names not implemented', 3 }
 
     if $sth.^can('column_types') {
-        my @columns = $sth.column_types; #'called column_types'; #test 35
-        is @columns.elems, 4, "column_types returns 4 fields in a row"; #test 36
-        ok @columns, [ Str, Str, Int, Rat ], 'column_types matches test data'; #test 37
+        ok (my @columns = $sth.column_types), 'called column_types';
+        is @columns.elems, 5, "column_types returns 5 fields in a row";
+        ok @columns eqv [ Str, Str, Int, Rat, Rat ], 'column_types matches test data';
     }
-    else { skip 'column_types not implemented', 2 }
+    else { skip 'column_type not implemented', 3 }
 
     #row and allrows return typed value, when possible
     my @typed-ref = $.typed-nulls ?? (
@@ -227,15 +255,15 @@ method run-tests {
 
     my %results = $sth.row(:hash);
 
-    ok %results<name> ~~ Str, "HASH: Test the type of a Str field";
+    ok %results<name>     ~~ Str, "HASH: Test the type of a Str field";
     ok %results<quantity> ~~ Int, "HASH: Test the type of a Int field";
-    ok %results<price> ~~ Rat, "HASH: Test the type of a NUMERIC like field";
+    ok %results<price>    ~~ Rat, "HASH: Test the type of a NUMERIC like field";
 
-    ok $sth.finish, "No more rows needed";
-    ok $sth.execute(),  "Can re-execute after finish";
+    ok $sth.finish,	'No more rows needed';
+    ok $sth.execute(),  'Can re-execute after explicit finish';
 
-    ok (@results = $sth.allrows()),  "call allrows works";
-    ok @results.elems == 6, "Test allrows, get 6 rows";
+    ok (@results = $sth.allrows),   'call allrows works';
+    ok @results.elems == 6,	    'Test allrows, get 6 rows';
 
     $ok = True;
     for ^6 -> $i {
