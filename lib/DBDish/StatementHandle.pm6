@@ -27,31 +27,32 @@ method row(:$hash) {
      self._row(:$hash);
 }
 
-method allrows(:$array-of-hash, :$hash-of-array) {
+multi method allrows(:$array-of-hash!) {
     my @rows;
-    die "You can't use array-of-hash with hash-of-array" if $array-of-hash and $hash-of-array;
-    if $array-of-hash {
-        while self.row(:hash) -> %row {
-            @rows.push(%row);
-        }
-        return @rows;
+    while self.row(:hash) -> %row {
+	@rows.push(%row);
     }
-    if $hash-of-array {
-        my @names := self.column_names;
-        my %rows = @names Z=> [] xx *;
-        while self.row -> @a {
-            for @a Z @names -> ($v, $n) {
-                %rows{$n}.push: $v;
-            }
-        }
-        return %rows;
+    @rows;
+}
+
+multi method allrows(:$hash-of-array!) {
+    my @names := self.column_names;
+    my %rows = @names Z=> [] xx *;
+    while self.row -> @a {
+	for @a Z @names -> ($v, $n) {
+	    %rows{$n}.push: $v;
+	}
     }
+    %rows;
+}
+
+multi method allrows() {
+    my @rows;
     while self.row -> @r {
          @rows.push(@r);
     }
     @rows;
 }
-
 
 method fetchrow_hashref { $.fetchrow-hash }
 
