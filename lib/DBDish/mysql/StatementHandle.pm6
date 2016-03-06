@@ -4,24 +4,25 @@ need DBDish;
 unit class DBDish::mysql::StatementHandle does DBDish::StatementHandle;
 use DBDish::mysql::Native;
 
-has $!mysql_client;
+has MYSQL $!mysql_client is required;
 has $!statement;
-has $!result_set;
+has MYSQL_RES $!result_set;
 has $!affected_rows;
 has @!column_names;
-has @!column_mysqltype;
+has @!column_type;
 has $!field_count;
 has $.mysql_warning_count is rw = 0;
+has Bool $.Prefetch;
 
 method !handle-errors {
-    if mysql_errno( $!mysql_client ) -> $code {
-        self!set-err($code, mysql_error( $!mysql_client ));
+    if $!mysql_client.mysql_errno -> $code {
+        self!set-err($code, $!mysql_client.mysql_error);
     } else {
         self.reset-err;
     }
 }
 
-submethod BUILD(:$!mysql_client, :$!parent!, :$!statement) { }
+submethod BUILD(:$!mysql_client!, :$!parent!, :$!statement, Bool :$!Prefetch = True) { }
 
 method execute(*@params is copy) {
     my $statement = '';
@@ -35,7 +36,7 @@ method execute(*@params is copy) {
                 $statement ~= $param
             }
             else {
-                $statement ~= self.quote($param.Str);
+                $statement ~= self.quote($param);
             }
         }
         else {
@@ -43,150 +44,135 @@ method execute(*@params is copy) {
         }
     }
     $statement ~= $last-chunk;
-    if $!result_set { # XXX Must assert that not
-        mysql_free_result($!result_set);
-	$!result_set = Mu;
-    }
-    if my $status = mysql_query( $!mysql_client, $statement ) { # 0 means OK
-        self!set-err($status, mysql_error( $!mysql_client ));
+    $!affected_rows = $!field_count = Nil;
+    if my $status = $!mysql_client.mysql_query($statement ) { # 0 means OK
+        self!set-err($status, $!mysql_client.mysql_error);
     } else {
-	self.reset-err;
-	$.mysql_warning_count = mysql_warning_count( $!mysql_client );
-	my $rows = self.rows;
-	($rows == 0) ?? "0E0" !! $rows;
+        $.mysql_warning_count = $!mysql_client.mysql_warning_count;
+        $!Executed++;
+        self.rows;
     }
 }
 
-method escape(Str $x) {
-    # XXX should really call mysql_real_scape_string
-    $x.trans(
-            [q['],  q["],  q[\\],   chr(0), "\r", "\n"]
-        =>  [q[\'], q[\"], q[\\\\], '\0',   '\r', '\n']
-    );
+method escape(|a) {
+    $!mysql_client.escape(a);
 }
 
-method quote(Str $x) {
-    q['] ~ self.escape($x) ~ q['];
+multi method quote(Str $x) {
+    q['] ~ $!mysql_client.escape($x) ~ q['];
+}
+
+multi method quote(Blob $b) {
+    "X'" ~ $!mysql_client.escape($b,:bin) ~ "'";
+}
+
+method !get_result {
+    $!Prefetch ?? $!mysql_client.mysql_store_result !! $!mysql_client.mysql_use_result;
+}
+
+method !get-meta() {
+    without $!field_count {
+        @!column_names = ();
+        @!column_type = ();
+        if $!field_count = $!mysql_client.mysql_field_count {
+	    # Was SELECT, so should be a result set.
+            with $!result_set = self!get_result {
+                loop (my $i = 0; $i < $!field_count; $i++) {
+                    with $_.mysql_fetch_field {
+                        @!column_names.push: .name;
+			if (my \t = %mysql-type-conv{.type}) === Any {
+			    warn "No type map defined for mysql type #{.type} at column $i";
+			    t = Str;
+			}
+                        @!column_type.push: t;
+                    }
+                    else { die "mysql: Opps! mysql_fetch_field"; }
+                }
+		if ($!affected_rows = $!mysql_client.mysql_affected_rows) == -1 {
+		    $!affected_rows = 0;
+		}
+            }
+            else {
+                .fail without self!handle-errors;
+		$!affected_rows = 0;
+            }
+        }
+        else { # Was DML
+            $!affected_rows = $!mysql_client.mysql_affected_rows;
+            self.finish;
+        }
+        self.reset-err;
+    }
+    $!field_count;
 }
 
 # do() and execute() return the number of affected rows directly or:
 # rows() is called on the statement handle $sth.
 method rows() {
-    unless defined $!affected_rows {
-        self.reset-err;
-        $!affected_rows = mysql_affected_rows($!mysql_client);
-	self!handle-errors;
-    }
-    $!affected_rows;
+    self!get-meta();
+    ($!affected_rows == 0) ?? "0E0" !! $!affected_rows;
 }
-
 method _row(:$hash) {
     my @row_array;
     my %hash;
     my @names;
     my @types;
 
-    unless $!result_set {
-        $!result_set  = mysql_use_result( $!mysql_client);
-        $!field_count = mysql_field_count($!mysql_client);
-        @!column_names = ();
-        @!column_mysqltype = ();
-        loop ( my $i=0; $i < $!field_count; $i++ ) {
-            my MYSQL_FIELD $field_info = mysql_fetch_field($!result_set).deref;
-            my $column_name = $field_info.name;
-            @!column_names.push($column_name);
-            @!column_mysqltype.push($field_info.type);
-        }
-    }
-
-    if $!result_set {
-        #Todo; Null should probably be handled watching the field_info
-        self.reset-err;
-
-        my $native_row = mysql_fetch_row($!result_set); # can return NULL
-	self!handle-errors;
-
-        if $native_row {
-            loop ( my $i=0; $i < $!field_count; $i++ ) {
-                my $type = %mysql-type-conv{@!column_mysqltype[$i]};
-                my Bool $is-null = ! defined $native_row[$i];
-                my $value = do given $type {
-                    when 'Int' {
-                        $is-null ?? Int !! $native_row[$i].Int;
-                    }
-                    when 'Rat' {
-                        $is-null ?? Rat !! $native_row[$i].Rat;
-                    }
-		    when 'Num' {
-                        $is-null ?? Num !! $native_row[$i].Num;
-		    }
-                    when 'Str' {
-                        $is-null ?? Str !! $native_row[$i].Str;
-                    }
-                    default {
-                        warn "unhandled type $type";
-                        $native_row[$i];
-                    }
-                };
+    if self!get-meta -> $fields {
+        if my $row = $!result_set.fetch_row {
+            loop (my $i = 0; $i < $fields; $i++) {
+                my $value = $row.want($i, @!column_type[$i]);
                 $hash ?? (%hash{@!column_names[$i]} = $value) !! @row_array.push($value);
             }
+            $!affected_rows++ unless $!Prefetch;
         }
-        else { self.finish; }
+        else {
+            without self!handle-errors {
+                .fail;
+            }
+            self.finish;
+        }
     }
     $hash ?? %hash !! @row_array;
 }
 
 method fetchrow() {
     my @row_array;
-
-    unless $!result_set {
-        $!result_set  = mysql_use_result( $!mysql_client);
-        $!field_count = mysql_field_count($!mysql_client);
-    }
-
-    if $!result_set {
-        self.reset-err;
-
-        my $native_row = mysql_fetch_row($!result_set); # can return NULL
-	self!handle-errors;
-
-        if $native_row {
+    if self!get-meta {
+        if my $native_row = $!result_set.fetch_row {
             loop ( my $i=0; $i < $!field_count; $i++ ) {
                 @row_array.push($native_row[$i]);
             }
+            $!affected_rows++ unless $!Prefetch;
         }
-        else { self.finish; }
+        else {
+            without self!handle-errors {
+                .fail;
+            }
+            self.finish;
+        }
     }
     @row_array;
 }
 
 method column_names {
-    unless @!column_names {
-        unless $!result_set {
-            $!result_set  = mysql_use_result( $!mysql_client);
-            $!field_count = mysql_field_count($!mysql_client);
-            @!column_mysqltype = ();
-        }
-        loop ( my $i=0; $i < $!field_count; $i++ ) {
-            my MYSQL_FIELD $field_info = mysql_fetch_field($!result_set).deref;
-            my $column_name = $field_info.name;
-            @!column_names.push($column_name);
-            @!column_mysqltype.push($field_info.type);
-        }
-    }
-    @!column_names;
+    self!get-meta && @!column_names;
+}
+
+method column_types {
+    self!get-meta && @!column_type;
 }
 
 method mysql_insertid() {
-    mysql_insert_id($!mysql_client);
-    # but Parrot NCI cannot return an unsigned long long :-(
+    $!mysql_client.mysql_insert_id;
 }
 
 method finish() {
     if $!result_set {
-        mysql_free_result($!result_set);
+        $!result_set.mysql_free_result;
         $!result_set   = Nil;
         @!column_names = ();
+	@!column_type = ();
     }
     $!Finished = True; # Per protocol
 }

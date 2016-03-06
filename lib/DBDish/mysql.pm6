@@ -2,15 +2,15 @@ use v6;
 need DBDish;
 # DBDish::mysql.pm6
 
-unit class DBDish::mysql:auth<mberends>:ver<0.0.2> does DBDish::Driver;
+unit class DBDish::mysql:auth<mberends>:ver<0.0.3> does DBDish::Driver;
 use DBDish::mysql::Native;
 need DBDish::mysql::Connection;
 
 #------------------ methods to be called from DBIish ------------------
 method connect(:$RaiseError, *%params ) {
     my $connection;
-    my $mysql_client = mysql_init( MYSQL );
-    my $errstr  = mysql_error( $mysql_client );
+    my $mysql_client = MYSQL.mysql_init;
+    my $errstr  = $mysql_client.mysql_error;
 
     unless $errstr {
         %params<host>     //= 'localhost';
@@ -19,11 +19,12 @@ method connect(:$RaiseError, *%params ) {
         %params<socket>   //= Str; # Undef
 
         # real_connect() returns either the same client pointer or null
-        my $result   = mysql_real_connect( $mysql_client,
-            |%params<host user password database port socket>,
-        0);
+        my $result   = $mysql_client.mysql_real_connect(
+            |%params<host user password database port socket>, 0
+        );
 
-        unless $errstr = mysql_error( $mysql_client ) {
+        unless $errstr = $mysql_client.mysql_error {
+	    $mysql_client.mysql_set_character_set('utf8'); # A sane default
             $connection = DBDish::mysql::Connection.new(
                 :$mysql_client, :$RaiseError, :parent(self)
             );
@@ -39,12 +40,11 @@ method connect(:$RaiseError, *%params ) {
 =begin pod
 
 =head1 DESCRIPTION
-# 'zavolaj' is a Native Call Interface for Rakudo/Parrot. 'DBIish' and
-# 'DBDish::mysql' are Perl 6 modules that use 'zavolaj' to use the
-# standard mysqlclient library.  There is a long term Parrot based
-# project to develop a new, comprehensive DBI architecture for Parrot
+# 'DBIish' and 'DBDish::mysql' are Perl 6 modules that use NativeCall
+# to use the standard mysqlclient library. There is a long term Rakudo
+# based project to develop a new, comprehensive DBI architecture for Parrot
 # and Perl 6.  DBIish is not that, it is a naive rewrite of the
-# similarly named Perl 5 modules.  Hence the 'Mini' part of the name.
+# similarly named Perl 5 modules.
 
 =head1 CLASSES
 The DBDish::mysql module contains the same classes and methods as every

@@ -64,7 +64,7 @@ my $table         = 't1';
 #ok $drh->{Version}, "Version $drh->{Version}";
 #print "Driver version is ", $drh->{Version}, "\n";my $mdriver = 'mysql';
 my $drh;
-$drh = DBIish.install_driver($mdriver);
+$drh = DBIish.install-driver($mdriver);
 ok $drh, 'Install driver'; # test 1
 my $drh_version;
 $drh_version = $drh.Version;
