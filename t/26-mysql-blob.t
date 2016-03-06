@@ -5,8 +5,22 @@ use DBIish;
 plan 9;
 
 my %con-parms = :database<dbdishtest>, :user<testuser>, :password<testpass>;
+my $dbh;
 
-my $dbh = DBIish.connect('mysql', |%con-parms);
+try {
+  $dbh = DBIish.connect('mysql', |%con-parms);
+  CATCH {
+	    when X::DBIish::LibraryMissing | X::DBDish::ConnectionFailed {
+		diag "$_\nCan't continue.";
+	    }
+            default { .throw; }
+  }
+}
+without $dbh {
+    skip-rest 'prerequisites failed';
+    exit;
+}
+
 ok $dbh,    'Connected';
 ok $dbh.do('DROP TABLE IF EXISTS test'), 'Clean';
 ok $dbh.do(q|
