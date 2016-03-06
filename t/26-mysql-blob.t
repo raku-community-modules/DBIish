@@ -2,7 +2,7 @@ v6;
 use Test;
 use DBIish;
 
-plan 9;
+plan 18;
 
 my %con-parms = :database<dbdishtest>, :user<testuser>, :password<testpass>;
 
@@ -14,14 +14,24 @@ ok $dbh.do(q|
 	id INT(3) NOT NULL DEFAULT 0, 
 	name BLOB
 )|), 'Table created';
-my $blob = Blob.new(^256);
+my $blob = Buf.new(^256);
 diag $blob.gist;
 my $query = 'INSERT INTO test VALUES(?, ?)';
 ok (my $sth = $dbh.prepare($query)),	 "Prepared '$query'";
-ok $sth.execute(1, $blob),		 'Executed';
+ok $sth.execute(1, $blob),		 'Executed with buf';
+ok $sth.execute(2, Buf),		 'Executed without buf';
 ok $sth = $dbh.prepare('SELECT name FROM test WHERE id = ?'), 'SELECT prepared';
-ok $sth.execute(1), 'Executed';
-my @res = $sth.row;
+ok $sth.execute(1), 'Executed for 1';
+ok (my @res = $sth.row), 'Get a row';
+is @res.elems,  1,	 'One field';
 $sth.finish;
-is @res[0], $blob, 'Data Match';
-ok $dbh.do('DROP TABLE IF EXISTS test'), 'Clean again';
+ok (my $data = @res[0]), 'With data at 0';
+ok $data ~~ Buf,         'Data is-a Buf';
+is $data, $blob,         'Data in Buf match with original';
+ok $sth.execute(2),      'Executed for 2';
+ok (@res = $sth.row),	 'Get a row';
+is @res.elems,  1,	 'One field';
+$data = @res[0];
+ok $data ~~ Buf,         'Data is-a Buf';
+ok not $data.defined,    'But is NULL';
+$dbh.do('DROP TABLE IF EXISTS test');
