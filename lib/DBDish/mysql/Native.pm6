@@ -66,9 +66,7 @@ class MyRow does Positional is export {
 	    $b;
 	}
 
-	my $itype = $type.HOW ~~ Metamodel::CurriedRoleHOW ??
-	    $type.^role_arguments[0] !! uint8;
-	buf-from-pointer($!car[$idx], :elems($!lon[$idx]), :type($itype));
+	buf-from-pointer($!car[$idx], :elems($!lon[$idx]), :type($type.of));
     }
 }
 
