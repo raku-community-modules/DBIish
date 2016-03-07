@@ -6,15 +6,25 @@ use DBIish;
 use Test;
 
 plan 2;
-skip-rest "WIP";
-exit;
+my %con-parms;
+# If env var set, no parameter needed.
+%con-parms<database> = 'dbdishtest' unless %*ENV<PGDATABASE>;
+%con-parms<user> = 'postgres' unless %*ENV<PGUSER>;
+my $dbh;
 
-my $dbh = DBIish.connect(
-	"Pg",
-	:database<dbdishtest>,
-	:user<postgres>,
-	:password<sa>, :RaiseError
-);
+try {
+  $dbh = DBIish.connect('Pg', |%con-parms);
+  CATCH {
+	    when X::DBIish::LibraryMissing | X::DBDish::ConnectionFailed {
+		diag "$_\nCan't continue.";
+	    }
+            default { .throw; }
+  }
+}
+without $dbh {
+    skip-rest 'prerequisites failed';
+    exit;
+}
 
 my $sth = $dbh.do(q:to/STATEMENT/);
   DROP TABLE IF EXISTS sal_emp;
@@ -60,12 +70,12 @@ my %h = $sth.row(:hash);;
 
 my %ref = (
 name => 'Bill',
-pay_by_quarter => [10000, 10000, 10000],
-schedule => [["metting", "lunch"], ["training day", "presentation"]],
-salary_by_month => [511.123, 622.345]
+pay_by_quarter => [10000, 10000, 10000, 10000],
+schedule => [["meeting", "lunch"], ["training day", "presentation"]],
+salary_by_month => [Num(511.123), Num(622.345), Num(1)]
 ).Hash;
 
-is %h.elems == 4, "Contain 4 elements";
+is %h.elems, 4, "Contain 4 elements";
 is-deeply %h, %ref, "Right data";
 
 # Cleanup

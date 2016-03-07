@@ -90,7 +90,7 @@ method _row(:$hash) {
             if ! $!result.PQgetisnull($!current_row, $_) {
 		$value = $!result.get-value($!current_row, $_, $value);
 		if @!column_type[$_] ~~ Array {
-		    $value := _pg-to-array( $value, $_.of.^name );
+		    $value := _pg-to-array( $value, @!column_type[$_].of.^name );
 		}
             }
             $hash ?? (%ret_hash{@!column_names[$_]} = $value)
@@ -177,7 +177,7 @@ sub _to-array(Match $match, Str $type where $_ eq any([ 'Str', 'Num', 'Rat', 'In
     @array;
 }
 
-sub _pg-to-array(Str $text, Str $type where $_ eq any([ 'Str', 'Rat', 'Int' ])) {
+sub _pg-to-array(Str $text, Str $type where $_ eq any([ 'Str', 'Rat', 'Int', 'Num' ])) {
     my $match = PgArrayGrammar.parse( $text );
     die "Failed to parse" unless $match.defined;
     _to-array($match, $type);
