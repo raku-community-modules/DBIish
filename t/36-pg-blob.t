@@ -4,11 +4,14 @@ use DBIish;
 
 plan 18;
 
-my %con-parms = :database<dbdishtest>, :user<testuser>, :password<testpass>;
+my %con-parms;
+# If env var set, no parameter needed.
+%con-parms<database> = 'dbdishtest' unless %*ENV<PGDATABASE>;
+%con-parms<user> = 'postgres' unless %*ENV<PGUSER>;
 my $dbh;
 
 try {
-  $dbh = DBIish.connect('mysql', |%con-parms);
+  $dbh = DBIish.connect('Pg', |%con-parms);
   CATCH {
 	    when X::DBIish::LibraryMissing | X::DBDish::ConnectionFailed {
 		diag "$_\nCan't continue.";
@@ -25,11 +28,10 @@ ok $dbh,    'Connected';
 ok $dbh.do('DROP TABLE IF EXISTS test'), 'Clean';
 ok $dbh.do(q|
     CREATE TABLE test (
-	id INT(3) NOT NULL DEFAULT 0, 
-	name BLOB
+	id INT NOT NULL DEFAULT 0, 
+	name bytea
 )|), 'Table created';
 my $blob = Buf.new(^256);
-diag $blob.gist;
 my $query = 'INSERT INTO test VALUES(?, ?)';
 ok (my $sth = $dbh.prepare($query)),	 "Prepared '$query'";
 ok $sth.execute(1, $blob),		 'Executed with buf';

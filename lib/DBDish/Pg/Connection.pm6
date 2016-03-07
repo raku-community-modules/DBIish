@@ -16,69 +16,76 @@ method prepare(Str $statement, $attr?) {
     my $statement_name = join '_', 'pg', $*PID, $statement_postfix++;
     my $munged = DBDish::Pg::pg-replace-placeholder($statement);
     my $result = $!pg_conn.PQprepare($statement_name, $munged, 0, OidArray);
-    if $result.is-ok {
-	self.reset-err;
-	my $info = $!pg_conn.PQdescribePrepared($statement_name);
-	my $param_count = $info.PQnparams;
+    LEAVE { $result.PQclear if $result }
+    if $result && $result.is-ok {
+        self.reset-err;
+        my @param_type;
+        with $!pg_conn.PQdescribePrepared($statement_name) -> $info {
+            @param_type.push(%oid-to-type{$info.PQparamtype($_)}) for ^$info.PQnparams;
+            $info.PQclear;
+        }
 
-	my $statement_handle = DBDish::Pg::StatementHandle.new(
-	    :$!pg_conn,
-	    :parent(self),
-	    :$statement,
-	    :$.RaiseError,
-	    :$statement_name,
-	    :$result,
-	    :$param_count,
-	);
-	$statement_handle;
+        my $statement_handle = DBDish::Pg::StatementHandle.new(
+            :$!pg_conn,
+            :parent(self),
+            :$statement,
+            :$.RaiseError,
+            :$statement_name,
+            :param_type(@param_type)
+        );
+        $statement_handle;
     } else {
-        self!set-err($result, $result.PQresultErrorMessage);
-    };
+        if $result {
+            self!set-err($result.PQresultStatus, $result.PQresultErrorMessage);
+        } else {
+            self!set-err(PGRES_FATAL_ERROR, $!pg_conn.PQerrorMessage);
+        }
+    }
 }
 
 method selectrow_arrayref(Str $statement, $attr?, *@bind is copy) {
     with self.prepare($statement, $attr) {
-	.execute(@bind) and .fetchrow_arrayref;
+        .execute(@bind) and .fetchrow_arrayref;
     } else {
-	.fail;
+        .fail;
     }
 }
 
 method selectrow_hashref(Str $statement, $attr?, *@bind is copy) {
     with self.prepare($statement, $attr) {
-	.execute(@bind) and .fetchrow_hashref;
+        .execute(@bind) and .fetchrow_hashref;
     } else {
-	.fail;
+        .fail;
     }
 }
 
 method selectall_arrayref(Str $statement, $attr?, *@bind is copy) {
     with self.prepare($statement, $attr) {
-	.execute(@bind) and .fetchall_arrayref;
+        .execute(@bind) and .fetchall_arrayref;
     } else {
-	.fail;
+        .fail;
     }
 }
 
 method selectall_hashref(Str $statement, Str $key, $attr?, *@bind is copy) {
     with self.prepare($statement, $attr) {
-	.execute(@bind) and .fetchall_hashref($key);
+        .execute(@bind) and .fetchall_hashref($key);
     } else {
-	.fail;
+        .fail;
     }
 }
 
 method selectcol_arrayref(Str $statement, $attr?, *@bind is copy) {
     with self.prepare($statement, $attr) {
-	.execute(@bind) and do {
-	    my @results;
-	    while (my $row = .fetchrow_arrayref) {
-		@results.push($row[0]);
-	    }
-	    item @results;
-	}
+        .execute(@bind) and do {
+            my @results;
+            while (my $row = .fetchrow_arrayref) {
+                @results.push($row[0]);
+            }
+            item @results;
+        }
     } else {
-	.fail;
+        .fail;
     }
 }
 

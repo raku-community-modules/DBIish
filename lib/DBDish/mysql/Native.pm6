@@ -46,28 +46,27 @@ class MyRow does Positional is export {
 	} else { Str }
     }
     method want(Int $idx, Mu $t) {
-	if $t === Blob {
-	    self.blob($idx);
+	if $t ~~ Blob {
+	    self.blob($idx, $t);
 	} else {
 	    with self[$idx] { $t($_) } else { $t }
 	}
     }
-    method blob(Int $idx) {
-	sub blob-from-pointer(Pointer:D \ptr, Int :$elems!, Mu :$type = uint8) {
+    method blob(Int $idx, Mu $type) {
+	sub buf-from-pointer(Pointer \ptr, Int :$elems!, Mu :$type = uint8) {
             # Stolen from NativeHelpers::Blob ;-)
 	    my sub memcpy(Blob:D $dest, Pointer $src, size_t $size)
 		returns Pointer is native() { * };
 	    my \t = ptr.of ~~ void ?? $type !! ptr.of;
-	    my \b = (t === uint8) ?? Blob.allocate($elems) !! Blob[t].allocate($elems);
-	    memcpy(b, ptr, $elems * nativesizeof(t));
-	    b;
+	    my $b = (t === uint8) ?? Buf !! Buf.^parameterize($type);
+	    with ptr {
+		$b .= allocate($elems);
+		memcpy($b, ptr, $elems * nativesizeof(t));
+	    }
+	    $b;
 	}
 
-	my $b = Blob;
-	with $!car[$idx] {
-	    $b = blob-from-pointer($!car[$idx], :elems($!lon[$idx]));
-	}
-	$b;
+	buf-from-pointer($!car[$idx], :elems($!lon[$idx]), :type($type.of));
     }
 }
 
@@ -185,10 +184,10 @@ constant %mysql-type-conv is export = map(
   MYSQL_TYPE_ENUM => Str,
   MYSQL_TYPE_VAR_STRING  => Str,
   MYSQL_TYPE_STRING  => Str,
-  MYSQL_TYPE_TINY_BLOB => Blob,
-  MYSQL_TYPE_MEDIUM_BLOB => Blob,
-  MYSQL_TYPE_LONG_BLOB => Blob,
-  MYSQL_TYPE_BLOB => Blob,
+  MYSQL_TYPE_TINY_BLOB => Buf,
+  MYSQL_TYPE_MEDIUM_BLOB => Buf,
+  MYSQL_TYPE_LONG_BLOB => Buf,
+  MYSQL_TYPE_BLOB => Buf,
 )).hash;
 
 sub mysql_stmt_prepare( OpaquePointer $mysql_stmt, Str, ulong $length )
