@@ -90,7 +90,7 @@ method _row(:$hash) {
             if ! $!result.PQgetisnull($!current_row, $_) {
 		$value = $!result.get-value($!current_row, $_, $value);
 		if @!column_type[$_] ~~ Array {
-		    $value := _pg-to-array( $value, @!column_type[$_].of.^name );
+		    $value = _pg-to-array( $value, @!column_type[$_].of );
 		}
             }
             $hash ?? (%ret_hash{@!column_names[$_]} = $value)
@@ -142,7 +142,7 @@ my grammar PgArrayGrammar {
     rule string      { '"' $<value>=( [\w|\s]+ ) '"' | $<value>=( \w+ ) }
 };
 
-sub _to-type($value, Str $type where $_ eq any([ 'Str', 'Num', 'Rat', 'Int' ])) {
+sub _to-type($value, Mu:U $type) {
     if $value.defined {
         given $type {
             when 'Str' { ~$value }     # String;
@@ -156,28 +156,27 @@ sub _to-type($value, Str $type where $_ eq any([ 'Str', 'Num', 'Rat', 'Int' ])) 
     }
 }
 
-sub _to-array(Match $match, Str $type where $_ eq any([ 'Str', 'Num', 'Rat', 'Int' ])) {
-    my @array;
+sub _to-array(Match $match, Mu:U $type) {
+    my $arr = Array[$type].new;
+    my $clean = True;
     for $match.<array>.values -> $element {
-      if $element.values[0]<array>.defined {
-          # An array
-          push @array, _to-array( $element.values[0], $type );
-      } elsif $element.values[0]<float>.defined {
-          # Floating point number
-          push @array, _to-type( $element.values[0]<float>, $type );
-      } elsif $element.values[0]<integer>.defined {
-          # Integer
-          push @array, _to-type( $element.values[0]<integer>, $type );
-      } else {
-          # Must be a String
-          push @array, _to-type( $element.values[0]<string><value>, $type );
+      if $element.values[0]<array>.defined { # An array
+	  if $clean && $arr.of === $type { # Need to downgrade
+	      $arr = Array.new; $clean = False;
+	  }
+          $arr.push: @(_to-array($element.values[0], $type));
+      } elsif $element.values[0]<float>.defined { # Floating point number
+          $arr.push: $type($element.values[0]<float>);
+      } elsif $element.values[0]<integer>.defined { # Integer
+          $arr.push: $type($element.values[0]<integer>);
+      } else { # Must be a String
+          $arr.push: ~$element.values[0]<string><value>;
       }
     }
-
-    @array;
+    $arr;
 }
 
-sub _pg-to-array(Str $text, Str $type where $_ eq any([ 'Str', 'Rat', 'Int', 'Num' ])) {
+sub _pg-to-array(Str $text, Mu:U $type) {
     my $match = PgArrayGrammar.parse( $text );
     die "Failed to parse" unless $match.defined;
     _to-array($match, $type);

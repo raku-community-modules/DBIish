@@ -5,7 +5,7 @@ use lib 'lib';
 use DBIish;
 use Test;
 
-plan 2;
+plan 7;
 my %con-parms;
 # If env var set, no parameter needed.
 %con-parms<database> = 'dbdishtest' unless %*ENV<PGDATABASE>;
@@ -49,15 +49,6 @@ $sth = $dbh.do(q:to/STATEMENT/);
     );
 STATEMENT
 
-# $sth = $dbh.prepare(q:to/STATEMENT/);
-#	INSERT INTO sal_emp (name, pay_by_quarter, schedule)
-#	VALUES ( ?, ?, ? )
-#STATEMENT
-
-# $sth.execute('TAFM', 'Mild fish taco', 1, 4.85);
-
-# $sth.execute('BEOM', 'Medium size orange juice', 2, 1.20);
-
 $sth = $dbh.prepare(q:to/STATEMENT/);
 	SELECT name, pay_by_quarter, schedule, salary_by_month
 	FROM sal_emp
@@ -67,16 +58,27 @@ $sth.execute;
 
 my %h = $sth.row(:hash);;
 
-
-my %ref = (
-name => 'Bill',
-pay_by_quarter => [10000, 10000, 10000, 10000],
-schedule => [["meeting", "lunch"], ["training day", "presentation"]],
-salary_by_month => [Num(511.123), Num(622.345), Num(1)]
-).Hash;
+class SalEmp {
+  has $.name;
+  has Int @.pay_by_quarter;
+  has @.schedule;
+  has Num @.salary_by_month;
+  submethod BUILD(:$!name, :@!pay_by_quarter, :@!schedule, :@!salary_by_month) { }
+};
 
 is %h.elems, 4, "Contain 4 elements";
-is-deeply %h, %ref, "Right data";
+
+my $obj;
+lives-ok {
+    $obj = SalEmp.new(|%h);
+}, "Can create class";
+
+isa-ok $obj.pay_by_quarter, Array[Int], 'Array[Int]';
+isa-ok $obj.salary_by_month,  Array[Num], 'Array[Num]';
+isa-ok $obj.schedule, Array, 'schedule is array';
+is $obj.schedule.elems, 2,	'schedule with 2';
+isa-ok $obj.schedule[0], Array[Str];
+diag $obj.perl;
 
 # Cleanup
 $sth.finish;
