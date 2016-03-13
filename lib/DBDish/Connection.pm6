@@ -17,17 +17,33 @@ unit role DBDish::Connection does DBDish::ErrorHandling;
 =head5 do
 =end pod
 
+has %.Statements;
+
+method dispose() {
+    $_.dispose for %!Statements.values;
+    self._disconnect;
+    ?($.parent.Connections{self.WHICH}:delete);
+}
+submethod DESTROY() {
+    self.dispose;
+}
+
+method disconnect is hidden-from-backtrace {
+    warn "{::?CLASS.^name}.disconnect is DEPRECATED, please use .dispose";
+    self.dispose;
+}
 
 method drv { $.parent }
 
 method new(*%args) {
-    my \new = ::?CLASS.bless(|%args);
-    new.reset-err;
-    new.drv.Connections.unshift(new);
-    new;
+    my \con = ::?CLASS.bless(|%args);
+    con.reset-err;
+    %args<parent>.Connections{con.WHICH} = con;
 }
 
-method do( Str $statement, *@params ) {
+method prepare(Str $statement, *%args) { ... }
+
+method do(Str $statement, *@params) {
     with self.prepare($statement) {
 	LEAVE { .finish }
 	.execute(@params);
@@ -50,10 +66,10 @@ method quote-identifier(Str:D $name) {
 }
 
 =begin pod
-=head5 disconnect
-The C<disconnect> method 
+=head5 _disconnect
+The C<_disconnect> method 
 =end pod
 
-method disconnect() {
+method _disconnect() {
     ...
 }

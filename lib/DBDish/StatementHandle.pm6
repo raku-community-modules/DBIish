@@ -10,13 +10,29 @@ need DBDish::ErrorHandling;
 
 unit role DBDish::StatementHandle does DBDish::ErrorHandling;
 
-has Int $.Executed = 0;
-has Bool $.Finished = False;
 
+has Int $.Executed = 0;
+has Bool $.Finished = True;
+
+method dispose() {
+    self.finish unless $!Finished;
+    self._free;
+    ?($.parent.Statements{self.WHICH}:delete);
+}
+#Avoid leaks if explicit dispose isn't used by the user.
+submethod DESTROY() {
+    self.dispose;
+}
+
+method new(*%args) {
+    my \sth = ::?CLASS.bless(|%args);
+    %args<parent>.Statements{sth.WHICH} = sth;
+}
+
+method _free() { ... }
 method finish(--> Bool) { ... }
 method fetchrow() { ... }
 method execute(*@) { ... }
-
 method	_row(:$hash) { ... }
 
 method fetchrow-hash() {

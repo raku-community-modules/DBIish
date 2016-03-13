@@ -12,7 +12,7 @@ class GLOBAL::X::DBDish::ConnectionFailed is X::DBDish::DBError {
 
 role Driver does DBDish::ErrorHandling {
     has $.Version = ::?CLASS.^ver;
-    has @.Connections;
+    has %.Connections;
 
     method connect(*%params --> DBDish::Connection) { ... };
 
