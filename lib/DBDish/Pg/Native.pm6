@@ -2,6 +2,7 @@ use v6;
 
 unit module DBDish::Pg::Native;
 use NativeCall :ALL;
+use nqp;
 
 sub MyLibName {
     %*ENV<DBIISH_PG_LIB> || guess_library_name(('pq', v5));
@@ -37,15 +38,17 @@ class PGresult	is export is repr('CPointer') {
 	sub PQgetvalue(PGresult, int32, int32 --> Pointer) is native(LIB) { * }
 	sub PQgetlength(PGresult, int32, int32 --> int32) is native(LIB) { * }
 	sub PQfformat(PGresult, int32 --> int32) is native(LIB) { * }
-	sub buf-from-pointer(Pointer \ptr, Int :$elems!, Mu :$type = uint8) {
+	sub buf-from-pointer(Pointer \ptr, int :$elems!, Blob:U :$type = Buf) {
 	    # Stolen from NativeHelpers::Blob ;-)
 	    my sub memcpy(Blob:D $dest, Pointer $src, size_t $size)
 		returns Pointer is native() { * };
-	    my \t = ptr.of ~~ void ?? $type !! ptr.of;
-	    my $b = (t === uint8) ?? Buf !! Buf.^parameterize($type);
+	    my \t = ptr.of ~~ void ?? $type.of !! ptr.of;
+	    my $b = (t === uint8) ?? Buf !! Buf.^parameterize(t);
 	    with ptr {
-		$b .= allocate($elems);
-		memcpy($b, ptr, $elems * nativesizeof(t));
+		my \b = $b.new;
+		nqp::setelems(b, $elems);
+		memcpy(b, ptr, $elems * nativesizeof(t));
+		$b = b;
 	    }
 	    $b;
 	}
@@ -62,7 +65,7 @@ class PGresult	is export is repr('CPointer') {
 			my \ptr = PQunescapeBytea($str, my size_t $elems);
 			LEAVE { PQfreemem(ptr) if ptr }
 			with ptr {
-			    buf-from-pointer(ptr, :$elems)
+			    buf-from-pointer(ptr, :$elems, :type($t))
 			} else { die "Can't allocate memory!" };
 		    }
 		    default { $t($str) } # Cast

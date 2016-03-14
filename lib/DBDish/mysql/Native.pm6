@@ -1,8 +1,8 @@
 use v6;
 
-use NativeCall :ALL;
-
 unit module DBDish::mysql::Native;
+use NativeCall :ALL;
+use nqp; # For Buf allocation
 
 sub MyLibName {
     %*ENV<DBIISH_MYSQL_LIB> || guess_library_name(('mysqlclient', v18));
@@ -53,20 +53,22 @@ class MyRow does Positional is export {
 	}
     }
     method blob(Int $idx, Mu $type) {
-	sub buf-from-pointer(Pointer \ptr, Int :$elems!, Mu :$type = uint8) {
+	sub buf-from-pointer(Pointer \ptr, int :$elems!, Blob:U :$type = Buf) {
             # Stolen from NativeHelpers::Blob ;-)
 	    my sub memcpy(Blob:D $dest, Pointer $src, size_t $size)
 		returns Pointer is native() { * };
-	    my \t = ptr.of ~~ void ?? $type !! ptr.of;
-	    my $b = (t === uint8) ?? Buf !! Buf.^parameterize($type);
+	    my \t = ptr.of ~~ void ?? $type.of !! ptr.of;
+	    my $b = (t === uint8) ?? Buf !! Buf.^parameterize(t);
 	    with ptr {
-		$b .= allocate($elems);
-		memcpy($b, ptr, $elems * nativesizeof(t));
+		my \b = $b.new;
+		nqp::setelems(b, $elems);
+		memcpy(b, ptr, $elems * nativesizeof(t));
+		$b = b;
 	    }
 	    $b;
 	}
 
-	buf-from-pointer($!car[$idx], :elems($!lon[$idx]), :type($type.of));
+	buf-from-pointer($!car[$idx], :elems($!lon[$idx]), :type($type));
     }
 }
 
