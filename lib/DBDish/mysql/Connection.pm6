@@ -22,14 +22,16 @@ method mysql_insertid() {
 }
 
 method ping() {
-    LEAVE { self.reset-err }
-    0 == $!mysql_client.mysql_ping;
+    with $!mysql_client {
+	0 == $!mysql_client.mysql_ping;
+    } else {
+	False;
+    }
 }
 
-method disconnect() {
-    $!mysql_client.mysql_close;
+method _disconnect() {
+    .mysql_close with $!mysql_client;
     $!mysql_client = Nil;
-    True
 }
 
 method quote-identifer(Str:D $name) {
