@@ -14,32 +14,11 @@ has $!stmthp;
 has Int $!state = 0; # execute (1) has to happen before fetch (2)
 #    has $!param_count;
 has $!result;
-#    has $!affected_rows;
-has @!column_names;
 has Int $!field_count;
 has %!parmd;
 has @!out-binds;
 has Int $!row_count;
-#    has $!current_row = 0;
-#
-#    method !handle-errors {
-#        my $status = PQresultStatus($!result);
-#        if status-is-ok($status) {
-#            self!reset_errstr;
-#            return True;
-#        }
-#        else {
-#            self!set_errstr(PQresultErrorMessage($!result));
-#            die self.errstr if $.RaiseError;
-#            return Nil;
-#        }
-#    }
-#
-#    method !munge_statement {
-#        my $count = 0;
-#        $!statement.subst(:g, '?', { '$' ~ ++$count});
-#    }
-#
+
 submethod BUILD(:$!parent!, :$!statement!, :$!statementtype!, :$!svchp!, :$!errhp!, :$!stmthp!) { }
 
 method execute(*@params is copy) {
@@ -181,19 +160,41 @@ method execute(*@params is copy) {
         die "execute of '$!statement' failed ($errcode): '$errortext'";
     }
     #warn "successfully executed $!parent.AutoCommit()";
+    without @!column-name {
+        my %parmd = self!parmd;
+        for 1 .. self.field_count -> $field_index {
+            my $parmdp = %parmd{$field_index};
+
+            my CArray[CArray[int8]] $col_namep .= new;
+            $col_namep[0] = CArray[int8].new;
+
+            my @col_name_len := CArray[ub4].new;
+            @col_name_len[0] = 0;
+
+            my $errcode = OCIAttrGet_Str($parmdp, OCI_DTYPE_PARAM, $col_namep, @col_name_len, OCI_ATTR_NAME, $!errhp);
+            my $col_name_len = @col_name_len[0];
+            #warn "COLUMN LEN: $col_name_len";
+            my @textary;
+            @textary[$_] = $col_namep[0][$_]
+                for ^$col_name_len;
+            my Str $col_name = Buf.new(@textary).decode();
+
+            @!column-name.push($col_name.lc);
+        }
+    }
 
     # for DDL statements, no further steps are necessary
     # if $!statementtype ~~ ( OCI_STMT_CREATE, OCI_STMT_DROP, OCI_STMT_ALTER );
 
     $!state = 1;
-    return self.rows;
+    self.rows;
 }
 
 # do() and execute() return the number of affected rows directly or:
 # rows() is called on the statement handle $sth.
 method rows() {
     # DDL statements always return 0E0
-    return "0E0"
+    return 0
         if $!statementtype ~~ ( OCI_STMT_CREATE, OCI_STMT_DROP, OCI_STMT_ALTER );
 
     unless defined $!row_count {
@@ -210,9 +211,7 @@ method rows() {
 
     #warn "row_count: $!row_count";
 
-    if defined $!row_count {
-        return ($!row_count == 0) ?? "0E0" !! $!row_count;
-    }
+    $!row_count;
 }
 
 method !parmd {
@@ -455,7 +454,7 @@ method _row(:$hash) {
     }
 
     #say @row.gist;
-    return (self.column_names Z=> @row).hash
+    return (@!column-name Z=> @row).hash
         if $hash;
 
     return @row;
@@ -478,50 +477,10 @@ method field_count {
     return $!field_count;
 }
 
-method column_names {
-   unless @!column_names {
-        my %parmd = self!parmd;
-        #say $!statement;
-        for 1 .. self.field_count -> $field_index {
-            my $parmdp = %parmd{$field_index};
-
-            # retrieve the column name
-            #my CArray[Pointer[Str]] $col_namepp.=new;
-            #$col_namepp[0] = Pointer[Str].new;
-            #my Str $col_name;
-            my CArray[CArray[int8]] $col_namep .= new;
-            $col_namep[0] = CArray[int8].new;
-
-            my @col_name_len := CArray[ub4].new;
-            @col_name_len[0] = 0;
-
-            my $errcode = OCIAttrGet_Str($parmdp, OCI_DTYPE_PARAM, $col_namep, @col_name_len, OCI_ATTR_NAME, $!errhp);
-
-            #my Str $col_name = $col_namepp[0].deref;
-
-            # not needed, NativeCall can handle null-terminated strings itself
-            my $col_name_len = @col_name_len[0];
-            #warn "COLUMN LEN: $col_name_len";
-            my @textary;
-            @textary[$_] = $col_namep[0][$_]
-                for ^$col_name_len;
-            my Str $col_name = Buf.new(@textary).decode();
-
-            #warn "COLUMN $field_index: $col_name";
-
-            # Oracle returns the column names uppercase if they wheren't
-            # quoted in the DDL statement
-            @!column_names.push($col_name.lc);
-        }
-    }
-    return @!column_names;
-}
-
+method _free() { }
 method finish() {
     if defined($!result) {
-        #PQclear($!result);
-        #$!result       = Any;
-        #@!column_names = ();
+	#TODO!!
     }
     return Bool::True;
 }

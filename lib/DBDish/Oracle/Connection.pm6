@@ -93,7 +93,6 @@ method rollback {
 #        PQstatus($!pg_conn) == CONNECTION_OK
 #    }
 
-method disconnect() {
+method _disconnect() {
     OCILogoff($!svchp, $!errhp);
-    True;
 }
