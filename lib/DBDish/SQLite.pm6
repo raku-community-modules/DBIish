@@ -14,10 +14,9 @@ method connect(:database(:$dbname)! is copy, :$RaiseError, *%params) {
 
     my $status = sqlite3_open($dbname, $p);
     if $status == SQLITE_OK {
-        my $con = DBDish::SQLite::Connection.new(
+        DBDish::SQLite::Connection.new(
             :conn($p), :$RaiseError, :parent(self)
         );
-        $con;
     }
     else {
         self!conn-error: :code($status) :$RaiseError :errstr(SQLITE($status));

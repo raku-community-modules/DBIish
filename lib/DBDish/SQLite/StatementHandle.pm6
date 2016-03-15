@@ -8,112 +8,118 @@ use NativeCall;
 has SQLite $!conn;
 has $.statement;
 has $!statement_handle;
+has $!param-count;
 has Int $!row_status;
-has @!mem_rows;
-has @!column_names;
-has $!finished = False;
+has $!field_count;
 
 method !handle-error($status) {
     if $status == SQLITE_OK {
-	self.reset-err;
+        self.reset-err;
     } else {
-	self!set-err(SQLITE($status), sqlite3_errmsg($!conn));
+        self!set-err($status, sqlite3_errmsg($!conn));
     }
 }
 
-submethod BUILD(:$!conn!, :$!parent!, :$!statement, :$!statement_handle) { }
+submethod BUILD(:$!conn!, :$!parent!,
+    :$!statement_handle!, :$!statement, :$!param-count
+) { }
 
 method execute(*@params) {
-    self.finish if $!statement_handle; # XXX
-    @!mem_rows = ();
+    self!set-err( -1,
+        "Wrong number of arguments to method execute: got @params.elems(), expected $!param-count"
+    ) if @params != $!param-count;
+
+    self!enter-execute;
+
     for @params.kv -> $idx, $v {
-        if $v ~~ Str {
-            @!mem_rows.push: $v;
-        }
         self!handle-error(sqlite3_bind($!statement_handle, $idx + 1, $v));
     }
     $!row_status = sqlite3_step($!statement_handle);
     if $!row_status != SQLITE_ROW and $!row_status != SQLITE_DONE {
-        self!handle-error($!row_status);
+        self!set-err($!row_status, sqlite3_errmsg($!conn));
+    } else {
+        my $rows = 0; my $was-select = True;
+	without $!field_count  {
+	    $!field_count = sqlite3_column_count($!statement_handle);
+	    for ^$!field_count {
+		@!column-name.push: sqlite3_column_name($!statement_handle, $_);
+		@!column-type.push: Any; #TODO
+	    }
+        }
+        unless $!field_count { # Assume non SELECT
+            $rows = sqlite3_changes($!conn);
+            $was-select = False;
+        }
+        self!done-execute($rows, $was-select);
     }
-    $!Executed++;
-    self.rows;
 }
-
-method rows {
-    my $rows = sqlite3_changes($!conn);
-    $rows == 0 ?? '0E0' !! $rows;
-}
-
-method column_names {
-    unless @!column_names {
-        my Int $count = sqlite3_column_count($!statement_handle);
-        @!column_names.push: sqlite3_column_name($!statement_handle, $_)
-            for ^$count;
-    }
-    @!column_names;
-}
-
 
 method _row (:$hash) {
     my @row;
     my %hash;
-    die 'row without prior execute' unless $!row_status.defined;
-    return $hash ?? Hash !! Array if $!row_status == SQLITE_DONE;
-    my Int $count = sqlite3_column_count($!statement_handle);
-    for ^$count  -> $col {
-        my $value;
-        given sqlite3_column_type($!statement_handle, $col) {
-            when SQLITE_INTEGER {
-                 $value = sqlite3_column_int64($!statement_handle, $col);
+    if $!row_status == SQLITE_ROW {
+        for ^$!field_count  -> $col {
+            my $value;
+            given sqlite3_column_type($!statement_handle, $col) {
+                when SQLITE_INTEGER {
+                     $value = sqlite3_column_int64($!statement_handle, $col);
+                }
+                when SQLITE_FLOAT {
+                     $value = sqlite3_column_double($!statement_handle, $col);
+                     $value = $value.Rat; # FIXME
+                }
+                when SQLITE_BLOB {
+                     ...  # TODO WIP
+                     $value = sqlite3_column_blob($!statement_handle, $col);
+                }
+                when SQLITE_NULL {
+                     # SQLite can't determine the type of NULL column, so instead
+                     # of lyng, prefer an explicit Nil.
+                     $value = Nil;
+                }
+                default {
+                    $value = sqlite3_column_text($!statement_handle, $col);
+                }
             }
-            when SQLITE_FLOAT {
-                 $value = sqlite3_column_double($!statement_handle, $col);
-                 $value = $value.Rat; # FIXME
-            }
-            when SQLITE_BLOB {
-                 ...  # TODO WIP
-                 $value = sqlite3_column_blob($!statement_handle, $col);
-            }
-            when SQLITE_NULL {
-                 # SQLite can't determine the type of NULL column, so instead
-                 # of lyng, prefer an explicit Nil.
-                 $value = Nil;
-            }
-            default {
-                $value = sqlite3_column_text($!statement_handle, $col);
-            }
+            $hash ?? (%hash{@!column-name[$col]} = $value) !! @row.push($value);
         }
-        $hash ?? (%hash{sqlite3_column_name($!statement_handle, $col)} = $value) !! @row.push: $value;
+        $!affected_rows++;
+        self.reset-err;
+        if ($!row_status = sqlite3_step($!statement_handle)) == SQLITE_DONE {
+            self.finish;
+        }
     }
-    $!row_status = sqlite3_step($!statement_handle);
-
     $hash ?? %hash !! @row;
 }
 
-
 method fetchrow {
     my @row;
-    die 'fetchrow_array without prior execute' unless $!row_status.defined;
-    return @row if $!row_status == SQLITE_DONE;
-    my Int $count = sqlite3_column_count($!statement_handle);
-    for ^$count {
-        @row.push: sqlite3_column_text($!statement_handle, $_);
+    die 'fetchrow_array without prior execute' unless $!row_status;
+    if $!row_status == SQLITE_ROW {
+        for ^$!field_count {
+            @row.push: sqlite3_column_text($!statement_handle, $_);
+        }
+        $!affected_rows++;
+        self.reset-err;
+        if ($!row_status = sqlite3_step($!statement_handle)) == SQLITE_DONE {
+            self.finish;
+        }
     }
-    $!row_status = sqlite3_step($!statement_handle);
-
-    @row || Nil;
+    @row;
 }
 
-method free {
-    sqlite3_finalize($!statement_handle) if $!statement_handle.defined;
-    $!row_status = Int;
-    $!parent._remove_sth(self);
-    $!finished = True;
-    True;
+method _free {
+    with $!statement_handle {
+        sqlite3_finalize($_);
+        $_ = Nil;
+        $!row_status = Int;
+    }
 }
 
 method finish {
-    sqlite3_reset($!statement_handle) if $!statement_handle;
+    with $!statement_handle {
+        sqlite3_reset($_);
+        sqlite3_clear_bindings($_);
+    }
     $!Finished = True;
 }

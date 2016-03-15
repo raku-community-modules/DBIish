@@ -109,24 +109,35 @@ sub sqlite3_step(STMT $statement_handle)
 
 
 sub sqlite3_libversion_number() returns int32 is native(LIB) is export { ... };
-sub sqlite3_bind_blob(STMT, int32, OpaquePointer, int32, OpaquePointer) returns int32 is native(LIB) is export { ... };
+sub sqlite3_errstr(int32) returns Str is native(LIB) is export { ... };
+sub sqlite3_bind_blob(STMT, int32, Blob, int32, Pointer) returns int32 is native(LIB) is export { ... };
 sub sqlite3_bind_double(STMT, int32, num64) returns int32 is native(LIB) is export { ... };
 sub sqlite3_bind_int64(STMT, int32, int64) returns int32 is native(LIB) is export { ... };
 sub sqlite3_bind_null(STMT, int32) returns int32 is native(LIB) is export { ... };
 sub sqlite3_bind_text(STMT, int32, Str is encoded('utf8'), int32, Pointer) returns int32 is native(LIB) is export { ... };
 
 sub sqlite3_changes(SQLite) returns int32 is native(LIB) is export { ... };
+sub sqlite3_bind_parameter_count(STMT --> int32) is native(LIB) is export { ... };
 
 proto sub sqlite3_bind(STMT, $, $) {*}
-multi sub sqlite3_bind(STMT $stmt, Int $n, Buf:D $b)  is export { sqlite3_bind_blob($stmt, $n, $b, $b.bytes, OpaquePointer) }
-multi sub sqlite3_bind(STMT $stmt, Int $n, Real:D $d) is export { sqlite3_bind_double($stmt, $n, $d.Num) }
-multi sub sqlite3_bind(STMT $stmt, Int $n, Int:D $i)  is export { sqlite3_bind_int64($stmt, $n, $i) }
-multi sub sqlite3_bind(STMT $stmt, Int $n, Any:U)     is export { sqlite3_bind_null($stmt, $n) }
+multi sub sqlite3_bind(STMT $stmt, Int $n, Buf:D $b)  is export {
+    sqlite3_bind_blob($stmt, $n, $b, $b.bytes, Pointer)
+}
+multi sub sqlite3_bind(STMT $stmt, Int $n, Real:D $d) is export {
+    sqlite3_bind_double($stmt, $n, $d.Num)
+}
+multi sub sqlite3_bind(STMT $stmt, Int $n, Int:D $i)  is export {
+    sqlite3_bind_int64($stmt, $n, $i)
+}
+multi sub sqlite3_bind(STMT $stmt, Int $n, Any:U)     is export {
+    sqlite3_bind_null($stmt, $n)
+}
 multi sub sqlite3_bind(STMT $stmt, Int $n, Str:D $d)  is export {
     sqlite3_bind_text($stmt, $n, $d, -1, Pointer.new(-1))
 }
 
 sub sqlite3_reset(STMT) returns int32 is native(LIB) is export  { ... }
+sub sqlite3_clear_bindings(STMT) returns int32 is native(LIB) is export { ... }
 
 sub sqlite3_column_text(STMT, int32) returns Str is native(LIB) is export  { ... }
 sub sqlite3_column_double(STMT, int32) returns num64 is native(LIB) is export { ... }

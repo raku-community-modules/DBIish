@@ -7,46 +7,46 @@ need DBDish::SQLite::StatementHandle;
 use DBDish::SQLite::Native;
 
 has SQLite $!conn is required;
-has @!sths;
 
 submethod BUILD(:$!conn, :$!parent!) { }
 
 method !handle-error(Int $status) {
     if $status == SQLITE_OK {
-	self.reset-err;
+        self.reset-err;
     } else {
-	self!set-err(SQLITE($status), sqlite3_errmsg($!conn));
+        self!set-err($status, sqlite3_errmsg($!conn));
     }
 }
 
-method prepare(Str $statement, $attr?) {
+method prepare(Str $statement, *%args) {
     my STMT $stmt .= new;
     my $status = (sqlite3_libversion_number() >= 3003009)
         ?? sqlite3_prepare_v2($!conn, $statement, -1, $stmt, Null)
         !! sqlite3_prepare($!conn, $statement, -1, $stmt, Null);
-    self!handle-error($status);
-    my $sth = DBDish::SQLite::StatementHandle.new(
-        :$!conn,
-        :parent(self),
-        :$statement,
-        :statement_handle($stmt),
-        :$.RaiseError,
-    );
-    @!sths.push: $sth;
-    $sth;
+    with self!handle-error($status) {
+        my $param-count = sqlite3_bind_parameter_count($stmt);
+        DBDish::SQLite::StatementHandle.new(
+            :$!conn,
+            :parent(self),
+            :$statement,
+            :statement_handle($stmt),
+            :$param-count,
+            :$.RaiseError,
+            |%args
+        );
+    }
+    else {
+        .fail;
+    }
 }
 
-method _remove_sth($sth) {
-    @!sths .= grep(* !=== $sth);
+method ping() {
+    $!conn.defined;
 }
 
-method rows() {
-    die 'Cannot determine rows of closed connection' unless $!conn.DEFINITE;
-    my $rows = sqlite3_changes($!conn);
-    $rows == 0 ?? '0E0' !! $rows;
-}
-
-method disconnect() {
-    .free for @!sths;
-    self!handle-error(sqlite3_close($!conn));
+method _disconnect() {
+    LEAVE { $!conn = Nil }
+    if $!conn and (my $status = sqlite3_close($!conn)) != SQLITE_OK {
+        self!set-err($status, sqlite3_errstr($status)).fail;
+    }
 }
