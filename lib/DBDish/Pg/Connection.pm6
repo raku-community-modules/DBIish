@@ -11,7 +11,7 @@ has $.in_transaction is rw = False;
 
 submethod BUILD(:$!pg_conn, :$!parent!, :$!AutoCommit) { }
 
-method prepare(Str $statement, $attr?) {
+method prepare(Str $statement, *%args) {
     state $statement_postfix = 0;
     my $statement_name = join '_', 'pg', $*PID, $statement_postfix++;
     my $munged = DBDish::Pg::pg-replace-placeholder($statement);
@@ -25,15 +25,15 @@ method prepare(Str $statement, $attr?) {
             $info.PQclear;
         }
 
-        my $statement_handle = DBDish::Pg::StatementHandle.new(
+        DBDish::Pg::StatementHandle.new(
             :$!pg_conn,
             :parent(self),
             :$statement,
             :$.RaiseError,
             :$statement_name,
-            :param_type(@param_type)
+            :param_type(@param_type),
+            |%args
         );
-        $statement_handle;
     } else {
         if $result {
             self!set-err($result.PQresultStatus, $result.PQresultErrorMessage);
@@ -108,10 +108,14 @@ method rollback {
 }
 
 method ping {
-    $!pg_conn.PQstatus == CONNECTION_OK
+    with $!pg_conn {
+        $_.PQstatus == CONNECTION_OK;
+    } else {
+        False;
+    }
 }
 
-method disconnect {
-    $!pg_conn.PQfinish;
-    True;
+method _disconnect() {
+    .PQfinish with $!pg_conn;
+    $!pg_conn = Nil;
 }

@@ -61,7 +61,7 @@ class PGresult	is export is repr('CPointer') {
 		    when Str { $str } # Done
 		    when Array { $str } # External process
 		    when Bool { $str eq 't' }
-		    when Buf {
+		    when Blob {
 			my \ptr = PQunescapeBytea($str, my size_t $elems);
 			LEAVE { PQfreemem(ptr) if ptr }
 			with ptr {

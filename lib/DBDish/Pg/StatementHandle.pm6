@@ -9,9 +9,6 @@ has Str $!statement_name;
 has $!statement;
 has @!param_type;
 has $!result;
-has $!affected_rows;
-has @!column_names;
-has @!column_type;
 has Int $!row_count;
 has $!field_count;
 has $!current_row = 0;
@@ -28,17 +25,20 @@ submethod BUILD(:$!parent!, :$!pg_conn, # Per protocol
     :$!statement, :$!statement_name, :@!param_type
 ) { }
 
-method execute(*@params is copy) {
+method execute(*@params) {
     self!set-err( -1,
 	"Wrong number of arguments to method execute: got @params.elems(), expected @!param_type.elems()"
     ) if @params != @!param_type;
+
+    self!enter-execute;
+
     my @param_values := ParamArray.new;
     for @params.kv -> $k, $v {
 	if $v.defined {
 	    @param_values[$k] = (@!param_type[$k] ~~ Buf)
 		?? $!pg_conn.escapeBytea(($v ~~ Buf) ?? $v !! ~$v.encode)
 		!! ~$v;
-	} else { Str }
+	} else { @param_values[$k] = Str }
     }
 
     $!result = $!pg_conn.PQexecPrepared($!statement_name, @params.elems, @param_values,
@@ -49,36 +49,25 @@ method execute(*@params is copy) {
     self!set-err(PGRES_FATAL_ERROR, $!pg_conn.PQerrorMessage).fail unless $!result;
 
     $!current_row = 0;
-    $!affected_rows = Nil;
     with self!handle-errors {
-        $!Executed++;
+	my $rows; my $was-select = True;
         if $!result.PQresultStatus == PGRES_TUPLES_OK { # WAS SELECT
 	    without $!field_count {
 		$!field_count = $!result.PQnfields;
 		for ^$!field_count {
-		    @!column_names.push($!result.PQfname($_));
-		    @!column_type.push(%oid-to-type{$!result.PQftype($_)});
+		    @!column-name.push($!result.PQfname($_));
+		    @!column-type.push(%oid-to-type{$!result.PQftype($_)});
 		}
 	    }
-            with $!row_count = $!result.PQntuples {
-		$!affected_rows = $_ == 0 ?? '0E0' !! $_;
-	    }
+            $rows = $!row_count = $!result.PQntuples;
         } else { # Other stmt without data to return
-	    with $!result.PQcmdTuples.Int {
-		$!affected_rows = $_ == 0 ?? '0E0' !! $_;
-	    }
-	    self.finish;
+	    $rows =  $!result.PQcmdTuples.Int;
+	    $was-select = False;
         }
-        self.rows;
+	self!done-execute($rows, $was-select);
     } else {
         .fail;
     }
-}
-
-# do() and execute() return the number of affected rows directly or:
-# rows() is called on the statement handle $sth.
-method rows() {
-    $!affected_rows;
 }
 
 method _row(:$hash) {
@@ -86,14 +75,14 @@ method _row(:$hash) {
     my %ret_hash;
     if $!field_count && $!current_row < $!row_count {
         for ^$!field_count {
-            my $value = @!column_type[$_];
-            if ! $!result.PQgetisnull($!current_row, $_) {
+            my $value = @!column-type[$_];
+            unless $!result.PQgetisnull($!current_row, $_) {
 		$value = $!result.get-value($!current_row, $_, $value);
-		if @!column_type[$_] ~~ Array {
-		    $value = _pg-to-array( $value, @!column_type[$_].of );
+		if @!column-type[$_] ~~ Array {
+		    $value = _pg-to-array($value, @!column-type[$_].of);
 		}
             }
-            $hash ?? (%ret_hash{@!column_names[$_]} = $value)
+            $hash ?? (%ret_hash{@!column-name[$_]} = $value)
 	          !! @row_array.push($value);
         }
 	self.finish if ++$!current_row == $!row_count;
@@ -110,14 +99,6 @@ method fetchrow() {
 	self.finish if ++$!current_row == $!row_count;
     }
     @row_array;
-}
-
-method column_names {
-    @!column_names;
-}
-
-method column_type {
-    @!column_type;
 }
 
 method fetchall_hashref(Str $key) {
@@ -203,10 +184,12 @@ method true_false(Str $s) {
     $s eq 't';
 }
 
+method _free() { }
+
 method finish() {
-    if $!result {
-        $!result.PQclear;
-        $!result        = Nil;
+    with $!result {
+        .PQclear;
+        $_ = Nil;
     }
     $!Finished = True;
 }
