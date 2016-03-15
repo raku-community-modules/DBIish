@@ -13,15 +13,34 @@ unit role DBDish::StatementHandle does DBDish::ErrorHandling;
 
 has Int $.Executed = 0;
 has Bool $.Finished = True;
+has Int $!affected_rows;
+has @!column-name;
+has @!column-type;
 
 method dispose() {
     self.finish unless $!Finished;
     self._free;
-    ?($.parent.Statements{self.WHICH}:delete);
+    my \id := self.WHICH.Str;
+    ?($.parent.Statements{id}:delete);
 }
 #Avoid leaks if explicit dispose isn't used by the user.
 submethod DESTROY() {
     self.dispose;
+}
+method !ftr() {
+    $.parent.last-sth-id = self.WHICH;
+}
+method !enter-execute() {
+    self.finish unless $!Finished;
+    $!affected_rows = Nil;
+    self!ftr;
+}
+method !done-execute(Int $rows, Bool $was-select) {
+    $!Executed++;
+    $!Finished = False;
+    $!affected_rows = $rows;
+    self.finish unless $was-select;
+    self.rows;
 }
 
 method new(*%args) {
@@ -29,18 +48,28 @@ method new(*%args) {
     %args<parent>.Statements{sth.WHICH} = sth;
 }
 
+my role IntTrue { method Bool { self.defined } };
+method rows {
+    $!affected_rows but IntTrue;
+}
+
 method _free() { ... }
 method finish(--> Bool) { ... }
 method fetchrow() { ... }
-method execute(*@) { ... }
+method execute(*@ --> IntTrue) { ... }
 method	_row(:$hash) { ... }
 
-method fetchrow-hash() {
-    hash self.column_names Z=> self.fetchrow;
+method row(:$hash) {
+    self!ftr;
+    self._row(:$hash);
 }
 
-method row(:$hash) {
-     self._row(:$hash);
+method column-names {
+    @!column-name;
+}
+
+method column-types {
+    @!column-type;
 }
 
 multi method allrows(:$array-of-hash!) {
@@ -52,7 +81,7 @@ multi method allrows(:$array-of-hash!) {
 }
 
 multi method allrows(:$hash-of-array!) {
-    my @names := self.column_names;
+    my @names := @!column-name;
     my %rows = @names Z=> [] xx *;
     while self.row -> @a {
 	for @a Z @names -> ($v, $n) {
@@ -70,10 +99,14 @@ multi method allrows() {
     @rows;
 }
 
+method fetchrow-hash() {
+    hash @!column-name Z=> self.fetchrow;
+}
+
 method fetchrow_hashref { $.fetchrow-hash }
 
 method fetchall-hash {
-    my @names := self.column_names;
+    my @names := @!column-name;
     my %res = @names Z=> [] xx *;
     for self.fetchall-array -> @a {
         for @a Z @names -> ($v, $n) {

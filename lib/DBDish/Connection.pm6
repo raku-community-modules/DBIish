@@ -18,6 +18,7 @@ unit role DBDish::Connection does DBDish::ErrorHandling;
 =end pod
 
 has %.Statements;
+has $.last-sth-id is rw;
 
 method dispose() {
     $_.dispose for %!Statements.values;
@@ -43,13 +44,21 @@ method new(*%args) {
 
 method prepare(Str $statement, *%args) { ... }
 
-method do(Str $statement, *@params) {
+method do(Str $statement, *@params, *%args) {
     with self.prepare($statement) {
 	LEAVE { .finish }
-	.execute(@params);
+	.execute(@params, |%args);
     }
     else {
 	.fail;
+    }
+}
+
+method rows {
+    if $!last-sth-id {
+	with %!Statements{$!last-sth-id} {
+	    .rows;
+	}
     }
 }
 
