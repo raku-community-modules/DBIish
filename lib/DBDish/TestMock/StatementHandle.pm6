@@ -8,15 +8,18 @@ my @data = (
        [<d e f>],
 );
 
-my @column_names = <col1 col2 col3>;
-
 has Int $!current_idx = 0;
 
-method execute(*@)  { $!current_idx = 0; @data.elems }
-method rows         { @data.elems }
+method execute(*@)  {
+    self!enter-execute;
+    $!current_idx = 0;
+    @!column-name = <col1 col2 col3>;
+    self!done-execute(@data.elems, True)
+}
+
 method _row	    {self.fetchrow}
 
 method fetchrow     { (@data[$!current_idx++] // ()).list }
-method column_names { @column_names }
 
+method _free	    { }
 method finish       { True }

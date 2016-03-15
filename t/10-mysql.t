@@ -94,8 +94,8 @@ my $dbh = try {
 
 # die "ERROR: {DBIish.errstr}. Can't continue test" if $!.defined;
 ok $dbh.defined, "Connected to database"; # test 3
-my $result = $dbh.disconnect();
-ok $result, 'disconnect returned true'; # test 4
+my $result = $dbh.dispose;
+ok $result, 'dispose returned true'; # test 4
 
 #-----------------------------------------------------------------------
 # from perl5 DBD/mysql/t/20createdrop.t
@@ -251,7 +251,7 @@ ok $sth.finish(), "statement 1 finish"; #  test 36
 ok $sth2.finish(), "statement 2 finish"; # test 37
 ok $dbh.do("DROP TABLE $table"),"drop table $table"; # test 38
 # Because the drop table might fail, disconnect and reconnect
-$dbh.disconnect();
+$dbh.dispose();
 try {
     $dbh = DBIish.connect( $mdriver, :user($test_user), :password($test_password),
 	:$host, :$port, :$database,
@@ -895,7 +895,7 @@ SKIP: {
 };
 
 
-$dbh->disconnect();
+$dbh->dispose();
 #-----------------------------------------------------------------------
 #!perl -w
 # vim: ft=perl

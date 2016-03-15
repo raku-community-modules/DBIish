@@ -41,5 +41,5 @@ throws-like {
 }, ::('X::DBIish::DriverNotFound'), "Detected bogus driver install attempt";
 
 my $installed = DBIish.installed-drivers;
-is $installed.elems, 5, 'Five installed drivers';
+is $installed.elems, drvs.elems, "{ drvs.elems} installed drivers";
 is $installed>>.key.sort, drvs, 'The expected five';

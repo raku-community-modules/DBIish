@@ -81,5 +81,4 @@ isa-ok $obj.schedule[0], Array[Str];
 diag $obj.perl;
 
 # Cleanup
-$sth.finish;
-$dbh.disconnect;
+$dbh.dispose;
