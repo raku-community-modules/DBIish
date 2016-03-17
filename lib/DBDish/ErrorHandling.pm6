@@ -48,7 +48,7 @@ role DBDish::ErrorHandling {
 
     method reset-err(--> True) { self.set-last-exception(Nil); }
 
-    method !error-dispatch(X::DBDish::DBError $_) {
+    method !error-dispatch(X::DBDish::DBError $_) is hidden-from-backtrace {
         self.set-last-exception($_);
         $!RaiseError and .throw or .fail;
     }

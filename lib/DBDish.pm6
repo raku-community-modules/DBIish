@@ -16,7 +16,8 @@ role Driver does DBDish::ErrorHandling {
 
     method connect(*%params --> DBDish::Connection) { ... };
 
-    method !conn-error(:$errstr!, :$code, :$RaiseError = $.RaiseError) {
+    method !conn-error(:$errstr!, :$code, :$RaiseError = $.RaiseError)
+	is hidden-from-backtrace {
 	self!error-dispatch: X::DBDish::ConnectionFailed.new(
 	    :$code, :native-message($errstr), :$.driver-name
 	);
