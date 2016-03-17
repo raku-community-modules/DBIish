@@ -65,7 +65,7 @@ sub quote-and-escape($s) {
 #------------------ methods to be called from DBIish ------------------
 method connect(:database(:$dbname), :$RaiseError, *%params) {
 
-    %params.push(:$dbname);
+    %params.push((:$dbname));
     my @connection_parameters = gather for %params.kv -> $key, $value {
         # Internal parameter, not for PostgreSQL usage.
         next if $key ~~ / <-lower> /;
