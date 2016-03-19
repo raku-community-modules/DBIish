@@ -39,12 +39,12 @@ method execute(*@params) {
         self!set-err($!row_status, sqlite3_errmsg($!conn));
     } else {
         my $rows = 0; my $was-select = True;
-	without $!field_count  {
-	    $!field_count = sqlite3_column_count($!statement_handle);
-	    for ^$!field_count {
-		@!column-name.push: sqlite3_column_name($!statement_handle, $_);
-		@!column-type.push: Any; #TODO
-	    }
+        without $!field_count  {
+            $!field_count = sqlite3_column_count($!statement_handle);
+            for ^$!field_count {
+                @!column-name.push: sqlite3_column_name($!statement_handle, $_);
+                @!column-type.push: Any; #TODO
+            }
         }
         unless $!field_count { # Assume non SELECT
             $rows = sqlite3_changes($!conn);
@@ -54,11 +54,10 @@ method execute(*@params) {
     }
 }
 
-method _row (:$hash) {
-    my @row;
-    my %hash;
+method _row() {
+    my $list = ();
     if $!row_status == SQLITE_ROW {
-        for ^$!field_count  -> $col {
+       $list = do for ^$!field_count  -> $col {
             my $value;
             given sqlite3_column_type($!statement_handle, $col) {
                 when SQLITE_INTEGER {
@@ -74,14 +73,14 @@ method _row (:$hash) {
                 }
                 when SQLITE_NULL {
                      # SQLite can't determine the type of NULL column, so instead
-                     # of lyng, prefer an explicit Nil.
+                     # of lying, prefer an explicit Nil.
                      $value = Nil;
                 }
                 default {
                     $value = sqlite3_column_text($!statement_handle, $col);
                 }
             }
-            $hash ?? (%hash{@!column-name[$col]} = $value) !! @row.push($value);
+            $value;
         }
         $!affected_rows++;
         self.reset-err;
@@ -89,23 +88,7 @@ method _row (:$hash) {
             self.finish;
         }
     }
-    $hash ?? %hash !! @row;
-}
-
-method fetchrow {
-    my @row;
-    die 'fetchrow_array without prior execute' unless $!row_status;
-    if $!row_status == SQLITE_ROW {
-        for ^$!field_count {
-            @row.push: sqlite3_column_text($!statement_handle, $_);
-        }
-        $!affected_rows++;
-        self.reset-err;
-        if ($!row_status = sqlite3_step($!statement_handle)) == SQLITE_DONE {
-            self.finish;
-        }
-    }
-    @row;
+    $list;
 }
 
 method _free {

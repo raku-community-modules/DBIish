@@ -70,11 +70,10 @@ method execute(*@params) {
     }
 }
 
-method _row(:$hash) {
-    my @row_array;
-    my %ret_hash;
+method _row() {
+    my $l = ();
     if $!field_count && $!current_row < $!row_count {
-        for ^$!field_count {
+        $l = do for ^$!field_count {
             my $value = @!column-type[$_];
             unless $!result.PQgetisnull($!current_row, $_) {
 		$value = $!result.get-value($!current_row, $_, $value);
@@ -82,36 +81,11 @@ method _row(:$hash) {
 		    $value = _pg-to-array($value, @!column-type[$_].of);
 		}
             }
-            $hash ?? (%ret_hash{@!column-name[$_]} = $value)
-	          !! @row_array.push($value);
-        }
+            $value;
+    }
 	self.finish if ++$!current_row == $!row_count;
     }
-    $hash ?? %ret_hash !! @row_array;
-}
-
-method fetchrow() {
-    my @row_array;
-    if $!field_count && $!current_row < $!row_count {
-	@row_array.push($!result.PQgetisnull($!current_row, $_) ?? Str
-		        !! $!result.PQgetvalue($!current_row, $_)
-	) for ^$!field_count;
-	self.finish if ++$!current_row == $!row_count;
-    }
-    @row_array;
-}
-
-method fetchall_hashref(Str $key) {
-    my %results;
-
-    return () if $!current_row >= $!row_count;
-
-    while my $row = self.fetchrow_hashref {
-        %results{$row{$key}} = $row;
-    }
-
-    my $results_ref = %results;
-    $results_ref;
+    $l;
 }
 
 my grammar PgArrayGrammar {

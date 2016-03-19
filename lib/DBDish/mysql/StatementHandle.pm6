@@ -100,18 +100,11 @@ method !get_result {
     $!Prefetch ?? $!mysql_client.mysql_store_result !! $!mysql_client.mysql_use_result;
 }
 
-method _row(:$hash) {
-    my @row_array;
-    my %hash;
-    my @names;
-    my @types;
-
+method _row {
+    my $list = ();
     if $!field_count -> $fields {
         if my $row = $!result_set.fetch_row {
-            loop (my int $i = 0; $i < $fields; $i++) {
-                my $value = $row.want($i, @!column-type[$i]);
-                $hash ?? (%hash{@!column-name[$i]} = $value) !! @row_array.push($value);
-            }
+            $list = do for ^$fields { $row.want($_, @!column-type[$_]) }
             $!affected_rows++ unless $!Prefetch;
         }
         else {
@@ -119,24 +112,7 @@ method _row(:$hash) {
             self.finish;
         }
     }
-    $hash ?? %hash !! @row_array;
-}
-
-method fetchrow() {
-    my @row_array;
-    if $!field_count {
-        if my $native_row = $!result_set.fetch_row {
-            loop (my int $i=0; $i < $!field_count; $i++ ) {
-                @row_array.push($native_row[$i]);
-            }
-            $!affected_rows++ unless $!Prefetch;
-        }
-        else {
-            .fail without self!handle-errors;
-            self.finish;
-        }
-    }
-    @row_array;
+    $list;
 }
 
 method mysql_insertid() {
