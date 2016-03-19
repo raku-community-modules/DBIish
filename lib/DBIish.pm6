@@ -1,7 +1,7 @@
 use v6;
 # DBIish.pm6
 
-unit class DBIish:auth<mberends>:ver<0.1.5>;
+unit class DBIish:auth<mberends>:ver<0.5.0>;
     use DBDish;
 
     package GLOBAL::X::DBIish {
@@ -47,8 +47,7 @@ unit class DBIish:auth<mberends>:ver<0.1.5>;
 	    };
 	}
 	my $d = self.install-driver( $driver );
-        my $connection = $d.connect(:$RaiseError, :$PrintError, :$AutoCommit, |%opts );
-        $connection;
+        $d.connect(:$RaiseError, :$PrintError, :$AutoCommit, |%opts );
     }
     method install-driver( $drivername ) {
 	my $d = %installed{$drivername} //= do {
@@ -153,7 +152,7 @@ our sub SQL_INTERVAL_MINUTE_TO_SECOND { 113 }
     use v6;
     use DBIish;
 
-    my $dbh = DBIish.connect("SQLite", :database<example-db.sqlite3>, :RaiseError);
+    my $dbh = DBIish.connect("SQLite", :database<example-db.sqlite3>);
 
     my $sth = $dbh.do(q:to/STATEMENT/);
         DROP TABLE nom
