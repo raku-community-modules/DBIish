@@ -332,7 +332,7 @@ method run-tests {
     if $sth.^can('fetchrow_arrayref') {
         ok my $arrayref = $sth.fetchrow_arrayref(), 'called fetchrow_arrayref'; #test 43
         is $arrayref.elems, 4, "fetchrow_arrayref returns 4 fields in a row"; #test 44
-        is $arrayref, [ 'PICO', 'Delish pina colada', '5', 7.90 ],
+        is $arrayref, [ 'PICO', 'Delish pina colada', '5', 7.9 ],
         'selected data matches test data of fetchrow_arrayref'; #test 45
     }
     else { skip 'fetchrow_arrayref not implemented', 2 }
