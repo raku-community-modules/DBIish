@@ -193,7 +193,7 @@ method run-tests {
     #fetch stuff return Str
     my @ref = [ Str, Str, "1", Str, Str],
         [ Str, Str, Str, "4.85", Str ],
-        [ 'BEOM', 'Medium size orange juice', "2", "1.20", "2.40" ],
+        [ 'BEOM', 'Medium size orange juice', "2", "1.2", "2.4" ],
         [ 'BUBH', 'Hot beef burrito', "1", "4.95", "4.95" ],
         [ 'ONE', Str, Str, Str, Str ],
         [ 'TAFM', 'Mild fish taco', "1", "4.85", "4.85" ];
@@ -207,7 +207,6 @@ method run-tests {
     for ^6 -> $i {
         $ok &&= @array[$i] eqv @ref[$i];
     }
-    todo "Will fail in sqlite, no real NUMERIC" if $.dbd eq 'SQLite';
     ok $ok, 'selected data be fetchall-array matches';
 
     # Re-execute the same statement
@@ -220,7 +219,7 @@ method run-tests {
 
     ok (@columns = $sth.column-types), 'called column-type';
     is @columns.elems, 5, "column-type returns 5 fields in a row";
-    ok @columns eqv ($.typed-nulls ?? 
+    ok @columns eqv ($.typed-nulls ??
 	[ Str, Str, Int, Rat, Rat ] !!
 	[ Any, Any, Any, Any, Any ]), 'column-types matches test data';
 
@@ -333,7 +332,7 @@ method run-tests {
     if $sth.^can('fetchrow_arrayref') {
         ok my $arrayref = $sth.fetchrow_arrayref(), 'called fetchrow_arrayref'; #test 43
         is $arrayref.elems, 4, "fetchrow_arrayref returns 4 fields in a row"; #test 44
-        ok self!magic-cmp($arrayref, [ 'PICO', 'Delish pina colada', '5', 7.90 ]),
+        is $arrayref, [ 'PICO', 'Delish pina colada', '5', 7.9 ],
         'selected data matches test data of fetchrow_arrayref'; #test 45
     }
     else { skip 'fetchrow_arrayref not implemented', 2 }

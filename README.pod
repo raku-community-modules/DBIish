@@ -9,7 +9,7 @@ DBIish - a simple database interface for Rakudo Perl 6
     use v6;
     use DBIish;
 
-    my $dbh = DBIish.connect("SQLite", :database<example-db.sqlite3>, :RaiseError);
+    my $dbh = DBIish.connect("SQLite", :database<example-db.sqlite3>);
 
     my $sth = $dbh.do(q:to/STATEMENT/);
         DROP TABLE IF EXISTS nom
@@ -66,11 +66,11 @@ aims to provide an interface that takes advantage of Perl 6 idioms
 =head2 Fetching data
 
 DBIish provides nearly all the perl5 DBI fetch* method to fetch values from the C<StatementHandle> object.
-However it's recommanded to use the C<row> and C<allrows> method. They provide you typed value when possible
+However it's recommanded to use the C<row> and C<allrows> methods. They provide you typed values
 
 =head3 row
 
-C<row> take the C<hash> adverb if you want to have the values in a hash form instead of a plain array
+C<row> take the C<hash> adverb if you want to have the values in a Hash form instead of a plain Array
 
 Example:
 
@@ -79,7 +79,7 @@ Example:
 
 =head3 allrows
 
-C<allrows> returns all the row as an array of arrays.
+C<allrows> lazily returns all the row as a list of arrays.
 If you want to fetch the values in a hash form, use one of the two adverbs C<array-of-hash>
 and C<hash-of-array>
 
@@ -95,10 +95,11 @@ Example:
 
 =head1 DBDish CLASSES
 
-Until there is a benefit in doing it otherwise, the DBDish drivers stay
-and install together with the main DBIish.pm6 in a single project.
+Some DBDish drivers install together with DBIish.pm6 and are maintained as a single project.
 
-Currently the following backends are supported
+Search the Perl 6 ecosystem for additional DBDish drivers.
+
+Currently the following backends are included:
 
 =head2 Pg (Postgresql)
 
@@ -110,7 +111,7 @@ Supports basic CRUD operations and prepared statements with placeholders
 Pg array are supported when fetching array fields with C<row/allrows>. You will
 get the properly typed array according to the field type.
 
-But passing array to C<execute/do> is not implemanted yet. You can use the
+But passing array to C<execute/do> is not implemented yet. You can use the
 C<pg-array-str> method on your Pg StatementHandle to convert an Array to a
 string Pg can understand.
 
@@ -136,20 +137,14 @@ and interpolating strings.
 
 =head1 TESTING
 
-The initial test script is merely a concatenation of all the scripts in
-the Perl 5 DBD::mysql test suite, translated to Perl 6.  It's not
-efficient but indispensable to assess coverage of the existing DBI
-feature set.  Only about 15% of the suite has been converted so far,
-with 86 tests passing, 0 todo and 0 skipped.
-
-The test suite will change to eliminate the current slowness and
-redundancy.  It will contain general tests as well as tests for
-particular databases.  The aim is to make the suite demonstrate portable
-and non portable operations.
+The DBIish::CommonTesting module, now with over 100 tests, provides a common unit
+testing that allows a driver developer to test its driver capabilities and the
+minimum expected compatibility.
 
 =head1 ROADMAP
 
-Add some more drivers. Improve robustness of all drivers. Improve the test suite.  Attract more contributors.
+Add some more drivers. Improve robustness of all drivers. Improve the test suite.
+Attract more contributors.
 
 Integrate with the DBDI project (L<http://github.com/timbunce/DBDI>)
 once it has sufficient functionality.
