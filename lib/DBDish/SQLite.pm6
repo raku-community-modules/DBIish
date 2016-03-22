@@ -10,7 +10,7 @@ method connect(:database(:$dbname)! is copy, :$RaiseError, *%params) {
 
     my SQLite $p .= new;
     # Add the standard extension unless has one
-    $dbname ~= '.sqlite3' unless $dbname ~~ / '.' /;
+    $dbname ~= '.sqlite3' unless $dbname ~~ / '.'|':memory:' /;
 
     my $status = sqlite3_open($dbname, $p);
     if $status == SQLITE_OK {
