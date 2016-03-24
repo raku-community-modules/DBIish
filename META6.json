@@ -1,11 +1,10 @@
 {
     "perl"	    : "6",
     "name"          : "DBIish",
-    "version"       : "0.1.5",
+    "version"       : "0.5.0",
     "description"   : "Database connectivity for Perl 6",
-    "test-depends"  : [
-        "Data::Dump"
-    ],
+    "test-depends"  : [ "Data::Dump" ],
+    "depends" : [ "NativeHelpers::Blob" ],
     "provides" : {
         "DBIish"                    : "lib/DBIish.pm6",
 	"DBIish::CommonTesting"     : "lib/DBIish/CommonTesting.pm6",
