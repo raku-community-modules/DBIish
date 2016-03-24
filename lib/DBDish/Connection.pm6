@@ -45,7 +45,9 @@ method new(*%args) {
 method prepare(Str $statement, *%args) { ... }
 
 method do(Str $statement, *@params, *%args) {
-    with self.prepare($statement) {
+    if !@params && self.can('execute') {
+	self.execute($statement, |%args);
+    } orwith self.prepare($statement, |%args) {
 	LEAVE { .finish }
 	.execute(@params, |%args);
     }
