@@ -33,7 +33,7 @@ submethod BUILD(:$!mysql_client!, :$!parent!, :$!stmt = MYSQL_STMT, :$!param-cou
 ) { }
 
 method !get-meta(MYSQL_RES $res) {
-    my $lengths = Buf[int64].allocate($!field_count);
+    my $lengths = blob-allocate(Buf[int64], $!field_count);
     loop (my $i = 0; $i < $!field_count; $i++) {
 	with $res.mysql_fetch_field {
 	    @!column-name.push: .name;
@@ -60,7 +60,7 @@ method execute(*@params) {
     if $!param-count {
 	my @Bufs;
 	my $par = LinearArray[MYSQL_BIND].new($!param-count);
-	my $lengths = Buf[int64].allocate($!param-count);
+	my $lengths = blob-allocate(Buf[int64], $!param-count);
 	my $lb = BPointer($lengths).Int;
 	LEAVE { $par.dispose if $par }
 	for @params.kv -> $k, $v { # The binding dance
@@ -87,7 +87,7 @@ method execute(*@params) {
 		&& $!stmt.mysql_stmt_result_metadata -> $res
 	    { # Need to bind outputs, reuse params structs.
 		$lengths = self!get-meta($res);
-		$!isnull = Buf[int64].allocate($!field_count);
+		$!isnull = blob-allocate(Buf[int64], $!field_count);
 		my $nb = BPointer($!isnull).Int;
 		my $stmt_buf = LinearArray[MYSQL_BIND].new($!field_count);
 		$lb = BPointer($lengths).Int;
@@ -95,8 +95,8 @@ method execute(*@params) {
 		for ^$!field_count -> $col {
 		    given $stmt_buf[$col] {
 			.buffer = BPointer(
-			    @Bufs[$col] = Buf.allocate(
-				.buffer_length = $lengths[$col]
+			    @Bufs[$col] = blob-allocate(
+				Buf, .buffer_length = $lengths[$col]
 			    )
 			).Int;
 			.length = $lb + $col * 8;

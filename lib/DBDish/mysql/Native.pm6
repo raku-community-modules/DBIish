@@ -174,9 +174,9 @@ class MYSQL is export is repr('CPointer') {
 	if $bin { # HACK: mysql_real_scape assumes latin1 :(
 	    $b.list.fmt('%02x','');
 	} else {
-	    my $r = Blob.allocate($b.bytes * 2 + 1);
-	    my $res = mysql_real_escape_string(self, $r, $b, $b.bytes);
-	    $r.subbuf(0, $res).decode.Str;
+	    my \r = Blob.new; nqp::setelems(r, $b.bytes * 2 + 1);
+	    my $res = mysql_real_escape_string(self, r, $b, $b.bytes);
+	    r.subbuf(0, $res).decode.Str;
 	}
     }
     multi method escape(Str $s --> Str) {
