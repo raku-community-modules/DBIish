@@ -9,6 +9,37 @@ sub MyLibName {
 }
 constant LIB = &MyLibName;
 
+#From mysql_com.h
+enum mysql-field-type is export (
+  MYSQL_TYPE_DECIMAL => 0,
+  MYSQL_TYPE_TINY => 1,
+  MYSQL_TYPE_SHORT => 2,
+  MYSQL_TYPE_LONG => 3,
+  MYSQL_TYPE_FLOAT => 4,
+  MYSQL_TYPE_DOUBLE => 5,
+  MYSQL_TYPE_NULL => 6,
+  MYSQL_TYPE_TIMESTAMP => 7,
+  MYSQL_TYPE_LONGLONG => 8,
+  MYSQL_TYPE_INT24 => 9,
+  MYSQL_TYPE_DATE => 10,
+  MYSQL_TYPE_TIME => 11,
+  MYSQL_TYPE_DATETIME => 12,
+  MYSQL_TYPE_YEAR => 13,
+  MYSQL_TYPE_NEWDATE => 14,
+  MYSQL_TYPE_VARCHAR => 15,
+  MYSQL_TYPE_BIT => 16,
+  MYSQL_TYPE_NEWDECIMAL => 246,
+  MYSQL_TYPE_ENUM => 247,
+  MYSQL_TYPE_SET => 248,
+  MYSQL_TYPE_TINY_BLOB => 249,
+  MYSQL_TYPE_MEDIUM_BLOB => 250,
+  MYSQL_TYPE_LONG_BLOB => 251,
+  MYSQL_TYPE_BLOB => 252,
+  MYSQL_TYPE_VAR_STRING => 253,
+  MYSQL_TYPE_STRING => 254,
+  MYSQL_TYPE_GEOMETRY => 255
+);
+
 class MYSQL_FIELD is repr('CStruct') is export {
     has	Str	$.name;
     has Str	$.org_name;
@@ -33,7 +64,35 @@ class MYSQL_FIELD is repr('CStruct') is export {
     has Pointer $.extension;
 }
 
+constant my_bool = int8;
+
 class MYSQL_RES is repr('CPointer') { ... }
+
+class MYSQL_BIND is repr('CStruct') is export {
+    #has Pointer[ulong]   $!length;
+    has uint64		 $.length is rw;
+    #has Pointer[my_bool] $.is_null;
+    has uint64		 $.is_null is rw;
+    #has Pointer	  $.buffer is rw;
+    has uint64		 $.buffer is rw;
+    has Pointer[my_bool] $.error;
+    has Pointer[uint8]   $.row_ptr;
+    has Pointer		 $.store_param_func;
+    has Pointer		 $.fetch_result;
+    has Pointer		 $.skip_result;
+    has ulong		 $.buffer_length is rw;
+    has ulong		 $.offset;
+    has size_t		 $.param_number is rw;
+    has size_t		 $.pack_length;
+    has uint32		 $.buffer_type is rw;
+    has my_bool		 $.error_value;
+    has my_bool		 $.is_unsigned;
+    has my_bool		 $.long_data_user;
+    has my_bool		 $.is_null_value;
+    has Pointer		 $.extension;
+}
+
+#note "MYSQL_BIND size: ", nativesizeof(MYSQL_BIND), nativesizeof(CArray[MYSQL_BIND]);
 
 class MyRow does Positional is export {
     has CArray[Pointer] $.car;
@@ -72,11 +131,25 @@ class MyRow does Positional is export {
     }
 }
 
-class MYSQL_STMT is export is repr('CPointer') { };
+class MYSQL_STMT is export is repr('CPointer') {
+    method mysql_stmt_prepare(::?CLASS:D: Str, ulong	--> int32) is native(LIB) { * }
+    method mysql_stmt_param_count(::?CLASS:D:		--> ulong) is native(LIB) { * }
+    method mysql_stmt_bind_param(::?CLASS:D: MYSQL_BIND --> int32) is native(LIB) { * }
+    method mysql_stmt_execute(::?CLASS:D:		--> int32) is native(LIB) { * }
+    method mysql_stmt_free_result(::?CLASS:D:	      --> my_bool) is native(LIB) { * }
+    method mysql_stmt_reset(::?CLASS:D:		      --> my_bool) is native(LIB) { * }
+    method mysql_stmt_field_count(::?CLASS:D:		--> int32) is native(LIB) { * }
+    method mysql_stmt_close(::?CLASS:D:	              --> my_bool) is native(LIB) { * }
+    method mysql_stmt_affected_rows(::?CLASS:D:        --> uint64) is native(LIB) { * }
+    method mysql_stmt_result_metadata(::?CLASS:D:   --> MYSQL_RES) is native(LIB) { * }
+    method mysql_stmt_store_result(::?CLASS:D:		--> int32) is native(LIB) { * }
+    method mysql_stmt_fetch(::?CLASS:D:			--> int32) is native(LIB) { * }
+    method mysql_stmt_bind_result(::?CLASS:D:
+	MYSQL_BIND				      --> my_bool) is native(LIB) { * }
+};
 
 class MYSQL_RES is export {
-
-    method fetch_row(--> MyRow) {
+    method fetch_row(MYSQL_RES:D: --> MyRow) {
 	sub mysql_fetch_row(MYSQL_RES $result_set )
 	    returns CArray[Pointer] is native(LIB) { * }
 	sub mysql_fetch_lengths(MYSQL_RES)
@@ -113,8 +186,8 @@ class MYSQL is export is repr('CPointer') {
     # Native methods
     method mysql_affected_rows(MYSQL:D:          --> int32) is native(LIB) { * }
     method mysql_close(MYSQL:D:                           ) is native(LIB) { * }
-    method mysql_errno( MYSQL:D:                 --> int32) is native(LIB) { * }
-    method mysql_error( MYSQL:D:                   --> Str) is native(LIB) { * }
+    method mysql_errno(MYSQL:D:                  --> int32) is native(LIB) { * }
+    method mysql_error(MYSQL:D:                    --> Str) is native(LIB) { * }
     method mysql_field_count( MYSQL:D:          --> uint32) is native(LIB) { * }
     method mysql_init(MYSQL:U:                   --> MYSQL) is native(LIB) { * }
     method mysql_insert_id(MYSQL:D:             --> uint64) is native(LIB) { * }
@@ -128,40 +201,9 @@ class MYSQL is export is repr('CPointer') {
     method mysql_store_result(MYSQL:D:       --> MYSQL_RES) is native(LIB) { * }
     method mysql_use_result(MYSQL:D:         --> MYSQL_RES) is native(LIB) { * }
     method mysql_warning_count(MYSQL:D:         --> uint32) is native(LIB) { * }
-    method mysql_stmt_init(MYSQL:D:         --> MYSQL_STMT) is native(LIB) { * }
     method mysql_ping(MYSQL:D:                   --> int32) is native(LIB) { * }
+    method mysql_stmt_init(MYSQL:D:         --> MYSQL_STMT) is native(LIB) { * }
 }
-
-#From mysql_com.h
-enum mysql-field-type is export (
-  MYSQL_TYPE_DECIMAL => 0,
-  MYSQL_TYPE_TINY => 1,
-  MYSQL_TYPE_SHORT => 2,
-  MYSQL_TYPE_LONG => 3,
-  MYSQL_TYPE_FLOAT => 4,
-  MYSQL_TYPE_DOUBLE => 5,
-  MYSQL_TYPE_NULL => 6,
-  MYSQL_TYPE_TIMESTAMP => 7,
-  MYSQL_TYPE_LONGLONG => 8,
-  MYSQL_TYPE_INT24 => 9,
-  MYSQL_TYPE_DATE => 10,
-  MYSQL_TYPE_TIME => 11,
-  MYSQL_TYPE_DATETIME => 12,
-  MYSQL_TYPE_YEAR => 13,
-  MYSQL_TYPE_NEWDATE => 14,
-  MYSQL_TYPE_VARCHAR => 15,
-  MYSQL_TYPE_BIT => 16,
-  MYSQL_TYPE_NEWDECIMAL => 246,
-  MYSQL_TYPE_ENUM => 247,
-  MYSQL_TYPE_SET => 248,
-  MYSQL_TYPE_TINY_BLOB => 249,
-  MYSQL_TYPE_MEDIUM_BLOB => 250,
-  MYSQL_TYPE_LONG_BLOB => 251,
-  MYSQL_TYPE_BLOB => 252,
-  MYSQL_TYPE_VAR_STRING => 253,
-  MYSQL_TYPE_STRING => 254,
-  MYSQL_TYPE_GEOMETRY => 255
-);
 
 constant %mysql-type-conv is export = map(
     {+mysql-field-type::{.key} => .value}, (
@@ -192,9 +234,4 @@ constant %mysql-type-conv is export = map(
   MYSQL_TYPE_BLOB => Buf,
 )).hash;
 
-sub mysql_stmt_prepare( OpaquePointer $mysql_stmt, Str, ulong $length )
-    returns OpaquePointer
-    is native(LIB)
-    is export
-    { ... }
 

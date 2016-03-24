@@ -10,11 +10,38 @@ has MYSQL $!mysql_client is required;
 
 submethod BUILD(:$!mysql_client, :$!parent!) { }
 
+method !handle-errors($code) {
+    if $code {
+	self!set-err($code, $!mysql_client.mysql_error);
+    } else {
+	self.reset-err;
+    }
+}
 method prepare(Str $statement, *%args) {
-    self.reset-err;
-    DBDish::mysql::StatementHandle.new(
-        :$!mysql_client, :parent(self), :$statement, :$!RaiseError, |%args
+    with $!mysql_client.mysql_stmt_init -> $stmt {
+	with self!handle-errors(
+	    $stmt.mysql_stmt_prepare($statement, $statement.encode.bytes)
+	) {
+	    unless my $param-count = $stmt.mysql_stmt_param_count {
+		# Use unprepared path, is faster;
+		$stmt.mysql_stmt_close;
+	    }
+	    DBDish::mysql::StatementHandle.new(
+		:$!mysql_client, :parent(self), :$stmt, :$param-count,
+		:$statement, :$!RaiseError, |%args
+	    );
+	} else { .fail }
+    } else {
+	self!set-err(-1, "Can't allocate memory");
+    }
+}
+
+method execute(Str $statement, *%args) {
+    my $sth = DBDish::mysql::StatementHandle.new(
+	:$!mysql_client, :parent(self), :$statement, :$!RaiseError, |%args
     );
+    LEAVE { $sth.finish if $sth };
+    $sth.execute;
 }
 
 method mysql_insertid() {
