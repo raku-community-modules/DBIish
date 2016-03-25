@@ -207,7 +207,11 @@ method mysql_insertid() {
 
 method _free() {
     with $!stmt {
-	$!stmt.mysql_stmt_close;
+	with $!binds {
+	    .dispose;
+	    @!out-bufs = ();
+	}
+	.mysql_stmt_close;
 	$_ = Nil;
     }
 }
