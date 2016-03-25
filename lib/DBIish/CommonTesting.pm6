@@ -136,6 +136,7 @@ method run-tests {
 
     is $rc, 1, "execute one with one integer parameter should return 1 row affected";
     is $sth.rows, 1, '$sth.rows for execute one with one integer parameter should report 1 row affected';
+    $sth.dispose;
 
     ok $sth = $dbh.prepare( "
         INSERT INTO nom (price)
@@ -144,6 +145,7 @@ method run-tests {
     ok $rc = $sth.execute(4.85), "execute one with one float parameter";
     is $rc, 1, "execute one with one float parameter should return 1 row affected";
     is $sth.rows, 1, '$sth.rows for execute one with one float parameter should report 1 row affected';
+    $sth.dispose;
 
     ok $sth = $dbh.prepare( "
         INSERT INTO nom (name, description, quantity, price)
@@ -337,30 +339,37 @@ method run-tests {
     }
     else { skip 'fetchrow_arrayref not implemented', 2 }
 
-    $sth.finish;
+    $sth.dispose;
 
     # test quotes and so on
     {
         $sth = $dbh.prepare(q[INSERT INTO nom (name, description) VALUES (?, ?)]);
         my $lived;
-        lives-ok { $sth.execute("quot", q["';]); $lived = 1 }, 'can insert single and double quotes';
+        lives-ok {
+	    $sth.execute("quot", q["';]); $lived = 1
+	}, 'can insert single and double quotes';
+	$sth.dispose;
         if $lived {
-            $sth = $dbh.prepare(q[SELECT description FROM nom where name = ?]);
-            lives-ok { $sth.execute('quot') }, 'lived while retrieving result';
+            $sth = $dbh.prepare(q[SELECT description FROM nom WHERE name = ?]);
+	    lives-ok {
+		$sth.execute('quot');
+	    }, 'lived while retrieving result';
             is $sth.fetchrow.join, q["';], 'got the right string back';
-            $sth.finish;
+            $sth.dispose;
         }
         else {
             skip('dependent tests', 2);
         }
 
         $lived = 0;
-        lives-ok { $dbh.do(q[INSERT INTO nom (name, description) VALUES(?, '?"')], 'mark'); $lived = 1}, 'can use question mark in quoted strings';
+        lives-ok {
+	    $dbh.do(q[INSERT INTO nom (name, description) VALUES(?, '?"')], 'mark'); $lived = 1
+	}, 'can use question mark in quoted strings';
         if $lived {
             my $sth = $dbh.prepare(q[SELECT description FROM nom WHERE name = 'mark']);
             $sth.execute;
             is $sth.fetchrow.join, '?"', 'correctly retrieved question mark';
-            $sth.finish;
+            $sth.dispose;
         }
         else {
             skip('dependent test', 1);
@@ -375,6 +384,7 @@ method run-tests {
         my $row = $sth.fetchrow-hash;
 
         ok !?$row, 'a query with no results should have a falsy value';
+	$sth.dispose;
     }
 
     # test that a query that's exhausted its result set has a falsy value
@@ -386,6 +396,7 @@ method run-tests {
            $row = $sth.fetchrow-hash;
 
         ok !?$row, 'a query with no more results should have a falsy value';
+	$sth.dispose;
     }
 
     # test that an integer >= 2**31 still works as an argument to execute
@@ -402,7 +413,7 @@ method run-tests {
         is $row[1], 'many', 'The contents of the row fetched via a large integer are correct';
         is $row[2], $large-int, 'The contents of the row fetched via a large integer are correct';
 
-        $sth.finish;
+        $sth.dispose;
     }
 
     # Drop the table when finished, and disconnect
