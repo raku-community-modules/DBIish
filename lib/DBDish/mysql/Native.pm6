@@ -2,7 +2,7 @@ use v6;
 
 unit module DBDish::mysql::Native;
 use NativeCall :ALL;
-use nqp; # For Buf allocation
+use NativeHelpers::Blob;
 
 sub MyLibName {
     %*ENV<DBIISH_MYSQL_LIB> || guess_library_name(('mysqlclient', v18));
@@ -68,13 +68,16 @@ constant my_bool = int8;
 
 class MYSQL_RES is repr('CPointer') { ... }
 
+# Current rakudo don't allow set a Pointer in a CStruct based class.
+# so we use an 'intprt'
+constant intptr = nativesizeof(Pointer) == 8 ?? uint64 !! uint32;
 class MYSQL_BIND is repr('CStruct') is export {
-    #has Pointer[ulong]   $!length;
-    has uint64		 $.length is rw;
-    #has Pointer[my_bool] $.is_null;
-    has uint64		 $.is_null is rw;
+    #has Pointer[ulong]   $!length is rw;
+    has intptr		 $.length is rw;
+    #has Pointer[my_bool] $.is_null is rw;
+    has intptr		 $.is_null is rw;
     #has Pointer	  $.buffer is rw;
-    has uint64		 $.buffer is rw;
+    has intptr		 $.buffer is rw;
     has Pointer[my_bool] $.error;
     has Pointer[uint8]   $.row_ptr;
     has Pointer		 $.store_param_func;
@@ -112,22 +115,7 @@ class MyRow does Positional is export {
 	}
     }
     method blob(Int $idx, Mu $type) {
-	sub buf-from-pointer(Pointer \ptr, int :$elems!, Blob:U :$type = Buf) {
-            # Stolen from NativeHelpers::Blob ;-)
-	    my sub memcpy(Blob:D $dest, Pointer $src, size_t $size)
-		returns Pointer is native() { * };
-	    my \t = ptr.of ~~ void ?? $type.of !! ptr.of;
-	    my $b = (t === uint8) ?? Buf !! Buf.^parameterize(t);
-	    with ptr {
-		my \b = $b.new;
-		nqp::setelems(b, $elems);
-		memcpy(b, ptr, $elems * nativesizeof(t));
-		$b = b;
-	    }
-	    $b;
-	}
-
-	buf-from-pointer($!car[$idx], :elems($!lon[$idx]), :type($type));
+	blob-from-pointer($!car[$idx], :elems($!lon[$idx]), :$type);
     }
 }
 
@@ -174,7 +162,7 @@ class MYSQL is export is repr('CPointer') {
 	if $bin { # HACK: mysql_real_scape assumes latin1 :(
 	    $b.list.fmt('%02x','');
 	} else {
-	    my \r = Blob.new; nqp::setelems(r, $b.bytes * 2 + 1);
+	    my \r = blob-allocate(Blob, $b.bytes * 2 + 1);
 	    my $res = mysql_real_escape_string(self, r, $b, $b.bytes);
 	    r.subbuf(0, $res).decode.Str;
 	}
