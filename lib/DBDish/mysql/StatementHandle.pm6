@@ -51,11 +51,7 @@ method !get-meta(MYSQL_RES $res) {
 
 
 method execute(*@params) {
-    self!set-err(-1,
-	"Wrong number of arguments to method execute: got @params.elems(), expected $!param-count"
-    ) if @params != $!param-count;
-
-    self!enter-execute;
+    self!enter-execute(@params.elems, $!param-count);
     my $rows = 0; my $was-select = True;
     if $!param-count {
 	my @Bufs;
@@ -105,7 +101,6 @@ method execute(*@params) {
 			    ?? MYSQL_TYPE_BLOB !! MYSQL_TYPE_STRING;
 		    }
 		}
-		#dd $stmt_buf.typed-pointer;
 		@!out-bufs := @Bufs;
 		$!binds = $stmt_buf;
 		$!retlen = $lengths;
@@ -118,7 +113,7 @@ method execute(*@params) {
 	without self!handle-errors { .fail }
 	$rows = $!stmt.mysql_stmt_affected_rows;
 	return self!done-execute($rows, $!field_count > 0);
-    # Try the old path
+    # Try the fast unprepared path
     } elsif my $status = $!mysql_client.mysql_query($!statement) { # 0 means OK
 	    self!set-err($status, $!mysql_client.mysql_error).fail;
     }

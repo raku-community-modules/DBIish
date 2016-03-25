@@ -37,11 +37,9 @@ method prepare(Str $statement, *%args) {
 }
 
 method execute(Str $statement, *%args) {
-    my $sth = DBDish::mysql::StatementHandle.new(
+    DBDish::mysql::StatementHandle.new(
 	:$!mysql_client, :parent(self), :$statement, :$!RaiseError, |%args
-    );
-    LEAVE { $sth.finish if $sth };
-    $sth.execute;
+    ).execute;
 }
 
 method mysql_insertid() {

@@ -25,11 +25,7 @@ submethod BUILD(:$!conn!, :$!parent!,
 ) { }
 
 method execute(*@params) {
-    self!set-err( -1,
-        "Wrong number of arguments to method execute: got @params.elems(), expected $!param-count"
-    ) if @params != $!param-count;
-
-    self!enter-execute;
+    self!enter-execute(@params.elems, $!param-count);
 
     for @params.kv -> $idx, $v {
         self!handle-error(sqlite3_bind($!statement_handle, $idx + 1, $v));
