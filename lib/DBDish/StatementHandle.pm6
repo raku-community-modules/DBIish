@@ -33,10 +33,13 @@ method !ftr() {
     $.parent.last-sth-id = self.WHICH;
 }
 
-method !enter-execute() {
+method !enter-execute(int $got = 0, int $expect = 0) {
     self.finish unless $!Finished;
     $!affected_rows = Nil;
     self!ftr;
+    self!set-err( -1,
+	"Wrong number of arguments to method execute: got $got, expected $expect"
+    ).fail unless $got == $expect;
 }
 
 method !done-execute(Int $rows, Bool $was-select) {
