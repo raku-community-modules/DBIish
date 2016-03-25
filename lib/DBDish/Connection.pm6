@@ -19,6 +19,7 @@ unit role DBDish::Connection does DBDish::ErrorHandling;
 
 has %.Statements;
 has $.last-sth-id is rw;
+has $.last-rows is rw;
 
 method dispose() {
     $_.dispose for %!Statements.values;
@@ -60,6 +61,8 @@ method rows {
     if $!last-sth-id {
 	with %!Statements{$!last-sth-id} {
 	    .rows;
+	} else {
+	    $!last-rows
 	}
     }
 }

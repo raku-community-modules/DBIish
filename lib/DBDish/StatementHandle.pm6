@@ -55,8 +55,10 @@ method new(*%args) {
 method dispose() {
     self.finish unless $!Finished;
     self._free;
-    my \id := self.WHICH.Str;
-    ?($.parent.Statements{id}:delete);
+    with $.parent.Statements{self.WHICH}:delete {
+	$.parent.last-rows = self.rows;
+	True;
+    } else { False };
 }
 #Avoid leaks if explicit dispose isn't used by the user.
 submethod DESTROY() {
