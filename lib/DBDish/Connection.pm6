@@ -46,10 +46,16 @@ method new(*%args) {
 method prepare(Str $statement, *%args) { ... }
 
 method do(Str $statement, *@params, *%args) {
+    LEAVE {
+	with %!Statements{$!last-sth-id} {
+	    warn "'do' should not be used for statements that returns rows"
+		unless .Finished;
+	    .dispose;
+	}
+    }
     if !@params && self.can('execute') {
 	self.execute($statement, |%args);
     } orwith self.prepare($statement, |%args) {
-	LEAVE { .finish }
 	.execute(@params, |%args);
     }
     else {
