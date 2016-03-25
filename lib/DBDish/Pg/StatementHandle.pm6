@@ -22,15 +22,11 @@ method !handle-errors {
 }
 
 submethod BUILD(:$!parent!, :$!pg_conn, # Per protocol
-    :$!statement, :$!statement_name, :@!param_type
+    :$!statement, :$!statement_name = '' , :@!param_type
 ) { }
 
 method execute(*@params) {
-    self!set-err( -1,
-        "Wrong number of arguments to method execute: got @params.elems(), expected @!param_type.elems()"
-    ) if @params != @!param_type;
-
-    self!enter-execute;
+    self!enter-execute(@params.elems, @!param_type.elems);
 
     my @param_values := ParamArray.new;
     for @params.kv -> $k, $v {
@@ -41,11 +37,11 @@ method execute(*@params) {
         } else { @param_values[$k] = Str }
     }
 
-    $!result = $!pg_conn.PQexecPrepared($!statement_name, @params.elems, @param_values,
-        Null, # ParamLengths, NULL pointer == all text
-        Null, # ParamFormats, NULL pointer == all text
-        0,    # Resultformat, 0 == text
-    );
+    $!result = $!statement_name
+	?? $!pg_conn.PQexecPrepared($!statement_name, @params.elems, @param_values,
+				    Null, Null, 0)
+	!! $!pg_conn.PQexec($!statement);
+
     self!set-err(PGRES_FATAL_ERROR, $!pg_conn.PQerrorMessage).fail unless $!result;
 
     $!current_row = 0;

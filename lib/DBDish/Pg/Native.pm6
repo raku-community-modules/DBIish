@@ -86,7 +86,7 @@ class PGresult	is export is repr('CPointer') {
 }
 
 class PGconn is export is repr('CPointer') {
-    method PQexec(--> PGresult) is native(LIB) { * }
+    method PQexec(str --> PGresult) is native(LIB) { * }
     method PQexecPrepared(
         str $statement_name,
         int32 $n_params,

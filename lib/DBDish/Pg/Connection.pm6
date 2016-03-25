@@ -43,6 +43,12 @@ method prepare(Str $statement, *%args) {
     }
 }
 
+method execute(Str $statement, *%args) {
+    DBDish::Pg::StatementHandle.new(
+	:$!pg_conn, :parent(self), :$statement, :param_type(@), |%args
+    ).execute;
+}
+
 method selectrow_arrayref(Str $statement, $attr?, *@bind is copy) {
     with self.prepare($statement, $attr) {
         .execute(@bind) and .fetchrow_arrayref;
