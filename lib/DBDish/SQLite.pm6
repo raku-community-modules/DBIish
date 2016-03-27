@@ -2,7 +2,7 @@ use v6;
 
 need DBDish;
 
-unit class DBDish::SQLite:auth<mberends>:ver<0.0.3> does DBDish::Driver;
+unit class DBDish::SQLite:auth<mberends>:ver<0.1.0> does DBDish::Driver;
 use DBDish::SQLite::Native;
 need DBDish::SQLite::Connection;
 

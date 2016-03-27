@@ -120,8 +120,8 @@ sub sqlite3_changes(SQLite) returns int32 is native(LIB) is export { ... };
 sub sqlite3_bind_parameter_count(STMT --> int32) is native(LIB) is export { ... };
 
 proto sub sqlite3_bind(STMT, $, $) {*}
-multi sub sqlite3_bind(STMT $stmt, Int $n, Buf:D $b)  is export {
-    sqlite3_bind_blob($stmt, $n, $b, $b.bytes, Pointer)
+multi sub sqlite3_bind(STMT $stmt, Int $n, Blob:D $b)  is export {
+    sqlite3_bind_blob($stmt, $n, $b, $b.bytes, Pointer.new(-1))
 }
 multi sub sqlite3_bind(STMT $stmt, Int $n, Real:D $d) is export {
     sqlite3_bind_double($stmt, $n, $d.Num)
