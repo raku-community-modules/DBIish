@@ -1,7 +1,6 @@
 use v6;
 
 use Test;
-use Data::Dump;
 use DBIish;
 
 unit class DBIish::CommonTesting;
@@ -9,7 +8,6 @@ unit class DBIish::CommonTesting;
 has $.dbd is required;
 has %.opts is required;
 has $.post-connect-cb;
-has $.typed-nulls = True;
 has $.create-table-sql = q|
     CREATE TABLE nom (
         name        varchar(4),
@@ -22,16 +20,6 @@ has $.create-table-sql = q|
 # Common queries
 has $.drop-table-sql    = 'DROP TABLE IF EXISTS nom';
 has $.select-null-query = 'SELECT NULL';
-
-# compare rows of the nom table
-method !magic-cmp(@a, @b) {
-    my $res =  @a ~~ @b;
-    unless $res {
-        diag "     Got: {Dump(@a)}";
-        diag "Expected: {Dump(@b)}";
-    }
-    $res;
-}
 
 method !hash-str(%h) {
     %h.sort.flatmap({ join '', .key, '=«', .value, '»' }).join('; ');
@@ -221,29 +209,25 @@ method run-tests {
 
     ok (@columns = $sth.column-types), 'called column-type';
     is @columns.elems, 5, "column-type returns 5 fields in a row";
-    ok @columns eqv ($.typed-nulls ??
+    ok @columns eqv ($.dbd ne 'SQLite' ??
 	[ Str, Str, Int, Rat, Rat ] !!
 	[ Any, Any, Any, Any, Any ]), 'column-types matches test data';
 
+    if $.dbd eq 'SQLite' { # Munge types
+	$sth.column-types[$_] = [Str, Str, Int, Rat, Rat][$_] for ^5;
+    }
+
     #row and allrows return typed value, when possible
-    my @typed-ref = $.typed-nulls ?? (
+    my @typed-ref = (
         [ Str, Str, 1 , Rat, Rat],
         [ Str, Str, Int, 4.85, Rat ],
         [ 'BEOM', 'Medium size orange juice', 2, 1.2, 2.4 ],
         [ 'BUBH', 'Hot beef burrito', 1, 4.95, 4.95 ],
         [ 'ONE', Str, Int, Rat, Rat ],
         [ 'TAFM', 'Mild fish taco', 1, 4.85, 4.85 ]
-    ) !! (
-        [ Any, Any, 1, Any, Any],
-        [ Any, Any, Any, 4.85, Any ],
-        [ 'BEOM', 'Medium size orange juice', 2, 1.2, 2.4 ],
-        [ 'BUBH', 'Hot beef burrito', 1, 4.95, 4.95 ],
-        [ 'ONE', Any, Any, Any, Any ],
-        [ 'TAFM', 'Mild fish taco', 1, 4.85, 4.85 ]
     );
 
-    #FIXME, sqlite (for example) return NULL field as Any type, we can't really use
-    # the empty line for this. so we skip them.
+    # we skip some uninterested rows
     $sth.row(); $sth.row();
     my @results = $sth.row();
     ok @results[1] ~~ Str, "Test the type of a Str field";
@@ -284,19 +268,12 @@ method run-tests {
     $sth.execute();
     @results = $sth.allrows(:array-of-hash);
     $sth.finish;
-    my @ref-aoh =  $.typed-nulls ?? (
+    my @ref-aoh =  (
         { name => Str, description => Str, quantity => 1, price => Rat, amount => Rat },
         { name => Str, description => Str, quantity => Int, price => 4.85, amount => Rat },
         { name => 'BEOM', description => 'Medium size orange juice', quantity => 2, price => 1.2, amount => 2.4 },
         { name => 'BUBH', description => 'Hot beef burrito', quantity => 1, price => 4.95, amount => 4.95 },
         { name => 'ONE', description => Str, quantity => Int, price => Rat, amount => Rat },
-        { name => 'TAFM', description => 'Mild fish taco', quantity => 1, price => 4.85, amount => 4.85 },
-    ) !! (
-        { name => Any, description => Any, quantity => 1, price => Any, amount => Any },
-        { name => Any, description => Any, quantity => Any, price => 4.85, amount => Any },
-        { name => 'BEOM', description => 'Medium size orange juice', quantity => 2, price => 1.2, amount => 2.4 },
-        { name => 'BUBH', description => 'Hot beef burrito', quantity => 1, price => 4.95, amount => 4.95 },
-        { name => 'ONE', description => Any, quantity => Any, price => Any, amount => Any },
         { name => 'TAFM', description => 'Mild fish taco', quantity => 1, price => 4.85, amount => 4.85 },
     );
 
@@ -314,13 +291,9 @@ method run-tests {
     nok @results[0][0].defined, 'NULL returns an undefined value';
     ok $sth.Finished,		'After one row is finished';
 
-    #TODO: I made piña colada (+U00F1) at first to test unicode. It gets properly
-    # inserted and selected, but a comparison within arrayref fails.
-    # Output _looks_ identical.
-
     ok $sth = $dbh.prepare("
 	INSERT INTO nom (name, description, quantity, price)
-        VALUES ('PICO', 'Delish pina colada', '5', '7.9')
+        VALUES ('PICO', 'Delish piña colada', '5', '7.9')
     " ), 'insert new value for fetchrow_arrayref test'; #test 38
 
     ok $sth.execute, 'new insert statement executed'; #test 39
@@ -334,7 +307,7 @@ method run-tests {
     if $sth.^can('fetchrow_arrayref') {
         ok my $arrayref = $sth.fetchrow_arrayref(), 'called fetchrow_arrayref'; #test 43
         is $arrayref.elems, 4, "fetchrow_arrayref returns 4 fields in a row"; #test 44
-        is $arrayref, [ 'PICO', 'Delish pina colada', '5', 7.9 ],
+        is $arrayref, [ 'PICO', 'Delish piña colada', '5', 7.9 ],
         'selected data matches test data of fetchrow_arrayref'; #test 45
     }
     else { skip 'fetchrow_arrayref not implemented', 2 }

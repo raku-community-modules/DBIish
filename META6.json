@@ -1,7 +1,7 @@
 {
     "perl"	    : "6",
     "name"          : "DBIish",
-    "version"       : "0.5.1",
+    "version"       : "0.5.2",
     "description"   : "Database connectivity for Perl 6",
     "test-depends"  : [ "Data::Dump" ],
     "depends" : [ "NativeHelpers::Blob" ],

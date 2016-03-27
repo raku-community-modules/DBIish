@@ -49,7 +49,7 @@ DBIish - a simple database interface for Rakudo Perl 6
 
     $sth.finish;
 
-    $dbh.disconnect;
+    $dbh.dispose;
 
 =head1 DESCRIPTION
 
@@ -126,8 +126,7 @@ Supports basic CRUD operations and prepared statements with placeholders
 
 =head2 mysql
 
-Supports basic CRUD operations. Emulates prepared statements by escaping
-and interpolating strings.
+Supports basic CRUD operations and prepared statements with placeholders
 
     my $dbh = DBIish.connect('mysql', :host<db02.yourdomain.com>, :port(3306),
             :database<blerg>, :user<myuser>, :$password);
