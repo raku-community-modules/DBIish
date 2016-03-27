@@ -19,11 +19,6 @@ method prepare(Str $statement, *%args) {
     LEAVE { $result.PQclear if $result }
     if $result && $result.is-ok {
         self.reset-err;
-        my @param_type;
-        with $!pg_conn.PQdescribePrepared($statement_name) -> $info {
-            @param_type.push(%oid-to-type{$info.PQparamtype($_)}) for ^$info.PQnparams;
-            $info.PQclear;
-        }
 
         DBDish::Pg::StatementHandle.new(
             :$!pg_conn,
@@ -31,7 +26,6 @@ method prepare(Str $statement, *%args) {
             :$statement,
             :$.RaiseError,
             :$statement_name,
-            :param_type(@param_type),
             |%args
         );
     } else {
@@ -45,7 +39,7 @@ method prepare(Str $statement, *%args) {
 
 method execute(Str $statement, *%args) {
     DBDish::Pg::StatementHandle.new(
-	:$!pg_conn, :parent(self), :$statement, :param_type(@), |%args
+	:$!pg_conn, :parent(self), :$statement, |%args
     ).execute;
 }
 

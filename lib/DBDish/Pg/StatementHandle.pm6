@@ -21,9 +21,26 @@ method !handle-errors {
     }
 }
 
+submethod !get-meta($result) {
+    if $!field_count = $result.PQnfields {
+        for ^$!field_count {
+            @!column-name.push($result.PQfname($_));
+            @!column-type.push(%oid-to-type{$result.PQftype($_)});
+        }
+    }
+}
+
 submethod BUILD(:$!parent!, :$!pg_conn, # Per protocol
-    :$!statement, :$!statement_name = '' , :@!param_type
-) { }
+    :$!statement, :$!statement_name = ''
+) {
+    if $!statement_name { # Prepared
+        with $!pg_conn.PQdescribePrepared($!statement_name) -> $info {
+            @!param_type.push(%oid-to-type{$info.PQparamtype($_)}) for ^$info.PQnparams;
+            self!get-meta($info);
+            $info.PQclear;
+        }
+    }
+}
 
 method execute(*@params) {
     self!enter-execute(@params.elems, @!param_type.elems);
@@ -38,29 +55,22 @@ method execute(*@params) {
     }
 
     $!result = $!statement_name
-	?? $!pg_conn.PQexecPrepared($!statement_name, @params.elems, @param_values,
-				    Null, Null, 0)
-	!! $!pg_conn.PQexec($!statement);
+        ?? $!pg_conn.PQexecPrepared($!statement_name, @params.elems, @param_values,
+                                    Null, Null, 0)
+        !! $!pg_conn.PQexec($!statement);
 
     self!set-err(PGRES_FATAL_ERROR, $!pg_conn.PQerrorMessage).fail unless $!result;
 
     $!current_row = 0;
     with self!handle-errors {
-        my $rows; my $was-select = True;
+        my $rows;
         if $!result.PQresultStatus == PGRES_TUPLES_OK { # WAS SELECT
-            without $!field_count {
-                $!field_count = $!result.PQnfields;
-                for ^$!field_count {
-                    @!column-name.push($!result.PQfname($_));
-                    @!column-type.push(%oid-to-type{$!result.PQftype($_)});
-                }
-            }
+            self!get-meta($!result) without $!field_count; # Unprepared
             $rows = $!row_count = $!result.PQntuples;
         } else { # Other stmt without data to return
             $rows =  $!result.PQcmdTuples.Int;
-            $was-select = False;
         }
-        self!done-execute($rows, $was-select);
+        self!done-execute($rows, $!field_count);
     } else {
         .fail;
     }
@@ -78,7 +88,7 @@ method _row() {
                 }
             }
             $value;
-    }
+        }
         self.finish if ++$!current_row == $!row_count;
     }
     $l;
