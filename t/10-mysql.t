@@ -148,10 +148,8 @@ CREATE TABLE $table (
 ";
 lives-ok { $dbh.do("DROP TABLE IF EXISTS $table") }, "drop table if exists $table"; # test 9
 lives-ok { $dbh.do($create) }, "create table $table"; # test 10
-#todo "lock tables does not work";
 ok $dbh.do("LOCK TABLES $table WRITE"), "lock tables $table write"; # test 11
 ok $dbh.do("INSERT INTO $table VALUES(1, 'Alligator Descartes test 12')"), "Insert"; # test 12
-#todo "delete works but not here";
 lives-ok {$dbh.do("DELETE FROM $table WHERE id = 1") }, "Delete"; # test 13
 my $sth;
 try {

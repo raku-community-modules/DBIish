@@ -22,12 +22,8 @@ method prepare(Str $statement, *%args) {
 	with self!handle-errors(
 	    $stmt.mysql_stmt_prepare($statement, $statement.encode.bytes)
 	) {
-	    unless my $param-count = $stmt.mysql_stmt_param_count {
-		# Use unprepared path, is faster;
-		$stmt.mysql_stmt_close;
-	    }
 	    DBDish::mysql::StatementHandle.new(
-		:$!mysql_client, :parent(self), :$stmt, :$param-count,
+		:$!mysql_client, :parent(self), :$stmt
 		:$statement, :$!RaiseError, |%args
 	    );
 	} else { .fail }
