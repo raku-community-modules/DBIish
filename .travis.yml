@@ -12,7 +12,7 @@ install:
     - rakudobrew build-panda
     - panda installdeps .
     # Will test later
-    - panda --notest install .
+    - panda --notests install .
 before_install:
     # mysql
     - mysql -e "CREATE DATABASE dbdishtest;" -uroot
