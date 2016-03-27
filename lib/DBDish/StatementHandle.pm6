@@ -42,11 +42,11 @@ method !enter-execute(int $got = 0, int $expect = 0) {
     ).fail unless $got == $expect;
 }
 
-method !done-execute(Int $rows, Bool $was-select) {
+method !done-execute(Int $rows, $fields) {
     $!Executed++;
     $!Finished = False;
     $!affected_rows = $rows;
-    self.finish unless $was-select;
+    self.finish unless $fields;
     self.rows;
 }
 
