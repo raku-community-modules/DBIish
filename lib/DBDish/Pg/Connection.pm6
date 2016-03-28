@@ -115,6 +115,16 @@ method ping {
     }
 }
 
+method pg_notifies {
+    with $!pg_conn {
+        if my $note = $_.PQnotifies($_) {
+			return $note;
+		} else {
+			return;
+		}
+    }
+}
+
 method _disconnect() {
     .PQfinish with $!pg_conn;
     $!pg_conn = Nil;

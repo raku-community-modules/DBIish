@@ -85,6 +85,13 @@ class PGresult	is export is repr('CPointer') {
     }
 }
 
+class PGnotify is repr('CStruct') is export {
+	has Str                           $.relname; # char* relname
+	has int32                         $.be_pid; # int be_pid
+	has Str                           $.extra; # char* extra
+	has PGnotify                      $!next; # pgNotify* next (private to libpq)
+}
+
 class PGconn is export is repr('CPointer') {
     method PQexec(str --> PGresult) is native(LIB) { * }
     method PQexecPrepared(
@@ -115,6 +122,7 @@ class PGconn is export is repr('CPointer') {
 	    die "Can't allocate memory!"
 	}
     }
+    method PQnotifies(PGconn) returns PGnotify is native(LIB) is export { * }
 
     method new(Str $conninfo) { # Our constructor
 	sub PQconnectdb(str --> PGconn) is native(LIB) { * };
