@@ -115,7 +115,7 @@ method ping {
     }
 }
 
-method pg_notifies {
+method pg-notifies {
     with $!pg_conn {
         if my $note = $_.PQnotifies($_) {
 			return $note;
