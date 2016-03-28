@@ -26,7 +26,7 @@ has @!column-type;
 # My defined interface
 method execute(*@ --> IntTrue) { ... }
 method finish(--> Bool) { ... }
-method _row(--> Array) { ... }
+method _row(--> List) { ... }
 method _free() { ... }
 
 method !ftr() {
@@ -113,6 +113,11 @@ multi method allrows() {
 	    take @r;
 	}
     }
+}
+
+method CALL-ME(*@args) {
+    self.execute(|@args);
+    ::('DBIish::DataSet').new(:sth(self));
 }
 
 # Legacy
