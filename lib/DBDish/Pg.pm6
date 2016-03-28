@@ -73,7 +73,7 @@ method connect(:database(:$dbname), :$RaiseError, *%params) {
     my $pg_conn = PGconn.new(~@connection_parameters);
     my $status = $pg_conn.PQstatus;
     if $status == CONNECTION_OK {
-        DBDish::Pg::Connection.new(:$pg_conn, :$RaiseError, :parent(self));
+        DBDish::Pg::Connection.new(:$pg_conn, :$RaiseError, :parent(self), |%params);
     }
     else {
         self!conn-error: :code($status) :$RaiseError :errstr($pg_conn.PQerrorMessage);

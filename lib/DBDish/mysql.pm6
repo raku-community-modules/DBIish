@@ -26,7 +26,7 @@ method connect(:$RaiseError, *%params ) {
         unless $errstr = $mysql_client.mysql_error {
 	    $mysql_client.mysql_set_character_set('utf8'); # A sane default
             $connection = DBDish::mysql::Connection.new(
-                :$mysql_client, :$RaiseError, :parent(self)
+                :$mysql_client, :$RaiseError, :parent(self), |%params,
             );
         }
     }
