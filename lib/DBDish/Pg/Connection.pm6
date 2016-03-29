@@ -115,6 +115,10 @@ method ping {
     }
 }
 
+method pg-notifies {
+    return $!pg_conn.pg-notifies;
+}
+
 method _disconnect() {
     .PQfinish with $!pg_conn;
     $!pg_conn = Nil;

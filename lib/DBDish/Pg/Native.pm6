@@ -85,6 +85,12 @@ class PGresult	is export is repr('CPointer') {
     }
 }
 
+class pg-notify {
+	has Str                           $.relname; # char* relname
+	has int32                         $.be_pid; # int be_pid
+	has Str                           $.extra; # char* extra
+}
+
 class PGconn is export is repr('CPointer') {
     method PQexec(str --> PGresult) is native(LIB) { * }
     method PQexecPrepared(
@@ -114,6 +120,28 @@ class PGconn is export is repr('CPointer') {
 	} else {
 	    die "Can't allocate memory!"
 	}
+    }
+    method pg-notifies {
+
+        class PGnotify is repr('CStruct') {
+        	has Str                           $.relname; # char* relname
+        	has int32                         $.be_pid; # int be_pid
+        	has Str                           $.extra; # char* extra
+        }
+        sub PQnotifies(PGconn) returns Pointer is native(LIB) is export { * }
+
+	    my \ptr = PQnotifies(self);
+        LEAVE { PQfreemem(ptr) if ptr }
+        with ptr {
+            with my PGnotify $pgnote = nativecast(PGnotify, $_) {
+                my $note = pg-notify.new(
+                    relname => $_.relname,
+                    be_pid => $_.be_pid,
+                    extra => $_.extra,
+                );
+                return $note;
+            }
+		}
     }
 
     method new(Str $conninfo) { # Our constructor
