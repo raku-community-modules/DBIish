@@ -116,13 +116,7 @@ method ping {
 }
 
 method pg-notifies {
-    with $!pg_conn {
-        if my $note = $_.PQnotifies($_) {
-			return $note;
-		} else {
-			return;
-		}
-    }
+    return $!pg_conn.pg-notifies;
 }
 
 method _disconnect() {
