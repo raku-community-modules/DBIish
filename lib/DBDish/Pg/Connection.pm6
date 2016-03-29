@@ -5,7 +5,7 @@ unit class DBDish::Pg::Connection does DBDish::Connection;
 use DBDish::Pg::Native;
 need DBDish::Pg::StatementHandle;
 
-has PGconn $!pg_conn is required;
+has PGconn $!pg_conn is required handles <pg-notifies>;
 has $.AutoCommit is rw = True;
 has $.in_transaction is rw = False;
 
@@ -113,10 +113,6 @@ method ping {
     } else {
         False;
     }
-}
-
-method pg-notifies {
-    return $!pg_conn.pg-notifies;
 }
 
 method _disconnect() {
