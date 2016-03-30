@@ -30,7 +30,7 @@ method !handle-errors {
 }
 
 method !get-meta(MYSQL_RES $res) {
-    my $lengths = blob-allocate(Buf[int64], $!field_count);
+    my $lengths = blob-allocate(Buf[intptr], $!field_count);
     loop (my $i = 0; $i < $!field_count; $i++) {
         with $res.mysql_fetch_field {
             @!column-name.push: .name;
@@ -53,22 +53,22 @@ submethod BUILD(:$!mysql_client!, :$!parent!, :$!stmt = MYSQL_STMT,
         if $!param-count = .mysql_stmt_param_count -> $pc {
             $!par-binds = LinearArray[MYSQL_BIND].new($pc);
             my $lb = BPointer(
-                $!in-lengths = blob-allocate(Buf[int64], $pc)
+                $!in-lengths = blob-allocate(Buf[intptr], $pc)
             ).Int;
-            $!par-binds[$_].length = $lb + $_ * 8 for ^$pc;
+            $!par-binds[$_].length = $lb + $_ * ptrsize_t for ^$pc;
         }
         if ($!field_count = .mysql_stmt_field_count) && .mysql_stmt_result_metadata -> $res {
             $!binds = LinearArray[MYSQL_BIND].new($!field_count);
             my $lb = BPointer($!out-lengths = self!get-meta($res)).Int;
-            $!isnull = blob-allocate(Buf[int64], $!field_count);
+            $!isnull = blob-allocate(Buf[intptr], $!field_count);
             my $nb = BPointer($!isnull).Int;
             for ^$!field_count -> $col {
                 given $!binds[$col] {
                     if .buffer_length = $!out-lengths[$col] {
                         @!out-bufs[$col] = blob-allocate(Buf, $!out-lengths[$col]);
                         .buffer = BPointer(@!out-bufs[$col]).Int;
-                        .length = $lb + $col * 8;
-                        .is_null = $nb + $col * 8;
+                        .length = $lb + $col * ptrsize_t;
+                        .is_null = $nb + $col * ptrsize_t;
                         .buffer_type = @!column-type[$col] ~~ Blob
                             ?? MYSQL_TYPE_BLOB !! MYSQL_TYPE_STRING;
                     } else {
@@ -110,7 +110,8 @@ method execute(*@params) {
                     $!par-binds[$k].buffer_type = MYSQL_TYPE_NULL;
                 }
             }
-            $!stmt.mysql_stmt_bind_param($!par-binds.typed-pointer)
+            $!stmt.mysql_stmt_bind_param($!par-binds.typed-pointer);
+            without self!handle-errors { .fail }
         }
         $!stmt.mysql_stmt_execute
         or $!Prefetch

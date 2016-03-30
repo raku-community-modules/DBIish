@@ -70,7 +70,8 @@ class MYSQL_RES is repr('CPointer') { ... }
 
 # Current rakudo don't allow set a Pointer in a CStruct based class.
 # so we use an 'intprt'
-constant intptr = nativesizeof(Pointer) == 8 ?? uint64 !! uint32;
+constant intptr is export = nativesizeof(Pointer) == 8 ?? uint64 !! uint32;
+constant ptrsize_t is export = nativesizeof(intptr);
 class MYSQL_BIND is repr('CStruct') is export {
     #has Pointer[ulong]   $!length is rw;
     has intptr		 $.length is rw;
@@ -85,8 +86,9 @@ class MYSQL_BIND is repr('CStruct') is export {
     has Pointer		 $.skip_result;
     has ulong		 $.buffer_length is rw;
     has ulong		 $.offset;
-    has size_t		 $.param_number is rw;
-    has size_t		 $.pack_length;
+    has ulong		 $.lenght_value;
+    has uint32		 $.param_number is rw;
+    has uint32		 $.pack_length;
     has uint32		 $.buffer_type is rw;
     has my_bool		 $.error_value;
     has my_bool		 $.is_unsigned;
@@ -172,7 +174,7 @@ class MYSQL is export is repr('CPointer') {
     }
 
     # Native methods
-    method mysql_affected_rows(MYSQL:D:          --> int32) is native(LIB) { * }
+    method mysql_affected_rows(MYSQL:D:          --> int64) is native(LIB) { * }
     method mysql_close(MYSQL:D:                           ) is native(LIB) { * }
     method mysql_errno(MYSQL:D:                  --> int32) is native(LIB) { * }
     method mysql_error(MYSQL:D:                    --> Str) is native(LIB) { * }
