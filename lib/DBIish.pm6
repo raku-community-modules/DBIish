@@ -1,7 +1,7 @@
 use v6;
 # DBIish.pm6
 
-unit class DBIish:auth<mberends>:ver<0.5.2>;
+unit class DBIish:auth<mberends>:ver<0.5.3>;
     use DBDish;
 
     package GLOBAL::X::DBIish {
@@ -14,7 +14,7 @@ unit class DBIish:auth<mberends>:ver<0.5.2>;
 	    has $.library;
 	    method message { "DBIish: DBDish::$.driver needs $.library, not found" }
 	}
-	our class NotADBIishDriver is Exception {
+	our class NotADBDishDriver is Exception {
 	    has $.who;
 	    method message { "$.who is not a DBDish::Driver" };
 	}
