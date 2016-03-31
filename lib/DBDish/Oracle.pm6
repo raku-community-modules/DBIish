@@ -96,14 +96,11 @@ method connect(*%params) {
     my $password = %params<password> // die 'Missing <password> config';
 
     # create the environment handle
-    my @envhpp := CArray[Pointer].new;
-    @envhpp[0]  = Pointer;
-    my Pointer $ctxp;
 
     my sword $errcode = OCIEnvNlsCreate(
-        @envhpp,
+	my $envhp = OCIEnv.new,
         OCI_DEFAULT,
-        $ctxp,
+	my Pointer $ctxp,
         Pointer,
         Pointer,
         Pointer,
@@ -113,9 +110,6 @@ method connect(*%params) {
         AL32UTF8,
     );
 
-    # fetch environment handle from pointer
-    my $envhp = @envhpp[0];
-
     if $errcode ne OCI_SUCCESS {
         my $errortext = get_errortext( $envhp, OCI_HTYPE_ENV );
         self!conn-error(
@@ -124,13 +118,11 @@ method connect(*%params) {
     }
 
     # allocate the error handle
-    my @errhpp := CArray[Pointer].new;
-    @errhpp[0]  = Pointer;
-    $errcode = OCIHandleAlloc($envhp, @errhpp, OCI_HTYPE_ERROR, 0, Pointer );
+    $errcode = OCIHandleAlloc($envhp, my $errhp = OCIError.new, OCI_HTYPE_ERROR, 0, Pointer );
     if $errcode ne OCI_SUCCESS {
         self!conn-error(:code($errcode), :errstr("OCIHandleAlloc failed"));
     }
-    my $errhp = @errhpp[0];
+    #my $errhp = @errhpp[0];
 
     my @svchp := CArray[OCISvcCtx].new;
     @svchp[0]  = OCISvcCtx;
@@ -153,13 +145,12 @@ method connect(*%params) {
     }
     my $svchp = @svchp[0];
 
-    my $connection = DBDish::Oracle::Connection.new(
+    DBDish::Oracle::Connection.new(
             :$envhp,
             :$svchp,
             :$errhp,
             :AutoCommit(%params<AutoCommit>),
             :parent(self),
             #:RaiseError(%params<RaiseError>),
-        );
-    return $connection;
+    );
 }

@@ -18,17 +18,14 @@ submethod BUILD(:$!envhp!, :$!svchp!, :$!errhp!, :$!AutoCommit = 1, :$!parent!) 
 method prepare(Str $statement, $attr?) {
     my $oracle_statement = DBDish::Oracle::oracle-replace-placeholder($statement);
 
-    # allocate a statement handle
-    my @stmthpp := CArray[OCIStmt].new;
-    @stmthpp[0]  = OCIStmt;
-    my $errcode = OCIHandleAlloc($!envhp, @stmthpp, OCI_HTYPE_STMT, 0, Pointer );
+    my $errcode = OCIHandleAlloc($!envhp, my $stmthp = OCIStmt.new, OCI_HTYPE_STMT, 0, Pointer );
     if $errcode ne OCI_SUCCESS {
         die "statement handle allocation failed: '$errcode'";
     }
 
     $errcode = OCIStmtPrepare2(
             $!svchp,
-            @stmthpp,
+            $stmthp,
             $!errhp,
             $oracle_statement,
             $oracle_statement.encode('utf8').bytes,
@@ -43,7 +40,7 @@ method prepare(Str $statement, $attr?) {
 #            die self.errstr if $.RaiseError;
 #            return Nil;
     }
-    my $stmthp = @stmthpp[0];
+    #my $stmthp = @stmthpp[0];
 
     my ub2 $statementtype;
     $errcode = OCIAttrGet_ub2($stmthp, OCI_HTYPE_STMT, $statementtype, Pointer, OCI_ATTR_STMT_TYPE, $!errhp);
@@ -52,7 +49,7 @@ method prepare(Str $statement, $attr?) {
         die "statement type get failed ($errcode): '$errortext'";
     }
 
-    my $statement_handle = DBDish::Oracle::StatementHandle.bless(
+    DBDish::Oracle::StatementHandle.new(
         # TODO: pass the original or the Oracle statment here?
         statement => $oracle_statement,
         #:$statement,
@@ -63,12 +60,6 @@ method prepare(Str $statement, $attr?) {
         #:$.RaiseError,
         :parent(self),
     );
-    return $statement_handle;
-}
-
-method do(Str $statement, *@bind is copy) {
-    my $sth = self.prepare($statement);
-    return $sth.execute(@bind);
 }
 
 method commit {

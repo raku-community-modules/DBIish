@@ -16,12 +16,13 @@ constant sword        is export = int32;
 constant ub2          is export = uint16;
 constant ub4          is export = uint32;
 
+class OCIHandle	    is repr('CPointer') is export {};
+class OCIEnv	    is OCIHandle is repr('CPointer') is export {};
+class OCIError	    is OCIHandle is repr('CPointer') is export {}
+class OCIStmt	    is OCIHandle is repr('CPointer') is export {};
 constant OCIBind      is export = Pointer;
 constant OCIDefine    is export = Pointer;
-constant OCIEnv       is export = Pointer;
-constant OCIError     is export = Pointer;
 constant OCISnapshot  is export = Pointer;
-constant OCIStmt      is export = Pointer;
 constant OCISvcCtx    is export = Pointer;
 constant OraText      is export = Str;
 
@@ -78,7 +79,7 @@ constant AL32UTF8               is export = 873;
 #------------ Oracle library functions in alphabetical order ------------
 
 sub OCIEnvNlsCreate (
-        CArray[OCIEnv] $envhpp,
+        OCIEnv $envhpp is rw,
         ub4            $mode,
         Pointer        $ctxp,
         Pointer        $malocfp,
@@ -95,7 +96,7 @@ sub OCIEnvNlsCreate (
     { ... }
 
 sub OCIErrorGet (
-        Pointer       $hndlp,
+        OCIHandle     $hndlp,
         ub4           $recordno,
         OraText       $sqlstate,
         CArray[sb4]   $errcodep,
@@ -109,8 +110,8 @@ sub OCIErrorGet (
     { ... }
 
 sub OCIHandleAlloc (
-        Pointer           $parenth,
-        CArray[Pointer]   $hndlpp,
+        OCIHandle         $parenth,
+        OCIHandle	  $hndlpp is rw,
         ub4               $type,
         size_t            $xtramem_sz,
         CArray[Pointer]   $usrmempp,
@@ -148,7 +149,7 @@ sub OCILogoff (
 
 sub OCIStmtPrepare2 (
         OCISvcCtx           $svchp,
-        CArray[OCIStmt]     $stmthp,
+        OCIStmt	            $stmthp is rw,
         OCIError            $errhp,
         OraText             $stmttext is encoded('utf8'),
         ub4                 $stmt_len,

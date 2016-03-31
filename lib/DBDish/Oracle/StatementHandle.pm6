@@ -11,20 +11,17 @@ has $!statementtype;
 has $!svchp;
 has $!errhp;
 has $!stmthp;
-has Int $!state = 0; # execute (1) has to happen before fetch (2)
 #    has $!param_count;
 has $!result;
 has Int $!field_count;
-has %!parmd;
+has @!parmd;
 has @!out-binds;
 has Int $!row_count;
 
 submethod BUILD(:$!parent!, :$!statement!, :$!statementtype!, :$!svchp!, :$!errhp!, :$!stmthp!) { }
 
 method execute(*@params is copy) {
-#        $!current_row = 0;
-#        die "Wrong number of arguments to method execute: got @params.elems(), expected $!param_count" if @params != $!param_count;
-
+    self!enter-execute();
     my sb4 $value_sz;
 
     my ub2 $alen = 0;
@@ -108,7 +105,7 @@ method execute(*@params is copy) {
             }
             when Str {
                 my Str $valuep = $v;
-                explicitly-manage($valuep);
+		explicitly-manage($valuep);
                 @in-binds.push($bindpp, $valuep, $indp);
                 $value_sz = $v.encode('utf8').bytes;
                 #warn "binding '$placeholder' ($placeh_len): '$valuep' ($value_sz) as OCI type 'SQLT_CHR' Perl type '$v.^name()' NULL '$ind'\n";
@@ -160,10 +157,27 @@ method execute(*@params is copy) {
         die "execute of '$!statement' failed ($errcode): '$errortext'";
     }
     #warn "successfully executed $!parent.AutoCommit()";
-    without @!column-name {
-        my %parmd = self!parmd;
-        for 1 .. self.field_count -> $field_index {
-            my $parmdp = %parmd{$field_index};
+    without $!field_count {
+        # TODO: because 2015.11: 'Natively typed state variables not yet implemented'
+        my ub4 $field_count_native;
+        my $errcode = OCIAttrGet_ub4($!stmthp, OCI_HTYPE_STMT, $field_count_native,
+                              Pointer, OCI_ATTR_PARAM_COUNT, $!errhp);
+        $!field_count = $field_count_native;
+        # FIXME: error handling
+        for ^$!field_count -> $field_index {
+            my @parmdpp := CArray[Pointer].new;
+            @parmdpp[0] = Pointer;
+            my $errcode = OCIParamGet($!stmthp, OCI_HTYPE_STMT, $!errhp, @parmdpp, $field_index+1);
+            # that might be required for some queries
+            # if $errcode eq OCI_ERROR {
+            #     warn "no parameter for position $field_index, skipping";
+            #     next;
+            # }
+            if $errcode ne OCI_SUCCESS {
+                my $errortext = get_errortext($!errhp);
+                die "parmd get for column $field_index failed ($errcode): '$errortext'";
+            }
+            my $parmdp = @!parmd[$field_index] = @parmdpp[0];
 
             my CArray[CArray[int8]] $col_namep .= new;
             $col_namep[0] = CArray[int8].new;
@@ -171,7 +185,7 @@ method execute(*@params is copy) {
             my @col_name_len := CArray[ub4].new;
             @col_name_len[0] = 0;
 
-            my $errcode = OCIAttrGet_Str($parmdp, OCI_DTYPE_PARAM, $col_namep, @col_name_len, OCI_ATTR_NAME, $!errhp);
+            $errcode = OCIAttrGet_Str($parmdp, OCI_DTYPE_PARAM, $col_namep, @col_name_len, OCI_ATTR_NAME, $!errhp);
             my $col_name_len = @col_name_len[0];
             #warn "COLUMN LEN: $col_name_len";
             my @textary;
@@ -186,13 +200,12 @@ method execute(*@params is copy) {
     # for DDL statements, no further steps are necessary
     # if $!statementtype ~~ ( OCI_STMT_CREATE, OCI_STMT_DROP, OCI_STMT_ALTER );
 
-    $!state = 1;
-    self.rows;
+    self!done-execute(self._rows,+@!column-name);
 }
 
 # do() and execute() return the number of affected rows directly or:
 # rows() is called on the statement handle $sth.
-method rows() {
+method _rows() {
     # DDL statements always return 0E0
     return 0
         if $!statementtype ~~ ( OCI_STMT_CREATE, OCI_STMT_DROP, OCI_STMT_ALTER );
@@ -214,34 +227,7 @@ method rows() {
     $!row_count;
 }
 
-method !parmd {
-    # caching
-    unless %!parmd {
-        for 1 .. self.field_count -> $field_index {
-            my @parmdpp := CArray[Pointer].new;
-            @parmdpp[0] = Pointer;
-            my $errcode = OCIParamGet($!stmthp, OCI_HTYPE_STMT, $!errhp, @parmdpp, $field_index);
-            # that might be required for some queries
-            # if $errcode eq OCI_ERROR {
-            #     warn "no parameter for position $field_index, skipping";
-            #     next;
-            # }
-            if $errcode ne OCI_SUCCESS {
-                my $errortext = get_errortext($!errhp);
-                die "parmd get for column $field_index failed ($errcode): '$errortext'";
-            }
-            %!parmd{$field_index} = @parmdpp[0];
-            #warn "parmd for column $field_index fetched";
-        }
-    }
-
-    return %!parmd;
-}
-
-method _row(:$hash) {
-    die "Can't fetch without execute first"
-        unless $!state >= 1;
-
+method _row() {
     my ub2 $rcode = 0;
     my $rcodep = CArray[ub2].new;
     $rcodep[0] = $rcode;
@@ -251,10 +237,9 @@ method _row(:$hash) {
         # OCIDefineByPos2 docs state that position is 1-based,
         # 0 selects rowids
         #warn "SQL: $!statement";
-        my %parmd = self!parmd;
-        for 1 .. self.field_count -> $field_index {
+        for ^$!field_count -> $field_index {
             #warn "binding out-value for column $field_index";
-            my $parmdp = %parmd{$field_index};
+            my $parmdp = @!parmd[$field_index];
 
             # retrieve the data type
             my ub2 $dty;
@@ -306,6 +291,7 @@ method _row(:$hash) {
             given $dty {
                 when SQLT_CHR {
                     #warn "defining #$field_index '$col_name'($datalen) as CHR($dty)";
+		    @!column-type.push(Str);
                     my $valuep = CArray[int8].new;
                     $valuep[$_] = 0
                         for ^$datalen;
@@ -316,7 +302,7 @@ method _row(:$hash) {
                         $!stmthp,
                         $defnpp,
                         $!errhp,
-                        $field_index,
+                        $field_index+1,
                         $valuep,
                         $value_sz,
                         $dty,
@@ -327,6 +313,7 @@ method _row(:$hash) {
                     );
                 }
                 when SQLT_INT {
+		    @!column-type.push(Int);
                     #warn "defining #$field_index '$col_name'($datalen) as INT|NUM($dty)";
                     my long $value = 0;
                     my $valuep = CArray[long].new;
@@ -337,7 +324,7 @@ method _row(:$hash) {
                         $!stmthp,
                         $defnpp,
                         $!errhp,
-                        $field_index,
+                        $field_index+1,
                         $valuep,
                         $value_sz,
                         $dty,
@@ -348,6 +335,7 @@ method _row(:$hash) {
                     );
                 }
                 when SQLT_FLT {
+		    @!column-type.push(Rat);
                     #warn "defining #$field_index '$col_name'($datalen) as FLT($dty)";
                     my num64 $value;
                     my $valuep = CArray[num64].new;
@@ -358,7 +346,7 @@ method _row(:$hash) {
                         $!stmthp,
                         $defnpp,
                         $!errhp,
-                        $field_index,
+                        $field_index+1,
                         $valuep,
                         $value_sz,
                         $dty,
@@ -383,8 +371,10 @@ method _row(:$hash) {
     my $errcode = OCIStmtFetch2($!stmthp, $!errhp, 1, OCI_DEFAULT, 0, OCI_DEFAULT);
 
     # no data is no exception
-    $hash ?? return {} !! return []
-        if $errcode eq OCI_NO_DATA;
+    if $errcode eq OCI_NO_DATA {
+	self.finish();
+	return ();
+    }
 
     if $errcode ne OCI_SUCCESS {
         my $errortext = get_errortext($!errhp);
@@ -399,13 +389,13 @@ method _row(:$hash) {
     #}
     #warn "ROWS FETCHED: $row_count";
 
-    my @row;
 
     # now unpack the returned data
-    for @!out-binds -> $col {
+    my $row = ();
+    $row = do for @!out-binds -> $col {
         #say $col.gist;
         # http://docs.oracle.com/database/121/LNOCI/oci02bas.htm#LNOCI16231
-        given $col<indp>[0] {
+        my $val = do given $col<indp>[0] {
             when -2 {
                 die "the length of the item is greater than the length of the output variable";
             }
@@ -413,13 +403,13 @@ method _row(:$hash) {
             when -1 {
                 given $col<dty> {
                     when SQLT_CHR {
-                        @row.push(Str);
+                        Str;
                     }
                     when SQLT_INT {
-                        @row.push(Int);
+                        Int;
                     }
                     when SQLT_FLT {
-                        @row.push(Rat);
+                        Rat;
                     }
                     default {
                         die "unhandled datatype $col<dty>";
@@ -427,19 +417,19 @@ method _row(:$hash) {
                 }
             }
             when 0 {
-                #say "$col<dty> $col<valuep>";
+		#say "$col<dty> $col<valuep>";
                 given $col<dty> {
                     when SQLT_CHR {
                         my @textary;
                         @textary[$_] = $col<valuep>[$_]
                             for ^$col<rlenp>[0];
-                        @row.push(Buf.new(@textary).decode());
+                        Buf.new(@textary).decode();
                     }
                     when SQLT_INT {
-                        @row.push($col<valuep>[0].Int);
+                        $col<valuep>[0].Int;
                     }
                     when SQLT_FLT {
-                        @row.push($col<valuep>[0].Rat);
+                        $col<valuep>[0].Rat;
                     }
                     default {
                         die "unhandled datatype $col<dty>";
@@ -451,30 +441,10 @@ method _row(:$hash) {
                 die "the length of the item is greater than the length of the output variable, length returned was $col<indp>";
             }
         }
+	$val;
     }
-
-    #say @row.gist;
-    return (@!column-name Z=> @row).hash
-        if $hash;
-
-    return @row;
-}
-
-method fetchrow {
-    return self._row;
-}
-
-method field_count {
-    # TODO: what should be returned before the statement has been executed?
-    unless $!field_count.defined {
-        # TODO: because 2015.11: 'Natively typed state variables not yet implemented'
-        my ub4 $field_count_native;
-        my $errcode = OCIAttrGet_ub4($!stmthp, OCI_HTYPE_STMT, $field_count_native,
-                              Pointer, OCI_ATTR_PARAM_COUNT, $!errhp);
-        $!field_count = $field_count_native;
-        # FIXME: error handling
-    }
-    return $!field_count;
+    $!affected_rows++;
+    $row;
 }
 
 method _free() { }
@@ -482,5 +452,5 @@ method finish() {
     if defined($!result) {
 	#TODO!!
     }
-    return Bool::True;
+    $!Finished = True;
 }
