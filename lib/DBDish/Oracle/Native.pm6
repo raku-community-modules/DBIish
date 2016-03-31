@@ -16,10 +16,10 @@ constant sword        is export = int32;
 constant ub2          is export = uint16;
 constant ub4          is export = uint32;
 
-class OCIHandle	    is repr('CPointer') is export {};
-class OCIEnv	    is OCIHandle is repr('CPointer') is export {};
-class OCIError	    is OCIHandle is repr('CPointer') is export {}
-class OCIStmt	    is OCIHandle is repr('CPointer') is export {};
+class OCIHandle       is repr('CPointer') is export {}
+class OCIEnv          is OCIHandle is repr('CPointer') is export {}
+class OCIError        is OCIHandle is repr('CPointer') is export {}
+class OCIStmt         is OCIHandle is repr('CPointer') is export {}
 constant OCIBind      is export = Pointer;
 constant OCIDefine    is export = Pointer;
 constant OCISnapshot  is export = Pointer;
@@ -111,7 +111,7 @@ sub OCIErrorGet (
 
 sub OCIHandleAlloc (
         OCIHandle         $parenth,
-        OCIHandle	  $hndlpp is rw,
+        OCIHandle         $hndlpp is rw,
         ub4               $type,
         size_t            $xtramem_sz,
         CArray[Pointer]   $usrmempp,
@@ -149,7 +149,7 @@ sub OCILogoff (
 
 sub OCIStmtPrepare2 (
         OCISvcCtx           $svchp,
-        OCIStmt	            $stmthp is rw,
+        OCIStmt             $stmthp is rw,
         OCIError            $errhp,
         OraText             $stmttext is encoded('utf8'),
         ub4                 $stmt_len,
@@ -241,7 +241,7 @@ sub OCIBindByName_Str (
         OCIError            $errhp,
         OraText             $placeholder is encoded('utf8'),
         sb4                 $placeh_len,
-        Str                 $valuep is encoded('utf8'),
+        Buf                 $valuep,
         sb4                 $value_sz,
         ub2                 $dty,
         #sb2                 $indp is rw,

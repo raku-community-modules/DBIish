@@ -104,10 +104,9 @@ method execute(*@params is copy) {
                 );
             }
             when Str {
-                my Str $valuep = $v;
-		explicitly-manage($valuep);
+                my $valuep = $v.encode;
                 @in-binds.push($bindpp, $valuep, $indp);
-                $value_sz = $v.encode('utf8').bytes;
+                $value_sz = $valuep.bytes;
                 #warn "binding '$placeholder' ($placeh_len): '$valuep' ($value_sz) as OCI type 'SQLT_CHR' Perl type '$v.^name()' NULL '$ind'\n";
                 $errcode = OCIBindByName_Str(
                     $!stmthp,
@@ -200,7 +199,7 @@ method execute(*@params is copy) {
     # for DDL statements, no further steps are necessary
     # if $!statementtype ~~ ( OCI_STMT_CREATE, OCI_STMT_DROP, OCI_STMT_ALTER );
 
-    self!done-execute(self._rows,+@!column-name);
+    self!done-execute(self._rows, $!field_count);
 }
 
 # do() and execute() return the number of affected rows directly or:
@@ -210,7 +209,7 @@ method _rows() {
     return 0
         if $!statementtype ~~ ( OCI_STMT_CREATE, OCI_STMT_DROP, OCI_STMT_ALTER );
 
-    unless defined $!row_count {
+    without $!row_count {
         my ub4 $row_count;
         # FIXME: this returns the number of rows already fetched,
         #        not the number of rows available!
@@ -291,7 +290,7 @@ method _row() {
             given $dty {
                 when SQLT_CHR {
                     #warn "defining #$field_index '$col_name'($datalen) as CHR($dty)";
-		    @!column-type.push(Str);
+                    @!column-type.push(Str);
                     my $valuep = CArray[int8].new;
                     $valuep[$_] = 0
                         for ^$datalen;
@@ -313,7 +312,7 @@ method _row() {
                     );
                 }
                 when SQLT_INT {
-		    @!column-type.push(Int);
+                    @!column-type.push(Int);
                     #warn "defining #$field_index '$col_name'($datalen) as INT|NUM($dty)";
                     my long $value = 0;
                     my $valuep = CArray[long].new;
@@ -335,7 +334,7 @@ method _row() {
                     );
                 }
                 when SQLT_FLT {
-		    @!column-type.push(Rat);
+                    @!column-type.push(Rat);
                     #warn "defining #$field_index '$col_name'($datalen) as FLT($dty)";
                     my num64 $value;
                     my $valuep = CArray[num64].new;
@@ -372,8 +371,8 @@ method _row() {
 
     # no data is no exception
     if $errcode eq OCI_NO_DATA {
-	self.finish();
-	return ();
+        self.finish();
+        return ();
     }
 
     if $errcode ne OCI_SUCCESS {
@@ -417,7 +416,7 @@ method _row() {
                 }
             }
             when 0 {
-		#say "$col<dty> $col<valuep>";
+                #say "$col<dty> $col<valuep>";
                 given $col<dty> {
                     when SQLT_CHR {
                         my @textary;
@@ -441,7 +440,7 @@ method _row() {
                 die "the length of the item is greater than the length of the output variable, length returned was $col<indp>";
             }
         }
-	$val;
+        $val;
     }
     $!affected_rows++;
     $row;
@@ -450,7 +449,7 @@ method _row() {
 method _free() { }
 method finish() {
     if defined($!result) {
-	#TODO!!
+        #TODO!!
     }
     $!Finished = True;
 }

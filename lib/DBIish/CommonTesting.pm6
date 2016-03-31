@@ -177,7 +177,7 @@ method run-tests {
     # TODO Different drivers returns different values, should implement the
     # capabilities announce.
     todo 'Will probably fails for the lack of proper capabilities annuonce'
-	if $.dbd eq 'SQLite';
+	if $.dbd eq 'SQLite' | 'Oracle';
     is $rc, 6,		    'In an ideal world should returns rows available';
 
     #fetch stuff return Str
