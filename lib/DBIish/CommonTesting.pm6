@@ -277,8 +277,6 @@ method run-tests {
         { name => 'TAFM', description => 'Mild fish taco', quantity => 1, price => 4.85, amount => 4.85 },
     );
 
-    #diag "ref-aoh: {Dump(@ref-aoh)}";
-
     is-deeply @results, @ref-aoh, 'types and values match';
 
     ok $sth = $dbh.prepare($.select-null-query), "can prepare '$.select-null-query'";
