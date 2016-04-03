@@ -5,7 +5,7 @@ unit class DBDish::Pg::Connection does DBDish::Connection;
 use DBDish::Pg::Native;
 need DBDish::Pg::StatementHandle;
 
-has PGconn $!pg_conn is required handles <pg-notifies>;
+has PGconn $!pg_conn is required handles <pg-notifies pg-socket>;
 has $.AutoCommit is rw = True;
 has $.in_transaction is rw = False;
 
