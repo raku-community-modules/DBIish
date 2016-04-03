@@ -121,6 +121,12 @@ class PGconn is export is repr('CPointer') {
 	    die "Can't allocate memory!"
 	}
     }
+    method pg-socket(--> Int) {
+        sub PQsocket(PGconn --> int8) is native(LIB) { * }
+
+        return PQsocket(self);
+	}
+
     method pg-notifies(--> pg-notify) {
         class PGnotify is repr('CStruct') {
             has Str                           $.relname; # char* relname

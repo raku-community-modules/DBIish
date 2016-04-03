@@ -2,7 +2,7 @@ v6;
 use Test;
 use DBIish;
 
-plan 13;
+plan 14;
 
 my %con-parms;
 
@@ -27,6 +27,7 @@ without $dbh {
 }
 
 ok $dbh,    'Connected';
+ok($dbh.pg-socket, "There's a socket");
 lives-ok { $dbh.do('LISTEN test') }, 'Listen to test';
 my $note = $dbh.pg-notifies;
 isa-ok $note, Any, 'No notification';
