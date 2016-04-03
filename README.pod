@@ -118,9 +118,9 @@ string Pg can understand.
   #prepare an insertion of an array field;
   $sth.execute($sth.pg-array-str(@data));
 
-=head3 B<pg_notifies>
+=head3 B<pg-notifies>
 
-  $ret = $dbh.pg_notifies;
+  $ret = $dbh.pg-notifies;
 
 Looks for any asynchronous notifications received and returns a pg-notify object that looks like this
 
