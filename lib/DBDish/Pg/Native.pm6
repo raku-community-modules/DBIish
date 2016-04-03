@@ -122,7 +122,7 @@ class PGconn is export is repr('CPointer') {
 	}
     }
     method pg-socket(--> Int) {
-        sub PQsocket(PGconn --> int8) is native(LIB) { * }
+        sub PQsocket(PGconn --> int32) is native(LIB) { * }
 
         return PQsocket(self);
 	}
