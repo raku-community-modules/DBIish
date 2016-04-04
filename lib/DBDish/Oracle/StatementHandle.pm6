@@ -49,11 +49,12 @@ method !get-meta {
 
         for ^$!field_count -> $col {
             with self!handle-err: $!stmth.ParamGet($!errh, $col + 1) -> $parmd {
-                my $col_name = $parmd.AttrGet($!errh, Buf, OCI_ATTR_NAME);
+                my $col_name = $parmd.AttrGet($!errh, utf8, OCI_ATTR_NAME);
                 my $dtype    = $parmd.AttrGet($!errh, ub2, OCI_ATTR_DATA_TYPE);
                 my $datalen  = $parmd.AttrGet($!errh, ub4, OCI_ATTR_DATA_SIZE);
                 my $wtype    = SQLT_CHR;
                 my $buff     = do given $dtype {
+                    #note "$col_name: $dtype ($datalen)";
                     when SQLT_NUM {
                         my $prec = $parmd.AttrGet($!errh, sb2, OCI_ATTR_PRECISION);
                         my $scale = $parmd.AttrGet($!errh, sb1, OCI_ATTR_SCALE);
@@ -63,7 +64,8 @@ method !get-meta {
                     }
                     when SQLT_FLT { $wtype = $_; array[num64].new(0e0); }
                     when SQLT_INT { $wtype = $_; Buf[int64].new(0); }
-                    default { blob-allocate(utf8, $datalen); }
+                    when SQLT_BIN { $wtype = $_; proceed; }
+                    default { blob-allocate(Buf, $datalen); }
                 }
                 my $bind = OCIDefine.new;
                 $!stmth.DefineByPos($bind, $!errh, $col + 1, |ptr-sized($buff),
@@ -73,6 +75,8 @@ method !get-meta {
                 @!out-binds.push:   $bind;
                 @!out-buffs.push:   $buff;
                 @!column-name.push: $col_name.decode.lc;
+                warn "No map defined for type $dtype\n"
+                    unless %sqltype-map{$dtype}:exists;
                 @!column-type.push: %sqltype-map{$dtype};
             } else { .fail }
         }
@@ -86,16 +90,18 @@ method execute(*@params) {
     my @in-bufs;
     my $indp = pointer-to($!in-indicator).Int if $!param-count;
     for @params.kv -> $k, $v {
-        my $buf;
-        with $v {
-            $buf = $v ~~ Str ?? .encode !! $v.Str.encode;
+        my $btype = SQLT_CHR;
+        my $buf = do with $v {
             $!in-indicator[$k] = 0;
+            when Blob { $btype = SQLT_BIN; $v }
+            when Str { .encode }
+            default { .Str.encode}
         } else {
-            $buf = utf8.new;
             $!in-indicator[$k] = -1;
+            utf8.new;
         };
         $!stmth.BindByPos(
-            @!in-binds[$k], $!errh, $k+1, |ptr-sized($buf), SQLT_CHR,
+            @!in-binds[$k], $!errh, $k+1, |ptr-sized($buf), $btype,
             $indp + $k*2, NULL, NULL, 0, NULL, OCI_DEFAULT
         ) and self!handle-err($!errh.gen-error).fail;
         @in-bufs.push: $buf; # Keep till execute
@@ -106,7 +112,7 @@ method execute(*@params) {
         :AutoCommit($!parent.AutoCommit)
     );
     given $errcode {
-        when OCI_ERROR { self!handle-err($!errh.gen-err) }
+        when OCI_ERROR { self!handle-err($!errh.gen-error) }
         my $rows = 0;
         when OCI_NO_DATA { proceed; }
         when OCI_SUCCESS_WITH_INFO {

@@ -83,12 +83,14 @@ constant SQLT_NUM               is export = 2;
 constant SQLT_INT               is export = 3;
 constant SQLT_FLT               is export = 4;
 constant SQLT_STR               is export = 5;
+constant SQLT_BIN               is export = 23;
 
 constant %sqltype-map is export = {
     +(SQLT_CHR) => Str,
     +(SQLT_NUM) => Rat,
     +(SQLT_INT) => Int,
-    +(SQLT_FLT) => Num
+    +(SQLT_FLT) => Num,
+    +(SQLT_BIN) => Buf
 };
 
 constant OCISnapshot  is export = Pointer;
