@@ -1,8 +1,7 @@
 use v6;
 need DBDish;     # roles for drivers
 
-unit class DBDish::Oracle:auth<mberends>:ver<0.0.1> does DBDish::Driver;
-use NativeCall;
+unit class DBDish::Oracle:auth<mberends>:ver<0.0.9> does DBDish::Driver;
 use DBDish::Oracle::Native;
 need DBDish::Oracle::Connection;
 need DBDish::Oracle::StatementHandle;
@@ -70,8 +69,8 @@ my class OracleTokenizer::Actions {
         make $0.map({.values[0].ast}).join;
     }
     method normal($/)       { make $/.Str }
-    # replace each ? placeholder with a named one
-    method placeholder($/)  { make ':p' ~ $!counter++ }
+    # replace each ? placeholder with a oracle's counted ones
+    method placeholder($/)  { make ':' ~ $!counter++ }
     method single_quote($/) { make $/.Str }
     method double_quote($/) { make $/.Str }
 }
@@ -81,76 +80,41 @@ our sub oracle-replace-placeholder(Str $query) is export {
         and $/.ast;
 }
 
-#sub quote-and-escape($s) {
-#    "'" ~ $s.trans([q{'}, q{\\]}] => [q{\\\'}, q{\\\\}])
-#        ~ "'"
-#}
-
 #------------------ methods to be called from DBIish ------------------
-method connect(*%params) {
-    # TODO: the dbname from tnsnames.ora includes the host and port config
-    #my $host     = %params<host>     // 'localhost';
-    #my $port     = %params<port>     // 1521;
-    my $database = %params<database> // die 'Missing <database> config';
-    my $username = %params<username> // die 'Missing <username> config';
-    my $password = %params<password> // die 'Missing <password> config';
+method connect(:$database, :$username, :$password, :$AutoCommit, :$RaiseError, *%params) {
 
     # create the environment handle
-
-    my sword $errcode = OCIEnvNlsCreate(
-	my $envhp = OCIEnv.new,
-        OCI_DEFAULT,
-	my Pointer $ctxp,
-        Pointer,
-        Pointer,
-        Pointer,
-        0,
-        Pointer,
-        AL32UTF8,
-        AL32UTF8,
-    );
-
-    if $errcode ne OCI_SUCCESS {
-        my $errortext = get_errortext( $envhp, OCI_HTYPE_ENV );
-        self!conn-error(
-            :code($errcode), :errstr("OCIEnvNlsCreate failed: '$errortext'")
-        );
+    my $envh = OCIEnv.NlsCreate();
+    if $envh ~~ OCIErr {
+        self!conn-error(:code(+$envh), :errstr(~$envh));
     }
 
     # allocate the error handle
-    $errcode = OCIHandleAlloc($envhp, my $errhp = OCIError.new, OCI_HTYPE_ERROR, 0, Pointer );
-    if $errcode ne OCI_SUCCESS {
-        self!conn-error(:code($errcode), :errstr("OCIHandleAlloc failed"));
+    my $errh = $envh.HandleAlloc(OCIError);
+    if $errh ~~ OCIErr {
+        self!conn-error(:code(+$errh), :errstr(~$errh));
     }
-    #my $errhp = @errhpp[0];
 
-    my @svchp := CArray[OCISvcCtx].new;
-    @svchp[0]  = OCISvcCtx;
-
-    $errcode = OCILogon2(
-        $envhp,
-        $errhp,
-        @svchp,
-        $username,
-        $username.encode('utf8').bytes,
-        $password,
-        $password.encode('utf8').bytes,
-        $database,
-        $database.encode('utf8').bytes,
-        OCI_LOGON2_STMTCACHE,
+    my $svch = $envh.Logon(
+        :$errh,
+        :$username,
+        :$password,
+        :dbname($database),
+        :mode(OCI_LOGON2_STMTCACHE),
     );
-    if $errcode ne OCI_SUCCESS {
-        my $errortext = get_errortext($errhp);
-        self!conn-error(:code($errcode), :errstr("OCILogon2 failed: '$errortext'"));
+    if $svch ~~ OCIErr {
+        self!conn-error(:code(+$svch), :errstr("Logon failed: '$svch'"));
     }
-    my $svchp = @svchp[0];
 
     DBDish::Oracle::Connection.new(
-            :$envhp,
-            :$svchp,
-            :$errhp,
-            :AutoCommit(%params<AutoCommit>),
-            :parent(self),
-            #:RaiseError(%params<RaiseError>),
-    );
+        :$envh,
+        :$errh,
+        :$svch,
+        :parent(self),
+        :$AutoCommit,
+        :$RaiseError,
+        |%params
+    )
 }
+
+# vim: expandtab ft=perl6

@@ -1,65 +1,35 @@
 use v6;
 need DBDish;
 
-use NativeCall;
-
-need DBDish::Oracle::StatementHandle;
-use DBDish::Oracle::Native;
-
 unit class DBDish::Oracle::Connection does DBDish::Connection;
+use DBDish::Oracle::Native;
+need DBDish::Oracle::StatementHandle;
 
-has $!envhp;
-has $!svchp;
-has $!errhp;
+has OCIEnv    $!envh is required;
+has OCISvcCtx $!svch is required;
+has OCIError  $!errh is required;
 has $.AutoCommit is rw;
 has $.in_transaction is rw;
-submethod BUILD(:$!envhp!, :$!svchp!, :$!errhp!, :$!AutoCommit = 1, :$!parent!) { }
+submethod BUILD(:$!parent!, :$!envh, :$!svch, :$!errh, :$!AutoCommit = 1) { }
 
-method prepare(Str $statement, $attr?) {
+method !handle-err($res) {
+    $res ~~ OCIErr ?? self!set-err(+$res, ~$res) !! $res;
+}
+
+method prepare(Str $statement, :$RaiseError = $!RaiseError, *%attr) {
     my $oracle_statement = DBDish::Oracle::oracle-replace-placeholder($statement);
 
-    my $errcode = OCIHandleAlloc($!envhp, my $stmthp = OCIStmt.new, OCI_HTYPE_STMT, 0, Pointer );
-    if $errcode ne OCI_SUCCESS {
-        die "statement handle allocation failed: '$errcode'";
-    }
-
-    $errcode = OCIStmtPrepare2(
-            $!svchp,
-            $stmthp,
-            $!errhp,
-            $oracle_statement,
-            $oracle_statement.encode('utf8').bytes,
-            OraText,
-            0,
-            OCI_NTV_SYNTAX,
-            OCI_DEFAULT,
-        );
-    if $errcode ne OCI_SUCCESS {
-        my $errortext = get_errortext($!errhp);
-        die "prepare failed ($errcode): '$errortext'";
-#            die self.errstr if $.RaiseError;
-#            return Nil;
-    }
-    #my $stmthp = @stmthpp[0];
-
-    my ub2 $statementtype;
-    $errcode = OCIAttrGet_ub2($stmthp, OCI_HTYPE_STMT, $statementtype, Pointer, OCI_ATTR_STMT_TYPE, $!errhp);
-    if $errcode ne OCI_SUCCESS {
-        my $errortext = get_errortext($!errhp);
-        die "statement type get failed ($errcode): '$errortext'";
-    }
-
-    DBDish::Oracle::StatementHandle.new(
-        # TODO: pass the original or the Oracle statment here?
-        statement => $oracle_statement,
-        #:$statement,
-        :$statementtype,
-        :$!svchp,
-        :$!errhp,
-        :$stmthp,
-        #:$.RaiseError,
-        :parent(self),
-    );
+    with self!handle-err: $!svch.StmtPrepare($oracle_statement, :$!errh) -> $stmth {
+	DBDish::Oracle::StatementHandle.new(
+	    :$!svch,
+	    :$!errh,
+	    :$stmth,
+	    :statement($oracle_statement), # Use the oracle ready statement
+	    :$RaiseError,
+	    :parent(self),
+	    |%attr
+	);
+    } else { .fail }
 }
 
 method commit {
@@ -80,10 +50,10 @@ method rollback {
     $.in_transaction = 0;
 }
 
-#    method ping {
-#        PQstatus($!pg_conn) == CONNECTION_OK
-#    }
+method ping {
+    $!svch.Ping($!errh, OCI_DEFAULT) == OCI_SUCCESS;
+}
 
 method _disconnect() {
-    OCILogoff($!svchp, $!errhp);
+    $!svch.Logoff($!errh);
 }
