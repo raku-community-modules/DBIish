@@ -68,7 +68,7 @@ method connect(:database(:$dbname), :$RaiseError, *%params) {
     my @connection_parameters = gather for %params.kv -> $key, $value {
         # Internal parameter, not for PostgreSQL usage.
         next if $key ~~ / <-lower> /;
-        take "$key={quote-and-escape $value}"
+        take "$key={quote-and-escape $value}" if $value.defined;
     }
     my $pg_conn = PGconn.new(~@connection_parameters);
     my $status = $pg_conn.PQstatus;
