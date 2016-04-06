@@ -1,6 +1,7 @@
 use v6;
 
 unit module DBDish;
+need DBIish::Common;
 need DBDish::ErrorHandling;
 need DBDish::Connection;
 need DBDish::StatementHandle;

@@ -9,7 +9,7 @@ plan drvs.elems * 4 + 14;
 use-ok 'DBIish', 'DBIish can be use-d';
 
 my \DBIish = ::('DBIish');
-ok DBIish.HOW, "Class is available";
+ok DBIish !~~ Failure, "Class is available";
 
 for <connect install-driver> {
     ok DBIish.^method_table{$_}:exists, "Method $_";
@@ -24,7 +24,7 @@ given DBIish.^ver {
 for < DBDish DBDish::Driver DBDish::Connection
       DBDish::StatementHandle DBDish::ErrorHandling >
 {
-    ok ::("$_").HOW, "Loaded $_";
+    ok ::("$_") !~~ Failure, "Loaded $_";
 }
 
 for drvs {
