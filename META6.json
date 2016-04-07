@@ -1,7 +1,7 @@
 {
     "perl"          : "6",
     "name"          : "DBIish",
-    "version"       : "0.5.4",
+    "version"       : "0.5.5",
     "description"   : "Database connectivity for Perl 6",
     "test-depends"  : [ ],
     "depends" : [ "NativeHelpers::Blob" ],
@@ -31,7 +31,8 @@
         "DBDish::SQLite"                  : "lib/DBDish/SQLite.pm6",
         "DBDish::SQLite::Connection"      : "lib/DBDish/SQLite/Connection.pm6",
         "DBDish::SQLite::Native"          : "lib/DBDish/SQLite/Native.pm6",
-        "DBDish::SQLite::StatementHandle" : "lib/DBDish/SQLite/StatementHandle.pm6"
+        "DBDish::SQLite::StatementHandle" : "lib/DBDish/SQLite/StatementHandle.pm6",
+        "NativeLibs"                      : "lib/NativeLibs.pm6"
     },
     "source-url" : "git://github.com/perl6/DBIish.git"
 }
