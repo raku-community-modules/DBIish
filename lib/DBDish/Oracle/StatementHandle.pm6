@@ -34,11 +34,18 @@ submethod BUILD(:$!parent!, :$!statement!, :$!RaiseError,
         @!in-binds.push(OCIBind.new) for ^$pn;
         $!in-indicator = blob-allocate(Buf[sb2], $pn);
     }
+    if $!stmttype == OCI_STMT_SELECT {
+        with self!handle-err: $!svch.StmtDescribe($!stmth, $!errh) {
+            self!get-meta;
+        } else { .fail; }
+    }
     self;
 }
 
 method !get-meta {
-    $!field_count = self!handle-err: $!stmth.AttrGet($!errh, ub4, OCI_ATTR_PARAM_COUNT);
+    without $!field_count = self!handle-err(
+        $!stmth.AttrGet($!errh, ub4, OCI_ATTR_PARAM_COUNT)
+    ) { .fail }
     if $!field_count {
         my $indp = pointer-to(
             $!out-indicator = blob-allocate(Buf[sb2], $!field_count)
@@ -56,7 +63,7 @@ method !get-meta {
                 my $buff     = do given $dtype {
                     #note "$col_name: $dtype ($datalen)";
                     when SQLT_NUM {
-                        my $prec = $parmd.AttrGet($!errh, sb2, OCI_ATTR_PRECISION);
+                        my $prec  = $parmd.AttrGet($!errh, sb2, OCI_ATTR_PRECISION);
                         my $scale = $parmd.AttrGet($!errh, sb1, OCI_ATTR_SCALE);
                         $_ = SQLT_INT and proceed if $prec > 0 && $scale == 0;
                         $_ = SQLT_FLT and proceed if $scale == -127;
@@ -75,7 +82,7 @@ method !get-meta {
                 @!out-binds.push:   $bind;
                 @!out-buffs.push:   $buff;
                 @!column-name.push: $col_name.decode.lc;
-                warn "No map defined for type $dtype\n"
+                warn "No map defined for Oracle type $dtype at column $col\n"
                     unless %sqltype-map{$dtype}:exists;
                 @!column-type.push: %sqltype-map{$dtype};
             } else { .fail }
@@ -88,30 +95,31 @@ method execute(*@params) {
 
     # bind placeholder values
     my @in-bufs;
-    my $indp = pointer-to($!in-indicator).Int if $!param-count;
-    for @params.kv -> $k, $v {
-        my $btype = SQLT_CHR;
-        my $buf = do with $v {
-            $!in-indicator[$k] = 0;
-            when Blob { $btype = SQLT_BIN; $v }
-            when Str { .encode }
-            default { .Str.encode}
-        } else {
-            $!in-indicator[$k] = -1;
-            utf8.new;
-        };
-        $!stmth.BindByPos(
-            @!in-binds[$k], $!errh, $k+1, |ptr-sized($buf), $btype,
-            $indp + $k*2, NULL, NULL, 0, NULL, OCI_DEFAULT
-        ) and self!handle-err($!errh.gen-error).fail;
-        @in-bufs.push: $buf; # Keep till execute
+    if $!param-count {
+        my $indp = pointer-to($!in-indicator).Int;
+        for @params.kv -> $k, $v {
+            my $btype = SQLT_CHR;
+            my $buf = do with $v {
+                $!in-indicator[$k] = 0;
+                when Blob { $btype = SQLT_BIN; $v }
+                when Str { .encode }
+                default { .Str.encode}
+            } else {
+                $!in-indicator[$k] = -1;
+                utf8.new;
+            };
+            $!stmth.BindByPos(
+                @!in-binds[$k], $!errh, $k+1, |ptr-sized($buf), $btype,
+                $indp + $k*2, NULL, NULL, 0, NULL, OCI_DEFAULT
+            ) and self!handle-err($!errh.gen-error).fail;
+            @in-bufs.push: $buf; # Keep till execute
+        }
     }
 
-    my $errcode = $!svch.StmtExecute($!stmth, $!errh,
-        $!stmttype != OCI_STMT_SELECT, # 0 Select, 1 Non Select
-        :AutoCommit($!parent.AutoCommit)
-    );
-    given $errcode {
+    given $!svch.StmtExecute($!stmth, $!errh,
+                             $!stmttype != OCI_STMT_SELECT, # 0 Select, 1 Non Select
+                             :AutoCommit($!parent.AutoCommit)
+    ) {
         when OCI_ERROR { self!handle-err($!errh.gen-error) }
         my $rows = 0;
         when OCI_NO_DATA { proceed; }

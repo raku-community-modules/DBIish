@@ -81,7 +81,7 @@ our sub oracle-replace-placeholder(Str $query) is export {
 }
 
 #------------------ methods to be called from DBIish ------------------
-method connect(:$database, :$username, :$password, :$AutoCommit, :$RaiseError, *%params) {
+method connect(:database(:$dbname), :$username, :$password, *%params) {
 
     # create the environment handle
     my $envh = OCIEnv.NlsCreate();
@@ -99,22 +99,14 @@ method connect(:$database, :$username, :$password, :$AutoCommit, :$RaiseError, *
         :$errh,
         :$username,
         :$password,
-        :dbname($database),
+        :$dbname,
         :mode(OCI_LOGON2_STMTCACHE),
     );
     if $svch ~~ OCIErr {
         self!conn-error(:code(+$svch), :errstr("Logon failed: '$svch'"));
     }
 
-    DBDish::Oracle::Connection.new(
-        :$envh,
-        :$errh,
-        :$svch,
-        :parent(self),
-        :$AutoCommit,
-        :$RaiseError,
-        |%params
-    )
+    DBDish::Oracle::Connection.new(:$envh, :$errh, :$svch, :parent(self), |%params)
 }
 
 # vim: expandtab ft=perl6
