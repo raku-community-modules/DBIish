@@ -3,10 +3,10 @@ use v6;
 # Common code used by both DBIish and DBDish
 unit package DBIish;
 
-BEGIN {
-    Rakudo::Internals.REGISTER-DYNAMIC: '$*DBI-DEFS', {
-	PROCESS::<$DBI-DEFS> = Hash.new;
-    };
+Rakudo::Internals.REGISTER-DYNAMIC: '$*DBI-DEFS', {
+    PROCESS::<$DBI-DEFS> = {
+	ConnDefaults => (:RaiseError, :!PrintError, :AutoCommit)
+    }
 }
 
 # The following list of SQL constants was produced by the following

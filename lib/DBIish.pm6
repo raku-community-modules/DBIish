@@ -1,20 +1,20 @@
 use v6;
 # DBIish.pm6
 
-unit class DBIish:auth<mberends>:ver<0.5.4>;
+unit class DBIish:auth<mberends>:ver<0.5.5>;
     use DBDish;
 
     package GLOBAL::X::DBIish {
-	our class DriverNotFound is Exception {
+	class DriverNotFound is Exception {
 	    has $.bogus;
 	    method message { "DBIish: No DBDish driver found: $.bogus" };
 	}
-	our class LibraryMissing is Exception {
+	class LibraryMissing is Exception {
 	    has $.driver;
 	    has $.library;
 	    method message { "DBIish: DBDish::$.driver needs $.library, not found" }
 	}
-	our class NotADBDishDriver is Exception {
+	class NotADBDishDriver is Exception {
 	    has $.who;
 	    method message { "$.who is not a DBDish::Driver" };
 	}
@@ -26,12 +26,7 @@ unit class DBIish:auth<mberends>:ver<0.5.4>;
     method err { $err-handler.err };
     method errstr { $err-handler.errstr };
 
-    method connect($driver,
-	:$RaiseError = True,
-	:$PrintError = False,
-	:$AutoCommit = True,
-	*%opts
-    ) {
+    method connect( $driver ) {
 	# The first native call done by the driver can trigger an X::AdHoc
 	# to report missing libraries.
 	# I catch here to avoid the drivers the need of this logic.
@@ -46,8 +41,8 @@ unit class DBIish:auth<mberends>:ver<0.5.4>;
 		.throw;
 	    };
 	}
-	my $d = self.install-driver( $driver );
-        $d.connect(:$RaiseError, :$PrintError, :$AutoCommit, |%opts );
+	my $d = self.install-driver( $driver, |%_ );
+	$d.connect(|%_);
     }
     method install-driver( $drivername ) {
 	my $d = %installed{$drivername} //= do {
@@ -69,7 +64,7 @@ unit class DBIish:auth<mberends>:ver<0.5.4>;
 		# it's an advice for authors for externally developed drivers
 		warn "$module dosn't DBDish::Driver role!";
 	    }
-	    M.new(:parent($err-handler), :RaiseError);
+	    M.new(:parent($err-handler), |%($*DBI-DEFS<ConnDefaults>), |%_);
 	}
 	without $d { .throw; };
 	$d;

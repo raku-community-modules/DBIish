@@ -1,22 +1,26 @@
-role DBDish::ErrorHandling {
+use v6;
 
-    # Our exceptions
-    package GLOBAL::X::DBDish {
-        our class DBError is Exception {
-            has $.driver-name;
-            has $.native-message is required;
-            has $.code;
-            has $.why = 'Error';
-            method message {
-                "$!driver-name: $.why: $!native-message" ~
-                ($!code ?? " ($!code)" !! '');
-            }
+# Our exceptions
+package X::DBDish {
+    class DBError is Exception {
+        has $.driver-name;
+        has $.native-message is required;
+        has $.code;
+        has $.why = 'Error';
+        method message {
+            "$!driver-name: $.why: $!native-message" ~
+            ($!code ?? " ($!code)" !! '');
         }
     }
+    class ConnectionFailed is DBError {
+        has $.why = "Can't connect";
+    }
+}
 
+role DBDish::ErrorHandling is export {
     has $.parent is required;
-    has Bool $.PrintError is rw = False;
-    has Bool $.RaiseError is rw = True;
+    has Bool $.PrintError is rw;
+    has Bool $.RaiseError is rw;
     has Exception $!last-exception;
 
     method set-last-exception($e) {
@@ -26,7 +30,7 @@ role DBDish::ErrorHandling {
         }
     }
 
-    method err( --> Int)  {
+    method err(--> Int)  {
         with $!last-exception {
             .?code || -1;
         }
