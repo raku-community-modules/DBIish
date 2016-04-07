@@ -55,7 +55,7 @@ submethod BUILD(:$!mysql_client!, :$!parent!, :$!stmt = MYSQL_STMT,
             my $lb = BPointer(
                 $!in-lengths = blob-allocate(Buf[intptr], $pc)
             ).Int;
-            $!par-binds[$_].length = $lb + $_ * ptrsize_t for ^$pc;
+            $!par-binds[$_].length = $lb + $_ * ptrsize for ^$pc;
         }
         if ($!field_count = .mysql_stmt_field_count) && .mysql_stmt_result_metadata -> $res {
             $!binds = LinearArray[MYSQL_BIND].new($!field_count);
@@ -67,8 +67,8 @@ submethod BUILD(:$!mysql_client!, :$!parent!, :$!stmt = MYSQL_STMT,
                     if .buffer_length = $!out-lengths[$col] {
                         @!out-bufs[$col] = blob-allocate(Buf, $!out-lengths[$col]);
                         .buffer = BPointer(@!out-bufs[$col]).Int;
-                        .length = $lb + $col * ptrsize_t;
-                        .is_null = $nb + $col * ptrsize_t;
+                        .length = $lb + $col * ptrsize;
+                        .is_null = $nb + $col * ptrsize;
                         .buffer_type = @!column-type[$col] ~~ Blob
                             ?? MYSQL_TYPE_BLOB !! MYSQL_TYPE_STRING;
                     } else {

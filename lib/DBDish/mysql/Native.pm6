@@ -1,13 +1,10 @@
 use v6;
 
 unit module DBDish::mysql::Native;
-use NativeCall :ALL;
+use NativeLibs :ALL;
 use NativeHelpers::Blob;
 
-sub MyLibName {
-    %*ENV<DBIISH_MYSQL_LIB> || guess_library_name(('mysqlclient', v18));
-}
-constant LIB = &MyLibName;
+constant LIB = NativeLibs::Searcher.at-runtime('mysqlclient', 'mysql_init', 16..20);
 
 #From mysql_com.h
 enum mysql-field-type is export (
@@ -70,8 +67,8 @@ class MYSQL_RES is repr('CPointer') { ... }
 
 # Current rakudo don't allow set a Pointer in a CStruct based class.
 # so we use an 'intprt'
-constant intptr is export = nativesizeof(Pointer) == 8 ?? uint64 !! uint32;
-constant ptrsize_t is export = nativesizeof(intptr);
+constant ptrsize is export = nativesizeof(Pointer);
+constant intptr is export = ptrsize == 8 ?? uint64 !! uint32;
 class MYSQL_BIND is repr('CStruct') is export {
     #has Pointer[ulong]   $!length is rw;
     has intptr		 $.length is rw;
