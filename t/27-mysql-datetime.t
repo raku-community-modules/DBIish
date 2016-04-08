@@ -2,7 +2,7 @@ use v6;
 use Test;
 use DBIish;
 
-if %*ENV{DEBIAN_FRONTEND} eq 'noninteractive' {
+if %*ENV{'DEBIAN_FRONTEND'} eq 'noninteractive' {
     # we are in travis, the installed mysql don't like TIMESTAMP(6)
     # I need to investigate why, so
     plan 1;
