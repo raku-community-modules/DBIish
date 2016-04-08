@@ -2,13 +2,6 @@ use v6;
 use Test;
 use DBIish;
 
-if %*ENV{'DEBIAN_FRONTEND'} eq 'noninteractive' {
-    # we are in travis, the installed mysql don't like TIMESTAMP(6)
-    # I need to investigate why, so
-    plan 1;
-    pass "Need more time...";
-    exit;
-}
 plan 12;
 
 my %con-parms = :database<dbdishtest>, :user<testuser>, :password<testpass>;
@@ -30,14 +23,20 @@ without $dbh {
 
 ok $dbh,    'Connected';
 lives-ok { $dbh.do('DROP TABLE IF EXISTS test') }, 'Clean';
-lives-ok {
+try {
     $dbh.do(q|
     CREATE TABLE test (
 	adate DATE,
 	atime TIME,
-	atimestamp TIMESTAMP(6)
-    )|)
-}, 'Table created';
+	atimestamp DATETIME(6)
+    )|);
+    CATCH {
+	skip-rest "This version of mysql don't like precision in DATETIME";
+	exit;
+    }
+};
+
+pass 'Table created';
 
 my $sth = $dbh.prepare('INSERT INTO test (adate, atimestamp) VALUES(?, ?)');
 my $now = DateTime.now;
