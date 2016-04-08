@@ -1,7 +1,7 @@
 use v6;
 
 unit module DBDish::Pg::Native;
-use NativeLibs :ALL;
+use NativeLibs;
 use NativeHelpers::Blob;
 
 constant LIB = NativeLibs::Searcher.at-runtime('pq', 'PQstatus', 5);
@@ -42,6 +42,8 @@ class PGresult	is export is repr('CPointer') {
 		my $str = nativecast(Str, ptr);
 		given $t {
 		    when Str { $str } # Done
+		    when Date { Date.new($str) }
+		    when DateTime { DateTime.new($str.split(' ').join('T')) }
 		    when Array { $str } # External process
 		    when Bool { $str eq 't' }
 		    when Blob {
@@ -139,6 +141,8 @@ constant %oid-to-type is export = (
         21  => Int,   # int2
         23  => Int,   # int4
         25  => Str,   # text
+       114  => Str,   # json
+       142  => Str,   # xml
        700  => Num,   # float4
        701  => Num,   # float8
       1000  => Bool,  # _bool
@@ -152,7 +156,11 @@ constant %oid-to-type is export = (
       1022  => Array[Num],     # Array(float4)
       1028  => Array[Int],     # Array<oid>
       1043  => Str,            # varchar
-      1114  => Str,   # Timestamp
+      1082  => Date,           # date
+      1083  => Str,            # time
+      1114  => DateTime,       # Timestamp
+      1184  => DateTime,       # Timestamp with time zone
+      1186  => Duration,       # interval
       1263  => Array[Str],     # Array<varchar>
       1700  => Rat,   # numeric
       2950  => Str,   # uuid

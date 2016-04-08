@@ -25,7 +25,12 @@ submethod !get-meta($result) {
     if $!field_count = $result.PQnfields {
         for ^$!field_count {
             @!column-name.push($result.PQfname($_));
-            @!column-type.push(%oid-to-type{$result.PQftype($_)});
+            my $pt = $result.PQftype($_);
+            if (my \t = %oid-to-type{$pt}) === Any {
+                warn "No type map defined for postgres type $pt at column $_";
+                t = Str;
+            }
+            @!column-type.push(t);
         }
     }
 }
@@ -79,7 +84,7 @@ method execute(*@params) {
 
 method _row() {
     my $l = ();
-    if $!field_count && $!current_row < $!row_count {
+    if $!Executed && $!field_count && $!current_row < $!row_count {
         $l = do for ^$!field_count {
             my $value = @!column-type[$_];
             unless $!result.PQgetisnull($!current_row, $_) {
