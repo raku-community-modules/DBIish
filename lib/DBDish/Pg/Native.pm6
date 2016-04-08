@@ -11,6 +11,7 @@ constant LIB = NativeLibs::Searcher.at-runtime('pq', 'PQstatus', 5);
 constant Oid = uint32;
 constant OidArray is export = CArray[Oid];
 
+sub PQlibVersion(-->uint32) is native(LIB) is export { * }
 sub PQfreemem(Pointer) is native(LIB) { * }
 sub PQunescapeBytea(str, size_t is rw --> Pointer) is native(LIB) { * }
 

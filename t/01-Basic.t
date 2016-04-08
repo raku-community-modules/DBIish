@@ -4,7 +4,7 @@ use Test;
 #DBIsh should can load the following, 'cus shipped
 my \drvs = <Oracle Pg SQLite TestMock mysql>;
 
-plan drvs.elems * 5 + 17;
+plan drvs.elems * 6 + 17;
 
 use-ok 'DBIish', 'DBIish can be use-d';
 
@@ -38,8 +38,11 @@ for drvs {
     ok $drv.defined, "Is an instance '$drv'";
     ok $drv ~~ ::('DBDish::Driver'), "{$drv.^name} indeed a driver";
     with $drv.^ver {
-	ok $_,  "Is version $_";
+	ok $_,  "Driver version $_";
     } else { flunk  'version declared' };
+    with $drv.version {
+	pass "Client version $_";
+    }
     ok $drv.Connections.elems == 0, "Without connections";
 }
 throws-like {

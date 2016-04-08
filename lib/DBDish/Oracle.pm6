@@ -109,4 +109,8 @@ method connect(:database(:$dbname), :$username, :$password, *%params) {
     DBDish::Oracle::Connection.new(:$envh, :$errh, :$svch, :parent(self), |%params)
 }
 
+method version {
+    libver;
+}
+
 # vim: expandtab ft=perl6

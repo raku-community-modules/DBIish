@@ -33,6 +33,10 @@ method connect(*%params ) {
     $errstr ??  self!conn-error(:$errstr) !!  $connection;
 }
 
+method version() {
+       Version.new(mysql_get_client_info);
+}
+
 =begin pod
 
 =head1 DESCRIPTION

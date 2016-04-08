@@ -21,4 +21,8 @@ method connect(:database(:$dbname)! is copy, *%params) {
     }
 }
 
+method version() {
+    Version.new(sqlite3_libversion);
+}
+
 # vim: ft=perl6

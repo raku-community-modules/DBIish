@@ -192,6 +192,9 @@ class MYSQL is export is repr('CPointer') {
     method mysql_stmt_init(MYSQL:D:         --> MYSQL_STMT) is native(LIB) { * }
 }
 
+sub mysql_get_client_version(--> uint32) is export is native(LIB) { * };
+sub mysql_get_client_info(--> Str)       is export is native(LIB) { * };
+
 constant %mysql-type-conv is export = map(
     {+mysql-field-type::{.key} => .value}, (
   MYSQL_TYPE_DECIMAL => Rat,

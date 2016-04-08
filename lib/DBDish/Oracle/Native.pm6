@@ -4,7 +4,8 @@ unit module DBDish::Oracle::Native;
 use NativeCall;
 use NativeHelpers::Blob;
 
-my constant lib = ('clntsh', v12.1);
+my constant libver is export = v12.1;
+my constant lib = ('clntsh', libver);
 
 #------------ Oracle library to NativeCall data type mappings -----------
 constant sb1          is export = int8;
