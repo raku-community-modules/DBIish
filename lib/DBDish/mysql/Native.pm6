@@ -1,7 +1,7 @@
 use v6;
 
 unit module DBDish::mysql::Native;
-use NativeLibs :ALL;
+use NativeLibs;
 use NativeHelpers::Blob;
 
 constant LIB = NativeLibs::Searcher.at-runtime('mysqlclient', 'mysql_init', 16..20);
@@ -201,12 +201,12 @@ constant %mysql-type-conv is export = map(
   MYSQL_TYPE_FLOAT => Num,
   MYSQL_TYPE_DOUBLE => Num,
   MYSQL_TYPE_NULL => Empty,
-  MYSQL_TYPE_TIMESTAMP => Int,
+  MYSQL_TYPE_TIMESTAMP => DateTime,
   MYSQL_TYPE_LONGLONG => Int,
   MYSQL_TYPE_INT24 => Int,
-  MYSQL_TYPE_DATE => Str,
+  MYSQL_TYPE_DATE => Date,
   MYSQL_TYPE_TIME => Str,
-  MYSQL_TYPE_DATETIME => Str,
+  MYSQL_TYPE_DATETIME => DateTime,
   MYSQL_TYPE_YEAR => Int,
   MYSQL_TYPE_NEWDATE => Str,
   MYSQL_TYPE_VARCHAR => Str,

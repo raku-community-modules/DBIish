@@ -156,16 +156,23 @@ method _row {
             if .mysql_stmt_fetch == 0 { # Has data
                 $list = do for ^$fields {
                     my $val = my $t = @!column-type[$_];
-                    unless $!isnull[$_] {
+                    if $!isnull[$_] {
+                        $val;
+                    } else {
                         my $len = $!out-lengths[$_];
-                        if $t ~~ Blob {
-                            $val = @!out-bufs[$_].subbuf(0,$len);
-                        } else {
-                            $val = @!out-bufs[$_].subbuf(0,$len).decode;
-                            $val = $t($val) if $t !~~ Str;
+                        $val = @!out-bufs[$_].subbuf(0,$len);
+                        given $t {
+                            when Blob { $val }
+                            $val .= decode;
+                            when Date { Date.new($val) }
+                            when DateTime {
+                                # Mysql don't report offset, and perl assume Z, so…
+                                DateTime.new($val.split(' ').join('T')):timezone($*TZ);
+                            }
+                            when Str { $val }
+                            default { $t($val) }
                         }
                     }
-                    $val;
                 }
                 $row = True;
             }
