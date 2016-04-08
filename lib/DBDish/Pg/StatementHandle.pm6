@@ -27,7 +27,7 @@ submethod !get-meta($result) {
             @!column-name.push($result.PQfname($_));
             my $pt = $result.PQftype($_);
             if (my \t = %oid-to-type{$pt}) === Any {
-                warn "No type map defined for postgres type $pt at column $_";
+                warn "No type map defined for postgresql type $pt at column $_";
                 t = Str;
             }
             @!column-type.push(t);

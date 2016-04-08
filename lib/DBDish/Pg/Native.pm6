@@ -145,6 +145,7 @@ constant %oid-to-type is export = (
        142  => Str,   # xml
        700  => Num,   # float4
        701  => Num,   # float8
+       705  => Empty, # unknown
       1000  => Bool,  # _bool
       1001  => Buf,   # _bytea
       1005  => Array[Int],     # Array(int2)
