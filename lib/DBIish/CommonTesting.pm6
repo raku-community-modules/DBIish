@@ -27,13 +27,14 @@ method !hash-str(%h) {
 
 method run-tests {
     diag "Testing DBDish::$.dbd";
-    plan 105;
+    plan 107;
 
     # Verify that the driver loads before attempting a connect
     my $drh = DBIish.install-driver($.dbd);
     ok $drh, 'Install driver';
-    my $drh-version = $drh.Version;
-    ok $drh-version ~~ Version:D, "DBDish::{$.dbd} version $drh-version";
+    my $aversion = $drh.Version;
+    ok $aversion ~~ Version:D, "DBDish::{$.dbd} version $aversion";
+    ok $aversion = $drh.version, "{$.dbd} library version $aversion";
 
     # Connect to the data source
     my $dbh;
@@ -52,6 +53,12 @@ method run-tests {
     }
     ok $dbh, "connect to '{%.opts<database> || "default"}'";
     is $dbh.drv.Connections.elems, 1, 'Driver has one connection';
+
+    if $dbh.can('server-version') {
+	ok $aversion = $dbh.server-version, "Server version $aversion";
+    } else {
+       skip 1, "No server version";
+    }
 
     # Test preconditions
     nok $dbh.last-sth-id,	      'No statement executed yet';
