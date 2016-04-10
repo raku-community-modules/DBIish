@@ -23,23 +23,21 @@ without $dbh {
 
 ok $dbh,    'Connected';
 lives-ok { $dbh.do('DROP TABLE IF EXISTS test') }, 'Clean';
-try {
-    $dbh.do(q|
+my $subsec = $dbh.drv.version after v5.6.4;
+my $field = 'DATETIME'; $field ~= '(6)' if $subsec;
+diag "Using $field";
+lives-ok {
+    $dbh.do(qq|
     CREATE TABLE test (
 	adate DATE,
 	atime TIME,
-	atimestamp DATETIME(6)
+	atimestamp $field 
     )|);
-    CATCH {
-	skip-rest "This version of mysql don't like precision in DATETIME";
-	exit;
-    }
-};
-
-pass 'Table created';
+}, 'Table created';
 
 my $sth = $dbh.prepare('INSERT INTO test (adate, atimestamp) VALUES(?, ?)');
 my $now = DateTime.now;
+$now .= truncated-to('second') unless $subsec;
 lives-ok {
     $sth.execute($now, $now);
 }, 'Insert Perl6 values';
@@ -58,6 +56,10 @@ $sth.dispose;
 $sth = $dbh.prepare('SELECT NOW()');
 is $sth.execute, 1,			    'One now';
 $datetime = $sth.row[0];
-isnt $datetime, $now,			    'Server drift';
-diag $datetime.Instant - $now.Instant;
+if $subsec {
+    isnt $datetime, $now,		    'Server drift';
+} else {
+    skip "Without subsecond precision",  1;
+}
+diag $now.Instant - $datetime.Instant;
 $dbh.do('DROP TABLE IF EXISTS test');

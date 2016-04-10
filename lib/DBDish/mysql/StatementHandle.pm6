@@ -188,8 +188,13 @@ method _row {
     $list;
 }
 
-method mysql_insertid() {
+method insert-id() {
     $!mysql_client.mysql_insert_id;
+}
+
+method mysql_insertid {
+    once warn("'mysql_insertid' is DEPRECATED, please use 'insert-id'");
+    self.insert-id;
 }
 
 method mysql_warning_count {

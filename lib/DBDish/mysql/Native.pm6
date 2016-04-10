@@ -190,10 +190,11 @@ class MYSQL is export is repr('CPointer') {
     method mysql_warning_count(MYSQL:D:         --> uint32) is native(LIB) { * }
     method mysql_ping(MYSQL:D:                   --> int32) is native(LIB) { * }
     method mysql_stmt_init(MYSQL:D:         --> MYSQL_STMT) is native(LIB) { * }
+    method mysql_get_server_info(MYSQL:D:          --> Str) is native(LIB) { * }
 }
 
-sub mysql_get_client_version(--> uint32) is export is native(LIB) { * };
-sub mysql_get_client_info(--> Str)       is export is native(LIB) { * };
+sub mysql_get_client_version(--> uint32) is export is native(LIB) { * }
+sub mysql_get_client_info(--> Str)       is export is native(LIB) { * }
 
 constant %mysql-type-conv is export = map(
     {+mysql-field-type::{.key} => .value}, (

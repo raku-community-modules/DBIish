@@ -38,8 +38,17 @@ method execute(Str $statement, *%args) {
     ).execute;
 }
 
-method mysql_insertid() {
+method insert-id() {
     $!mysql_client.mysql_insert_id;
+}
+
+method mysql_insertid {
+    once warn("'mysql_insertid' is DEPRECATED, please use 'insert-id'");
+    self.insert-id;
+}
+
+method server-version() {
+    Version.new($!mysql_client.mysql_get_server_info);
 }
 
 method ping() {
