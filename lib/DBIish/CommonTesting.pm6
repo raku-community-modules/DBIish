@@ -57,7 +57,7 @@ method run-tests {
     if $dbh.can('server-version') {
 	ok $aversion = $dbh.server-version, "Server version $aversion";
     } else {
-       skip 1, "No server version";
+       skip "No server version", 1;
     }
 
     # Test preconditions
