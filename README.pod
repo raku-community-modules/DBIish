@@ -118,6 +118,28 @@ string Pg can understand.
   #prepare an insertion of an array field;
   $sth.execute($sth.pg-array-str(@data));
 
+=head3 B<pg-notifies>
+
+  $ret = $dbh.pg-notifies;
+
+Looks for any asynchronous notifications received and returns a pg-notify object that looks like this
+
+	class pg-notify {
+		has Str                           $.relname; # Channel Name
+		has int32                         $.be_pid; # Backend pid
+		has Str                           $.extra; # Payload
+	}
+
+or nothing if there is no pending notifications.
+
+The payload is optional and will always be an empty string for Postgres servers less than version 9.0.
+
+=head3 B<pg-socket>
+
+	my Int $socket = pg-socket;
+
+Returns the file description number of the connection socket to the server.
+
 =head2 SQLite
 
 Supports basic CRUD operations and prepared statements with placeholders

@@ -1,19 +1,17 @@
 use v6;
 
 unit module DBDish::Pg::Native;
-use NativeCall :ALL;
-use nqp;
+use NativeLibs;
+use NativeHelpers::Blob;
 
-sub MyLibName {
-    %*ENV<DBIISH_PG_LIB> || guess_library_name(('pq', v5));
-}
-constant LIB = &MyLibName;
+constant LIB = NativeLibs::Searcher.at-runtime('pq', 'PQstatus', 5);
 
 #------------ My Visible Types
 
 constant Oid = uint32;
 constant OidArray is export = CArray[Oid];
 
+sub PQlibVersion(-->uint32) is native(LIB) is export { * }
 sub PQfreemem(Pointer) is native(LIB) { * }
 sub PQunescapeBytea(str, size_t is rw --> Pointer) is native(LIB) { * }
 
@@ -38,20 +36,6 @@ class PGresult	is export is repr('CPointer') {
 	sub PQgetvalue(PGresult, int32, int32 --> Pointer) is native(LIB) { * }
 	sub PQgetlength(PGresult, int32, int32 --> int32) is native(LIB) { * }
 	sub PQfformat(PGresult, int32 --> int32) is native(LIB) { * }
-	sub buf-from-pointer(Pointer \ptr, int :$elems!, Blob:U :$type = Buf) {
-	    # Stolen from NativeHelpers::Blob ;-)
-	    my sub memcpy(Blob:D $dest, Pointer $src, size_t $size)
-		returns Pointer is native() { * };
-	    my \t = ptr.of ~~ void ?? $type.of !! ptr.of;
-	    my $b = (t === uint8) ?? Buf !! Buf.^parameterize(t);
-	    with ptr {
-		my \b = $b.new;
-		nqp::setelems(b, $elems);
-		memcpy(b, ptr, $elems * nativesizeof(t));
-		$b = b;
-	    }
-	    $b;
-	}
 
 	my \ptr = PQgetvalue(self, $row, $col);
 	given PQfformat(self, $col) {
@@ -59,13 +43,15 @@ class PGresult	is export is repr('CPointer') {
 		my $str = nativecast(Str, ptr);
 		given $t {
 		    when Str { $str } # Done
+		    when Date { Date.new($str) }
+		    when DateTime { DateTime.new($str.split(' ').join('T')) }
 		    when Array { $str } # External process
 		    when Bool { $str eq 't' }
 		    when Blob {
 			my \ptr = PQunescapeBytea($str, my size_t $elems);
 			LEAVE { PQfreemem(ptr) if ptr }
 			with ptr {
-			    buf-from-pointer(ptr, :$elems, :type($t))
+			    blob-from-pointer(ptr, :$elems, :type($t))
 			} else { die "Can't allocate memory!" };
 		    }
 		    default { $t($str) } # Cast
@@ -77,12 +63,18 @@ class PGresult	is export is repr('CPointer') {
 		given $t {
 		    when Str { nativecast(Str, ptr) }
 		    when Blob {
-			buf-from-pointer(ptr, :elems($size));
+			blob-from-pointer(ptr, :elems($size));
 		    }
 		}
 	    }
 	}
     }
+}
+
+class pg-notify is export {
+    has Str   $.relname;
+    has int32 $.be_pid;
+    has Str   $.extra;
 }
 
 class PGconn is export is repr('CPointer') {
@@ -116,9 +108,44 @@ class PGconn is export is repr('CPointer') {
 	}
     }
 
-    method new(Str $conninfo) { # Our constructor
+    method pg-socket(--> int32) is symbol('PQsocket') is native(LIB) { * }
+
+    method pg-notifies(--> pg-notify) {
+        class PGnotify is repr('CStruct') {
+            has Str                           $.relname; # char* relname
+            has int32                         $.be_pid; # int be_pid
+            has Str                           $.extra; # char* extra
+        }
+        sub PQnotifies(PGconn --> Pointer) is native(LIB) { * }
+
+        my \ptr = PQnotifies(self);
+        LEAVE { PQfreemem(ptr) if ptr }
+        with ptr && nativecast(PGnotify, ptr) -> \self {
+            pg-notify.new(:$.relname, :$.be_pid, :$.extra)
+        } else { Nil }
+    }
+
+    method pg-parameter-status(Str --> Str) is symbol('PQparameterStatus')
+	is native(LIB) { * }
+
+    multi method new(Str $conninfo) { # Our legacy constructor
 	sub PQconnectdb(str --> PGconn) is native(LIB) { * };
 	PQconnectdb($conninfo);
+    }
+
+    multi method new(%connparms) { # Our named constructor
+	sub PQconnectdbParams(CArray[Str], CArray[Str], int32 --> PGconn)
+	    is native(LIB) { * };
+
+	my $keys = CArray[Str].new; my $vals = CArray[Str].new;
+	my int $i = 0;
+	for %connparms.kv -> $k,$v {
+	    next without $v;
+	    $keys[$i] = $k.subst('-','_');
+	    $vals[$i] = $v; $i++;
+	}
+	$keys[$i] = Str; $vals[$i] = Str;
+	PQconnectdbParams($keys, $vals, 1);
     }
 }
 
@@ -133,8 +160,11 @@ constant %oid-to-type is export = (
         21  => Int,   # int2
         23  => Int,   # int4
         25  => Str,   # text
+       114  => Str,   # json
+       142  => Str,   # xml
        700  => Num,   # float4
        701  => Num,   # float8
+       705  => Empty, # unknown
       1000  => Bool,  # _bool
       1001  => Buf,   # _bytea
       1005  => Array[Int],     # Array(int2)
@@ -146,7 +176,11 @@ constant %oid-to-type is export = (
       1022  => Array[Num],     # Array(float4)
       1028  => Array[Int],     # Array<oid>
       1043  => Str,            # varchar
-      1114  => Str,   # Timestamp
+      1082  => Date,           # date
+      1083  => Str,            # time
+      1114  => DateTime,       # Timestamp
+      1184  => DateTime,       # Timestamp with time zone
+      1186  => Duration,       # interval
       1263  => Array[Str],     # Array<varchar>
       1700  => Rat,   # numeric
       2950  => Str,   # uuid

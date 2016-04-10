@@ -1,20 +1,20 @@
 use v6;
 # DBIish.pm6
 
-unit class DBIish:auth<mberends>:ver<0.5.2>;
+unit class DBIish:auth<mberends>:ver<0.5.5>;
     use DBDish;
 
     package GLOBAL::X::DBIish {
-	our class DriverNotFound is Exception {
+	class DriverNotFound is Exception {
 	    has $.bogus;
 	    method message { "DBIish: No DBDish driver found: $.bogus" };
 	}
-	our class LibraryMissing is Exception {
+	class LibraryMissing is Exception {
 	    has $.driver;
 	    has $.library;
 	    method message { "DBIish: DBDish::$.driver needs $.library, not found" }
 	}
-	our class NotADBIishDriver is Exception {
+	class NotADBDishDriver is Exception {
 	    has $.who;
 	    method message { "$.who is not a DBDish::Driver" };
 	}
@@ -26,12 +26,7 @@ unit class DBIish:auth<mberends>:ver<0.5.2>;
     method err { $err-handler.err };
     method errstr { $err-handler.errstr };
 
-    method connect($driver,
-	:$RaiseError = True,
-	:$PrintError = False,
-	:$AutoCommit = True,
-	*%opts
-    ) {
+    method connect( $driver ) {
 	# The first native call done by the driver can trigger an X::AdHoc
 	# to report missing libraries.
 	# I catch here to avoid the drivers the need of this logic.
@@ -46,8 +41,8 @@ unit class DBIish:auth<mberends>:ver<0.5.2>;
 		.throw;
 	    };
 	}
-	my $d = self.install-driver( $driver );
-        $d.connect(:$RaiseError, :$PrintError, :$AutoCommit, |%opts );
+	my $d = self.install-driver( $driver, |%_ );
+	$d.connect(|%_);
     }
     method install-driver( $drivername ) {
 	my $d = %installed{$drivername} //= do {
@@ -69,7 +64,7 @@ unit class DBIish:auth<mberends>:ver<0.5.2>;
 		# it's an advice for authors for externally developed drivers
 		warn "$module dosn't DBDish::Driver role!";
 	    }
-	    M.new(:parent($err-handler), :RaiseError);
+	    M.new(:parent($err-handler), |%($*DBI-DEFS<ConnDefaults>), |%_);
 	}
 	without $d { .throw; };
 	$d;
@@ -82,69 +77,6 @@ unit class DBIish:auth<mberends>:ver<0.5.2>;
 	%installed.pairs.cache;
     }
 
-
-# The following list of SQL constants was produced by the following
-# adaptation of the EXPORT_TAGS suggestion in 'perldoc DBI':
-#    perl -MDBI -e'for (@{ $DBI::EXPORT_TAGS{sql_types} })
-#        { printf "our sub %s { %d }\n", $_, &{"DBI::$_"}; }'
-our sub SQL_GUID { -11 }
-our sub SQL_WLONGVARCHAR { -10 }
-our sub SQL_WVARCHAR { -9 }
-our sub SQL_WCHAR { -8 }
-our sub SQL_BIGINT { -5 }
-our sub SQL_BIT { -7 }
-our sub SQL_TINYINT { -6 }
-our sub SQL_LONGVARBINARY { -4 }
-our sub SQL_VARBINARY { -3 }
-our sub SQL_BINARY { -2 }
-our sub SQL_LONGVARCHAR { -1 }
-our sub SQL_UNKNOWN_TYPE { 0 }
-our sub SQL_ALL_TYPES { 0 }
-our sub SQL_CHAR { 1 }
-our sub SQL_NUMERIC { 2 }
-our sub SQL_DECIMAL { 3 }
-our sub SQL_INTEGER { 4 }
-our sub SQL_SMALLINT { 5 }
-our sub SQL_FLOAT { 6 }
-our sub SQL_REAL { 7 }
-our sub SQL_DOUBLE { 8 }
-our sub SQL_DATETIME { 9 }
-our sub SQL_DATE { 9 }
-our sub SQL_INTERVAL { 10 }
-our sub SQL_TIME { 10 }
-our sub SQL_TIMESTAMP { 11 }
-our sub SQL_VARCHAR { 12 }
-our sub SQL_BOOLEAN { 16 }
-our sub SQL_UDT { 17 }
-our sub SQL_UDT_LOCATOR { 18 }
-our sub SQL_ROW { 19 }
-our sub SQL_REF { 20 }
-our sub SQL_BLOB { 30 }
-our sub SQL_BLOB_LOCATOR { 31 }
-our sub SQL_CLOB { 40 }
-our sub SQL_CLOB_LOCATOR { 41 }
-our sub SQL_ARRAY { 50 }
-our sub SQL_ARRAY_LOCATOR { 51 }
-our sub SQL_MULTISET { 55 }
-our sub SQL_MULTISET_LOCATOR { 56 }
-our sub SQL_TYPE_DATE { 91 }
-our sub SQL_TYPE_TIME { 92 }
-our sub SQL_TYPE_TIMESTAMP { 93 }
-our sub SQL_TYPE_TIME_WITH_TIMEZONE { 94 }
-our sub SQL_TYPE_TIMESTAMP_WITH_TIMEZONE { 95 }
-our sub SQL_INTERVAL_YEAR { 101 }
-our sub SQL_INTERVAL_MONTH { 102 }
-our sub SQL_INTERVAL_DAY { 103 }
-our sub SQL_INTERVAL_HOUR { 104 }
-our sub SQL_INTERVAL_MINUTE { 105 }
-our sub SQL_INTERVAL_SECOND { 106 }
-our sub SQL_INTERVAL_YEAR_TO_MONTH { 107 }
-our sub SQL_INTERVAL_DAY_TO_HOUR { 108 }
-our sub SQL_INTERVAL_DAY_TO_MINUTE { 109 }
-our sub SQL_INTERVAL_DAY_TO_SECOND { 110 }
-our sub SQL_INTERVAL_HOUR_TO_MINUTE { 111 }
-our sub SQL_INTERVAL_HOUR_TO_SECOND { 112 }
-our sub SQL_INTERVAL_MINUTE_TO_SECOND { 113 }
 
 =begin pod
 =head1 SYNOPSIS

@@ -1,13 +1,10 @@
 use v6;
 
 unit module DBDish::mysql::Native;
-use NativeCall :ALL;
+use NativeLibs;
 use NativeHelpers::Blob;
 
-sub MyLibName {
-    %*ENV<DBIISH_MYSQL_LIB> || guess_library_name(('mysqlclient', v18));
-}
-constant LIB = &MyLibName;
+constant LIB = NativeLibs::Searcher.at-runtime('mysqlclient', 'mysql_init', 16..20);
 
 #From mysql_com.h
 enum mysql-field-type is export (
@@ -70,7 +67,8 @@ class MYSQL_RES is repr('CPointer') { ... }
 
 # Current rakudo don't allow set a Pointer in a CStruct based class.
 # so we use an 'intprt'
-constant intptr = nativesizeof(Pointer) == 8 ?? uint64 !! uint32;
+constant ptrsize is export = nativesizeof(Pointer);
+constant intptr is export = ptrsize == 8 ?? uint64 !! uint32;
 class MYSQL_BIND is repr('CStruct') is export {
     #has Pointer[ulong]   $!length is rw;
     has intptr		 $.length is rw;
@@ -85,8 +83,9 @@ class MYSQL_BIND is repr('CStruct') is export {
     has Pointer		 $.skip_result;
     has ulong		 $.buffer_length is rw;
     has ulong		 $.offset;
-    has size_t		 $.param_number is rw;
-    has size_t		 $.pack_length;
+    has ulong		 $.lenght_value;
+    has uint32		 $.param_number is rw;
+    has uint32		 $.pack_length;
     has uint32		 $.buffer_type is rw;
     has my_bool		 $.error_value;
     has my_bool		 $.is_unsigned;
@@ -172,7 +171,7 @@ class MYSQL is export is repr('CPointer') {
     }
 
     # Native methods
-    method mysql_affected_rows(MYSQL:D:          --> int32) is native(LIB) { * }
+    method mysql_affected_rows(MYSQL:D:          --> int64) is native(LIB) { * }
     method mysql_close(MYSQL:D:                           ) is native(LIB) { * }
     method mysql_errno(MYSQL:D:                  --> int32) is native(LIB) { * }
     method mysql_error(MYSQL:D:                    --> Str) is native(LIB) { * }
@@ -191,7 +190,11 @@ class MYSQL is export is repr('CPointer') {
     method mysql_warning_count(MYSQL:D:         --> uint32) is native(LIB) { * }
     method mysql_ping(MYSQL:D:                   --> int32) is native(LIB) { * }
     method mysql_stmt_init(MYSQL:D:         --> MYSQL_STMT) is native(LIB) { * }
+    method mysql_get_server_info(MYSQL:D:          --> Str) is native(LIB) { * }
 }
+
+sub mysql_get_client_version(--> uint32) is export is native(LIB) { * }
+sub mysql_get_client_info(--> Str)       is export is native(LIB) { * }
 
 constant %mysql-type-conv is export = map(
     {+mysql-field-type::{.key} => .value}, (
@@ -202,12 +205,12 @@ constant %mysql-type-conv is export = map(
   MYSQL_TYPE_FLOAT => Num,
   MYSQL_TYPE_DOUBLE => Num,
   MYSQL_TYPE_NULL => Empty,
-  MYSQL_TYPE_TIMESTAMP => Int,
+  MYSQL_TYPE_TIMESTAMP => DateTime,
   MYSQL_TYPE_LONGLONG => Int,
   MYSQL_TYPE_INT24 => Int,
-  MYSQL_TYPE_DATE => Str,
+  MYSQL_TYPE_DATE => Date,
   MYSQL_TYPE_TIME => Str,
-  MYSQL_TYPE_DATETIME => Str,
+  MYSQL_TYPE_DATETIME => DateTime,
   MYSQL_TYPE_YEAR => Int,
   MYSQL_TYPE_NEWDATE => Str,
   MYSQL_TYPE_VARCHAR => Str,

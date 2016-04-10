@@ -1,7 +1,7 @@
 use v6;
 need DBDish;
 
-unit class DBDish::Pg:auth<mberends>:ver<0.1.0> does DBDish::Driver;
+unit class DBDish::Pg:auth<mberends>:ver<0.1.1> does DBDish::Driver;
 use DBDish::Pg::Native;
 need DBDish::Pg::Connection;
 
@@ -62,22 +62,27 @@ sub quote-and-escape($s) {
 }
 
 #------------------ methods to be called from DBIish ------------------
-method connect(:database(:$dbname), :$RaiseError, *%params) {
 
-    %params.push((:$dbname));
-    my @connection_parameters = gather for %params.kv -> $key, $value {
-        # Internal parameter, not for PostgreSQL usage.
-        next if $key ~~ / <-lower> /;
-        take "$key={quote-and-escape $value}"
-    }
-    my $pg_conn = PGconn.new(~@connection_parameters);
+method connect(:database(:$dbname), *%params) {
+
+    %params.push((:$dbname)) with $dbname;
+    my $pg_conn = PGconn.new(%(%params<
+	host hostaddr port dbname user password connect-timeout
+	client-encoding options application-name keepalives keepalives-idle
+	keepalives-interval sslmode requiressl sslcert sslkey sslrootcert
+	sslcrl requirepeer krbsrvname gsslib service>:p:delete));
     my $status = $pg_conn.PQstatus;
     if $status == CONNECTION_OK {
-        DBDish::Pg::Connection.new(:$pg_conn, :$RaiseError, :parent(self), |%params);
+        DBDish::Pg::Connection.new(:$pg_conn, :parent(self), |%params);
     }
     else {
-        self!conn-error: :code($status) :$RaiseError :errstr($pg_conn.PQerrorMessage);
+        self!conn-error: :code($status) :errstr($pg_conn.PQerrorMessage);
     }
+}
+
+method version {
+    my $ver = PQlibVersion;
+    Version.new((gather for ^3 { take $ver mod 100; $ver div= 100 }).reverse);
 }
 
 =begin pod

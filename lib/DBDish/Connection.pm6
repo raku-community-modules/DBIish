@@ -49,7 +49,7 @@ method prepare(Str $statement, *%args) { ... }
 method do(Str $statement, *@params, *%args) {
     LEAVE {
 	with %!Statements{$!last-sth-id} {
-	    warn "'do' should not be used for statements that returns rows"
+	    warn "'do' should not be used for statements that return rows"
 		unless .Finished;
 	    .dispose;
 	}
@@ -88,7 +88,7 @@ method quote-identifier(Str:D $name) {
 
 =begin pod
 =head5 _disconnect
-The C<_disconnect> method 
+The C<_disconnect> method
 =end pod
 
 method _disconnect() {

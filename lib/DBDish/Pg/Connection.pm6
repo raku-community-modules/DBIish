@@ -5,7 +5,7 @@ unit class DBDish::Pg::Connection does DBDish::Connection;
 use DBDish::Pg::Native;
 need DBDish::Pg::StatementHandle;
 
-has PGconn $!pg_conn is required;
+has PGconn $!pg_conn is required handles <pg-notifies pg-socket pg-parameter-status>;
 has $.AutoCommit is rw = True;
 has $.in_transaction is rw = False;
 
@@ -41,6 +41,10 @@ method execute(Str $statement, *%args) {
     DBDish::Pg::StatementHandle.new(
 	:$!pg_conn, :parent(self), :$statement, |%args
     ).execute;
+}
+
+method server-version() {
+    Version.new($!pg_conn.pg-parameter-status('server_version'));
 }
 
 method selectrow_arrayref(Str $statement, $attr?, *@bind is copy) {

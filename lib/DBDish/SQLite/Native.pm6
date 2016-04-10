@@ -109,6 +109,7 @@ sub sqlite3_step(STMT $statement_handle)
 
 
 sub sqlite3_libversion_number() returns int32 is native(LIB) is export { ... };
+sub sqlite3_libversion(--> Str) is export is native(LIB) { * }
 sub sqlite3_errstr(int32) returns Str is native(LIB) is export { ... };
 sub sqlite3_bind_blob(STMT, int32, Blob, int32, Pointer) returns int32 is native(LIB) is export { ... };
 sub sqlite3_bind_double(STMT, int32, num64) returns int32 is native(LIB) is export { ... };

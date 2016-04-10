@@ -25,7 +25,12 @@ submethod !get-meta($result) {
     if $!field_count = $result.PQnfields {
         for ^$!field_count {
             @!column-name.push($result.PQfname($_));
-            @!column-type.push(%oid-to-type{$result.PQftype($_)});
+            my $pt = $result.PQftype($_);
+            if (my \t = %oid-to-type{$pt}) === Any {
+                warn "No type map defined for postgresql type $pt at column $_";
+                t = Str;
+            }
+            @!column-type.push(t);
         }
     }
 }
@@ -48,8 +53,9 @@ method execute(*@params) {
     my @param_values := ParamArray.new;
     for @params.kv -> $k, $v {
         if $v.defined {
-            @param_values[$k] = (@!param_type[$k] ~~ Buf)
+            @param_values[$k] = @!param_type[$k] ~~ Buf
                 ?? $!pg_conn.escapeBytea(($v ~~ Buf) ?? $v !! ~$v.encode)
+                !! @!param_type[$k] ~~ Array ?? self.pg-array-str($v)
                 !! ~$v;
         } else { @param_values[$k] = Str }
     }
@@ -78,7 +84,7 @@ method execute(*@params) {
 
 method _row() {
     my $l = ();
-    if $!field_count && $!current_row < $!row_count {
+    if $!Executed && $!field_count && $!current_row < $!row_count {
         $l = do for ^$!field_count {
             my $value = @!column-type[$_];
             unless $!result.PQgetisnull($!current_row, $_) {
@@ -104,15 +110,9 @@ my grammar PgArrayGrammar {
 };
 
 sub _to-type($value, Mu:U $type) {
-    if $value.defined {
-        given $type {
-            when 'Str' { ~$value }     # String;
-            when 'Num' { Num($value) } # SQL Floating point
-            when 'Rat' { Rat($value) } # SQL Numeric
-            default    { Int($value) } # Must be
-        }
-    }
-    else {
+    with $value {
+        $type($value);
+    } else {
         $value;
     }
 }
@@ -146,15 +146,13 @@ sub _pg-to-array(Str $text, Mu:U $type) {
 method pg-array-str(@data) {
     my @tmp;
     for @data -> $c {
-        if  $c ~~ Array {
+        if $c ~~ Array {
             @tmp.push(self.pg-array-str($c));
+        } elsif $c ~~ Numeric {
+            @tmp.push($c);
         } else {
-            if $c ~~ Numeric {
-                @tmp.push($c);
-            } else {
-                my $t = $c.subst('"', '\\"');
-                @tmp.push('"'~$t~'"');
-            }
+            my $t = $c.subst('"', '\\"');
+            @tmp.push('"'~$t~'"');
         }
     }
     '{' ~ @tmp.join(',') ~ '}';

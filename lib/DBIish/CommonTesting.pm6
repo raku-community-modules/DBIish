@@ -27,13 +27,14 @@ method !hash-str(%h) {
 
 method run-tests {
     diag "Testing DBDish::$.dbd";
-    plan 105;
+    plan 107;
 
     # Verify that the driver loads before attempting a connect
     my $drh = DBIish.install-driver($.dbd);
     ok $drh, 'Install driver';
-    my $drh-version = $drh.Version;
-    ok $drh-version ~~ Version:D, "DBDish::{$.dbd} version $drh-version";
+    my $aversion = $drh.Version;
+    ok $aversion ~~ Version:D, "DBDish::{$.dbd} version $aversion";
+    ok $aversion = $drh.version, "{$.dbd} library version $aversion";
 
     # Connect to the data source
     my $dbh;
@@ -52,6 +53,12 @@ method run-tests {
     }
     ok $dbh, "connect to '{%.opts<database> || "default"}'";
     is $dbh.drv.Connections.elems, 1, 'Driver has one connection';
+
+    if $dbh.can('server-version') {
+	ok $aversion = $dbh.server-version, "Server version $aversion";
+    } else {
+       skip "No server version", 1;
+    }
 
     # Test preconditions
     nok $dbh.last-sth-id,	      'No statement executed yet';
@@ -176,8 +183,8 @@ method run-tests {
 
     # TODO Different drivers returns different values, should implement the
     # capabilities announce.
-    todo 'Will probably fails for the lack of proper capabilities annuonce'
-	if $.dbd eq 'SQLite';
+    todo 'Will probably fails for the lack of proper capabilities announce'
+	if $.dbd eq 'SQLite' | 'Oracle';
     is $rc, 6,		    'In an ideal world should returns rows available';
 
     #fetch stuff return Str
@@ -276,8 +283,6 @@ method run-tests {
         { name => 'ONE', description => Str, quantity => Int, price => Rat, amount => Rat },
         { name => 'TAFM', description => 'Mild fish taco', quantity => 1, price => 4.85, amount => 4.85 },
     );
-
-    #diag "ref-aoh: {Dump(@ref-aoh)}";
 
     is-deeply @results, @ref-aoh, 'types and values match';
 
