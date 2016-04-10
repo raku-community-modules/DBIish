@@ -125,9 +125,27 @@ class PGconn is export is repr('CPointer') {
         } else { Nil }
     }
 
-    method new(Str $conninfo) { # Our constructor
+    method pg-parameter-status(Str --> Str) is symbol('PQparameterStatus')
+	is native(LIB) { * }
+
+    multi method new(Str $conninfo) { # Our legacy constructor
 	sub PQconnectdb(str --> PGconn) is native(LIB) { * };
 	PQconnectdb($conninfo);
+    }
+
+    multi method new(%connparms) { # Our named constructor
+	sub PQconnectdbParams(CArray[Str], CArray[Str], int32 --> PGconn)
+	    is native(LIB) { * };
+
+	my $keys = CArray[Str].new; my $vals = CArray[Str].new;
+	my int $i = 0;
+	for %connparms.kv -> $k,$v {
+	    next without $v;
+	    $keys[$i] = $k.subst('-','_');
+	    $vals[$i] = $v; $i++;
+	}
+	$keys[$i] = Str; $vals[$i] = Str;
+	PQconnectdbParams($keys, $vals, 1);
     }
 }
 

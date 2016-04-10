@@ -62,15 +62,15 @@ sub quote-and-escape($s) {
 }
 
 #------------------ methods to be called from DBIish ------------------
+
 method connect(:database(:$dbname), *%params) {
 
     %params.push((:$dbname)) with $dbname;
-    my @connection_parameters = gather for %params.kv -> $key, $value {
-        # Internal parameter, not for PostgreSQL usage.
-        next if $key ~~ / <-lower> /;
-        take "$key={quote-and-escape $value}";
-    }
-    my $pg_conn = PGconn.new(~@connection_parameters);
+    my $pg_conn = PGconn.new(%(%params<
+	host hostaddr port dbname user password connect-timeout
+	client-encoding options application-name keepalives keepalives-idle
+	keepalives-interval sslmode requiressl sslcert sslkey sslrootcert
+	sslcrl requirepeer krbsrvname gsslib service>:p:delete));
     my $status = $pg_conn.PQstatus;
     if $status == CONNECTION_OK {
         DBDish::Pg::Connection.new(:$pg_conn, :parent(self), |%params);
