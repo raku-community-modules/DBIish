@@ -40,7 +40,7 @@ method drv { $.parent }
 method new(*%args) {
     my \con = ::?CLASS.bless(|%args);
     con.reset-err;
-    $*DBDDEFS<con> = con if %args<Set-Default>:exists;
+    $*DBI-DEFS<connection> = con if %args<Set-Default>:exists;
     %args<parent>.Connections{con.WHICH} = con;
 }
 
