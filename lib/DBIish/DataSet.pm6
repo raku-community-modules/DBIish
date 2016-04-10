@@ -2,10 +2,6 @@ use v6;
 unit package DBIish;
 use MONKEY-TYPING;
 
-Rakudo::Internals.REGISTER-DYNAMIC: '$*DBDDEFS', {
-    PROCESS::<$DBDDEFS> = Hash.new;
-};
-
 need DBDish;
 class Row does Positional does Associative is export {
     has $!row is required handles <list Array elems Numeric Int AT-POS EXISTS-POS>;
@@ -62,7 +58,7 @@ class DataSet does Iterable is export {
 }
 
 augment class Str {
-    method SQL(Str:D: DBDish::Connection $dbh = $*DBDDEFS<con>) {
+    method SQL(Str:D: DBDish::Connection $dbh = $*DBI-DEFS<connection>) {
 	$dbh.prepare(self);
     }
 }
