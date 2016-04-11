@@ -24,7 +24,7 @@ method connect(*%params ) {
         );
 
         unless $errstr = $mysql_client.mysql_error {
-	    $mysql_client.mysql_set_character_set('utf8'); # A sane default
+            $mysql_client.mysql_set_character_set('utf8'); # A sane default
             $connection = DBDish::mysql::Connection.new(
                 :$mysql_client, :parent(self), |%params,
             );
@@ -34,7 +34,11 @@ method connect(*%params ) {
 }
 
 method version() {
-       Version.new(mysql_get_client_info);
+    my $ver = Version.new(mysql_get_client_info);
+    CATCH {
+        when X::AdHoc { }
+    }
+    $ver;
 }
 
 =begin pod

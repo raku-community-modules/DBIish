@@ -12,7 +12,7 @@ class Searcher {
 	for @vers {
 	    my $ver = $_.defined ?? Version.new($_) !! Version;
 	    $wlibname = $_ and last with self!test:
-		guess_library_name(($libname, $ver)), $wks;
+		$*VM.platform-library-name($libname.IO, :version($ver)).Str, $wks;
 	}
 	$wlibname //= self!test: guess_library_name($libname), $wks unless @vers;
 	$wlibname;
@@ -22,7 +22,10 @@ class Searcher {
 	    with self.search($libname, $wks, |@vers) {
 		$_
 	    } else {
-		die "Cannot locate native library '$libname'";
+		# The sensate thing to do is die, but somehow that don't work
+		# so let NC::!setup die for us returning $libname.
+		# die "Cannot locate native library '$libname'"
+		$libname;
 	    }
 	}
     }

@@ -34,8 +34,6 @@ method run-tests {
     ok $drh, 'Install driver';
     my $aversion = $drh.Version;
     ok $aversion ~~ Version:D, "DBDish::{$.dbd} version $aversion";
-    ok $aversion = $drh.version, "{$.dbd} library version $aversion";
-
     # Connect to the data source
     my $dbh;
     try {
@@ -51,6 +49,7 @@ method run-tests {
 	skip-rest 'prerequisites failed';
 	exit;
     }
+    ok $aversion = $drh.version, "{$.dbd} library version $aversion";
     ok $dbh, "connect to '{%.opts<database> || "default"}'";
     is $dbh.drv.Connections.elems, 1, 'Driver has one connection';
 

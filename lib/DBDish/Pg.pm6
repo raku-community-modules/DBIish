@@ -82,7 +82,9 @@ method connect(:database(:$dbname), *%params) {
 
 method version {
     my $ver = PQlibVersion;
-    Version.new((gather for ^3 { take $ver mod 100; $ver div= 100 }).reverse);
+    $ver = Version.new((gather for ^3 { take $ver mod 100; $ver div= 100 }).reverse);
+    CATCH { when X::AdHoc { } }
+    $ver;
 }
 
 =begin pod

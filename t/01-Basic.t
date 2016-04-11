@@ -42,6 +42,8 @@ for drvs {
     } else { flunk  'version declared' };
     with $drv.version {
 	pass "Client version $_";
+    } else {
+	pass "Library not installed";
     }
     ok $drv.Connections.elems == 0, "Without connections";
 }
