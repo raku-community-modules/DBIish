@@ -32,6 +32,13 @@ method prepare(Str $statement, :$RaiseError = $!RaiseError, *%attr) {
     } else { .fail }
 }
 
+method set-defaults {
+    self.do(
+	q|ALTER SESSION SET nls_timestamp_tz_format='YYYY-MM-DD"T"HH24:MI:SS.FFTZR'|
+    );
+    $!last-sth-id = Nil; # Lie a little.
+}
+
 method commit {
     if $!AutoCommit {
         warn "Commit ineffective while AutoCommit is on";

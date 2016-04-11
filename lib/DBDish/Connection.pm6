@@ -40,6 +40,7 @@ method drv { $.parent }
 method new(*%args) {
     my \con = ::?CLASS.bless(|%args);
     con.reset-err;
+    con.?set-defaults;
     %args<parent>.Connections{con.WHICH} = con;
 }
 

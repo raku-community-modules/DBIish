@@ -59,7 +59,7 @@ method !get-meta {
                 my $col_name = $parmd.AttrGet($!errh, utf8, OCI_ATTR_NAME);
                 my $dtype    = $parmd.AttrGet($!errh, ub2, OCI_ATTR_DATA_TYPE);
                 my $datalen  = $parmd.AttrGet($!errh, ub4, OCI_ATTR_DATA_SIZE);
-                my $wtype    = SQLT_CHR;
+                my $wtype    = SQLT_CHR; # Sane default
                 my $buff     = do given $dtype {
                     #note "$col_name: $dtype ($datalen)";
                     when SQLT_NUM {
@@ -72,6 +72,8 @@ method !get-meta {
                     when SQLT_FLT { $wtype = $_; array[num64].new(0e0); }
                     when SQLT_INT { $wtype = $_; Buf[int64].new(0); }
                     when SQLT_BIN { $wtype = $_; proceed; }
+                    when SQLT_DAT { $wtype = $_; proceed; }
+                    when SQLT_TIMESTAMP_TZ { $datalen = 50; proceed; }
                     default { blob-allocate(Buf, $datalen); }
                 }
                 my $bind = OCIDefine.new;
@@ -103,6 +105,11 @@ method execute(*@params) {
                 $!in-indicator[$k] = 0;
                 when Blob { $btype = SQLT_BIN; $v }
                 when Str { .encode }
+                when Date {
+                    $btype = SQLT_DAT;
+                    Blob.new($v.year div 100 + 100, $v.year mod 100 + 100,
+                             $v.month, $v.day, 1, 1, 1);
+                }
                 default { .Str.encode}
             } else {
                 $!in-indicator[$k] = -1;
@@ -151,7 +158,19 @@ method _row() {
                             when Int | Num { $res[0] }
                             $res .= subbuf(0, $!out-lengths[$col]);
                             when Blob { $res }
+                            when Date {
+                                my $year = ($res[0]-100)*100 + $res[1]-100;
+                                Date.new(:$year,:month($res[2]),:day($res[3]));
+                            }
+                            when DateTime {
+                                if $res.bytes == 7 {
+                                    my $year = ($res[0]-100)*100 + $res[1]-100;
+                                    DateTime.new(:$year,:month($res[2]),:day($res[3]),
+                                         :hour($res[4]),:minute($res[5]),:second($res[6]));
+                                } else { proceed; }
+                            }
                             $res .= decode;
+                            when DateTime { DateTime.new($res) }
                             when Rat { $res.Rat }
                             default { $res }
                         }
