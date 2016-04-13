@@ -11,4 +11,4 @@ my $lib = $sub.();
 todo "Can fail if the mysqlclient library isn't installed", 1;
 like $lib,  / 'mysql' .* \d+ /,		"Indeed $lib";
 todo "Can fail if the pq library isn't installed", 1;
-ok $lib = Util.search('pq', 'PQstatus', 5),		"Postgres is $lib";
+ok $lib = Util.try-versions('pq', 'PQstatus', 4,5,6),	"Postgres is $lib";
