@@ -45,10 +45,8 @@ enum SQLITE_TYPE is export (
     SQLITE_NULL    => 5
 );
 
-sub MyLibName {
-    %*ENV<DBIISH_SQLITE_LIB> || guess_library_name(('sqlite3', v0));
-}
-constant LIB = &MyLibName;
+# Look mom, no LIB! ;-)
+constant LIB = Str;
 
 constant Null is export = Pointer;
 class SQLite is export is repr('CPointer') { };
