@@ -99,6 +99,12 @@ method execute(*@params) {
                         when Blob { $st = MYSQL_TYPE_BLOB; $_ }
                         when Str  { .encode }
                         when Int  { $st = MYSQL_TYPE_LONGLONG; Blob[int64].new($_) }
+			when DateTime {
+			    # mysql knows nothing of timezones, all assumed local-time
+			    # but in Windows the parser chokes with the offset, so
+			    # we should remove it. See _row for the reverse
+			    .local.Str.subst(/ <[\-\+]>\d\d ':' \d\d /,'').encode;
+			}
                         default   { .Str.encode }
                     };
                     given $!par-binds[$k] {
@@ -189,7 +195,12 @@ method _row {
 }
 
 method insert-id() {
-    $!mysql_client.mysql_insert_id;
+    self!ftr;
+    with $!stmt {
+        $!stmt.mysql_stmt_insert_id;
+    } else {
+        $!mysql_client.mysql_insert_id;
+    }
 }
 
 method mysql_insertid {

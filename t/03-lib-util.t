@@ -1,11 +1,11 @@
 use v6;
 use Test;
-
+constant is-win = Rakudo::Internals.IS-WIN();
 plan 5;
 
 use-ok 'NativeLibs';
 ok (my \Util = ::('NativeLibs::Searcher')) !~~ Failure,	'Class Searcher exists';
-my $sub = Util.at-runtime('mysqlclient', 'mysql_init', 16..20);
+my $sub = Util.at-runtime(is-win ?? 'libmysql' !! 'mysqlclient', 'mysql_init', 16..20);
 does-ok $sub, Callable;
 my $lib = $sub.();
 todo "Can fail if the mysqlclient library isn't installed", 1;

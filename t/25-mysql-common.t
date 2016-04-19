@@ -20,7 +20,7 @@ Your system should already have MySQL server installed and running.
 The tests by default use the database 'dbdishtest', user 'testuser' and
 password 'testpass', all this can be create with:
 
-    mysql -e "CREATE DATABASE dbdistest;" -uroot
+    mysql -e "CREATE DATABASE dbdishtest;" -uroot
     mysql -e "CREATE USER 'testuser'@'localhost' IDENTIFIED BY 'testpass';" -uroot
     mysql -e "GRANT ALL PRIVILEGES ON dbdishtest.* TO 'testuser'@'localhost';"
 

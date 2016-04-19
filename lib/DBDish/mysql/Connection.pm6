@@ -39,7 +39,9 @@ method execute(Str $statement, *%args) {
 }
 
 method insert-id() {
-    $!mysql_client.mysql_insert_id;
+    with $!last-sth-id andthen %!Statements{$_} {
+	.insert-id;
+    }
 }
 
 method mysql_insertid {

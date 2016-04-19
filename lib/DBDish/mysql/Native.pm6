@@ -4,7 +4,9 @@ unit module DBDish::mysql::Native;
 use NativeLibs;
 use NativeHelpers::Blob;
 
-constant LIB = NativeLibs::Searcher.at-runtime('mysqlclient', 'mysql_init', 16..20);
+constant LIB = NativeLibs::Searcher.at-runtime(
+    Rakudo::Internals.IS-WIN ?? 'libmysql' !! 'mysqlclient',
+    'mysql_init', 16..20);
 
 #From mysql_com.h
 enum mysql-field-type is export (
@@ -128,6 +130,7 @@ class MYSQL_STMT is export is repr('CPointer') {
     method mysql_stmt_field_count(::?CLASS:D:		--> int32) is native(LIB) { * }
     method mysql_stmt_close(::?CLASS:D:	              --> my_bool) is native(LIB) { * }
     method mysql_stmt_affected_rows(::?CLASS:D:        --> uint64) is native(LIB) { * }
+    method mysql_stmt_insert_id(::?CLASS:D:            --> uint64) is native(LIB) { * }
     method mysql_stmt_result_metadata(::?CLASS:D:   --> MYSQL_RES) is native(LIB) { * }
     method mysql_stmt_store_result(::?CLASS:D:		--> int32) is native(LIB) { * }
     method mysql_stmt_fetch(::?CLASS:D:			--> int32) is native(LIB) { * }

@@ -24,7 +24,7 @@ without $dbh {
 ok $dbh,    'Connected';
 lives-ok { $dbh.do('DROP TABLE IF EXISTS test') }, 'Clean';
 my $subsec = $dbh.drv.version after v5.6.4;
-my $field = 'DATETIME'; $field ~= '(6)' if $subsec;
+my $field = 'TIMESTAMP'; $field ~= '(6)' if $subsec;
 diag "Using $field";
 lives-ok {
     $dbh.do(qq|
@@ -39,7 +39,7 @@ my $sth = $dbh.prepare('INSERT INTO test (adate, atimestamp) VALUES(?, ?)');
 my $now = DateTime.now;
 $now .= truncated-to('second') unless $subsec;
 lives-ok {
-    $sth.execute($now, $now);
+    $sth.execute($now.Date, $now);
 }, 'Insert Perl6 values';
 $sth.dispose;
 $sth = $dbh.prepare('SELECT adate, atimestamp FROM test');
