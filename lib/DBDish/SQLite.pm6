@@ -2,7 +2,7 @@ use v6;
 
 need DBDish;
 
-unit class DBDish::SQLite:auth<mberends>:ver<0.1.0> does DBDish::Driver;
+unit class DBDish::SQLite:auth<mberends>:ver<0.1.1> does DBDish::Driver;
 use NativeLibs;
 use DBDish::SQLite::Native;
 need DBDish::SQLite::Connection;
@@ -12,7 +12,7 @@ has $.library-resolved = False;
 
 method connect(:database(:$dbname)! is copy, *%params) {
     die "Cannot locate native library '" ~
-	$*VM.platform-library-name('sqlite3', :version(v0)) ~ "'"
+	$*VM.platform-library-name('sqlite3'.IO, :version(v0)) ~ "'"
 	unless $!library-resolved;
 
     my SQLite $p .= new;
