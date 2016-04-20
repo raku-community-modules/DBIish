@@ -5,7 +5,7 @@ use NativeLibs;
 use NativeHelpers::Blob;
 
 constant LIB = NativeLibs::Searcher.at-runtime(
-    Rakudo::Internals.IS-WIN ?? 'libmysql' !! 'mysqlclient',
+    Rakudo::Internals.IS-WIN ?? 'mysql' !! 'mysqlclient',
     'mysql_init', 16..20);
 
 #From mysql_com.h

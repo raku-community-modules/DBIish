@@ -51,4 +51,5 @@ $data = @res[0];
 ok $data ~~ Buf,         'Data is-a Buf';
 ok not $data.defined,    'But is NULL';
 $dbh.do('DROP TABLE IF EXISTS test');
+$dbh.dispose;
 $TDB.unlink

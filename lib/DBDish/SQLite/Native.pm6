@@ -1,6 +1,6 @@
 use v6;
 
-use NativeCall :ALL;
+use NativeLibs;
 
 unit module DBDish::SQLite::Native;
 
@@ -45,8 +45,8 @@ enum SQLITE_TYPE is export (
     SQLITE_NULL    => 5
 );
 
-# Look mom, no LIB! ;-)
-constant LIB = Str;
+# Look mom, no LIB! when supported ;-)
+constant LIB = NativeLibs::is-win ?? 'sqlite3' !! Str;
 
 constant Null is export = Pointer;
 class SQLite is export is repr('CPointer') { };

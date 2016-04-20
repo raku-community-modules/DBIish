@@ -41,6 +41,7 @@ ok so $dbh.err,		'Has error at $dbh level';
 ok so $dbh.drv.err,	'Has error at $drv level';
 ok so DBIish.err,	'Has error at $sth leval';
 is DBIish.errstr, $e, 'Propagated to DBIish';
+$dbh.dispose; # Close the connection
 
 
 END { try unlink "$dbfile.sqlite3" };
