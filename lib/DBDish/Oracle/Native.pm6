@@ -5,7 +5,7 @@ use NativeCall;
 use NativeHelpers::Blob;
 
 my constant libver is export = v12.1;
-my constant lib = ('clntsh', libver);
+my constant lib = Rakudo::Internals.IS-WIN() ?? 'oci' !! ('clntsh', libver);
 
 #------------ Oracle library to NativeCall data type mappings -----------
 constant sb1          is export = int8;
