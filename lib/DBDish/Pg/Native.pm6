@@ -142,7 +142,7 @@ class PGconn is export is repr('CPointer') {
 	for %connparms.kv -> $k,$v {
 	    next without $v;
 	    $keys[$i] = $k.subst('-','_');
-	    $vals[$i] = $v; $i++;
+	    $vals[$i] = ~$v; $i++;
 	}
 	$keys[$i] = Str; $vals[$i] = Str;
 	PQconnectdbParams($keys, $vals, 1);
