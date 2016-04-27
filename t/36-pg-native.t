@@ -9,6 +9,7 @@ my %con-parms;
 # If env var set, no parameter needed.
 %con-parms<dbname> = 'dbdishtest' unless %*ENV<PGDATABASE>;
 %con-parms<user> = 'postgres' unless %*ENV<PGUSER>;
+%con-parms<port> = 5432; # Test for issue #62
 
 my $dbh;
 
