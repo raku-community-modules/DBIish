@@ -3,6 +3,8 @@ services:
     - mysql
 
 language: perl6
+env:
+    - PERL=/usr/bin/perl
 
 perl6:
     - 2016.01
