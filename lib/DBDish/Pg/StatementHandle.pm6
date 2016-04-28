@@ -9,7 +9,7 @@ has Str $!statement_name;
 has $!statement;
 has @!param_type;
 has $!result;
-has Int $!row_count;
+has $!row_count;
 has $!field_count;
 has $!current_row = 0;
 
@@ -30,7 +30,7 @@ submethod !get-meta($result) {
                 warn "No type map defined for postgresql type $pt at column $_";
                 t = Str;
             }
-            @!column-type.push(t);
+            @!column-type.push(t ~~ Empty ?? Any !! t);
         }
     }
 }
@@ -85,14 +85,16 @@ method execute(*@params) {
 method _row() {
     my $l = ();
     if $!Executed && $!field_count && $!current_row < $!row_count {
-        $l = do for ^$!field_count {
-            my $value = @!column-type[$_];
-            unless $!result.PQgetisnull($!current_row, $_) {
-                $value = $!result.get-value($!current_row, $_, $value);
-                if @!column-type[$_] ~~ Array {
-                    $value = _pg-to-array($value, @!column-type[$_].of);
+        my $col = 0;
+        $l = do for @!column-type -> \ct {
+            my $value = ct;
+            unless $!result.PQgetisnull($!current_row, $col) {
+                $value = $!result.get-value($!current_row, $col, $value);
+                if ct ~~ Array {
+                    $value = _pg-to-array($value, ct.of);
                 }
             }
+            $col++;
             $value;
         }
         self.finish if ++$!current_row == $!row_count;

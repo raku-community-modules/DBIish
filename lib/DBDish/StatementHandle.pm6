@@ -109,8 +109,8 @@ multi method allrows(:$hash-of-array!) {
 
 multi method allrows() {
     gather {
-	while self.row -> @r {
-	    take @r;
+	while self.row -> \r {
+	    take r;
 	}
     }
 }

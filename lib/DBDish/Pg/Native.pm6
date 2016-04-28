@@ -28,19 +28,19 @@ class PGresult	is export is repr('CPointer') {
     method PQntuples(--> int32) is native(LIB) { * }
     method PQresultErrorMessage(--> str) is native(LIB) { * }
     method PQresultStatus(--> int32) is native(LIB) { * }
+    method PQgetlength(int32, int32 --> int32) is native(LIB) { * }
+    method PQfformat(int32 --> int32) is native(LIB) { * }
+    method PQgetvaluePtr(int32, int32 --> Pointer)
+	is symbol('PQgetvalue') is native(LIB) { * }
 
     method is-ok {
 	self.PQresultStatus ~~ (0 .. 4);
     }
-    method get-value(Int $row, Int $col, Mu $t) {
-	sub PQgetvalue(PGresult, int32, int32 --> Pointer) is native(LIB) { * }
-	sub PQgetlength(PGresult, int32, int32 --> int32) is native(LIB) { * }
-	sub PQfformat(PGresult, int32 --> int32) is native(LIB) { * }
 
-	my \ptr = PQgetvalue(self, $row, $col);
-	given PQfformat(self, $col) {
-	    when 0 { #Text
-		my $str = nativecast(Str, ptr);
+    method get-value(Int $row, Int $col, Mu $t) {
+	#given self.PQfformat($col) {
+	#    when 0 { #Text
+		my $str = self.PQgetvalue($row,$col);
 		given $t {
 		    when Str { $str } # Done
 		    when Date { Date.new($str) }
@@ -56,20 +56,22 @@ class PGresult	is export is repr('CPointer') {
 		    }
 		    default { $t($str) } # Cast
 		}
-	    }
-	    when 1 { # Binary
-		my $size = PQgetlength(self, $row, $col);
-		# TODO This is certainly incomplete
-		given $t {
-		    when Str { nativecast(Str, ptr) }
-		    when Blob {
-			blob-from-pointer(ptr, :elems($size));
-		    }
-		}
-	    }
-	}
+	#   }
+	#   when 1 { # Binary
+	#	my $size = self.PQgetlength($row, $col);
+	#	my \ptr = self.PQgetvaluePtr($row, $col);
+	#	# TODO This is certainly incomplete
+	#	given $t {
+	#	    when Str { nativecast(Str, ptr) }
+	#	    when Blob {
+	#		blob-from-pointer(ptr, :elems($size));
+	#	    }
+	#	}
+	#    }
+	#}
     }
 }
+
 
 class pg-notify is export {
     has Str   $.relname;
@@ -95,11 +97,11 @@ class PGconn is export is repr('CPointer') {
 	is native(LIB) { * }
     method PQfinish is native(LIB) { * }
 
+    method PQescapeByteaConn(Buf, size_t, size_t is rw --> Pointer)
+	is native(LIB) { * }
     method escapeBytea(Buf:D $buf) {
-	sub PQescapeByteaConn(PGconn, Buf, size_t, size_t is rw --> Pointer)
-	    is native(LIB) { * }
 	my size_t $sz;
-	my \ptr = PQescapeByteaConn(self, $buf, $buf.elems * nativesizeof($buf.of), $sz);
+	my \ptr = self.PQescapeByteaConn($buf, $buf.elems * nativesizeof($buf.of), $sz);
 	LEAVE { PQfreemem(ptr) if ptr }
 	with ptr {
 	    nativecast(Str, $_);
@@ -110,15 +112,15 @@ class PGconn is export is repr('CPointer') {
 
     method pg-socket(--> int32) is symbol('PQsocket') is native(LIB) { * }
 
+    method PQnotifies(--> Pointer) is native(LIB) { * }
     method pg-notifies(--> pg-notify) {
         class PGnotify is repr('CStruct') {
             has Str                           $.relname; # char* relname
             has int32                         $.be_pid; # int be_pid
             has Str                           $.extra; # char* extra
         }
-        sub PQnotifies(PGconn --> Pointer) is native(LIB) { * }
 
-        my \ptr = PQnotifies(self);
+        my \ptr = self.PQnotifies;
         LEAVE { PQfreemem(ptr) if ptr }
         with ptr && nativecast(PGnotify, ptr) -> \self {
             pg-notify.new(:$.relname, :$.be_pid, :$.extra)
@@ -128,14 +130,14 @@ class PGconn is export is repr('CPointer') {
     method pg-parameter-status(Str --> Str) is symbol('PQparameterStatus')
 	is native(LIB) { * }
 
+    sub PQconnectdb(str --> PGconn) is native(LIB) { * };
     multi method new(Str $conninfo) { # Our legacy constructor
-	sub PQconnectdb(str --> PGconn) is native(LIB) { * };
 	PQconnectdb($conninfo);
     }
 
+    sub PQconnectdbParams(CArray[Str], CArray[Str], int32 --> PGconn)
+	is native(LIB) { * };
     multi method new(%connparms) { # Our named constructor
-	sub PQconnectdbParams(CArray[Str], CArray[Str], int32 --> PGconn)
-	    is native(LIB) { * };
 
 	my $keys = CArray[Str].new; my $vals = CArray[Str].new;
 	my int $i = 0;
