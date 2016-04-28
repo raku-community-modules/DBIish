@@ -30,7 +30,8 @@ submethod !get-meta($result) {
                 warn "No type map defined for postgresql type $pt at column $_";
                 t = Str;
             }
-            @!column-type.push(t ~~ Empty ?? Any !! t);
+            @!column-type.push(t);
+	    @!column-type.push(Any) if t.^name eq 'Slip';
         }
     }
 }
