@@ -139,14 +139,13 @@ class MYSQL_STMT is export is repr('CPointer') {
 };
 
 class MYSQL_RES is export {
-    method fetch_row(MYSQL_RES:D: --> MyRow) {
-	sub mysql_fetch_row(MYSQL_RES $result_set )
-	    returns CArray[Pointer] is native(LIB) { * }
-	sub mysql_fetch_lengths(MYSQL_RES)
-	    returns CArray[ulong] is native(LIB) { * }
 
-	my $car = mysql_fetch_row(self);
-	my $lon = mysql_fetch_lengths(self);
+    method mysql_fetch_row(--> CArray[Pointer]) is native(LIB) { * }
+    method mysql_fetch_lengths(--> CArray[ulong]) is native(LIB) { * }
+    method fetch_row(MYSQL_RES:D: --> MyRow) {
+
+	my $car = self.mysql_fetch_row;
+	my $lon = self.mysql_fetch_lengths;
 
 	$car.defined ?? MyRow.new(:$car, :rs(self), :$lon) !! MyRow;
     }
@@ -158,14 +157,14 @@ class MYSQL_RES is export {
 
 class MYSQL is export is repr('CPointer') {
 
+    method mysql_real_escape_string(Blob, Blob, ulong)
+	returns ulong is native(LIB) { * };
     multi method escape(Blob $b, :$bin --> Str) {
-	sub mysql_real_escape_string(MYSQL, Blob, Blob, ulong)
-	    returns ulong is native(LIB) { * };
 	if $bin { # HACK: mysql_real_scape assumes latin1 :(
 	    $b.list.fmt('%02x','');
 	} else {
 	    my \r = blob-allocate(Blob, $b.bytes * 2 + 1);
-	    my $res = mysql_real_escape_string(self, r, $b, $b.bytes);
+	    my $res = self.mysql_real_escape_string(r, $b, $b.bytes);
 	    r.subbuf(0, $res).decode.Str;
 	}
     }
