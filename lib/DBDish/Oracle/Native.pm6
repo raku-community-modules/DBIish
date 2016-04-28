@@ -108,9 +108,7 @@ class OCIErr is Cool is export {
 class OCIHandle is repr('CPointer') is export {
     method h-type { 0 }
 
-    method gen-error(OCIHandle:D:) {
-        sub OCIErrorGet (
-            OCIHandle $hndl,
+    method OCIErrorGet (OCIHandle $hndl:
             ub4       $recordno,
             OraText   $sqlstate,
             sb4       $errcodep is rw,
@@ -118,39 +116,35 @@ class OCIHandle is repr('CPointer') is export {
             ub4       $bufsiz,
             ub4       $type
             --> sword ) is native(lib) { * }
-
+    method gen-error(OCIHandle:D:) {
         my $errtxt = blob-allocate(utf8, 512);
-        OCIErrorGet(self, 1, OraText, my sb4 $errcode, $errtxt, 512, self.h-type);
+        self.OCIErrorGet(1, OraText, my sb4 $errcode, $errtxt, 512, self.h-type);
         OCIErr.new(:Str(~$errtxt), :Numeric($errcode));
     }
 
-    method HandleAlloc(OCIHandle:D: OCIHandle:U $want) {
-        sub OCIHandleAlloc (
-            OCIHandle $parenth,
+    method OCIHandleAlloc (OCIHandle $parenth:
             OCIHandle $hndl is rw,
             ub4       $type,
             size_t    $xtramem_sz,
             Pointer   $usrmempp
             --> sword ) is native(lib) { * }
-
+    method HandleAlloc(OCIHandle:D: OCIHandle:U $want) {
         my $nh = $want.new;
-        OCIHandleAlloc(self, $nh, $want.h-type, 0, Pointer)
+        self.OCIHandleAlloc($nh, $want.h-type, 0, Pointer)
             ?? self.gen-error
             !! $nh;
     }
 
+    method OCIHandleFree (OCIHandle: ub4 --> sword ) is native(lib) { * }
     method HandleFree(OCIHandle:D:) {
-        sub OCIHandleFree (OCIHandle, ub4 --> sword ) is native(lib) { * }
-
-        OCIHandleFree(self, self.h-type);
+        self.OCIHandleFree(self.h-type);
     }
 
+    method OCIAttrGet (OCIHandle: ub4, Buf, ub4 $size is rw, ub4 $type, OCIHandle
+        --> sword ) is native(lib) { * }
     method AttrGet(OCIHandle:D: OCIHandle $errh, Mu:U $want, $type) {
-        sub OCIAttrGet (OCIHandle, ub4, Buf, ub4 $size is rw, ub4 $type, OCIHandle
-            --> sword ) is native(lib) { * }
-
         my $buf = blob-allocate($want ~~ Blob ?? Buf[intptr] !! Buf[$want], 1);
-        if OCIAttrGet(self, self.h-type, $buf, my ub4 $size, $type, $errh) {
+        if self.OCIAttrGet(self.h-type, $buf, my ub4 $size, $type, $errh) {
             $errh.gen-error;
         } else {
             $want ~~ Blob
@@ -159,12 +153,11 @@ class OCIHandle is repr('CPointer') is export {
         }
     }
 
-    method ParamGet(OCIHandle:D: OCIHandle $errh, OCIHandle $want, $pos) {
-        sub OCIParamGet(OCIHandle, ub4, OCIHandle, OCIHandle is rw, ub4
+    method OCIParamGet(OCIHandle: ub4, OCIHandle, OCIHandle is rw, ub4
             --> sword ) is native(lib) { * }
-
+    method ParamGet(OCIHandle:D: OCIHandle $errh, OCIHandle $want, $pos) {
         my $parh = $want.new;
-        OCIParamGet(self, self.h-type, $errh, $parh, $pos)
+        self.OCIParamGet(self.h-type, $errh, $parh, $pos)
             ?? $errh.gen-error
             !! $parh;
     }
@@ -242,8 +235,7 @@ class OCIStmt is OCIHandle is repr('CPointer') is export {
         ub4          $mode
         --> sword ) is symbol('OCIDefineByPos2') is native(lib) { * }
 
-    method StmtFetch(OCIError $errh) {
-        sub OCIStmtFetch2 (
+    my sub OCIStmtFetch2 (
             OCIStmt  $stmt,
             OCIError $errh,
             ub4      $nrows,
@@ -251,7 +243,7 @@ class OCIStmt is OCIHandle is repr('CPointer') is export {
             sb4      $fetchOffset,
             ub4      $mode
             --> sword ) is native(lib) { * }
-
+    method StmtFetch(OCIError $errh) {
         OCIStmtFetch2(self, $errh, 1, OCI_DEFAULT, 0, OCI_DEFAULT)
     }
 }
@@ -259,8 +251,7 @@ class OCIStmt is OCIHandle is repr('CPointer') is export {
 class OCISvcCtx is OCIHandle is repr('CPointer') is export {
     method h-type { OCI_HTYPE_SVCCTX }
 
-    method StmtPrepare($stmttext, OCIError :$errh!) {
-        sub OCIStmtPrepare2 (
+    my sub OCIStmtPrepare2 (
             OCISvcCtx $svch,
             OCIStmt   $stmt is rw,
             OCIError  $errh,
@@ -272,6 +263,7 @@ class OCISvcCtx is OCIHandle is repr('CPointer') is export {
             ub4       $mode
             --> sword ) is native(lib) { * }
 
+    method StmtPrepare($stmttext, OCIError :$errh!) {
         my $stmt = OCIStmt.new;
         OCIStmtPrepare2(self, $stmt, $errh, |buf-sized($stmttext),
             utf8, 0, OCI_NTV_SYNTAX, OCI_DEFAULT)
@@ -309,8 +301,7 @@ class OCISvcCtx is OCIHandle is repr('CPointer') is export {
 class OCIEnv is OCIHandle is repr('CPointer') is export {
     method h-type { OCI_HTYPE_ENV }
 
-    method NlsCreate(:$mode = OCI_DEFAULT, :$charset = AL32UTF8, :$ncharset = AL32UTF8) {
-        sub OCIEnvNlsCreate (
+    my sub OCIEnvNlsCreate (
             OCIEnv  is rw,
             ub4     $mode,
             Pointer $ctxp,
@@ -323,6 +314,7 @@ class OCIEnv is OCIHandle is repr('CPointer') is export {
             ub2     $ncharset
             --> sword ) is native(lib) { * }
 
+    method NlsCreate(:$mode = OCI_DEFAULT, :$charset = AL32UTF8, :$ncharset = AL32UTF8) {
         my $env = self.new;
         if OCIEnvNlsCreate($env, $mode,
             my Pointer $ctxp, NULL, NULL, NULL, 0, Pointer,
@@ -334,8 +326,7 @@ class OCIEnv is OCIHandle is repr('CPointer') is export {
         }
     }
 
-    method Logon(OCIError :$errh, Int :$mode, :$dbname, :$username, :$password) {
-        sub OCILogon2 (
+    my sub OCILogon2 (
             OCIEnv    $envh,
             OCIError  $errh,
             OCISvcCtx $svch is rw,
@@ -348,6 +339,7 @@ class OCIEnv is OCIHandle is repr('CPointer') is export {
             ub4       $mode
             --> sword ) is native(lib) { * }
 
+    method Logon(OCIError :$errh, Int :$mode, :$dbname, :$username, :$password) {
         my $svch = OCISvcCtx.new;
         OCILogon2(self, $errh, $svch, |buf-sized($username), |buf-sized($password),
                   |buf-sized($dbname), $mode)
