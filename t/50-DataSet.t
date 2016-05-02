@@ -136,7 +136,7 @@ with $insert.SQL -> $insertor {
       unless $insertor($i, $random_chars) { $all-ok = False; }
     }
     $insertor.dispose;
-    ok $all-ok, "insert 99 rows of random chars";
+    ok $all-ok, "insert 19 rows of random chars";
 }
 
 
