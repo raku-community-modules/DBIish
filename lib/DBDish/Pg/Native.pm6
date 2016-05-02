@@ -149,6 +149,12 @@ class PGconn is export is repr('CPointer') {
 	$keys[$i] = Str; $vals[$i] = Str;
 	PQconnectdbParams($keys, $vals, 1);
     }
+    method pg-db(--> Str) is symbol('PQdb') is native(LIB) { * }
+    method pg-user(--> Str) is symbol('PQuser') is native(LIB) { * }
+    method pg-pass(--> Str) is symbol('PQpass') is native(LIB) { * }
+    method pg-host(--> Str) is symbol('PQhost') is native(LIB) { * }
+    method pg-port(--> Str) is symbol('PQport') is native(LIB) { * }
+    method pg-options(--> Str) is symbol('PQoptions') is native(LIB) { * }
 }
 
 constant Null is export = Pointer;
