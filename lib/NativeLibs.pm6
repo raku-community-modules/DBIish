@@ -14,9 +14,9 @@ class Loader {
     has Str   $.name;
     has DLLib $.library;
 
+    my sub dlerror(--> Str)         is native { * } # For linux or darwin/OS X
+    my sub GetLastError(--> uint32) is native('kernel32') { * } # On Microsoft land
     method !dlerror() {
-	my sub dlerror(--> Str)         is native { * } # For linux or darwin/OS X
-	my sub GetLastError(--> uint32) is native('kernel32') { * } # On Microsoft land
 	given $*VM.config<osname>.lc {
 	    when 'linux' | 'darwin' {
 		dlerror() // '';
@@ -27,11 +27,10 @@ class Loader {
 	}
     }
 
+    my sub dlLoadLibrary(Str --> DLLib)  is native { * } # dyncall
+    my sub dlopen(Str, uint32 --> DLLib) is native { * } # libffi
+    my sub LoadLibraryA(Str --> DLLib) is native('kernel32') { * }
     method !dlLoadLibrary(Str $libname --> DLLib) {
-	my sub dlLoadLibrary(Str --> DLLib)  is native { * } # dyncall
-	my sub dlopen(Str, uint32 --> DLLib) is native { * } # libffi
-        my sub LoadLibraryA(Str --> DLLib) is native('kernel32') { * }
-
         is-win  ?? LoadLibraryA($libname) !!
         dyncall ?? dlLoadLibrary($libname) !!
         dlopen($libname, 0x102); # RTLD_GLOBAL | RTLD_NOW
@@ -46,8 +45,8 @@ class Loader {
 	}
     }
 
+    sub dlFreeLibrary(DLLib) is native { * };
     method dispose {
-	sub dlFreeLibrary(DLLib) is native { * };
 	with $!library {
 	    dlFreeLibrary($_);
 	    $_ = Nil;
