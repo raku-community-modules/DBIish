@@ -3,22 +3,24 @@ use Test;
 plan 16;
 use DBIish;
 
+# Test some errors
 ok not DBIish.err,  "At start DBIish.err is 0";
 throws-like {
     DBIish.connect('SQLite');
 }, X::AdHoc, 'Need database';
+
+my $dbfile = 'exec-error';
+unless DBIish.install-driver('SQLite').version {
+    skip-rest 'No SQLite3 library installed';
+    exit;
+}
 
 throws-like {
     DBIish.connect('SQLite', :database</no-such/database>);
 }, X::DBDish::ConnectionFailed, "Die on invalid database";
 ok so DBIish.err,     "Error registered";
 
-my $dbfile = 'exec-error';
 ok (my $dbh =  DBIish.connect('SQLite', dbname => $dbfile)), 'Created';
-without $dbh {
-    skip-rest 'SQLite3 not available';
-    exit;
-}
 ok not $dbh.err,    'Without errors en $dbh';
 ok not DBIish.err,  'Error cleared in DBIish';
 
