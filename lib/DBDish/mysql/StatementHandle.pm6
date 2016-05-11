@@ -34,12 +34,14 @@ method !get-meta(MYSQL_RES $res) {
     loop (my $i = 0; $i < $!field_count; $i++) {
         with $res.mysql_fetch_field {
             @!column-name.push: .name;
-            if (my \t = %mysql-type-conv{.type}) === Any {
-                warn "No type map defined for mysql type #{.type} at column $i";
-                t = Str;
-            }
-            @!column-type.push: t;
-            $lengths[$i] = .length;
+            @!column-type.push: do {
+		my $pt = .type;
+		if (my \t = %mysql-type-conv{$pt}) === Nil {
+		    warn "No type map defined for mysql type #$pt at column $i";
+		    Str;
+		} else { t }
+	    }
+	    $lengths[$i] = .length;
         }
         else { die 'mysql: Opps! mysql_fetch_field'; }
     }

@@ -198,7 +198,7 @@ class MYSQL is export is repr('CPointer') {
 sub mysql_get_client_version(--> uint32) is export is native(LIB) { * }
 sub mysql_get_client_info(--> Str)       is export is native(LIB) { * }
 
-constant %mysql-type-conv is export = map(
+constant %mysql-type-conv is export = Map.new: map(
     {+mysql-field-type::{.key} => .value}, (
   MYSQL_TYPE_DECIMAL => Rat,
   MYSQL_TYPE_TINY => Int,
@@ -206,7 +206,7 @@ constant %mysql-type-conv is export = map(
   MYSQL_TYPE_LONG => Int,
   MYSQL_TYPE_FLOAT => Num,
   MYSQL_TYPE_DOUBLE => Num,
-  MYSQL_TYPE_NULL => Empty,
+  MYSQL_TYPE_NULL => Any,
   MYSQL_TYPE_TIMESTAMP => DateTime,
   MYSQL_TYPE_LONGLONG => Int,
   MYSQL_TYPE_INT24 => Int,
@@ -225,6 +225,6 @@ constant %mysql-type-conv is export = map(
   MYSQL_TYPE_MEDIUM_BLOB => Buf,
   MYSQL_TYPE_LONG_BLOB => Buf,
   MYSQL_TYPE_BLOB => Buf,
-)).hash;
+));
 
 

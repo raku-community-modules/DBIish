@@ -2,7 +2,7 @@ use v6;
 need DBDish;
 # DBDish::mysql.pm6
 
-unit class DBDish::mysql:auth<mberends>:ver<0.1.1> does DBDish::Driver;
+unit class DBDish::mysql:auth<mberends>:ver<0.1.2> does DBDish::Driver;
 use DBDish::mysql::Native;
 need DBDish::mysql::Connection;
 
@@ -34,11 +34,7 @@ method connect(*%params ) {
 }
 
 method version() {
-    my $ver = Version.new(mysql_get_client_info);
-    CATCH {
-        when X::AdHoc { }
-    }
-    $ver;
+    try Version.new(mysql_get_client_info);
 }
 
 =begin pod
