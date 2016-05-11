@@ -1,7 +1,7 @@
 use v6;
 need DBDish;
 
-unit class DBDish::Pg:auth<mberends>:ver<0.1.4> does DBDish::Driver;
+unit class DBDish::Pg:auth<mberends>:ver<0.1.5> does DBDish::Driver;
 use DBDish::Pg::Native;
 need DBDish::Pg::Connection;
 
@@ -85,6 +85,18 @@ method version {
     $ver = Version.new((gather for ^3 { take $ver mod 100; $ver div= 100 }).reverse);
     CATCH { when X::AdHoc { } }
     $ver;
+}
+
+method data-sources(*%params) {
+    with self.connect(:dbname<template1>, |%params) {
+	LEAVE { .dispose }
+	with .prepare(
+	    'SELECT pg_catalog.quote_ident(datname) FROM pg_catalog.pg_database ORDER BY 1'
+	) {
+	    .execute;
+	    .allrows.map({ dbname => .[0] }) . eager; # 'cus this conn will be disposed
+	} else { .fail }
+    } else { .fail }
 }
 
 =begin pod

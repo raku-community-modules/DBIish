@@ -2,7 +2,7 @@ v6;
 use Test;
 use DBIish;
 
-plan 14;
+plan 17;
 
 my %con-parms;
 
@@ -28,7 +28,14 @@ without $dbh {
 }
 
 ok $dbh,    'Connected';
-ok($dbh.pg-socket, "There's a socket");
+
+ok (my $sv = $dbh.server-version), "server-version ($sv)";
+
+ok $dbh.pg-socket, "There's a socket";
+
+is $dbh.quote('foo'),	    "'foo'",    'Quote literal';
+is $dbh.quote('foo'):as-id, '"foo"',    'Quote Id';
+
 lives-ok { $dbh.do('LISTEN test') }, 'Listen to test';
 my $note = $dbh.pg-notifies;
 isa-ok $note, Any, 'No notification';
@@ -44,3 +51,6 @@ isa-ok $note, 'DBDish::Pg::Native::pg-notify', 'A notification received';
 is $note.relname, 'test', 'Test channel';
 isa-ok $note.be_pid, Int, 'Pid';
 is $note.extra, 'Payload', 'w/ extras';
+
+#dd $dbh.drv.data-sources(:user<postgres>);
+#dd $dbh.table-info(:table<sal_emp>).allrows(:array-of-hash).list;

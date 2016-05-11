@@ -24,14 +24,14 @@ method !handle-errors {
 submethod !get-meta($result) {
     if $!field_count = $result.PQnfields {
         for ^$!field_count {
-            @!column-name.push($result.PQfname($_));
-            my $pt = $result.PQftype($_);
-            if (my \t = %oid-to-type{$pt}) === Any {
-                warn "No type map defined for postgresql type $pt at column $_";
-                t = Str;
+            @!column-name.push: $result.PQfname($_);
+            @!column-type.push: do {
+                my $pt = $result.PQftype($_);
+                if (my \t = %oid-to-type{$pt}) === Nil {
+                    warn "No type map defined for postgresql type $pt at column $_";
+                    Str;
+                } else { t }
             }
-            @!column-type.push(t);
-	    @!column-type.push(Any) if t.^name eq 'Slip';
         }
     }
 }
@@ -174,3 +174,5 @@ method finish() {
     }
     $!Finished = True;
 }
+
+# vim: ft=perl6 et

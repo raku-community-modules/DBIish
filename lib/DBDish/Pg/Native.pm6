@@ -98,16 +98,27 @@ class PGconn is export is repr('CPointer') {
     method PQfinish is native(LIB) { * }
 
     method PQescapeByteaConn(Buf, size_t, size_t is rw --> Pointer)
-	is native(LIB) { * }
+        is native(LIB) { * }
     method escapeBytea(Buf:D $buf) {
-	my size_t $sz;
-	my \ptr = self.PQescapeByteaConn($buf, $buf.elems * nativesizeof($buf.of), $sz);
-	LEAVE { PQfreemem(ptr) if ptr }
-	with ptr {
-	    nativecast(Str, $_);
-	} else {
-	    die "Can't allocate memory!"
-	}
+        my size_t $sz;
+        with self.PQescapeByteaConn($buf, $buf.elems * nativesizeof($buf.of), $sz) {
+            LEAVE { PQfreemem($_) }
+            nativecast(Str, $_);
+        } else {
+            die "Can't allocate memory!"
+        }
+    }
+
+    method PQescapeIdentifier(utf8, size_t --> Pointer) is native(LIB) { * }
+    method PQescapeLiteral(utf8, size_t --> Pointer) is native(LIB) { * }
+    method quote(Str $str, :$as-id --> Str) {
+        with $as-id ?? self.PQescapeIdentifier(|buf-sized($str))
+                !! self.PQescapeLiteral(|buf-sized($str)) {
+            LEAVE { PQfreemem($_) }
+            nativecast(Str, $_);
+        } else {
+            Nil
+        }
     }
 
     method pg-socket(--> int32) is symbol('PQsocket') is native(LIB) { * }
@@ -161,9 +172,10 @@ constant Null is export = Pointer;
 constant ParamArray is export = CArray[Str];
 
 # from pg_type.h
-constant %oid-to-type is export = (
+constant %oid-to-type is export = Map.new(
         16  => Bool,  # bool
         17  => Buf,   # bytea
+        19  => Str,   # name
         20  => Int,   # int8
         21  => Int,   # int2
         23  => Int,   # int4
@@ -172,7 +184,7 @@ constant %oid-to-type is export = (
        142  => Str,   # xml
        700  => Num,   # float4
        701  => Num,   # float8
-       705  => Empty, # unknown
+       705  => Any,   # unknown
       1000  => Bool,  # _bool
       1001  => Buf,   # _bytea
       1005  => Array[Int],     # Array(int2)
@@ -193,7 +205,7 @@ constant %oid-to-type is export = (
       1700  => Rat,   # numeric
       2950  => Str,   # uuid
       2951  => Str,   # _uuid
-).hash;
+);
 
 constant CONNECTION_OK         is export = 0;
 constant CONNECTION_BAD        is export = 1;
@@ -208,3 +220,5 @@ constant PGRES_NON_FATAL_ERROR is export = 6;
 constant PGRES_FATAL_ERROR     is export = 7;
 constant PGRES_COPY_BOTH       is export = 8;
 constant PGRES_SINGLE_TUPLE    is export = 9;
+
+# vim: ft=perl6 et
