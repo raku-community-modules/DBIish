@@ -1,19 +1,23 @@
 use v6;
 use Test;
 use DBIish;
-plan 22;
+plan 25;
 
 my $dbh = DBIish.connect('TestMock');
-my $sth = $dbh.prepare('everything');
+my $sth = $dbh.prepare('mockdata');
 
-$sth.execute;
+nok $sth.Executed, 'Not executed yet';
+is $sth.statement, 'mockdata',		'Statement';
 is $sth.column-names, <col1 col2 colN>, 'Columns';
 is $sth.column-types.perl, [Str, Str, Int].perl,  'Types';
+
+$sth.execute;
 is $sth.rows, 2, 'Results';
 
 is $sth.row.join(','), 'a,b,1', 'first row';
 is $sth.row.join(','), 'd,e,2', 'second row';
 nok $sth.row, 'third row is empty';
+ok $sth.Finished, 'Finished';
 
 $sth.execute;
 is $sth.fetchrow.join(','), 'a,b,1', 'first row (legacy)';
