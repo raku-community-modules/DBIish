@@ -1,10 +1,9 @@
 use v6;
 need DBDish;     # roles for drivers
 
-unit class DBDish::Oracle:auth<mberends>:ver<0.1.0> does DBDish::Driver;
+unit class DBDish::Oracle:auth<mberends>:ver<0.1.1> does DBDish::Driver;
 use DBDish::Oracle::Native;
 need DBDish::Oracle::Connection;
-need DBDish::Oracle::StatementHandle;
 
 =begin pod
 

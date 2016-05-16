@@ -1,5 +1,4 @@
 use v6;
-no precompilation;
 need DBDish;
 
 unit class DBDish::Oracle::StatementHandle does DBDish::StatementHandle;
