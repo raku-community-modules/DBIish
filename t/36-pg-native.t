@@ -54,3 +54,4 @@ is $note.extra, 'Payload', 'w/ extras';
 
 #dd $dbh.drv.data-sources(:user<postgres>);
 #dd $dbh.table-info(:table<sal_emp>).allrows(:array-of-hash).list;
+#dd $dbh.column-info(:schema<public>, :table<sal_emp>).allrows.list;
