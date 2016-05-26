@@ -66,6 +66,15 @@ method _disconnect() {
     $!mysql_client = Nil;
 }
 
-method quote-identifer(Str:D $name) {
+method quote(Str $x, :$as-id) {
+    if $as-id {
+	q[`] ~ $!mysql_client.escape($x) ~ q[`]
+    } else {
+	q['] ~ $!mysql_client.escape($x) ~ q[']
+    }
+}
+
+#legacy, user should prefer 'quote'
+method quote-identifier(Str:D $name) {
     qq[`$name`];
 }

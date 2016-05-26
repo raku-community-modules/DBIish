@@ -2,7 +2,7 @@ use v6;
 need DBDish;
 # DBDish::mysql.pm6
 
-unit class DBDish::mysql:auth<mberends>:ver<0.1.2> does DBDish::Driver;
+unit class DBDish::mysql:auth<mberends>:ver<0.1.3> does DBDish::Driver;
 use DBDish::mysql::Native;
 need DBDish::mysql::Connection;
 

@@ -32,7 +32,7 @@ GRANT ALL PRIVILEGES ON dbdishtest.* TO 'testuser'@'localhost';
 
 use Test;
 
-plan 87;
+plan 90;
 
 use DBIish;
 #use DBDish::mysql;
@@ -528,6 +528,11 @@ ok ($sth.execute("3", "Jochen Wiedmann")),"insert with string for numeric field"
 $numericVal = 2;
 $charVal = "Tim Bunce";
 ok ($sth.execute($numericVal, $charVal)),"insert with number for numeric"; # test 87
+# Test quote methods
+is $dbh.quote-identifier('ID'), '`ID`',  "Proper legacy quoted identifier";
+is $dbh.quote('foo'),       "'foo'",    'Quote literal';
+is $dbh.quote('foo'):as-id, '`foo`',    'Quote Id';
+
 # Now try the explicit type settings
 #ok ($sth.bind_param(1, " 4", SQL_INTEGER())),"bind_param SQL_INTEGER"; # test 88
 
@@ -3153,3 +3158,4 @@ $::test_dsn .= ":$::test_port" if $::test_port;
 } 1;
 
 =end pod
+# vim: ft=perl6 et
