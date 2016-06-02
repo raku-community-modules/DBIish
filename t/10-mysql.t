@@ -81,7 +81,7 @@ ok $drh_version ~~ Version:D, "DBDish::mysql version $drh_version"; # test 2
 my $dbh = try {
     CATCH { default {
         diag "Connect failed with error $_";
-        skip 'connect failed -- missing prereqs?', 85;
+        skip-rest 'prerequisites failed';
         exit;
 
     }}
