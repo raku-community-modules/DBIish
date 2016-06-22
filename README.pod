@@ -66,7 +66,7 @@ aims to provide an interface that takes advantage of Perl 6 idioms
 =head2 Fetching data
 
 DBIish provides nearly all the perl5 DBI fetch* method to fetch values from the C<StatementHandle> object.
-However it's recommanded to use the C<row> and C<allrows> methods. They provide you typed values
+However it's recommended to use the C<row> and C<allrows> methods. They provide you typed values
 
 =head3 row
 
