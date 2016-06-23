@@ -61,7 +61,31 @@ now. It looks like a DBI, and it talks like a DBI (although it only offers
 a subset of the functionality).
 
 It is based on Martin Berends' MiniDBI project, but unlike MiniDBI, DBDish
-aims to provide an interface that takes advantage of Perl 6 idioms
+aims to provide an interface that takes advantage of Perl 6 idioms.
+
+=head2 Connecting to, and disconnecting from, a database
+
+You obtain a C<DataBaseHandler> by calling the static C<DBIish.connect> method, passing
+as the only positional argument the driver name followed by any required named arguments.
+
+Those named arguments are driver specific, but commonly required ones are:
+C<database>, C<user> and C<password>.
+
+For the different syntactic forms of
+L<named arguments|https://doc.perl6.org/language/functions#Arguments> see
+the language documentation.
+
+For example, for connect to a database 'hierarchy' on Postresql, with the user in C<$user>
+and using the function C<get-secret> to obtain you password, you can:
+
+   my $dbh = DBIish.connect('Pg', :database<hierarchy>, :$user, password => get-secret());
+
+See ahead more examples.
+
+To disconnect from a database and free the allocated resources you should call the
+C<dispose> method:
+
+  $dbh.dispose;
 
 =head2 Fetching data
 
@@ -101,19 +125,27 @@ Search the Perl 6 ecosystem for additional DBDish drivers.
 
 Currently the following backends are included:
 
-=head2 Pg (Postgresql)
+=head2 Pg (PostgreSQL)
 
 Supports basic CRUD operations and prepared statements with placeholders
 
     my $dbh = DBIish.connect('Pg', :host<db01.yourdomain.com>, :port(5432),
             :database<blerg>, :user<myuser>, :$password);
 
+Pg supports the following named arguments:
+C<host>, C<hostaddr>, C<port>, C<database> (or its alias C<dbname>), C<user>, C<password>,
+C<connect-timeout>, C<client-encoding>, C<options>, C<application-name>, C<keepalives>,
+C<keepalives-idle>, C<keepalives-interval>, C<sslmode>, C<requiressl>, C<sslcert>, C<sslkey>,
+C<sslrootcert>, C<sslcrl>, C<requirepeer>, C<krbsrvname>, C<gsslib>, and C<service>.
+
+See your Postrgresql documentation for details.
+
 Pg array are supported when fetching array fields with C<row/allrows>. You will
 get the properly typed array according to the field type.
 
-But passing array to C<execute/do> is not implemented yet. You can use the
+Passing array to C<execute/do> is now implemented. But you can also use the
 C<pg-array-str> method on your Pg StatementHandle to convert an Array to a
-string Pg can understand.
+string Pg can understand:
 
   #prepare an insertion of an array field;
   $sth.execute($sth.pg-array-str(@data));
@@ -125,14 +157,14 @@ string Pg can understand.
 Looks for any asynchronous notifications received and returns a pg-notify object that looks like this
 
 	class pg-notify {
-		has Str                           $.relname; # Channel Name
-		has int32                         $.be_pid; # Backend pid
-		has Str                           $.extra; # Payload
+	    has Str                           $.relname; # Channel Name
+	    has int32                         $.be_pid; # Backend pid
+	    has Str                           $.extra; # Payload
 	}
 
 or nothing if there is no pending notifications.
 
-The payload is optional and will always be an empty string for Postgres servers less than version 9.0.
+The payload is optional and will always be an empty string for PostgreSQL servers less than version 9.0.
 
 =head3 B<pg-socket>
 
@@ -144,7 +176,7 @@ Returns the file description number of the connection socket to the server.
 
 Supports basic CRUD operations and prepared statements with placeholders
 
-    my $dbh = DBIish.connect('SQLite', :database<thefile.sqlite3>);
+    my $dbh = DBIish.connect('SQLite', :database<thefile>);
 
 =head2 mysql
 
