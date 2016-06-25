@@ -1,7 +1,7 @@
 use v6;
 need DBDish;     # roles for drivers
 
-unit class DBDish::Oracle:auth<mberends>:ver<0.1.1> does DBDish::Driver;
+unit class DBDish::Oracle:auth<mberends>:ver<0.1.2> does DBDish::Driver;
 use DBDish::Oracle::Native;
 need DBDish::Oracle::Connection;
 
@@ -80,7 +80,7 @@ our sub oracle-replace-placeholder(Str $query) is export {
 }
 
 #------------------ methods to be called from DBIish ------------------
-method connect(:database(:$dbname), :$username, :$password, *%params) {
+method connect(:database(:$dbname), :user(:$username), :$password, *%params) {
 
     # create the environment handle
     my $envh = OCIEnv.NlsCreate();

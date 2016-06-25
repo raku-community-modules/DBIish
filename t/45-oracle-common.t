@@ -6,7 +6,7 @@ DBIish::CommonTesting.new(
     dbd => 'Oracle',
     opts => {
         database => 'XE',
-        username => 'TESTUSER',
+        user     => 'TESTUSER',
         password => 'Testpass',
     },
     drop-table-sql => "
