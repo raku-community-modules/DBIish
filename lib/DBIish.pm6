@@ -1,7 +1,7 @@
 use v6;
 # DBIish.pm6
 
-unit class DBIish:auth<mberends>:ver<0.5.8>;
+unit class DBIish:auth<mberends>:ver<0.5.9>;
     use DBDish;
 
     package GLOBAL::X::DBIish {
