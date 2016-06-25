@@ -188,6 +188,12 @@ Supports basic CRUD operations and prepared statements with placeholders
     my $dbh = DBIish.connect('mysql', :socket<mysql.sock>,
             :database<blerg>, :user<myuser>, :$password);
 
+=head2 Oracle
+
+Supports basic CRUD operations and prepared statements with placeholders
+
+    my $dbh = DBIish.connect('Oracle', database => 'XE', :user<sysadm>, :password('secret'));
+
 =head1 TESTING
 
 The DBIish::CommonTesting module, now with over 100 tests, provides a common unit
