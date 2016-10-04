@@ -346,6 +346,7 @@ constant %oid-to-type is export = Map.new(
        700  => Num,   # float4
        701  => Num,   # float8
        705  => Any,   # unknown
+       790  => Str,   # money
       1000  => Bool,  # _bool
       1001  => Buf,   # _bytea
       1005  => Array[Int],     # Array(int2)
