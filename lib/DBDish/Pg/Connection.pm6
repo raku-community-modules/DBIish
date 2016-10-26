@@ -5,7 +5,7 @@ unit class DBDish::Pg::Connection does DBDish::Connection;
 use DBDish::Pg::Native;
 need DBDish::Pg::StatementHandle;
 need DBDish::TestMock;
-constant SQLType = DBIish::SQLType;
+use DBIish::Common;
 
 has PGconn $!pg_conn is required handles <
     pg-notifies pg-socket pg-parameter-status
