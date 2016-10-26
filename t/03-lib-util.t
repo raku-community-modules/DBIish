@@ -1,9 +1,10 @@
 use v6;
 use Test;
 constant is-win = Rakudo::Internals.IS-WIN();
-plan 6;
+plan 5;
 
-use-ok 'NativeLibs';
+use NativeLibs;
+
 ok (my \Util = ::('NativeLibs::Searcher')) !~~ Failure,	'Class Searcher exists';
 ok (my \Loader = ::('NativeLibs::Loader')) !~~ Failure,	'Class Loader exists';
 my $sub = Util.at-runtime(is-win ?? 'libmysql' !! 'mysqlclient', 'mysql_init', 16..20);

@@ -4,12 +4,12 @@ use Test;
 #DBIsh should can load the following, 'cus shipped
 my \drvs = <Oracle Pg SQLite TestMock mysql>;
 
-plan drvs.elems * 6 + 17;
+plan drvs.elems * 6 + 8;
 
-use-ok 'DBIish', 'DBIish can be use-d';
+use DBIish;
 
-my \DBIish = ::('DBIish');
-ok DBIish !~~ Failure, "Class is available";
+my \DBIish-class = ::('DBIish');
+ok DBIish-class !~~ Failure, "Class is available";
 
 for <connect install-driver> {
     ok DBIish.^method_table{$_}:exists, "Method $_";
@@ -18,16 +18,6 @@ for <connect install-driver> {
 given DBIish.^ver {
     ok $_, 'DBIish Has version';
     ok $_ gt v0.0.0, "Greter than v.0.0.0, (v$_)";
-}
-
-# DBIish should load the following
-for < DBIish::SQLType
-      DBDish DBDish::Driver DBDish::Connection
-      DBDish::StatementHandle DBDish::ErrorHandling
-      X::DBDish::DBError X::DBDish::ConnectionFailed
-  >
-{
-    ok ::("$_") !~~ Failure, "Loaded $_";
 }
 
 for drvs {
