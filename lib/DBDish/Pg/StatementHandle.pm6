@@ -2,6 +2,7 @@ use v6;
 need DBDish;
 
 unit class DBDish::Pg::StatementHandle does DBDish::StatementHandle;
+use DBDish::Pg::Types;
 use DBDish::Pg::Native;
 
 has PGconn $!pg_conn;
@@ -87,12 +88,16 @@ method _row() {
     my $l = ();
     if $!Executed && $!field_count && $!current_row < $!row_count {
         my $col = 0;
+        my $types = $!parent.types;
         $l = do for @!column-type -> \ct {
             my $value = ct;
             unless $!result.PQgetisnull($!current_row, $col) {
-                $value = $!result.get-value($!current_row, $col, $value);
+                my $str = $!result.PQgetvalue($!current_row, $col);
                 if ct ~~ Array {
-                    $value = _pg-to-array($value, ct.of);
+                    $value = _pg-to-array($str, ct.of);
+                } else {
+                    my $sub = $types.get(ct.^name);
+                    $value = &$sub(:$str, :type-name(ct.^name));
                 }
             }
             $col++;

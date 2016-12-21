@@ -15,6 +15,14 @@ sub PQlibVersion(-->uint32) is native(LIB) is export { * }
 sub PQfreemem(Pointer) is native(LIB) { * }
 sub PQunescapeBytea(str, size_t is rw --> Pointer) is native(LIB) { * }
 
+sub str-to-blob(Str :str($value), Str :$type-name) is export {
+    my \ptr = PQunescapeBytea($value, my size_t $elems);
+    LEAVE { PQfreemem(ptr) if ptr }
+    with ptr {
+        blob-from-pointer(ptr, :$elems, :type(Buf))
+    } else { die "Can't allocate memory!" };
+}
+
 class PGresult	is export is repr('CPointer') {
     method PQclear is native(LIB) { * }
     method PQcmdTuples(--> Str) is native(LIB) { * }
@@ -36,43 +44,7 @@ class PGresult	is export is repr('CPointer') {
     method is-ok {
 	self.PQresultStatus ~~ (0 .. 4);
     }
-
-    method get-value(Int $row, Int $col, Mu $t) {
-	#given self.PQfformat($col) {
-	#    when 0 { #Text
-		my $str = self.PQgetvalue($row,$col);
-		given $t {
-		    when Str { $str } # Done
-		    when Date { Date.new($str) }
-		    when DateTime { DateTime.new($str.split(' ').join('T')) }
-		    when Array { $str } # External process
-		    when Bool { $str eq 't' }
-		    when Blob {
-			my \ptr = PQunescapeBytea($str, my size_t $elems);
-			LEAVE { PQfreemem(ptr) if ptr }
-			with ptr {
-			    blob-from-pointer(ptr, :$elems, :type($t))
-			} else { die "Can't allocate memory!" };
-		    }
-		    when * === Any { $str }
-		    default { $t($str) } # Cast
-		}
-	#   }
-	#   when 1 { # Binary
-	#	my $size = self.PQgetlength($row, $col);
-	#	my \ptr = self.PQgetvaluePtr($row, $col);
-	#	# TODO This is certainly incomplete
-	#	given $t {
-	#	    when Str { nativecast(Str, ptr) }
-	#	    when Blob {
-	#		blob-from-pointer(ptr, :elems($size));
-	#	    }
-	#	}
-	#    }
-	#}
-    }
 }
-
 
 class pg-notify is export {
     has Str   $.relname;
