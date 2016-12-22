@@ -51,4 +51,4 @@ say $arrayref.elems; # 3
 
 # Cleanup
 $sth.finish;
-$dbh.disconnect;
+$dbh.dispose;
