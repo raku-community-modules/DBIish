@@ -73,4 +73,4 @@ say %h;
 
 # Cleanup
 $sth.finish;
-$dbh.disconnect;
+$dbh.dispose;
