@@ -124,7 +124,7 @@ unit class DBIish:auth<mberends>:ver<0.5.9>;
 
     $sth.finish;
 
-    $dbh.disconnect;
+    $dbh.dispose;
 
 See also F<README.pod> for more documentation.
 
