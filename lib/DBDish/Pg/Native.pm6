@@ -356,6 +356,7 @@ constant %oid-to-type is export = Map.new(
       1021  => Array[Num],     # Array(float4)
       1022  => Array[Num],     # Array(float4)
       1028  => Array[Int],     # Array<oid>
+      1042  => Str,            # char(bpchar)
       1043  => Str,            # varchar
       1082  => Date,           # date
       1083  => Str,            # time
