@@ -20,10 +20,10 @@ role Driver does DBDish::ErrorHandling {
 }
 
 role Type {
-    has Sub %!Conversions{Str};
+    has Callable %!Conversions{Str};
 
-    method set(Str $name, Sub $convert) {
-        %!Conversions{$name} = $convert;
+    method set(Str $name, &convert) {
+        %!Conversions{$name} = &convert;
     }
     method get(Str $name) {
         %!Conversions{$name} || sub (Str :$str, Str :$type-name) { $type-name($str) };

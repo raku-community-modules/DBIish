@@ -4,9 +4,13 @@ use DBDish;
 plan 9;
 
 class type-test does DBDish::Type {
+	method test-str(Str $value) {
+		$value.flip;
+	}
+
 	submethod BUILD {
 		%!Conversions{'Int'} = sub (Str $value) { Int($value) };
-		self.set('Str', sub (Str $value) { $value });
+		self.set('Str', self.^find_method('test-str'));
 	}
 }
 
@@ -19,4 +23,5 @@ ok $sub = $test.get('Int');
 is $sub.WHAT, Sub;
 is $sub('123'), 1;
 ok $sub = $test.get('Str');
-is $sub('test'), 'test';
+$sub.gist.say;
+is $test.$sub('test'), 'tset';
