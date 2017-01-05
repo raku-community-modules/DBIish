@@ -96,8 +96,8 @@ method _row() {
                 if ct ~~ Array {
                     $value = _pg-to-array($str, ct.of);
                 } else {
-                    my $sub = $types.get(ct.^name);
-                    $value = &$sub(:$str, :type-name(ct.^name));
+                    my $sub = $types.get(ct);
+                    $value = &$sub(:$str, :type-name(ct));
                 }
             }
             $col++;

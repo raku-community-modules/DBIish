@@ -18,14 +18,12 @@ has $.types;
 
 submethod BUILD(:$!pg_conn, :$!parent!, :$!AutoCommit) {
 	$!types = DBDish::Pg::Types.new;
-$!types.set('Int',  sub (Str :$str, Str :$type-name) { Int($str) });
-$!types.set('Rat',  sub (Str :$str, Str :$type-name) { Rat($str) });
-    $!types.set('Str',  sub (Str :$str, Str :$type-name) { $str });
-    $!types.set('Date', sub (Str :$str, Str :$type-name) { Date.new($str) });
-    $!types.set('DateTime',  sub (Str :$str, Str :$type-name) { DateTime.new($str.split(' ').join('T')) });
-    $!types.set('Array',  sub (Str :$str, Str :$type-name) { $str });
-    $!types.set('Bool',  sub (Str :$str, Str :$type-name) { $str eq 't' });
-    $!types.set('Buf',  &str-to-blob);
+    $!types.set(Str,  sub (Str :$str, Mu:U :$type-name) { $str });
+    $!types.set(Date, sub (Str :$str, Mu:U :$type-name) { Date.new($str) });
+    $!types.set(DateTime,  sub (Str :$str, Mu:U :$type-name) { DateTime.new($str.split(' ').join('T')) });
+    $!types.set(Array,  sub (Str :$str, Mu:U :$type-name) { $str });
+    $!types.set(Bool,  sub (Str :$str, Mu:U :$type-name) { $str eq 't' });
+    $!types.set(Buf,  &str-to-blob);
 }
 
 method prepare(Str $statement, *%args) {

@@ -20,13 +20,13 @@ role Driver does DBDish::ErrorHandling {
 }
 
 role Type {
-    has Callable %!Conversions{Str};
+    has Callable %!Conversions{Mu:U};
 
-    method set(Str $name, &convert) {
+    method set(Mu:U $name, &convert) {
         %!Conversions{$name} = &convert;
     }
-    method get(Str $name) {
-        %!Conversions{$name} || sub (Str :$str, Str :$type-name) { $type-name($str) };
+    method get(Mu:U $type) {
+        %!Conversions{$type} || sub (Str :$str, Mu:U :$type-name) { $type-name($str) };
     }
 }
 

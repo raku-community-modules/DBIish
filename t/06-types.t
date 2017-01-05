@@ -9,19 +9,18 @@ class type-test does DBDish::Type {
 	}
 
 	submethod BUILD {
-		%!Conversions{'Int'} = sub (Str $value) { Int($value) };
-		self.set('Str', self.^find_method('test-str'));
+		%!Conversions{Int} = sub (Str $value) { Int($value) };
+		self.set(Str, self.^find_method('test-str'));
 	}
 }
 
 ok my $test = type-test.new;
-ok my $sub = $test.get('Int');
+ok my $sub = $test.get(Int);
 is $sub('123'), 123;
 my $int =  sub ($) {1};
-ok $test.set('Int', $int);
-ok $sub = $test.get('Int');
+ok $test.set(Int, $int);
+ok $sub = $test.get(Int);
 is $sub.WHAT, Sub;
 is $sub('123'), 1;
-ok $sub = $test.get('Str');
-$sub.gist.say;
+ok $sub = $test.get(Str);
 is $test.$sub('test'), 'tset';
