@@ -2,7 +2,6 @@ use v6;
 need DBDish;
 
 unit class DBDish::Pg::Connection does DBDish::Connection;
-use DBDish::Pg::Types;
 use DBDish::Pg::Native;
 need DBDish::Pg::StatementHandle;
 need DBDish::TestMock;
@@ -14,16 +13,15 @@ has PGconn $!pg_conn is required handles <
     pg-port pg-options quote>;
 has $.AutoCommit is rw = True;
 has $.in_transaction is rw = False;
-has $.types;
+has %.Converter is DBDish::TypeConverter;
+has %.dynamic-types = %oid-to-type;
 
 submethod BUILD(:$!pg_conn, :$!parent!, :$!AutoCommit) {
-	$!types = DBDish::Pg::Types.new;
-    $!types.set(Str,  sub (Str :$str, Mu:U :$type-name) { $str });
-    $!types.set(Date, sub (Str :$str, Mu:U :$type-name) { Date.new($str) });
-    $!types.set(DateTime,  sub (Str :$str, Mu:U :$type-name) { DateTime.new($str.split(' ').join('T')) });
-    $!types.set(Array,  sub (Str :$str, Mu:U :$type-name) { $str });
-    $!types.set(Bool,  sub (Str :$str, Mu:U :$type-name) { $str eq 't' });
-    $!types.set(Buf,  &str-to-blob);
+    %!Converter{Str} =  sub (Str $str, Mu:U $type-name) { $str };
+    %!Converter{Date} = sub (Str $str, Mu:U $type-name) { Date.new($str) };
+    %!Converter{DateTime} =  sub (Str $str, Mu:U $type-name) { DateTime.new($str.split(' ').join('T')) };
+    %!Converter{Bool} =  sub (Str $str, Mu:U $type-name) { $str eq 't' };
+    %!Converter{Buf} =  &str-to-blob;
 }
 
 method prepare(Str $statement, *%args) {

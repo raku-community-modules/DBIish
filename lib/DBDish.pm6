@@ -19,14 +19,16 @@ role Driver does DBDish::ErrorHandling {
     #method new() { nextsame; }
 }
 
-role Type {
-    has Callable %!Conversions{Mu:U};
+role TypeConverter does Associative {
+    has Callable %!Conversions{Mu:U} handles <AT-KEY EXISTS-KEY>;
 
-    method set(Mu:U $name, &convert) {
-        %!Conversions{$name} = &convert;
-    }
-    method get(Mu:U $type) {
-        %!Conversions{$type} || sub (Str :$str, Mu:U :$type-name) { $type-name($str) };
+    # The role implements the conversion
+    method convert (::?CLASS:D: Str $datum, Mu:U $typ) {
+        with %!Conversions{$typ} -> &converter {
+            converter($datum, $typ);
+        } else { # Common case
+            $typ($datum);
+        }
     }
 }
 

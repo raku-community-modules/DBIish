@@ -1,26 +1,33 @@
 use v6;
 use Test;
-use DBDish;
-plan 9;
+need DBDish;
 
-class type-test does DBDish::Type {
+plan 11;
+
+class type-test {
+	has %.Converter is DBDish::TypeConverter;
+
 	method test-str(Str $value) {
 		$value.flip;
 	}
 
 	submethod BUILD {
-		%!Conversions{Int} = sub (Str $value) { Int($value) };
-		self.set(Str, self.^find_method('test-str'));
+		%!Converter{Int} = sub (Str $value, $typ) { Int($value) };
+		%!Converter{Str} = self.^find_method('test-str');
 	}
 }
 
 ok my $test = type-test.new;
-ok my $sub = $test.get(Int);
-is $sub('123'), 123;
+ok my $res = $test.Converter.convert('123', Int), 'Get the result (Int)';
+is $res, 123, 'Check it';
+
+ok my $sub = $test.Converter{Int}, 'Get the converter sub (Int)';
+is $sub('123', Int), 123, 'and then convert';
 my $int =  sub ($) {1};
-ok $test.set(Int, $int);
-ok $sub = $test.get(Int);
-is $sub.WHAT, Sub;
-is $sub('123'), 1;
-ok $sub = $test.get(Str);
-is $test.$sub('test'), 'tset';
+ok ($test.Converter{Int} = $int), 'Change the Int converter';
+ok $sub = $test.Converter{Int}, 'Get it back';
+is $sub.WHAT, Sub, 'Is it a sub?';
+is $sub('123'), 1, 'Does it do its job?';
+
+ok $sub = $test.Converter{Str}, 'get the Str method';
+is $test.$sub('test'), 'tset', 'and try it';
