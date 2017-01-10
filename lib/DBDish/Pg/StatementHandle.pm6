@@ -27,7 +27,7 @@ submethod !get-meta($result) {
             @!column-name.push: $result.PQfname($_);
             @!column-type.push: do {
                 my $pt = $result.PQftype($_);
-                if (my \t = %oid-to-type{$pt}) === Nil {
+                if (my \t = $!parent.dynamic-types{$pt}) === Nil {
                     warn "No type map defined for postgresql type $pt at column $_";
                     Str;
                 } else { t }
@@ -41,7 +41,7 @@ submethod BUILD(:$!parent!, :$!pg_conn, # Per protocol
 ) {
     if $!statement_name { # Prepared
         with $!pg_conn.PQdescribePrepared($!statement_name) -> $info {
-            @!param_type.push(%oid-to-type{$info.PQparamtype($_)}) for ^$info.PQnparams;
+            @!param_type.push($!parent.dynamic-types{$info.PQparamtype($_)}) for ^$info.PQnparams;
             self!get-meta($info);
             $info.PQclear;
         }
@@ -87,12 +87,15 @@ method _row() {
     my $l = ();
     if $!Executed && $!field_count && $!current_row < $!row_count {
         my $col = 0;
+        my %Converter := $!parent.Converter;
         $l = do for @!column-type -> \ct {
             my $value = ct;
             unless $!result.PQgetisnull($!current_row, $col) {
-                $value = $!result.get-value($!current_row, $col, $value);
+                my $str = $!result.PQgetvalue($!current_row, $col);
                 if ct ~~ Array {
-                    $value = _pg-to-array($value, ct.of);
+                    $value = _pg-to-array($str, ct.of);
+                } else {
+                    $value = %Converter.convert($str, ct);
                 }
             }
             $col++;

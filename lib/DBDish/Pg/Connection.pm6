@@ -13,8 +13,16 @@ has PGconn $!pg_conn is required handles <
     pg-port pg-options quote>;
 has $.AutoCommit is rw = True;
 has $.in_transaction is rw = False;
+has %.Converter is DBDish::TypeConverter;
+has %.dynamic-types = %oid-to-type;
 
-submethod BUILD(:$!pg_conn, :$!parent!, :$!AutoCommit) { }
+submethod BUILD(:$!pg_conn, :$!parent!, :$!AutoCommit) {
+    %!Converter{Str} =  sub (Str $str, Mu:U $type-name) { $str };
+    %!Converter{Date} = sub (Str $str, Mu:U $type-name) { Date.new($str) };
+    %!Converter{DateTime} =  sub (Str $str, Mu:U $type-name) { DateTime.new($str.split(' ').join('T')) };
+    %!Converter{Bool} =  sub (Str $str, Mu:U $type-name) { $str eq 't' };
+    %!Converter{Buf} =  &str-to-blob;
+}
 
 method prepare(Str $statement, *%args) {
     state $statement_postfix = 0;
