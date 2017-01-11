@@ -49,7 +49,7 @@ is $sth.execute, 1,			    '1 row';
 my ($col1) = $sth.row;
 isa-ok $col1, Str;
 is $col1, 'test',			    'Test';
-$dbh.Converter{Str} = sub (Str $str, Str $type-name) { 'changed' };
+$dbh.Converter{Str} = sub ($) { 'changed' };
 is $sth.execute, 1,			    '1 row';
 ($col1) = $sth.row;
 is $col1, 'changed',		    'Changed';

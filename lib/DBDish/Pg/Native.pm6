@@ -15,11 +15,11 @@ sub PQlibVersion(-->uint32) is native(LIB) is export { * }
 sub PQfreemem(Pointer) is native(LIB) { * }
 sub PQunescapeBytea(str, size_t is rw --> Pointer) is native(LIB) { * }
 
-sub str-to-blob(Str $value, Mu:U $type-name) is export {
+sub str-to-blob(Str $value, Mu:U :$type) is export {
     my \ptr = PQunescapeBytea($value, my size_t $elems);
     LEAVE { PQfreemem(ptr) if ptr }
     with ptr {
-        blob-from-pointer(ptr, :$elems, :type($type-name))
+        blob-from-pointer(ptr, :$elems, :$type)
     } else { die "Can't allocate memory!" };
 }
 

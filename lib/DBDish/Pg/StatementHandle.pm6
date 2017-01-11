@@ -91,11 +91,11 @@ method _row() {
         $l = do for @!column-type -> \ct {
             my $value = ct;
             unless $!result.PQgetisnull($!current_row, $col) {
-                my $str = $!result.PQgetvalue($!current_row, $col);
+                $value = $!result.PQgetvalue($!current_row, $col);
                 if ct ~~ Array {
-                    $value = _pg-to-array($str, ct.of);
+                    $value = _pg-to-array($value, ct.of);
                 } else {
-                    $value = %Converter.convert($str, ct);
+                    $value = %Converter.convert($value, ct);
                 }
             }
             $col++;
