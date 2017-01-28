@@ -67,10 +67,10 @@ method connect(:database(:$dbname), *%params) {
 
     %params.push((:$dbname)) with $dbname;
     my $pg_conn = PGconn.new(%(%params<
-	host hostaddr port dbname user password connect-timeout
-	client-encoding options application-name keepalives keepalives-idle
-	keepalives-interval sslmode requiressl sslcert sslkey sslrootcert
-	sslcrl requirepeer krbsrvname gsslib service>:p:delete));
+    host hostaddr port dbname user password connect-timeout
+    client-encoding options application-name keepalives keepalives-idle
+    keepalives-interval sslmode requiressl sslcert sslkey sslrootcert
+    sslcrl requirepeer krbsrvname gsslib service>:p:delete));
     my $status = $pg_conn.PQstatus;
     if $status == CONNECTION_OK {
         DBDish::Pg::Connection.new(:$pg_conn, :parent(self), |%params);
@@ -89,13 +89,13 @@ method version {
 
 method data-sources(*%params) {
     with self.connect(:dbname<template1>, |%params) {
-	LEAVE { .dispose }
-	with .prepare(
-	    'SELECT pg_catalog.quote_ident(datname) FROM pg_catalog.pg_database ORDER BY 1'
-	) {
-	    .execute;
-	    .allrows.map({ dbname => .[0] }) . eager; # 'cus this conn will be disposed
-	} else { .fail }
+    LEAVE { .dispose }
+    with .prepare(
+        'SELECT pg_catalog.quote_ident(datname) FROM pg_catalog.pg_database ORDER BY 1'
+    ) {
+        .execute;
+        .allrows.map({ dbname => .[0] }) . eager; # 'cus this conn will be disposed
+    } else { .fail }
     } else { .fail }
 }
 

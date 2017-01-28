@@ -48,29 +48,29 @@ method prepare(Str $statement, *%args) { ... }
 
 method do(Str $statement, *@params, *%args) {
     LEAVE {
-	with %!Statements{$!last-sth-id} {
-	    warn "'do' should not be used for statements that return rows"
-		unless .Finished;
-	    .dispose;
-	}
+        with %!Statements{$!last-sth-id} {
+            warn "'do' should not be used for statements that return rows"
+            unless .Finished;
+            .dispose;
+        }
     }
     if !@params && self.can('execute') {
-	self.execute($statement, |%args);
+        self.execute($statement, |%args);
     } orwith self.prepare($statement, |%args) {
-	.execute(@params, |%args);
+        .execute(@params, |%args);
     }
     else {
-	.fail;
+        .fail;
     }
 }
 
 method rows {
     if $!last-sth-id {
-	with %!Statements{$!last-sth-id} {
-	    .rows;
-	} else {
-	    $!last-rows
-	}
+        with %!Statements{$!last-sth-id} {
+            .rows;
+        } else {
+            $!last-rows
+        }
     }
 }
 

@@ -12,11 +12,10 @@ role Driver does DBDish::ErrorHandling {
     method connect(*%params --> DBDish::Connection) { ... };
 
     method !conn-error(:$errstr!, :$code) is hidden-from-backtrace {
-	self!error-dispatch: X::DBDish::ConnectionFailed.new(
-	    :$code, :native-message($errstr), :$.driver-name
-	);
+        self!error-dispatch: X::DBDish::ConnectionFailed.new(
+            :$code, :native-message($errstr), :$.driver-name
+        );
     }
-    #method new() { nextsame; }
 }
 
 role TypeConverter does Associative {
@@ -25,20 +24,19 @@ role TypeConverter does Associative {
     # The role implements the conversion
     method convert (::?CLASS:D: Str $datum, Mu:U $type) {
         with %!Conversions{$type} -> &converter {
-	    &converter.signature.params.any ~~ .named
-		?? converter($datum, :$type)
-		!! converter($datum);
+            &converter.signature.params.any ~~ .named
+                ?? converter($datum, :$type)
+                !! converter($datum);
         } else { # Common case
             Str.can($type.^name) ?? $type($datum) !! $type.new($datum);
         }
     }
     method STORE(::?CLASS:D: \to_store) {
-	for @(to_store) {
-	    when Callable { %!Conversions{$_.signature.returns} = $_ }
-	    when Pair { %!Conversions{::($_.key)} = $_.value }
-	}
+        for @(to_store) {
+            when Callable { %!Conversions{$_.signature.returns} = $_ }
+            when Pair { %!Conversions{::($_.key)} = $_.value }
+        }
     }
-
 }
 
 =begin pod

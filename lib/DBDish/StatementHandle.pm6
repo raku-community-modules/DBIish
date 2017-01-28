@@ -38,8 +38,8 @@ method !enter-execute(int $got = 0, int $expect = 0) {
     $!affected_rows = Nil;
     self!ftr;
     self!set-err( -1,
-	"Wrong number of arguments to method execute: got $got, expected $expect"
-    ).fail unless $got == $expect;
+            "Wrong number of arguments to method execute: got $got, expected $expect"
+        ).fail unless $got == $expect;
 }
 
 method !done-execute(Int $rows, $fields) {
@@ -59,8 +59,8 @@ method dispose() {
     self.finish unless $!Finished;
     self._free;
     with $.parent.Statements{self.WHICH}:delete {
-	$.parent.last-rows = self.rows;
-	True;
+        $.parent.last-rows = self.rows;
+        True;
     } else { False };
 }
 #Avoid leaks if explicit dispose isn't used by the user.
@@ -75,9 +75,9 @@ method rows {
 method row(:$hash) {
     self!ftr;
     if my \r = self._row {
-	$hash ?? (@!column-name Z=> @(r)).hash !! r.Array;
+        $hash ?? (@!column-name Z=> @(r)).hash !! r.Array;
     } else {
-	$hash ?? % !! @;
+        $hash ?? % !! @;
     }
 }
 
@@ -91,34 +91,34 @@ method column-types {
 
 multi method allrows(:$array-of-hash!) {
     gather {
-	while self.row(:hash) -> %r {
-	    take %r;
-	}
+        while self.row(:hash) -> %r {
+            take %r;
+        }
     }
 }
 
 multi method allrows(:$hash-of-array!) {
     my %rows = @!column-name Z=> [] xx *;
     while self.row -> @a {
-	for @a Z @!column-name -> ($v, $n) {
-	    %rows{$n}.push: $v;
-	}
+        for @a Z @!column-name -> ($v, $n) {
+            %rows{$n}.push: $v;
+        }
     }
     %rows;
 }
 
 multi method allrows() {
     gather {
-	while self.row -> \r {
-	    take r;
-	}
+        while self.row -> \r {
+            take r;
+        }
     }
 }
 
 # Legacy
 method fetchrow {
     if my \r = self._row {
-	my @ = (r.map: { .defined ?? ~$_ !! Str });
+        my @ = (r.map: { .defined ?? ~$_ !! Str });
     } else { @ };
 }
 
@@ -130,7 +130,7 @@ method fetchrow_hashref { self.fetchrow-hash }
 method fetchall_hashref(Str $key) {
     my %results;
     while self.fetch-hash -> \h {
-	%results{h{$key}} = h;
+        %results{h{$key}} = h;
     }
     %results;
 }

@@ -39,28 +39,28 @@ method run-tests {
     try {
         $dbh = DBIish.connect( $.dbd, |%.opts, :RaiseError );
         CATCH {
-	    when X::DBIish::LibraryMissing | X::DBDish::ConnectionFailed {
-		diag "$_\nCan't continue.";
-	    }
+            when X::DBIish::LibraryMissing | X::DBDish::ConnectionFailed {
+                diag "$_\nCan't continue.";
+            }
             default { .throw; }
         }
     }
     without $dbh {
-	skip-rest 'prerequisites failed';
-	exit;
+        skip-rest 'prerequisites failed';
+        exit;
     }
     ok $aversion = $drh.version, "{$.dbd} library version $aversion";
     ok $dbh, "connect to '{%.opts<database> || "default"}'";
     is $dbh.drv.Connections.elems, 1, 'Driver has one connection';
 
     if $dbh.can('server-version') {
-	ok $aversion = $dbh.server-version, "Server version $aversion";
+        ok $aversion = $dbh.server-version, "Server version $aversion";
     } else {
        skip "No server version", 1;
     }
 
     # Test preconditions
-    nok $dbh.last-sth-id,	      'No statement executed yet';
+    nok $dbh.last-sth-id,         'No statement executed yet';
     is  $dbh.Statements.elems, 0,     'No statement registered';
 
     try EVAL '$.post-connect-cb.($dbh)';
@@ -70,10 +70,10 @@ method run-tests {
 
     ok (my $stid = $dbh.last-sth-id), 'Statement registered';
     with $dbh.Statements{$stid} {
-	ok .Finished,	          'After do sth is Finished';
+        ok .Finished,             'After do sth is Finished';
     }
     else  {
-	pass		          'was GC-ected, so Finished';
+        pass                  'was GC-ected, so Finished';
     }
 
     # Create a table
@@ -100,13 +100,13 @@ method run-tests {
     "), "prepare an insert command with one string parameter";
 
     ok not $sth.Executed,   'Not executed yet';
-    ok $sth.Finished,	    'So Finished';
+    ok $sth.Finished,       'So Finished';
     ok !$sth.rows.defined,  'Rows undefined';
 
     ok $rc = $sth.execute('ONE'), "execute one with one string parameter";
 
-    ok $sth.Executed,	    'Was executed';
-    ok $sth.Finished,	    'execute on DML statement should leave finished';
+    ok $sth.Executed,       'Was executed';
+    ok $sth.Finished,       'execute on DML statement should leave finished';
 
     is $dbh.Statements{$dbh.last-sth-id}, $sth, 'The expected Statement';
 
@@ -116,8 +116,8 @@ method run-tests {
     }
     else { skip '$sth.rows not implemented', 1 }
 
-    ok $sth.dispose,	    'Can dispose a StatementHandle';
-    nok $sth.dispose,	    'Already disposed';
+    ok $sth.dispose,        'Can dispose a StatementHandle';
+    nok $sth.dispose,       'Already disposed';
 
     ok $sth = $dbh.prepare( "
         INSERT INTO nom (quantity)
@@ -126,7 +126,7 @@ method run-tests {
 
     ok not $sth.Executed,   'New statement sould not be marked executed yet';
     ok $rc = $sth.execute(1), "execute one with one integer parameter";
-    ok $sth.Finished,	    'execute on DML statement should leave finished';
+    ok $sth.Finished,       'execute on DML statement should leave finished';
 
     is $rc, 1, "execute one with one integer parameter should return 1 row affected";
     is $sth.rows, 1, '$sth.rows for execute one with one integer parameter should report 1 row affected';
@@ -152,7 +152,7 @@ method run-tests {
        "execute twice with parameters";
 
     is $sth.Executed, 2,    'Was executed twice';
-    ok $sth.Finished,	    'Multiple execute finished';
+    ok $sth.Finished,       'Multiple execute finished';
 
     is $dbh.rows, $sth.rows, "each level reports the same rows affected";
 
@@ -177,14 +177,14 @@ method run-tests {
 
     ok not $sth.Executed,    'SELECT statement sould not be marked executed yet';
     $rc = $sth.execute,
-    ok $rc.defined,	     'execute a prepared select statement without parameters';
+    ok $rc.defined,      'execute a prepared select statement without parameters';
     ok $sth.Executed,        'SELECT statement sould now be marked executed';
 
     # TODO Different drivers returns different values, should implement the
     # capabilities announce.
     todo 'Will probably fails for the lack of proper capabilities announce'
-	if $.dbd eq 'SQLite' | 'Oracle';
-    is $rc, 6,		    'In an ideal world should returns rows available';
+    if $.dbd eq 'SQLite' | 'Oracle';
+    is $rc, 6,          'In an ideal world should returns rows available';
 
     #fetch stuff return Str
     my @ref = [ Str, Str, "1", Str, Str],
@@ -195,8 +195,8 @@ method run-tests {
         [ 'TAFM', 'Mild fish taco', "1", "4.85", "4.85" ];
 
     my @array = $sth.fetchall-array;
-    is $sth.rows, 6,	'$sth.rows after fetch-array should report all';
-    ok $sth.Finished,	'And marked Finished';
+    is $sth.rows, 6,    '$sth.rows after fetch-array should report all';
+    ok $sth.Finished,   'And marked Finished';
     is @array.elems, 6, 'fetchall-array returns 6 rows';
 
     my $ok = True;
@@ -206,21 +206,21 @@ method run-tests {
     ok $ok, 'selected data be fetchall-array matches';
 
     # Re-execute the same statement
-    ok $sth.execute,	'statement can be re-executed';
+    ok $sth.execute,    'statement can be re-executed';
 
     ok (my @columns = $sth.column-names), 'called column-name';
     is @columns.elems, 5, 'column-name returns 5';
     is @columns, [ <name description quantity price amount> ],
-	'column-name matched test data';
+    'column-name matched test data';
 
     ok (@columns = $sth.column-types), 'called column-type';
     is @columns.elems, 5, "column-type returns 5 fields in a row";
     ok @columns eqv ($.dbd ne 'SQLite' ??
-	[ Str, Str, Int, Rat, Rat ] !!
-	[ Any, Any, Any, Any, Any ]), 'column-types matches test data';
+    [ Str, Str, Int, Rat, Rat ] !!
+    [ Any, Any, Any, Any, Any ]), 'column-types matches test data';
 
     if $.dbd eq 'SQLite' { # Munge types
-	$sth.column-types[$_] = [Str, Str, Int, Rat, Rat][$_] for ^5;
+    $sth.column-types[$_] = [Str, Str, Int, Rat, Rat][$_] for ^5;
     }
 
     #row and allrows return typed value, when possible
@@ -246,12 +246,12 @@ method run-tests {
     ok %results<quantity> ~~ Int, "HASH: Test the type of a Int field";
     ok %results<price>    ~~ Rat, "HASH: Test the type of a NUMERIC like field";
 
-    ok $sth.finish,	'No more rows needed';
-    ok $sth.Finished,	'Finished indeed';
+    ok $sth.finish, 'No more rows needed';
+    ok $sth.Finished,   'Finished indeed';
     ok $sth.execute,    'Can re-execute after explicit finish';
 
     ok (@results = $sth.allrows),   'call allrows works';
-    ok @results.elems == 6,	    'Test allrows, get 6 rows';
+    ok @results.elems == 6,     'Test allrows, get 6 rows';
 
     $ok = True;
     for ^6 -> $i {
@@ -288,15 +288,15 @@ method run-tests {
     ok $sth = $dbh.prepare($.select-null-query), "can prepare '$.select-null-query'";
     $sth.execute;
     @results = $sth.allrows;
-    is @results.elems, 1,	'SELECT return one row';
+    is @results.elems, 1,   'SELECT return one row';
     isa-ok @results[0], Array,  'An array';
-    is @results[0].elems, 1,	'with a column';
+    is @results[0].elems, 1,    'with a column';
 
     nok @results[0][0].defined, 'NULL returns an undefined value';
-    ok $sth.Finished,		'After one row is finished';
+    ok $sth.Finished,       'After one row is finished';
 
     ok $sth = $dbh.prepare("
-	INSERT INTO nom (name, description, quantity, price)
+    INSERT INTO nom (name, description, quantity, price)
         VALUES ('PICO', 'Delish piña colada', '5', '7.9')
     " ), 'insert new value for fetchrow_arrayref test'; #test 38
 
@@ -322,15 +322,11 @@ method run-tests {
     {
         $sth = $dbh.prepare(q[INSERT INTO nom (name, description) VALUES (?, ?)]);
         my $lived;
-        lives-ok {
-	    $sth.execute("quot", q["';]); $lived = 1
-	}, 'can insert single and double quotes';
-	$sth.dispose;
+        lives-ok { $sth.execute("quot", q["';]); $lived = 1 }, 'can insert single and double quotes';
+        $sth.dispose;
         if $lived {
             $sth = $dbh.prepare(q[SELECT description FROM nom WHERE name = ?]);
-	    lives-ok {
-		$sth.execute('quot');
-	    }, 'lived while retrieving result';
+            lives-ok { $sth.execute('quot'); }, 'lived while retrieving result';
             is $sth.fetchrow.join, q["';], 'got the right string back';
             $sth.dispose;
         }
@@ -340,8 +336,8 @@ method run-tests {
 
         $lived = 0;
         lives-ok {
-	    $dbh.do(q[INSERT INTO nom (name, description) VALUES(?, '?"')], 'mark'); $lived = 1
-	}, 'can use question mark in quoted strings';
+            $dbh.do(q[INSERT INTO nom (name, description) VALUES(?, '?"')], 'mark'); $lived = 1
+            }, 'can use question mark in quoted strings';
         if $lived {
             my $sth = $dbh.prepare(q[SELECT description FROM nom WHERE name = 'mark']);
             $sth.execute;
@@ -361,7 +357,7 @@ method run-tests {
         my $row = $sth.fetchrow-hash;
 
         ok !?$row, 'a query with no results should have a falsy value';
-	$sth.dispose;
+        $sth.dispose;
     }
 
     # test that a query that's exhausted its result set has a falsy value
@@ -373,7 +369,7 @@ method run-tests {
            $row = $sth.fetchrow-hash;
 
         ok !?$row, 'a query with no more results should have a falsy value';
-	$sth.dispose;
+        $sth.dispose;
     }
 
     # test that an integer >= 2**31 still works as an argument to execute
@@ -404,6 +400,6 @@ method run-tests {
     ok $dbh.dispose, "disconnect";
     is $dbh.drv.Connections.elems, 0, 'Driver has no connections';
     lives-ok {
-	nok $dbh.dispose, 'Already disconnected';
+        nok $dbh.dispose, 'Already disconnected';
     }, 'Safe to call disconnect on a disconnected handle';
 }

@@ -94,7 +94,7 @@ method _row() {
                 $value = $!result.PQgetvalue($!current_row, $col);
                 if ct ~~ Array {
                     $value = _pg-to-array($value, ct.of);
-    			} elsif (ct.^name ne 'Any') {
+                } elsif (ct.^name ne 'Any') {
                     $value = %Converter.convert($value, ct);
                 }
             }

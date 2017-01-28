@@ -5,19 +5,19 @@ unit class DBIish:auth<mberends>:ver<0.5.9>;
     use DBDish;
 
     package GLOBAL::X::DBIish {
-	class DriverNotFound is Exception {
-	    has $.bogus;
-	    method message { "DBIish: No DBDish driver found: $.bogus" };
-	}
-	class LibraryMissing is Exception {
-	    has $.driver;
-	    has $.library;
-	    method message { "DBIish: DBDish::$.driver needs $.library, not found" }
-	}
-	class NotADBDishDriver is Exception {
-	    has $.who;
-	    method message { "$.who is not a DBDish::Driver" };
-	}
+    class DriverNotFound is Exception {
+        has $.bogus;
+        method message { "DBIish: No DBDish driver found: $.bogus" };
+    }
+    class LibraryMissing is Exception {
+        has $.driver;
+        has $.library;
+        method message { "DBIish: DBDish::$.driver needs $.library, not found" }
+    }
+    class NotADBDishDriver is Exception {
+        has $.who;
+        method message { "$.who is not a DBDish::Driver" };
+    }
     }
 
     my %installed;
@@ -27,54 +27,54 @@ unit class DBIish:auth<mberends>:ver<0.5.9>;
     method errstr { $err-handler.errstr };
 
     method connect( $driver ) {
-	# The first native call done by the driver can trigger an X::AdHoc
-	# to report missing libraries.
-	# I catch here to avoid the drivers the need of this logic.
-	CATCH {
-	    when $_.message ~~ m/
-		^ "Cannot locate native library "
-		( "'" <-[ ' ]> * "'" ) 
-	    / {
-		X::DBIish::LibraryMissing.new(:library($/[0]), :$driver).fail;
-	    }
-	    default {
-		.throw;
-	    };
-	}
-	my $d = self.install-driver( $driver, |%_ );
-	$d.connect(|%_);
+        # The first native call done by the driver can trigger an X::AdHoc
+        # to report missing libraries.
+        # I catch here to avoid the drivers the need of this logic.
+        CATCH {
+            when $_.message ~~ m/
+            ^ "Cannot locate native library "
+            ( "'" <-[ ' ]> * "'" ) 
+            / {
+                X::DBIish::LibraryMissing.new(:library($/[0]), :$driver).fail;
+            }
+            default {
+                .throw;
+            };
+        }
+        my $d = self.install-driver( $driver, |%_ );
+        $d.connect(|%_);
     }
     method install-driver( $drivername ) {
-	my $d = %installed{$drivername} //= do {
-	    CATCH {
-		when X::CompUnit::UnsatisfiedDependency {
-		    X::DBIish::DriverNotFound.new(:bogus($drivername)).fail;
-		}
-		default {
-		    .throw;
-		}
-	    }
-	    my $module = "DBDish::$drivername";
-	    my \M = (require ::($module));
-	    # The DBDish namespace isn't formally reserved for DBDish's drivers,
-	    # and is a good place for related common code.
-	    # An assurance at driver load time is in place,
-	    unless M ~~ DBDish::Driver {
-		# This warn will be converted in a die after the Role is settled,
-		# it's an advice for authors for externally developed drivers
-		warn "$module dosn't DBDish::Driver role!";
-	    }
-	    M.new(:parent($err-handler), |%($*DBI-DEFS<ConnDefaults>), |%_);
-	}
-	without $d { .throw; };
-	$d;
+        my $d = %installed{$drivername} //= do {
+            CATCH {
+                when X::CompUnit::UnsatisfiedDependency {
+                    X::DBIish::DriverNotFound.new(:bogus($drivername)).fail;
+                }
+                default {
+                    .throw;
+                }
+            }
+            my $module = "DBDish::$drivername";
+            my \M = (require ::($module));
+            # The DBDish namespace isn't formally reserved for DBDish's drivers,
+            # and is a good place for related common code.
+            # An assurance at driver load time is in place,
+            unless M ~~ DBDish::Driver {
+                # This warn will be converted in a die after the Role is settled,
+                # it's an advice for authors for externally developed drivers
+                warn "$module dosn't DBDish::Driver role!";
+            }
+            M.new(:parent($err-handler), |%($*DBI-DEFS<ConnDefaults>), |%_);
+        }
+        without $d { .throw; };
+        $d;
     }
     method install_driver($drivername) is hidden-from-backtrace {
-	warn "DBIish::install_driver is DEPRECATED, please use install-driver";
-	self.install-driver($drivername)
+        warn "DBIish::install_driver is DEPRECATED, please use install-driver";
+        self.install-driver($drivername)
     }
     method installed-drivers {
-	%installed.pairs.cache;
+        %installed.pairs.cache;
     }
 
 

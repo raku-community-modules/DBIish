@@ -5,7 +5,7 @@ unit package DBIish;
 
 Rakudo::Internals.REGISTER-DYNAMIC: '$*DBI-DEFS', {
     PROCESS::<$DBI-DEFS> = {
-	ConnDefaults => (:RaiseError, :!PrintError, :AutoCommit)
+        ConnDefaults => (:RaiseError, :!PrintError, :AutoCommit)
     }
 }
 

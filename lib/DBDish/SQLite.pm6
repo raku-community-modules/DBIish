@@ -12,8 +12,8 @@ has $.library-resolved = False;
 
 method connect(:database(:$dbname)! is copy, *%params) {
     die "Cannot locate native library '" ~
-	$*VM.platform-library-name('sqlite3'.IO, :version(v0)) ~ "'"
-	unless $!library-resolved;
+    $*VM.platform-library-name('sqlite3'.IO, :version(v0)) ~ "'"
+    unless $!library-resolved;
 
     my SQLite $p .= new;
     # Add the standard extension unless has one
@@ -31,10 +31,10 @@ method connect(:database(:$dbname)! is copy, *%params) {
 my $wks = 'sqlite3_libversion'; # A well known symbol
 method new() {
     with (%*ENV<DBIISH_SQLITE_LIB> andthen NativeLibs::Searcher.try-versions($_, $wks))
-	 // NativeLibs::Searcher.try-versions( 'sqlite3', $wks, 0) {
-	# Try to keep the library loaded.
-	%_<library> = NativeLibs::Loader.load($_);
-	%_<library-resolved> = True;
+     // NativeLibs::Searcher.try-versions( 'sqlite3', $wks, 0) {
+    # Try to keep the library loaded.
+    %_<library> = NativeLibs::Loader.load($_);
+    %_<library-resolved> = True;
     }
     self.bless(|%_);
 }
