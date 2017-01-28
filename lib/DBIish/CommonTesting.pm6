@@ -321,8 +321,8 @@ method run-tests {
     # test quotes and so on
     {
         $sth = $dbh.prepare(q[INSERT INTO nom (name, description) VALUES (?, ?)]);
-        my $lived;
-        lives-ok { $sth.execute("quot", q["';]); $lived = 1 }, 'can insert single and double quotes';
+        my Bool $lived = False;
+        lives-ok { $sth.execute("quot", q["';]); $lived = True }, 'can insert single and double quotes';
         $sth.dispose;
         if $lived {
             $sth = $dbh.prepare(q[SELECT description FROM nom WHERE name = ?]);
@@ -334,9 +334,10 @@ method run-tests {
             skip('dependent tests', 2);
         }
 
-        $lived = 0;
+        $lived = False;
         lives-ok {
-            $dbh.do(q[INSERT INTO nom (name, description) VALUES(?, '?"')], 'mark'); $lived = 1
+            $dbh.do(q[INSERT INTO nom (name, description) VALUES(?, '?"')], 'mark'); 
+            $lived = True
             }, 'can use question mark in quoted strings';
         if $lived {
             my $sth = $dbh.prepare(q[SELECT description FROM nom WHERE name = 'mark']);
