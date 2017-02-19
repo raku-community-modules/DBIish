@@ -147,19 +147,19 @@ method fetchall-hash {
 }
 
 method fetchall-AoH {
-    (0 xx *).flatmap: {
+    (0 xx *).flatmap({
         my $h = self.fetchrow-hash;
         last unless $h;
         $h;
-    };
+    }).eager;
 }
 
 method fetchall-array {
-    (0 xx *).flatmap: {
+    (0 xx *).flatmap({
         my $r = self.fetchrow;
         last unless $r;
         $r;
-    };
+    }).eager;
 }
 
 method fetchrow_array { self.fetchrow }
