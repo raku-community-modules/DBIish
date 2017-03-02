@@ -14,9 +14,9 @@ my $dbh;
 try {
   $dbh = DBIish.connect('Pg', |%con-parms);
   CATCH {
-	    when X::DBIish::LibraryMissing | X::DBDish::ConnectionFailed {
-		diag "$_\nCan't continue.";
-	    }
+        when X::DBIish::LibraryMissing | X::DBDish::ConnectionFailed {
+        diag "$_\nCan't continue.";
+        }
             default { .throw; }
   }
 }
@@ -39,7 +39,7 @@ $sth = $dbh.do(q:to/STATEMENT/);
 STATEMENT
 
 $sth = $dbh.do(q:to/STATEMENT/);
-	INSERT INTO sal_emp
+    INSERT INTO sal_emp
     VALUES (
       'Bill',
       '{10000, 10000, 10000, 10000}',
@@ -49,8 +49,8 @@ $sth = $dbh.do(q:to/STATEMENT/);
 STATEMENT
 
 $sth = $dbh.prepare(q:to/STATEMENT/);
-	SELECT name, pay_by_quarter, schedule, salary_by_month
-	FROM sal_emp
+    SELECT name, pay_by_quarter, schedule, salary_by_month
+    FROM sal_emp
 STATEMENT
 
 $sth.execute;
@@ -75,9 +75,8 @@ lives-ok {
 isa-ok $obj.pay_by_quarter, Array[Int], 'Array[Int]';
 isa-ok $obj.salary_by_month,  Array[Num], 'Array[Num]';
 isa-ok $obj.schedule, Array, 'schedule is array';
-is $obj.schedule.elems, 2,	'schedule with 2';
+is $obj.schedule.elems, 2,    'schedule with 2';
 isa-ok $obj.schedule[0], Array[Str];
-diag $obj.perl;
 
 # Cleanup
 $dbh.dispose;
