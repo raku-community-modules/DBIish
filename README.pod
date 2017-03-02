@@ -152,6 +152,12 @@ string Pg can understand:
   #prepare an insertion of an array field;
   $sth.execute($sth.pg-array-str(@data));
 
+=head3 B<pg-consume-input>
+
+Consume available input from the server, buffering the read data if there is any. 
+This is only necessary if you are planning on calling C<pg-notifies> without having
+requested input by other means (such as an C<execute>.)
+
 =head3 B<pg-notifies>
 
   $ret = $dbh.pg-notifies;
@@ -165,6 +171,21 @@ Looks for any asynchronous notifications received and returns a pg-notify object
 	}
 
 or nothing if there is no pending notifications.
+
+In order to receive the notifications you should execute the PostgreSQL command "LISTEN"
+prior to calling C<pg-notifies> the first time, if you have not executed any other
+commands in the meantime you will also need to execute C<pg-consume-input> first.
+
+For example:
+
+    $db.do("LISTEN foo");
+
+    loop {
+        $db.pg-consume-input
+        if $db.pg-notifies -> $not {
+            say $not;
+        }
+    }
 
 The payload is optional and will always be an empty string for PostgreSQL servers less than version 9.0.
 
