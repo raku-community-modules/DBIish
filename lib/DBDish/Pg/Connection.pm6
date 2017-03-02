@@ -8,7 +8,7 @@ need DBDish::TestMock;
 use DBIish::Common;
 
 has PGconn $!pg_conn is required handles <
-    pg-notifies pg-socket pg-parameter-status
+    pg-notifies pg-consume-input pg-socket pg-parameter-status
     pg-db pg-user pg-pass pg-host
     pg-port pg-options quote>;
 has $.AutoCommit is rw = True;
