@@ -7,6 +7,7 @@ my \drvs = <Oracle Pg SQLite TestMock mysql>;
 plan drvs.elems * 6 + 8;
 
 use DBIish;
+use DBDish;
 
 my \DBIish-class = ::('DBIish');
 ok DBIish-class !~~ Failure, "Class is available";
@@ -26,7 +27,7 @@ for drvs {
 	$drv = DBIish.install-driver($_);
     }, "Can install driver for '$_'";
     ok $drv.defined, "Is an instance '$drv'";
-    ok $drv ~~ ::('DBDish::Driver'), "{$drv.^name} indeed a driver";
+    ok $drv ~~ DBDish::Driver, "{$drv.^name} indeed a driver";
     with $drv.^ver {
 	ok $_,  "Driver version $_";
     } else { flunk  'version declared' };
