@@ -9,6 +9,7 @@ env:
 perl6:
     - 2016.01
     - latest
+    - nom
 sudo: false
 install:
     - rakudobrew build-panda
