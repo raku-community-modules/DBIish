@@ -89,6 +89,27 @@ C<dispose> method:
 
   $dbh.dispose;
 
+=head2 Connecting to, and disconnecting from, a database
+
+For a database named I<hierarchy>, a connection may be established with any of
+the following syntaxes:
+
+    my ($dbh, $db);
+
+    $dbh = DBIish.connect("Pg", :database<hierarchy>);
+    $dbh.dispose;
+
+    $db = 'hierarchy';
+
+    $dbh = DBIish.connect("Pg", :database($db));
+    $dbh.dispose;
+
+    $dbh = DBIish.connect("Pg", database => $db);
+    $dbh.dispose;
+
+    $dbh = DBIish.connect("Pg", :$db);
+    $dbh.dispose;
+
 =head2 Fetching data
 
 DBIish provides nearly all the perl5 DBI fetch* method to fetch values from the C<StatementHandle> object.
