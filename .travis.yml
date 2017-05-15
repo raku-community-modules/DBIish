@@ -12,10 +12,7 @@ perl6:
     - nom
 sudo: false
 install:
-    - rakudobrew build-panda
-    - panda installdeps .
-    # Will test later
-    - panda --notests install .
+    - (rakudobrew build-zef && zef install .) || (rakudobrew build-panda && panda installdeps .)
 before_install:
     # mysql
     - mysql -e "CREATE DATABASE dbdishtest;" -uroot
