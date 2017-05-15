@@ -8,3 +8,4 @@ dbdish-sqlite-test.sqlite3
 .precomp
 *.swp
 lib/.precomp
+/.panda-work/
