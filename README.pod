@@ -201,7 +201,7 @@ Supports basic CRUD operations and prepared statements with placeholders
 
     my $dbh = DBIish.connect('SQLite', :database<thefile>);
     
-The :database parameter can be an abosulte file path as well:
+The :database parameter can be an absolute file path as well:
 
     my $dbh = DBIish.connect('SQLite', database => '/path/to/sqlite.db' );
     
