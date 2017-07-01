@@ -200,7 +200,11 @@ Returns the file description number of the connection socket to the server.
 Supports basic CRUD operations and prepared statements with placeholders
 
     my $dbh = DBIish.connect('SQLite', :database<thefile>);
+    
+The :database parameter can be an absolute file path as well:
 
+    my $dbh = DBIish.connect('SQLite', database => '/path/to/sqlite.db' );
+    
 =head2 mysql
 
 Supports basic CRUD operations and prepared statements with placeholders
