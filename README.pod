@@ -117,7 +117,7 @@ Example:
 
 =head1 INSTALLATION
 
-    $ panda install DBIish
+    $ zef install DBIish
 
 =head1 DBDish CLASSES
 
