@@ -53,9 +53,9 @@ class pg-notify is export {
 }
 
 class PGconn is export is repr('CPointer') {
-    method PQexec(str --> PGresult) is native(LIB) { * }
+    method PQexec(Str --> PGresult) is native(LIB) { * }
     method PQexecPrepared(
-        str $statement_name,
+        Str $statement_name,
         int32 $n_params,
         CArray[Str] $param_values,
         CArray[int32] $param_length,
@@ -64,9 +64,9 @@ class PGconn is export is repr('CPointer') {
     ) returns PGresult is native(LIB) { * }
 
     method PQerrorMessage(--> Str) is native(LIB) { * }
-    method PQdescribePrepared(str --> PGresult) is native(LIB) { * }
+    method PQdescribePrepared(Str --> PGresult) is native(LIB) { * }
     method PQstatus(--> int32) is native(LIB) { * }
-    method PQprepare(str $sth_name, str $query, int32 $n_params, OidArray --> PGresult)
+    method PQprepare(Str $sth_name, Str $query, int32 $n_params, OidArray --> PGresult)
     is native(LIB) { * }
     method PQfinish is native(LIB) { * }
 
