@@ -7,7 +7,7 @@ env:
     - PERL=/usr/bin/perl
 
 perl6:
-    - 2017.01
+    - 2017.08
     - latest
     - nom
 sudo: false
