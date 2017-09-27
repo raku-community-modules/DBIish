@@ -31,7 +31,7 @@ submethod DESTROY() {
 }
 
 method disconnect is hidden-from-backtrace {
-    warn "{::?CLASS.^name}.disconnect is DEPRECATED, please use .dispose";
+    DEPRECATED("dispose");
     self.dispose;
 }
 

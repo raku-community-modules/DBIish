@@ -33,7 +33,7 @@ unit class DBIish:auth<mberends>:ver<0.5.9>;
         CATCH {
             when $_.message ~~ m/
             ^ "Cannot locate native library "
-            ( "'" <-[ ' ]> * "'" ) 
+            ( "'" <-[ ' ]> * "'" )
             / {
                 X::DBIish::LibraryMissing.new(:library($/[0]), :$driver).fail;
             }
@@ -62,7 +62,7 @@ unit class DBIish:auth<mberends>:ver<0.5.9>;
             unless M ~~ DBDish::Driver {
                 # This warn will be converted in a die after the Role is settled,
                 # it's an advice for authors for externally developed drivers
-                warn "$module dosn't DBDish::Driver role!";
+                warn "$module doesn't do DBDish::Driver role!";
             }
             M.new(:parent($err-handler), |%($*DBI-DEFS<ConnDefaults>), |%_);
         }
@@ -70,7 +70,7 @@ unit class DBIish:auth<mberends>:ver<0.5.9>;
         $d;
     }
     method install_driver($drivername) is hidden-from-backtrace {
-        warn "DBIish::install_driver is DEPRECATED, please use install-driver";
+        DEPRECATED("install-driver");
         self.install-driver($drivername)
     }
     method installed-drivers {

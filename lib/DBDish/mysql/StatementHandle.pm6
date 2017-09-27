@@ -35,13 +35,13 @@ method !get-meta(MYSQL_RES $res) {
         with $res.mysql_fetch_field {
             @!column-name.push: .name;
             @!column-type.push: do {
-		my $pt = .type;
-		if (my \t = %mysql-type-conv{$pt}) === Nil {
-		    warn "No type map defined for mysql type #$pt at column $i";
-		    Str;
-		} else { t }
-	    }
-	    $lengths[$i] = .length;
+    	my $pt = .type;
+    	if (my \t = %mysql-type-conv{$pt}) === Nil {
+    	    warn "No type map defined for mysql type #$pt at column $i";
+    	    Str;
+    	} else { t }
+        }
+        $lengths[$i] = .length;
         }
         else { die 'mysql: Opps! mysql_fetch_field'; }
     }
@@ -101,12 +101,12 @@ method execute(*@params) {
                         when Blob { $st = MYSQL_TYPE_BLOB; $_ }
                         when Str  { .encode }
                         when Int  { $st = MYSQL_TYPE_LONGLONG; Blob[int64].new($_) }
-			when DateTime {
-			    # mysql knows nothing of timezones, all assumed local-time
-			    # but in Windows the parser chokes with the offset, so
-			    # we should remove it. See _row for the reverse
-			    .local.Str.subst(/ <[\-\+]>\d\d ':' \d\d /,'').encode;
-			}
+    		when DateTime {
+    		    # mysql knows nothing of timezones, all assumed local-time
+    		    # but in Windows the parser chokes with the offset, so
+    		    # we should remove it. See _row for the reverse
+    		    .local.Str.subst(/ <[\-\+]>\d\d ':' \d\d /,'').encode;
+    		}
                         default   { .Str.encode }
                     };
                     given $!par-binds[$k] {
@@ -206,7 +206,7 @@ method insert-id() {
 }
 
 method mysql_insertid {
-    once warn("'mysql_insertid' is DEPRECATED, please use 'insert-id'");
+    DEPRECATED('insert-id');
     self.insert-id;
 }
 
