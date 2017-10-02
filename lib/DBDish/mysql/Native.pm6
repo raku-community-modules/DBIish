@@ -1,6 +1,7 @@
 use v6;
 
 unit module DBDish::mysql::Native;
+use NativeCall;
 use NativeLibs;
 use NativeHelpers::Blob;
 
