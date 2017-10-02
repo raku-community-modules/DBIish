@@ -1,6 +1,7 @@
 use v6;
 
 unit module DBDish::Pg::Native;
+use NativeCall;
 use NativeLibs;
 use NativeHelpers::Blob;
 

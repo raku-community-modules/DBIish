@@ -1,6 +1,7 @@
 use v6;
 
 use NativeLibs;
+use NativeCall;
 
 unit module DBDish::SQLite::Native;
 
