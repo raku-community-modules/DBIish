@@ -7,26 +7,22 @@ use DBDish::mysql::Native;
 need DBDish::mysql::Connection;
 
 #------------------ methods to be called from DBIish ------------------
-method connect(*%params ) {
+method connect(Str :$host = 'localhost', Int :$port = 3306, Str :$database = 'mysql', Str :$user, Str :$password, Str :$socket ) {
     my $connection;
     my $mysql_client = MYSQL.mysql_init;
     my $errstr  = $mysql_client.mysql_error;
 
     unless $errstr {
-        %params<host>     //= 'localhost';
-        %params<port>     //= 3306;
-        %params<database> //= 'mysql';
-        %params<socket>   //= Str; # Undef
 
         # real_connect() returns either the same client pointer or null
         my $result   = $mysql_client.mysql_real_connect(
-            |%params<host user password database port socket>, 0
+            $host, $user, $password, $database, $port, $socket, 0
         );
 
         unless $errstr = $mysql_client.mysql_error {
             $mysql_client.mysql_set_character_set('utf8'); # A sane default
             $connection = DBDish::mysql::Connection.new(
-                :$mysql_client, :parent(self), |%params,
+                :$mysql_client, :parent(self), :$host, :$user, :$password, :$database, :$port, :$socket
             );
         }
     }
