@@ -12,7 +12,7 @@ perl6:
     - nom
 sudo: false
 install:
-    - rakudobrew build-zef && zef install .
+    - rakudobrew build-zef && zef -v install .
 before_install:
     # mysql
     - mysql -e "CREATE DATABASE dbdishtest;" -uroot
