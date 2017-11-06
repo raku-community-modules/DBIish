@@ -151,7 +151,7 @@ sub _pg-to-array(Str $text, Mu:U $type) {
 
 method pg-array-str(\arr) {
     my @tmp;
-    my @data = arr ~~ Array ?? arr !! [ arr ];
+    my @data := arr ~~ Array ?? arr !! [ arr ];
     for @data -> $c {
         if $c ~~ Array {
             @tmp.push(self.pg-array-str($c));
