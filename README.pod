@@ -215,6 +215,9 @@ Supports basic CRUD operations and prepared statements with placeholders
     my $dbh = DBIish.connect('mysql', :socket<mysql.sock>,
             :database<blerg>, :user<myuser>, :$password);
 
+Since MariaDB uses the same wire protocol as MySQL, the `mysql` backend
+also works for MariaDB.
+
 =head2 Oracle
 
 Supports basic CRUD operations and prepared statements with placeholders
