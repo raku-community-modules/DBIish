@@ -38,8 +38,8 @@ method version() {
 =head1 DESCRIPTION
 # 'DBIish' and 'DBDish::mysql' are Perl 6 modules that use NativeCall
 # to use the standard mysqlclient library. There is a long term Rakudo
-# based project to develop a new, comprehensive DBI architecture for Parrot
-# and Perl 6.  DBIish is not that, it is a naive rewrite of the
+# based project to develop a new, comprehensive DBI architecture for
+# Perl 6.  DBIish is not that, it is a naive rewrite of the
 # similarly named Perl 5 modules.
 
 =head1 CLASSES

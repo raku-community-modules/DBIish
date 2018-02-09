@@ -1,4 +1,3 @@
-*.pir
 Makefile
 blib/
 dbdish-sqlite-test.sqlite3
