@@ -115,8 +115,8 @@ L<doc:DBIish> and internal architecture in L<doc:DBDish>.  Below are
 only notes about code unique to the DBDish::Pg implementation.
 
 =head1 SEE ALSO
-The Postgres 8.4 Documentation, C Library.
-L<http://www.postgresql.org/docs/8.4/static/libpq.html>
+The PostgreSQL Documentation, C Library.
+L<https://www.postgresql.org/docs/current/static/libpq.html>
 
 =end pod
 
