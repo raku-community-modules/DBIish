@@ -77,7 +77,7 @@ For the different syntactic forms of
 L<named arguments|https://doc.perl6.org/language/functions#Arguments> see
 the language documentation.
 
-For example, for connect to a database 'hierarchy' on Postresql, with the user in C<$user>
+For example, for connect to a database 'hierarchy' on PostgreSQL, with the user in C<$user>
 and using the function C<get-secret> to obtain you password, you can:
 
    my $dbh = DBIish.connect('Pg', :database<hierarchy>, :$user, password => get-secret());
@@ -140,7 +140,7 @@ C<connect-timeout>, C<client-encoding>, C<options>, C<application-name>, C<keepa
 C<keepalives-idle>, C<keepalives-interval>, C<sslmode>, C<requiressl>, C<sslcert>, C<sslkey>,
 C<sslrootcert>, C<sslcrl>, C<requirepeer>, C<krbsrvname>, C<gsslib>, and C<service>.
 
-See your Postrgresql documentation for details.
+See your PostgreSQL documentation for details.
 
 Pg array are supported when fetching array fields with C<row/allrows>. You will
 get the properly typed array according to the field type.
