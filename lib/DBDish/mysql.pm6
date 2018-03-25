@@ -1,4 +1,5 @@
 use v6;
+use NativeCall;
 need DBDish;
 # DBDish::mysql.pm6
 
@@ -6,14 +7,23 @@ unit class DBDish::mysql:auth<mberends>:ver<0.1.4> does DBDish::Driver;
 use DBDish::mysql::Native;
 need DBDish::mysql::Connection;
 
+has %.mysql-init-per-thread;
+
 #------------------ methods to be called from DBIish ------------------
 method connect(Str :$host = 'localhost', Int :$port = 3306, Str :$database = 'mysql', Str :$user, Str :$password, Str :$socket ) {
+    state $access = Lock.new;
     my $connection;
-    my $mysql_client = MYSQL.mysql_init;
+    my $mysql_client;
+    # We call basially mysql_library_init here, which is exposed as mysql_server_init.
+    $access.protect: {
+        #%!mysql-init-per-thread{$*THREAD.id()} //=
+        mysql_server_init(0, Pointer, Pointer);
+        $mysql_client = MYSQL.mysql_init;
+    };
+    #my $mysql_client = MYSQL.mysql_init;
     my $errstr  = $mysql_client.mysql_error;
 
     unless $errstr {
-
         # real_connect() returns either the same client pointer or null
         my $result   = $mysql_client.mysql_real_connect(
             $host, $user, $password, $database, $port, $socket, 0

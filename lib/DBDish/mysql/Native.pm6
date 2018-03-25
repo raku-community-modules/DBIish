@@ -196,6 +196,9 @@ class MYSQL is export is repr('CPointer') {
     method mysql_get_server_info(MYSQL:D:          --> Str) is native(LIB) { * }
 }
 
+# This is #define'd to be the same as mysql_library_init
+sub mysql_server_init(int32, Pointer, Pointer --> int32) is export is native(LIB) { * }
+
 sub mysql_get_client_version(--> uint32) is export is native(LIB) { * }
 sub mysql_get_client_info(--> Str)       is export is native(LIB) { * }
 

@@ -24,7 +24,10 @@ has $.last-rows is rw;
 method dispose() {
     $_.dispose for %!Statements.values;
     self._disconnect;
-    ?($.parent.Connections{self.WHICH}:delete);
+    #state $access = Lock.new;
+    #$access.protect: {
+        ?($.parent.Connections{self.WHICH}:delete);
+    #}
 }
 submethod DESTROY() {
     self.dispose;
@@ -41,7 +44,10 @@ method new(*%args) {
     my \con = ::?CLASS.bless(|%args);
     con.reset-err;
     con.?set-defaults;
-    %args<parent>.Connections{con.WHICH} = con;
+    #state $access = Lock.new;
+    #$access.protect: {
+        %args<parent>.Connections{con.WHICH} = con;
+    #}
 }
 
 method prepare(Str $statement, *%args) { ... }

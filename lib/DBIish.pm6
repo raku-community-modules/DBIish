@@ -45,7 +45,8 @@ unit class DBIish:auth<mberends>:ver<0.5.9>;
         $d.connect(|%_);
     }
     method install-driver( $drivername ) {
-        my $d = %installed{$drivername} //= do {
+        state $access = Lock.new;
+        my $d = $access.protect: { %installed{$drivername} //= do {
             CATCH {
                 when X::CompUnit::UnsatisfiedDependency {
                     X::DBIish::DriverNotFound.new(:bogus($drivername)).fail;
@@ -65,7 +66,7 @@ unit class DBIish:auth<mberends>:ver<0.5.9>;
                 warn "$module doesn't do DBDish::Driver role!";
             }
             M.new(:parent($err-handler), |%($*DBI-DEFS<ConnDefaults>), |%_);
-        }
+        }};
         without $d { .throw; };
         $d;
     }
