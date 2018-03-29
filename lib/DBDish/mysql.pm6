@@ -12,31 +12,31 @@ has %.mysql-init-per-thread;
 #------------------ methods to be called from DBIish ------------------
 method connect(Str :$host = 'localhost', Int :$port = 3306, Str :$database = 'mysql', Str :$user, Str :$password, Str :$socket ) {
     state $access = Lock.new;
-    my $connection;
-    my $mysql_client;
-    # We call basially mysql_library_init here, which is exposed as mysql_server_init.
     $access.protect: {
+        my $connection;
+        my $mysql_client;
+        # We call basially mysql_library_init here, which is exposed as mysql_server_init.
         #%!mysql-init-per-thread{$*THREAD.id()} //=
         mysql_server_init(0, Pointer, Pointer);
         $mysql_client = MYSQL.mysql_init;
-    };
-    #my $mysql_client = MYSQL.mysql_init;
-    my $errstr  = $mysql_client.mysql_error;
+        #my $mysql_client = MYSQL.mysql_init;
+        my $errstr  = $mysql_client.mysql_error;
 
-    unless $errstr {
-        # real_connect() returns either the same client pointer or null
-        my $result   = $mysql_client.mysql_real_connect(
-            $host, $user, $password, $database, $port, $socket, 0
-        );
-
-        unless $errstr = $mysql_client.mysql_error {
-            $mysql_client.mysql_set_character_set('utf8'); # A sane default
-            $connection = DBDish::mysql::Connection.new(
-                :$mysql_client, :parent(self), :$host, :$user, :$password, :$database, :$port, :$socket
+        unless $errstr {
+            # real_connect() returns either the same client pointer or null
+            my $result   = $mysql_client.mysql_real_connect(
+                $host, $user, $password, $database, $port, $socket, 0
             );
+
+            unless $errstr = $mysql_client.mysql_error {
+                $mysql_client.mysql_set_character_set('utf8'); # A sane default
+                $connection = DBDish::mysql::Connection.new(
+                    :$mysql_client, :parent(self), :$host, :$user, :$password, :$database, :$port, :$socket
+                );
+            }
         }
+        $errstr ??  self!conn-error(:$errstr) !!  $connection;
     }
-    $errstr ??  self!conn-error(:$errstr) !!  $connection;
 }
 
 method version() {

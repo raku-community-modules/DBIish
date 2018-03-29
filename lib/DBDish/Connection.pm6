@@ -22,12 +22,12 @@ has $.last-sth-id is rw;
 has $.last-rows is rw;
 
 method dispose() {
+    state $access = Lock.new;
     $_.dispose for %!Statements.values;
     self._disconnect;
-    #state $access = Lock.new;
-    #$access.protect: {
+    $access.protect: {
         ?($.parent.Connections{self.WHICH}:delete);
-    #}
+    }
 }
 submethod DESTROY() {
     self.dispose;
