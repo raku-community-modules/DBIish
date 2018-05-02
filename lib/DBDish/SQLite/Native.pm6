@@ -135,6 +135,12 @@ multi sub sqlite3_bind(STMT $stmt, Int $n, Any:U)     is export {
 multi sub sqlite3_bind(STMT $stmt, Int $n, Str:D $d)  is export {
     sqlite3_bind_text($stmt, $n, $d, -1, Pointer.new(-1))
 }
+multi sub sqlite3_bind(STMT $stmt, Int $n, Date:D $d)  is export {
+    sqlite3_bind_text($stmt, $n, $d.Str, -1, Pointer.new(-1))
+}
+multi sub sqlite3_bind(STMT $stmt, Int $n, DateTime:D $d)  is export {
+    sqlite3_bind_text($stmt, $n, $d.Str, -1, Pointer.new(-1))
+}
 
 sub sqlite3_reset(STMT) returns int32 is native(LIB) is export  { ... }
 sub sqlite3_clear_bindings(STMT) returns int32 is native(LIB) is export { ... }
