@@ -136,9 +136,11 @@ multi sub sqlite3_bind(STMT $stmt, Int $n, Str:D $d)  is export {
     sqlite3_bind_text($stmt, $n, $d, -1, Pointer.new(-1))
 }
 multi sub sqlite3_bind(STMT $stmt, Int $n, Date:D $d)  is export {
+    # FIXME: don't rely on the Date objects' formatter
     sqlite3_bind_text($stmt, $n, $d.Str, -1, Pointer.new(-1))
 }
 multi sub sqlite3_bind(STMT $stmt, Int $n, DateTime:D $d)  is export {
+    # FIXME: don't rely on the DateTime objects' formatter
     sqlite3_bind_text($stmt, $n, $d.Str, -1, Pointer.new(-1))
 }
 
