@@ -44,8 +44,7 @@ method insert-id() {
     }
 }
 
-method mysql_insertid {
-    DEPRECATED('insert-id');
+method mysql_insertid is DEPRECATED('insert-id') {
     self.insert-id;
 }
 
