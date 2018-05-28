@@ -30,8 +30,7 @@ submethod DESTROY() {
     self.dispose;
 }
 
-method disconnect is hidden-from-backtrace {
-    DEPRECATED("dispose");
+method disconnect is hidden-from-backtrace is DEPRECATED("dispose") {
     self.dispose;
 }
 

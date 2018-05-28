@@ -69,8 +69,11 @@ unit class DBIish:auth<mberends>:ver<0.5.9>;
         without $d { .throw; };
         $d;
     }
-    method install_driver($drivername) is hidden-from-backtrace {
-        DEPRECATED("install-driver");
+    method install_driver($drivername)
+      is hidden-from-backtrace
+      is DEPRECATED("install-driver")
+    {
+
         self.install-driver($drivername)
     }
     method installed-drivers {
