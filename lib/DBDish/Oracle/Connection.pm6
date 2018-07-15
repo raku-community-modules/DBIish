@@ -5,9 +5,9 @@ unit class DBDish::Oracle::Connection does DBDish::Connection;
 use DBDish::Oracle::Native;
 need DBDish::Oracle::StatementHandle;
 
-has OCIEnv    $!envh is required;
-has OCISvcCtx $!svch is required;
-has OCIError  $!errh is required;
+has OCIEnv    $!envh;
+has OCISvcCtx $!svch;
+has OCIError  $!errh;
 has $.AutoCommit is rw;
 has $.in_transaction is rw;
 submethod BUILD(:$!parent!, :$!envh, :$!svch, :$!errh, :$!AutoCommit = 1) { }

@@ -6,7 +6,7 @@ use DBDish::mysql::Native;
 use NativeHelpers::Blob;
 use NativeHelpers::CStruct;
 
-has MYSQL $!mysql_client is required;
+has MYSQL $!mysql_client;
 has MYSQL_STMT $!stmt;
 has int $!param-count;
 has $!statement;
