@@ -7,7 +7,7 @@ need DBDish::Pg::StatementHandle;
 need DBDish::TestMock;
 use DBIish::Common;
 
-has PGconn $!pg_conn is required handles <
+has PGconn $!pg_conn handles <
     pg-notifies pg-consume-input pg-socket pg-parameter-status
     pg-db pg-user pg-pass pg-host
     pg-port pg-options quote>;

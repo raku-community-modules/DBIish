@@ -6,7 +6,7 @@ unit class DBDish::SQLite::Connection does DBDish::Connection;
 need DBDish::SQLite::StatementHandle;
 use DBDish::SQLite::Native;
 
-has SQLite $!conn is required;
+has SQLite $!conn;
 
 submethod BUILD(:$!conn, :$!parent!) { }
 

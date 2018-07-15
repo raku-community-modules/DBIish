@@ -5,9 +5,9 @@ unit class DBDish::Oracle::StatementHandle does DBDish::StatementHandle;
 use NativeHelpers::Blob;
 use DBDish::Oracle::Native;
 
-has OCISvcCtx $!svch is required;
-has OCIError  $!errh is required;
-has OCIStmt   $!stmth is required;
+has OCISvcCtx $!svch;
+has OCIError  $!errh;
+has OCIStmt   $!stmth;
 has $!statement;
 has $!stmttype;
 # For input parameters
