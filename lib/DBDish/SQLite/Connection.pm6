@@ -8,7 +8,9 @@ use DBDish::SQLite::Native;
 
 has SQLite $!conn;
 
-submethod BUILD(:$!conn, :$!parent!) { }
+submethod BUILD(:$!conn   = die ("Required attribute 'conn' missing for new DBDish::SQLite::Conection"),
+                :$!parent = die ("Required attribute 'parent' missing for new DBDish::SQLite::Conection")
+               ) { }
 
 method !handle-error(Int $status) {
     if $status == SQLITE_OK {

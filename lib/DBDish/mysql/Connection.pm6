@@ -8,7 +8,8 @@ need DBDish::mysql::StatementHandle;
 
 has MYSQL $!mysql_client;
 
-submethod BUILD(:$!mysql_client, :$!parent!) { }
+submethod BUILD(:$!mysql_client = die ("Required attribute 'mysql_client' missing for new DBDish::mysql::Connection"),
+                :$!parent       = die ("Required attribute 'parent' missing for new DBDish::mysql::Connection")) { }
 
 method !handle-errors($code) {
     if $code {
@@ -16,6 +17,7 @@ method !handle-errors($code) {
     } else {
     self.reset-err;
     }
+ $_
 }
 method prepare(Str $statement, *%args) {
     with $!mysql_client.mysql_stmt_init -> $stmt {

@@ -21,8 +21,11 @@ method !handle-error($status) {
     }
 }
 
-submethod BUILD(:$!conn!, :$!parent!,
-    :$!statement_handle!, :$!statement, :$!param-count
+submethod BUILD(:$!conn             = die "Required attribute 'conn' missing for new DBDish::SQLite::StatementHandle"),
+                :$!parent           = die "Required attribute 'parent' missing for new DBDish::SQLite::StatementHandle"),
+                :$!statement_handle = die "Required attribute 'statement_handle' missing for new DBDish::SQLite::StatementHandle"),
+                :$!statement,
+                :$!param-count
 ) {
     $!field_count = sqlite3_column_count($!statement_handle);
     for ^$!field_count {

@@ -16,7 +16,9 @@ has $.in_transaction is rw = False;
 has %.Converter is DBDish::TypeConverter;
 has %.dynamic-types = %oid-to-type;
 
-submethod BUILD(:$!pg_conn, :$!parent!, :$!AutoCommit) {
+submethod BUILD(:$!pg_conn = die("Required attribute 'pg_conn' missing for new DBD::Pg::Connection"),
+                :$!parent  = die("Required attribute 'pg_conn' missing for new DBD::Pg::Connection"),
+                :$!AutoCommit) {
     %!Converter =
        method (--> Bool) { self eq 't' },
        method (--> DateTime) { DateTime.new(self.split(' ').join('T')) },

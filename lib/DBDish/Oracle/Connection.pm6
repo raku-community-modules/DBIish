@@ -10,7 +10,11 @@ has OCISvcCtx $!svch;
 has OCIError  $!errh;
 has $.AutoCommit is rw;
 has $.in_transaction is rw;
-submethod BUILD(:$!parent!, :$!envh, :$!svch, :$!errh, :$!AutoCommit = 1) { }
+submethod BUILD(:$!parent!,
+                :$!envh = die ("Required attribute 'envh' missing for new DBDish::Oracle::Connection"),
+                :$!svch = die ("Required attribute 'svch' missing for new DBDish::Oracle::Connection"),
+                :$!errh = die ("Required attribute 'errh' missing for new DBDish::Oracle::Connection"),
+                :$!AutoCommit = 1) { }
 
 method !handle-err($res) {
     $res ~~ OCIErr ?? self!set-err(+$res, ~$res) !! $res;

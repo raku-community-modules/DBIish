@@ -48,7 +48,8 @@ method !get-meta(MYSQL_RES $res) {
     $lengths;
 }
 
-submethod BUILD(:$!mysql_client!, :$!parent!, :$!stmt = MYSQL_STMT,
+submethod BUILD(:$!mysql_client = die ("Required attribute 'mysql_client' missing for new DBDish::mysql::StatementHandle"),
+                :$!parent = die ("Required attribute 'parent' missing for new DBDish::mysql::StatementHandle"), :$!stmt = MYSQL_STMT,
     :$!statement, Bool :$!Prefetch = True
 ) {
     with $!stmt { #Prepared

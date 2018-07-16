@@ -26,7 +26,9 @@ method !handle-err($res) {
 }
 
 submethod BUILD(:$!parent!, :$!statement!, :$!RaiseError,
-    :$!svch, :$!errh, :$!stmth,
+    :$!svch  = die ("Required attribute 'svch' missing for new DBDish::Oracle::StatementHandle"),
+    :$!errh  = die ("Required attribute 'errh' missing for new DBDish::Oracle::StatementHandle"),
+    :$!stmth = die ("Required attribute 'stmth' missing for new DBDish::Oracle::StatementHandle"),
 ) {
     $!stmttype = $!stmth.AttrGet($!errh, ub2, OCI_ATTR_STMT_TYPE);
     if $!param-count = $!stmth.AttrGet($!errh, ub4, OCI_ATTR_BIND_COUNT) -> $pn {

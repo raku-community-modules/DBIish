@@ -36,8 +36,10 @@ submethod !get-meta($result) {
     }
 }
 
-submethod BUILD(:$!parent!, :$!pg_conn, # Per protocol
-    :$!statement, :$!statement_name = ''
+submethod BUILD(:$!parent = die ("Required attribute 'parent' missing for new DBDish::Pg::StatementHandle", 
+                :$!pg_conn,  # Per protocol
+                :$!statement,
+                :$!statement_name = ''
 ) {
     if $!statement_name { # Prepared
         with $!pg_conn.PQdescribePrepared($!statement_name) -> $info {
