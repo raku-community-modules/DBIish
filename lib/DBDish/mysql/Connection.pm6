@@ -39,8 +39,8 @@ method execute(Str $statement, *%args) {
 }
 
 method insert-id() {
-    with $!last-sth-id andthen %!Statements{$_} {
-    .insert-id;
+    with $!last-sth-id andthen $!statements-lock.protect({ %!statements{$_} }) {
+        .insert-id;
     }
 }
 
