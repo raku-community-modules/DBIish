@@ -28,7 +28,7 @@ method dispose() {
         %!statements = ();
     }
     self._disconnect;
-    ?($.parent.Connections{self.WHICH}:delete);
+    ?($.parent.unregister-connection(self))
 }
 submethod DESTROY() {
     self.dispose;
@@ -44,7 +44,7 @@ method new(*%args) {
     my \con = ::?CLASS.bless(|%args);
     con.reset-err;
     con.?set-defaults;
-    %args<parent>.Connections{con.WHICH} = con;
+    %args<parent>.register-connection(con)
 }
 
 method prepare(Str $statement, *%args) { ... }

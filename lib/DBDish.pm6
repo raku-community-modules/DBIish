@@ -7,7 +7,8 @@ need DBDish::StatementHandle;
 
 role Driver does DBDish::ErrorHandling {
     has $.Version = ::?CLASS.^ver;
-    has %.Connections;
+    has Lock $!connections-lock .= new;
+    has %!connections;
 
     method connect(*%params --> DBDish::Connection) { ... };
 
@@ -15,6 +16,24 @@ role Driver does DBDish::ErrorHandling {
         self!error-dispatch: X::DBDish::ConnectionFailed.new(
             :$code, :native-message($errstr), :$.driver-name
         );
+    }
+
+    method register-connection($con) {
+        $!connections-lock.protect: {
+            %!connections{$con.WHICH} = $con
+        }
+    }
+
+    method unregister-connection($con) {
+        $!connections-lock.protect: {
+            %!connections{$con.WHICH}:delete
+        }
+    }
+
+    method Connections() {
+        # Return a defensive copy, since %!connections access must be done
+        # while holding the lock
+        $!connections-lock.protect: { %!connections.clone }
     }
 }
 
