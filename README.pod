@@ -201,10 +201,33 @@ Supports basic CRUD operations and prepared statements with placeholders
 
     my $dbh = DBIish.connect('SQLite', :database<thefile>);
     
-The :database parameter can be an absolute file path as well:
+The C<:database> parameter can be an absolute file path as well (or even an
+C<IO::Path> object):
 
     my $dbh = DBIish.connect('SQLite', database => '/path/to/sqlite.db' );
-    
+
+If the SQLite library was compiled to be threadsafe (which is usually the
+case), then it is possible to use SQLite from multiple threads. This can be
+introspected:
+
+    say DBIish.install-driver('SQLite').threadsafe;
+
+SQLite does support using one connection object concurrently, however other
+databases may not; if portability is a concern, then only use a particular
+connection object from one thread at a time (and so have multiple connection
+objects).
+
+When using a SQLite database concurrently (from multiple threads, or even
+multiple processes), operations may not be able to happen immediately due to
+the database being locked. DBIish sets a default timeout of 10000 miliseconds;
+this can be changed by passing the C<busy-timeout> option to C<connect>.
+
+    my $dbh = DBIish.connect('SQLite', :database<thefile>, :60000busy-timeout);
+
+Passing a value less than or equal to zero will disable the timeout, resulting
+in any operation that cannot take place immediately producing a database
+locked error.
+
 =head2 mysql
 
 Supports basic CRUD operations and prepared statements with placeholders
