@@ -10,7 +10,7 @@ need DBDish::SQLite::Connection;
 has $.library;
 has $.library-resolved = False;
 
-method connect(:database(:$dbname)! is copy, *%params) {
+method connect(Str() :database(:$dbname)! is copy, *%params) {
     die "Cannot locate native library '" ~
     $*VM.platform-library-name('sqlite3'.IO, :version(v0)) ~ "'"
     unless $!library-resolved;
