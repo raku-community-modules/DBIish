@@ -46,4 +46,8 @@ method version() {
     $!library-resolved ?? Version.new(sqlite3_libversion) !! Nil;
 }
 
+method threadsafe(--> Bool) {
+    so sqlite3_threadsafe()
+}
+
 # vim: ft=perl6

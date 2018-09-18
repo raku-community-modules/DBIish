@@ -57,6 +57,12 @@ class STMT is export is repr('CPointer') { };
 # at install time.
 #constant SQLITE_TRANSIENT = Pointer.new(-1);
 
+sub sqlite3_threadsafe()
+    returns int32
+    is native(LIB)
+    is export
+    { ... }
+
 sub sqlite3_errmsg(SQLite $handle)
     returns Str
     is native(LIB)
