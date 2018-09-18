@@ -21,6 +21,9 @@ method connect(Str() :database(:$dbname)! is copy, *%params) {
 
     my $status = sqlite3_open($dbname, $p);
     if $status == SQLITE_OK {
+        given %params<busy-timeout> // 10000 {
+            sqlite3_busy_timeout($p, .Int);
+        }
         DBDish::SQLite::Connection.new(:conn($p), :parent(self), |%params);
     }
     else {

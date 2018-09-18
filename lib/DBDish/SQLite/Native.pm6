@@ -75,6 +75,11 @@ sub sqlite3_close(SQLite)
     is export
     { ... }
 
+sub sqlite3_busy_timeout(SQLite, int32)
+    returns int32
+    is native(LIB)
+    is export
+    { ... }
 
 sub sqlite3_prepare_v2 (
         SQLite,
