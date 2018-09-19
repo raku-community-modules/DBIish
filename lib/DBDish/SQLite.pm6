@@ -10,7 +10,7 @@ need DBDish::SQLite::Connection;
 has $.library;
 has $.library-resolved = False;
 
-method connect(:database(:$dbname)! is copy, *%params) {
+method connect(Str() :database(:$dbname)! is copy, *%params) {
     die "Cannot locate native library '" ~
     $*VM.platform-library-name('sqlite3'.IO, :version(v0)) ~ "'"
     unless $!library-resolved;
@@ -21,6 +21,9 @@ method connect(:database(:$dbname)! is copy, *%params) {
 
     my $status = sqlite3_open($dbname, $p);
     if $status == SQLITE_OK {
+        given %params<busy-timeout> // 10000 {
+            sqlite3_busy_timeout($p, .Int);
+        }
         DBDish::SQLite::Connection.new(:conn($p), :parent(self), |%params);
     }
     else {
@@ -41,6 +44,10 @@ method new() {
 
 method version() {
     $!library-resolved ?? Version.new(sqlite3_libversion) !! Nil;
+}
+
+method threadsafe(--> Bool) {
+    so sqlite3_threadsafe()
 }
 
 # vim: ft=perl6

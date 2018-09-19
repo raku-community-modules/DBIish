@@ -17,14 +17,18 @@ unit role DBDish::Connection does DBDish::ErrorHandling;
 =head5 do
 =end pod
 
-has %.Statements;
+has %!statements;
+has Lock $!statements-lock .= new;
 has $.last-sth-id is rw;
 has $.last-rows is rw;
 
 method dispose() {
-    $_.dispose for %!Statements.values;
+    $!statements-lock.protect: {
+        $_.dispose for %!statements.values;
+        %!statements = ();
+    }
     self._disconnect;
-    ?($.parent.Connections{self.WHICH}:delete);
+    ?($.parent.unregister-connection(self))
 }
 submethod DESTROY() {
     self.dispose;
@@ -40,14 +44,14 @@ method new(*%args) {
     my \con = ::?CLASS.bless(|%args);
     con.reset-err;
     con.?set-defaults;
-    %args<parent>.Connections{con.WHICH} = con;
+    %args<parent>.register-connection(con)
 }
 
 method prepare(Str $statement, *%args) { ... }
 
 method do(Str $statement, *@params, *%args) {
     LEAVE {
-        with %!Statements{$!last-sth-id} {
+        with $!statements-lock.protect({ %!statements{$!last-sth-id} }) {
             warn "'do' should not be used for statements that return rows"
             unless .Finished;
             .dispose;
@@ -65,12 +69,29 @@ method do(Str $statement, *@params, *%args) {
 
 method rows {
     if $!last-sth-id {
-        with %!Statements{$!last-sth-id} {
+        with $!statements-lock.protect({ %!statements{$!last-sth-id} }) {
             .rows;
         } else {
             $!last-rows
         }
     }
+}
+
+method register-statement-handle($handle) {
+    $!statements-lock.protect: {
+        %!statements{$handle.WHICH} = $handle;
+    }
+}
+
+method unregister-statement-handle($handle) {
+    $!statements-lock.protect: {
+        %!statements{$handle.WHICH}:delete;
+    }
+}
+
+method Statements() {
+    # Defensive copy, since %!statements access must be done under lock
+    $!statements-lock.protect: { %!statements.clone }
 }
 
 =begin pod

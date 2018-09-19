@@ -52,13 +52,13 @@ method !done-execute(Int $rows, $fields) {
 
 method new(*%args) {
     my \sth = ::?CLASS.bless(|%args);
-    %args<parent>.Statements{sth.WHICH} = sth;
+    %args<parent>.register-statement-handle(sth)
 }
 
 method dispose() {
     self.finish unless $!Finished;
     self._free;
-    with $.parent.Statements{self.WHICH}:delete {
+    with $.parent.unregister-statement-handle(self) {
         $.parent.last-rows = self.rows;
         True;
     } else { False };
