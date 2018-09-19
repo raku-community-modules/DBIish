@@ -1,7 +1,7 @@
 {
     "perl"          : "6.c",
     "name"          : "DBIish",
-    "version"       : "0.5.15",
+    "version"       : "0.5.16",
     "description"   : "Database connectivity for Perl 6",
     "test-depends"  : [ ],
     "license"       : "BSD-2-Clause",
