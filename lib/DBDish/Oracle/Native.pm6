@@ -86,14 +86,16 @@ constant SQLT_FLT               is export = 4;
 constant SQLT_STR               is export = 5;
 constant SQLT_DAT               is export = 12;
 constant SQLT_BIN               is export = 23;
+constant SQLT_CLOB              is export = 112;
 constant SQLT_TIMESTAMP_TZ      is export = 188;
 
 constant %sqltype-map is export = {
-    +(SQLT_CHR) => Str,
-    +(SQLT_NUM) => Rat,
-    +(SQLT_INT) => Int,
-    +(SQLT_FLT) => Num,
-    +(SQLT_BIN) => Buf,
+    +(SQLT_CHR)  => Str,
+    +(SQLT_NUM)  => Rat,
+    +(SQLT_INT)  => Int,
+    +(SQLT_FLT)  => Num,
+    +(SQLT_BIN)  => Buf,
+    +(SQLT_CLOB) => Str,
     +(SQLT_TIMESTAMP_TZ) => DateTime,
     +(SQLT_DAT) => Date,
 };
