@@ -191,7 +191,7 @@ The payload is optional and will always be an empty string for PostgreSQL server
 
 =head3 B<pg-socket>
 
-	my Int $socket = pg-socket;
+	my Int $socket = $db.pg-socket;
 
 Returns the file description number of the connection socket to the server.
 
