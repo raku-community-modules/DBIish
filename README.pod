@@ -189,6 +189,45 @@ For example:
 
 The payload is optional and will always be an empty string for PostgreSQL servers less than version 9.0.
 
+=head3 Statement Exceptions
+
+Exceptions for a query result are thrown as X::DBDish::DBError::Pg objects (inherits X::DBDish::DBError)
+and have the following additional attributes as provided by PostgreSQL
+(perl exception field ➡ PostgreSQL field name):
+
+  * message ➡ PG_DIAG_MESSAGE_PRIMARY
+  * message-detail ➡ PG_DIAG_MESSAGE_DETAIL
+  * message-hint ➡ PG_DIAG_MESSAGE_HINT
+  * context ➡ PG_DIAG_CONTEXT
+  * type ➡ PG_DIAG_SEVERITY_NONLOCALIZED
+  * type-localized ➡ PG_DIAG_SEVERITY
+  * state ➡ PG_DIAG_SQLSTATE
+  * statement-position ➡ PG_DIAG_STATEMENT_POSITION
+  * internal-position ➡ PG_DIAG_INTERNAL_POSITION
+  * internal-query ➡ PG_DIAG_INTERNAL_QUERY
+  * schema ➡ PG_DIAG_SCHEMA_NAME
+  * table ➡ PG_DIAG_TABLE_NAME
+  * column ➡ PG_DIAG_COLUMN_NAME
+  * datatype ➡ PG_DIAG_DATATYPE_NAME
+  * constraint ➡ PG_DIAG_CONSTRAINT_NAME
+  * source-file ➡ PG_DIAG_SOURCE_FILE
+  * source-line ➡ PG_DIAG_SOURCE_LINE
+  * source-function ➡ PG_DIAG_SOURCE_FUNCTION
+
+Please see the L<PostgreSQL documentation|https://www.postgresql.org/docs/current/static/libpq-exec.html#LIBPQ-PQRESULTERRORFIELD>
+for a detailed description of what each field contains.
+
+A special C<is-temporary()> method returns True if an immediate retry of the full transaction should be attempted:
+
+It is set to true when the L<SQLState|https://www.postgresql.org/docs/current/static/errcodes-appendix.html>
+is any of the following codes:
+
+  * Class 08\w{3}: All connection exceptions (possible network issues)
+  * 40001 serialization_failure
+  * 40P01 deadlock_detected
+  * Class 57\w{3}: Operator Intervention (early/forced connection termination)
+  * 72000 snapshot_too_old
+
 =head3 B<pg-socket>
 
 	my Int $socket = $db.pg-socket;

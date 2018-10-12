@@ -11,6 +11,13 @@ package X::DBDish {
             "$!driver-name: $.why: $!native-message" ~
             ($!code ?? " ($!code)" !! '');
         }
+
+        # Individual drivers are expected to override this to return true for
+        # errors which may succeed if retried immediately.
+        # Serialization failure, deadlocks, network disconnects, etc.
+        method is-temporary {
+            False;
+        }
     }
     class ConnectionFailed is DBError {
         has $.why = "Can't connect";

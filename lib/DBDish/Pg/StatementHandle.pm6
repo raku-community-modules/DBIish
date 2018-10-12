@@ -3,6 +3,7 @@ need DBDish;
 
 unit class DBDish::Pg::StatementHandle does DBDish::StatementHandle;
 use DBDish::Pg::Native;
+use DBDish::Pg::ErrorHandling;
 
 has PGconn $!pg_conn;
 has Str $!statement_name;
@@ -17,7 +18,13 @@ method !handle-errors {
     if $!result.is-ok {
         self.reset-err;
     } else {
-        self!set-err($!result.PQresultStatus, $!pg_conn.PQerrorMessage);
+        self!error-dispatch: X::DBDish::DBError::Pg.new(
+            :code($!result.PQresultStatus),
+            :native-message($!result.PQresultErrorField(PG_DIAG_MESSAGE_PRIMARY)),
+            :driver-name<DBDish::Pg>,
+
+            :result($!result),
+        );
     }
 }
 
