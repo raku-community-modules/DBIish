@@ -71,29 +71,36 @@ for @enum -> @option {
 	@enumtypes.push(@option[2]);	
 	@options.push(@option[3]);	
 }
-my enum YesNo (@options);
-for @enumtypes -> $type {
-	$dbh.dynamic-types{$type} = YesNo;
+{
+    # This is required as the compiler sees the empty
+    # @options being passed to the enum before it is
+    # populated at run-time
+    no worries;
+
+    my enum YesNo (@options);
+    for @enumtypes -> $type {
+        $dbh.dynamic-types{$type} = YesNo;
+    }
+
+    my Str $expected = 'Yes';
+    my $yesno =  sub (Str $value) {
+        is $value, $expected, "Value OK ($value eq $expected)";
+        $value;
+    };
+    ok ($dbh.Converter{YesNo} = $yesno),   'Install the YesNo converter';
+
+    ok $sth = $dbh.prepare('SELECT yeah FROM test WHERE id = ?'), 'SELECT prepared';
+    ok $sth.execute(1), 'Executed for 1';
+    ok (@res = $sth.row), 'Get a row';
+    is @res.elems,  1,	 'One field';
+    ok (my $data = @res[0]), 'With data at 0';
+    ok $data ~~ Str,         'Data is-a Str';
+    is $data, 'Yes',         'Data match with original';
+
+    $expected = 'No';
+    ok $sth.execute(2),      'Executed for 2';
+    ok (@res = $sth.row),	 'Get a row';
+    is @res.elems,  1,	 'One field';
 }
-
-my Str $expected = 'Yes';
-my $yesno =  sub (Str $value) {
-	is $value, $expected, "Value OK ($value eq $expected)";
-	$value;
-};
-ok ($dbh.Converter{YesNo} = $yesno),   'Install the YesNo converter';
-
-ok $sth = $dbh.prepare('SELECT yeah FROM test WHERE id = ?'), 'SELECT prepared';
-ok $sth.execute(1), 'Executed for 1';
-ok (@res = $sth.row), 'Get a row';
-is @res.elems,  1,	 'One field';
-ok (my $data = @res[0]), 'With data at 0';
-ok $data ~~ Str,         'Data is-a Str';
-is $data, 'Yes',         'Data match with original';
-
-$expected = 'No';
-ok $sth.execute(2),      'Executed for 2';
-ok (@res = $sth.row),	 'Get a row';
-is @res.elems,  1,	 'One field';
 
 $dbh.do('DROP TABLE IF EXISTS test');
