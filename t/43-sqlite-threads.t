@@ -24,6 +24,7 @@ my $dbh = DBIish.connect("SQLite", :$database);
 END try $dbh.dispose;
 $dbh.do('CREATE TABLE nom ( name varchar(50) )');
 
+
 # Check that it is possible to work with the database from multiple threads
 # at once with a single connection option. This works in SQLite's serialized
 # mode, which is the default.
@@ -59,7 +60,7 @@ subtest 'Statements across threads on one connection' => {
 subtest 'Multiple connections, one per thread' => {
     my @inserters = do for ^5 -> $thread {
         start {
-            my $dbht = DBIish.connect("SQLite", :$database);
+            my $dbht = DBIish.connect("SQLite", :$database, busy-timeout => 30000);
             for ^100 {
                 my $sth = $dbht.prepare(q:to/STATEMENT/);
                     INSERT INTO nom (name)
