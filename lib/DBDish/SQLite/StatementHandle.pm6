@@ -13,7 +13,7 @@ has $!param-count;
 has Int $!row_status;
 has $!field_count;
 
-method !handle-error($status) {
+method !handle-error(Int $status) {
     unless $status == SQLITE_OK {
         self!set-err($status, sqlite3_errmsg($!conn));
     }
@@ -29,7 +29,7 @@ submethod BUILD(:$!conn!, :$!parent!,
     }
 }
 
-method execute(*@params) {
+method execute(*@params is raw) {
     self!enter-execute(@params.elems, $!param-count);
 
     my $num-params = @params.elems;
