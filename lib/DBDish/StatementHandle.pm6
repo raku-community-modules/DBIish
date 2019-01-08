@@ -22,15 +22,16 @@ has Bool $.Finished = True;
 has Int $!affected_rows;
 has @!column-name;
 has @!column-type;
+has $!which = self.WHICH;
 
 # My defined interface
-method execute(*@ --> IntTrue) { ... }
+method execute(*@ --> Int) { ... }
 method finish(--> Bool) { ... }
 method _row(--> Array) { ... }
 method _free() { ... }
 
 method !ftr() {
-    $.parent.last-sth-id = self.WHICH;
+    $.parent.last-sth-id = $!which;
 }
 
 method !enter-execute(int $got = 0, int $expect = 0) {
@@ -69,7 +70,10 @@ submethod DESTROY() {
 }
 
 method rows {
-    $!affected_rows but IntTrue;
+    my constant TRUE_ZERO = 0 but IntTrue;
+    $!affected_rows.defined
+            ?? $!affected_rows || TRUE_ZERO
+            !! Int
 }
 
 method row(:$hash) {

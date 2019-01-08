@@ -25,9 +25,7 @@ role DBDish::ErrorHandling is export {
 
     method set-last-exception($e) {
         $!last-exception = $e;
-        if $!parent.^can('set-last-exception') {
-            $!parent.set-last-exception($e);
-        }
+        $!parent.?set-last-exception($e);
     }
 
     method err(--> Int)  {
@@ -57,7 +55,7 @@ role DBDish::ErrorHandling is export {
         $!RaiseError and .throw or .fail;
     }
 
-    method !set-err($code, $errstr) is hidden-from-backtrace {
+    method !set-err(Int $code, Str $errstr) is hidden-from-backtrace {
         self!error-dispatch: X::DBDish::DBError.new(
             :$code, :native-message($errstr), :$.driver-name
         );
