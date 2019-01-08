@@ -24,7 +24,7 @@ has @!column-name;
 has @!column-type;
 
 # My defined interface
-method execute(*@ --> IntTrue) { ... }
+method execute(*@ --> Int) { ... }
 method finish(--> Bool) { ... }
 method _row(--> Array) { ... }
 method _free() { ... }
@@ -69,7 +69,10 @@ submethod DESTROY() {
 }
 
 method rows {
-    $!affected_rows but IntTrue;
+    my constant TRUE_ZERO = 0 but IntTrue;
+    $!affected_rows.defined
+            ?? $!affected_rows || TRUE_ZERO
+            !! Int
 }
 
 method row(:$hash) {
