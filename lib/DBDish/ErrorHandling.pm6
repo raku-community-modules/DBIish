@@ -25,9 +25,7 @@ role DBDish::ErrorHandling is export {
 
     method set-last-exception($e) {
         $!last-exception = $e;
-        if $!parent.^can('set-last-exception') {
-            $!parent.set-last-exception($e);
-        }
+        $!parent.?set-last-exception($e);
     }
 
     method err(--> Int)  {
