@@ -22,6 +22,7 @@ has Bool $.Finished = True;
 has Int $!affected_rows;
 has @!column-name;
 has @!column-type;
+has $!which = self.WHICH;
 
 # My defined interface
 method execute(*@ --> Int) { ... }
@@ -30,7 +31,7 @@ method _row(--> Array) { ... }
 method _free() { ... }
 
 method !ftr() {
-    $.parent.last-sth-id = self.WHICH;
+    $.parent.last-sth-id = $!which;
 }
 
 method !enter-execute(int $got = 0, int $expect = 0) {
