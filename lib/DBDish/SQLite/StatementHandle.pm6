@@ -14,9 +14,7 @@ has Int $!row_status;
 has $!field_count;
 
 method !handle-error($status) {
-    if $status == SQLITE_OK {
-        self.reset-err;
-    } else {
+    unless $status == SQLITE_OK {
         self!set-err($status, sqlite3_errmsg($!conn));
     }
 }
@@ -40,6 +38,7 @@ method execute(*@params) {
     $!row_status = sqlite3_step($!statement_handle);
     if $!row_status == SQLITE_ROW | SQLITE_DONE {
         my $rows = $!field_count ?? 0 !! sqlite3_changes($!conn); # Non SELECT
+        self.reset-err;
         self!done-execute($rows, $!field_count);
     } else {
         self!set-err($!row_status, sqlite3_errmsg($!conn));
