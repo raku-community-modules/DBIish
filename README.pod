@@ -105,9 +105,9 @@ Example:
 
 =head3 allrows
 
-C<allrows> lazily returns all the row as a list of arrays.
+C<allrows> lazily returns all the rows as a list of arrays.
 If you want to fetch the values in a hash form, use one of the two adverbs C<array-of-hash>
-and C<hash-of-array>
+or C<hash-of-array>
 
 Example:
 
@@ -142,10 +142,10 @@ C<sslrootcert>, C<sslcrl>, C<requirepeer>, C<krbsrvname>, C<gsslib>, and C<servi
 
 See your PostgreSQL documentation for details.
 
-Pg array are supported when fetching array fields with C<row/allrows>. You will
+Pg arrays are supported when fetching array fields with C<row/allrows>. You will
 get the properly typed array according to the field type.
 
-Passing array to C<execute/do> is now implemented. But you can also use the
+Passing an array to C<execute/do> is now implemented. But you can also use the
 C<pg-array-str> method on your Pg StatementHandle to convert an Array to a
 string Pg can understand:
 
@@ -170,10 +170,10 @@ Looks for any asynchronous notifications received and returns a pg-notify object
 	    has Str                           $.extra; # Payload
 	}
 
-or nothing if there is no pending notifications.
+or nothing if there are no pending notifications.
 
 In order to receive the notifications you should execute the PostgreSQL command "LISTEN"
-prior to calling C<pg-notifies> the first time, if you have not executed any other
+prior to calling C<pg-notifies> the first time; if you have not executed any other
 commands in the meantime you will also need to execute C<pg-consume-input> first.
 
 For example:
