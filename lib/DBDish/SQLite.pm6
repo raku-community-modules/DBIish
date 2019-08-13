@@ -10,14 +10,20 @@ need DBDish::SQLite::Connection;
 has $.library;
 has $.library-resolved = False;
 
-method connect(Str() :database(:$dbname)! is copy, *%params) {
+method connect(:database(:$dbname)! is copy, *%params) {
     die "Cannot locate native library '" ~
     $*VM.platform-library-name('sqlite3'.IO, :version(v0)) ~ "'"
     unless $!library-resolved;
 
     my SQLite $p .= new;
-    # Add the standard extension unless has one
-    $dbname ~= '.sqlite3' unless $dbname ~~ / '.'|':memory:' /;
+    if ($dbname ne ':memory:') {
+	$dbname = (
+	    # Don't touch if already an IO::Path
+	    $dbname ~~ IO::Path ?? $dbname !!
+	    # Add the standard extension unless has one
+	    ($dbname.IO.extension ?? $dbname !! $dbname ~ '.sqlite3').IO
+	).absolute;
+    }
 
     my $status = sqlite3_open($dbname, $p);
     if $status == SQLITE_OK {
