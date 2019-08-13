@@ -182,8 +182,7 @@ ok $dbh.do("DROP TABLE $table"), "Drop table $table"; # test 19
 #}
 ok($sth= $dbh.prepare("DROP TABLE IF EXISTS no_such_table"), "prepare drop no_such_table"); # test 20
 ok($sth.execute(), "execute drop no_such_table..."); # test 21
-todo "warning_count seems 0 on windows", 1 if Rakudo::Internals.IS-WIN;
-is($sth.mysql_warning_count, 1, "...returns an error"); # test 22
+is($sth.mysql_warning_count, 0, "...do not returns an error"); # test 22 (Now fixed in mysql)
 
 #-----------------------------------------------------------------------
 # from perl5 DBD/mysql/t/30insertfetch.t

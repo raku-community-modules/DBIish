@@ -7,7 +7,7 @@ use NativeHelpers::Blob;
 
 constant LIB = NativeLibs::Searcher.at-runtime(
     Rakudo::Internals.IS-WIN ?? 'mysql' !! 'mysqlclient',
-    'mysql_init', 16..20);
+    'mysql_init', 16..21);
 
 #From mysql_com.h
 enum mysql-field-type is export (
