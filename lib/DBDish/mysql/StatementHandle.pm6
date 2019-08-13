@@ -109,6 +109,7 @@ method execute(*@params) {
                             my $l = .local.Str;
                             $l .= subst(/ 'T' /,' ');
                             $l .= subst(/ <[\-\+]>\d\d ':' \d\d /,'');
+                            $l .= subst(/ 'Z' /,''); # .local with Z !?
                             $l.encode;
                         }
                         default   { .Str.encode }
