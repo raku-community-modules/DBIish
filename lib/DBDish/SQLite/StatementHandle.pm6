@@ -32,8 +32,8 @@ submethod BUILD(:$!conn!, :$!parent!,
 method execute(*@params is raw) {
     self!enter-execute(@params.elems, $!param-count);
 
-    my $num-params = @params.elems;
-    loop (my $idx = 0; $idx < $num-params; $idx++) {
+    my int $num-params = @params.elems;
+    loop (my int $idx = 0; $idx < $num-params; $idx++) {
         self!handle-error(sqlite3_bind($!statement_handle, $idx + 1, @params[$idx]));
     }
     $!row_status = sqlite3_step($!statement_handle);
