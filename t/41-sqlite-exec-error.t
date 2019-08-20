@@ -1,6 +1,6 @@
 use v6;
 use Test;
-plan 16;
+plan 17;
 use DBIish;
 
 # Test some errors
@@ -36,12 +36,13 @@ throws-like {
     $insert.execute(1, 1);
 }, X::DBDish::DBError,  'Cannot insert tuple the second time';
 
-ok so $insert.err,	'Has error at $sth level';
-ok (my $e = $insert.errstr),	'Error preserved';
-ok so $dbh.err,		'Has error at $dbh level';
-ok so $dbh.drv.err,	'Has error at $drv level';
-ok so DBIish.err,	'Has error at $sth leval';
-is DBIish.errstr, $e, 'Propagated to DBIish';
+ok so $insert.err,      'Has error at $sth level';
+ok (my $e = $insert.errstr),    'Error preserved';
+ok so $dbh.err,         'Has error at $dbh level';
+ok so $dbh.drv.err,     'Has error at $drv level';
+ok so DBIish.err,     'Has error at DBIish level';
+is DBIish.errstr, $e,      'Propagated to DBIish';
+like $e, /UNIQUE/;
 $dbh.dispose; # Close the connection
 
 
