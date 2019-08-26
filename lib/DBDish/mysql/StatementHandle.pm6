@@ -36,7 +36,7 @@ method !get-meta(MYSQL_RES $res) {
             @!column-name.push: .name;
             @!column-type.push: do {
                 my $pt = .type;
-                if (my \t = %mysql-type-conv{$pt}) === Nil {
+                if (my \t = $!parent.dynamic-types{$pt}) === Nil {
                     warn "No type map defined for mysql type #$pt at column $i";
                     Str;
                 } else { t }
@@ -167,6 +167,7 @@ method _row {
         my $row;
         with $!stmt {
             if .mysql_stmt_fetch == 0 { # Has data
+                my %Converter := $!parent.Converter;
                 $list = do for ^$fields {
                     my $val = my $t = @!column-type[$_];
                     if $!isnull[$_] {
@@ -174,17 +175,12 @@ method _row {
                     } else {
                         my $len = $!out-lengths[$_];
                         $val = @!out-bufs[$_].subbuf(0,$len);
-                        given $t {
-                            when Blob { $val }
-                            $val .= decode;
-                            when Date { Date.new($val) }
-                            when DateTime {
-                                # Mysql don't report offset, and perl assume Z, so…
-                                DateTime.new($val.split(' ').join('T')):timezone($*TZ);
-                            }
-                            when Str { $val }
-                            default { $t($val) }
+                        if $t ~~ Blob {
+                            # Don't touch
+                        } elsif ($t.^name ne 'Any') {
+                            $val = %Converter.convert($val.decode, $t);
                         }
+                        $val;
                     }
                 }
                 $row = True;
