@@ -1,7 +1,14 @@
 use v6;
 use Test;
 use DBIish;
-use JSON::Tiny;
+our &from-json;
+BEGIN {
+    require ::('JSON::Tiny');
+    &from-json = ::("JSON::Tiny::EXPORT::DEFAULT::&from-json");
+    CATCH {
+	plan :skip-all<This test need JSON::Tiny installed>;
+    }
+}
 
 class JSON {
     # Used only as a marker for converter
