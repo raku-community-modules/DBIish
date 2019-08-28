@@ -19,9 +19,10 @@ method !handle-error(Int $status) {
     }
 }
 
-submethod BUILD(:$!conn!, :$!parent!,
-    :$!statement_handle!, :$!statement, :$!param-count
+submethod BUILD(:$!conn!, :$!parent!, :$!statement_handle!,
+    :$!statement
 ) {
+    $!param-count = sqlite3_bind_parameter_count($!statement_handle);
     $!field_count = sqlite3_column_count($!statement_handle);
     for ^$!field_count {
 	@!column-name.push: sqlite3_column_name($!statement_handle, $_);

@@ -19,18 +19,16 @@ method !handle-error(Int $status) {
 }
 
 method prepare(Str $statement, *%args) {
-    my STMT $stmt .= new;
+    my STMT $statement_handle .= new;
     my $status = (sqlite3_libversion_number() >= 3003009)
-        ?? sqlite3_prepare_v2($!conn, $statement, -1, $stmt, Null)
-        !! sqlite3_prepare($!conn, $statement, -1, $stmt, Null);
+        ?? sqlite3_prepare_v2($!conn, $statement, -1, $statement_handle, Null)
+        !! sqlite3_prepare($!conn, $statement, -1, $statement_handle, Null);
     with self!handle-error($status) {
-        my $param-count = sqlite3_bind_parameter_count($stmt);
         DBDish::SQLite::StatementHandle.new(
             :$!conn,
             :parent(self),
+            :$statement_handle,
             :$statement,
-            :statement_handle($stmt),
-            :$param-count,
             :$.RaiseError,
             |%args
         );
