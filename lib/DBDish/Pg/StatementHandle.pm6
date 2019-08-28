@@ -36,7 +36,7 @@ submethod !get-meta($result) {
     }
 }
 
-submethod BUILD(:$!parent!, :$!pg_conn, # Per protocol
+submethod BUILD(:$!parent!, :$!pg_conn!, # Per protocol
     :$!statement, :$!statement_name = ''
 ) {
     if $!statement_name { # Prepared

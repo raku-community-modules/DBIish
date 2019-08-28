@@ -16,7 +16,7 @@ has $.in_transaction is rw = False;
 has %.Converter is DBDish::TypeConverter;
 has %.dynamic-types = %oid-to-type;
 
-submethod BUILD(:$!pg_conn, :$!parent!, :$!AutoCommit) {
+submethod BUILD(:$!pg_conn!, :$!parent!, :$!AutoCommit) {
     %!Converter =
        method (--> Bool) { self eq 't' },
        method (--> DateTime) { DateTime.new(self.split(' ').join('T')) },

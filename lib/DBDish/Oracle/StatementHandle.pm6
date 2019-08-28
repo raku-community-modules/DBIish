@@ -25,8 +25,8 @@ method !handle-err($res) {
     $res ~~ OCIErr ?? self!set-err(+$res, ~$res) !! $res;
 }
 
-submethod BUILD(:$!parent!, :$!statement!, :$!RaiseError,
-    :$!svch, :$!errh, :$!stmth,
+submethod BUILD(:$!parent!, :$!statement!, :$!svch!, :$!errh!, :$!stmth!,
+    :$!RaiseError,
 ) {
     $!stmttype = $!stmth.AttrGet($!errh, ub2, OCI_ATTR_STMT_TYPE);
     if $!param-count = $!stmth.AttrGet($!errh, ub4, OCI_ATTR_BIND_COUNT) -> $pn {

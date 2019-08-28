@@ -8,7 +8,7 @@ use DBDish::SQLite::Native;
 
 has SQLite $!conn;
 
-submethod BUILD(:$!conn, :$!parent!) { }
+submethod BUILD(:$!conn!, :$!parent!) { }
 
 method !handle-error(Int $status) {
     if $status == SQLITE_OK {

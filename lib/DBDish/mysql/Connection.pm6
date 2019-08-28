@@ -10,7 +10,7 @@ has MYSQL $!mysql_client;
 has %.Converter is DBDish::TypeConverter;
 has %.dynamic-types = %mysql-type-conv;
 
-submethod BUILD(:$!mysql_client, :$!parent!) {
+submethod BUILD(:$!mysql_client!, :$!parent!) {
     %!Converter =
         method (--> DateTime) {
             # Mysql don't report offset, and perl assume Z, so…
