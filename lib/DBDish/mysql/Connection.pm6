@@ -20,29 +20,29 @@ submethod BUILD(:$!mysql_client, :$!parent!) {
 
 method !handle-errors($code) {
     if $code {
-    self!set-err($code, $!mysql_client.mysql_error);
+        self!set-err($code, $!mysql_client.mysql_error);
     } else {
-    self.reset-err;
+        self.reset-err;
     }
 }
 method prepare(Str $statement, *%args) {
     with $!mysql_client.mysql_stmt_init -> $stmt {
-    with self!handle-errors(
-        $stmt.mysql_stmt_prepare($statement, $statement.encode.bytes)
-    ) {
-        DBDish::mysql::StatementHandle.new(
-    	:$!mysql_client, :parent(self), :$stmt
-    	:$statement, :$!RaiseError, |%args
-        );
-    } else { .fail }
+        with self!handle-errors(
+            $stmt.mysql_stmt_prepare($statement, $statement.encode.bytes)
+        ) {
+             DBDish::mysql::StatementHandle.new(
+                 :$!mysql_client, :parent(self), :$stmt
+                 :$statement, :$!RaiseError, |%args
+             );
+        } else { .fail }
     } else {
-    self!set-err(-1, "Can't allocate memory");
+        self!set-err(-1, "Can't allocate memory");
     }
 }
 
 method execute(Str $statement, *%args) {
     DBDish::mysql::StatementHandle.new(
-    :$!mysql_client, :parent(self), :$statement, :$!RaiseError, |%args
+        :$!mysql_client, :parent(self), :$statement, :$!RaiseError, |%args
     ).execute;
 }
 
@@ -62,9 +62,9 @@ method server-version() {
 
 method ping() {
     with $!mysql_client {
-    0 == $!mysql_client.mysql_ping;
+        0 == $!mysql_client.mysql_ping;
     } else {
-    False;
+        False;
     }
 }
 
@@ -75,9 +75,9 @@ method _disconnect() {
 
 method quote(Str $x, :$as-id) {
     if $as-id {
-    q[`] ~ $!mysql_client.escape($x) ~ q[`]
+        q[`] ~ $!mysql_client.escape($x) ~ q[`]
     } else {
-    q['] ~ $!mysql_client.escape($x) ~ q[']
+        q['] ~ $!mysql_client.escape($x) ~ q[']
     }
 }
 
