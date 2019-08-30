@@ -1,9 +1,23 @@
 use v6;
 
-unit module NativeLibs:auth<sortiz>:ver<0.0.2>;
+unit module NativeLibs:auth<sortiz>:ver<0.0.3>;
 use NativeCall :ALL;
 
 our constant is-win = Rakudo::Internals.IS-WIN();
+
+our proto sub cannon-name(|) { * }
+multi sub cannon-name(Str $libname, Version $version = Version) {
+    with $libname.IO {
+	if .extension {
+	    .Str; # Assume resolved, so don't touch
+	} else {
+	    $*VM.platform-library-name($_, :$version).Str;
+	}
+    }
+}
+multi sub cannon-name(Str $libname, Cool $ver) {
+    cannon-name($libname, Version.new($ver));
+}
 
 class Loader {
     # Right now NC::cglobal unload loaded libraries too fast, so we need our own loader
@@ -60,15 +74,16 @@ class Searcher {
     }
     method try-versions(Str $libname, Str $wks, *@vers) {
 	my $wlibname;
+	return $wlibname unless $libname; # Nothing to test
 	for @vers {
 	    my $ver = $_.defined ?? Version.new($_) !! Version;
 	    $wlibname = $_ and last with self!test:
-		$*VM.platform-library-name($libname.IO, :version($ver)), $wks;
+		cannon-name($libname, $ver), $wks;
 	}
-	$wlibname //= self!test: $*VM.platform-library-name($libname.IO), $wks
-	    unless @vers; # Try unversionized
+	# Try unversionized
+	$wlibname //= self!test: cannon-name($libname), $wks unless @vers;
 	# Try common practice in Windows;
-	$wlibname //= self!test: $*VM.platform-library-name("lib$libname".IO), $wks;
+	$wlibname //= self!test: "lib$libname.dll", $wks;
 	$wlibname;
     }
     method at-runtime($libname, $wks, *@vers) {
