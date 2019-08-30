@@ -36,6 +36,7 @@ class PGresult    is export is repr('CPointer') {
     method PQnparams(--> int32) is native(LIB) { * }
     method PQntuples(--> int32) is native(LIB) { * }
     method PQresultErrorMessage(--> str) is native(LIB) { * }
+    method PQresultErrorField(int32 $field_number --> Str) is native(LIB) { * }
     method PQresultStatus(--> int32) is native(LIB) { * }
     method PQgetlength(int32, int32 --> int32) is native(LIB) { * }
     method PQfformat(int32 --> int32) is native(LIB) { * }
@@ -360,5 +361,26 @@ constant PGRES_NON_FATAL_ERROR is export = 6;
 constant PGRES_FATAL_ERROR     is export = 7;
 constant PGRES_COPY_BOTH       is export = 8;
 constant PGRES_SINGLE_TUPLE    is export = 9;
+
+enum ResultErrorField is export (
+    PG_DIAG_SEVERITY              => ord('S'),
+    PG_DIAG_SEVERITY_NONLOCALIZED => ord('V'),
+    PG_DIAG_SQLSTATE              => ord('C'),
+    PG_DIAG_MESSAGE_PRIMARY       => ord('M'),
+    PG_DIAG_MESSAGE_DETAIL        => ord('D'),
+    PG_DIAG_MESSAGE_HINT          => ord('H'),
+    PG_DIAG_STATEMENT_POSITION    => ord('P'),
+    PG_DIAG_INTERNAL_POSITION     => ord('p'),
+    PG_DIAG_INTERNAL_QUERY        => ord('q'),
+    PG_DIAG_CONTEXT               => ord('W'),
+    PG_DIAG_SCHEMA_NAME           => ord('s'),
+    PG_DIAG_TABLE_NAME            => ord('t'),
+    PG_DIAG_COLUMN_NAME           => ord('c'),
+    PG_DIAG_DATATYPE_NAME         => ord('d'),
+    PG_DIAG_CONSTRAINT_NAME       => ord('n'),
+    PG_DIAG_SOURCE_FILE           => ord('F'),
+    PG_DIAG_SOURCE_LINE           => ord('L'),
+    PG_DIAG_SOURCE_FUNCTION       => ord('R'),
+);
 
 # vim: ft=perl6 et

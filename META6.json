@@ -27,6 +27,7 @@
         "DBDish::Oracle::StatementHandle"   : "lib/DBDish/Oracle/StatementHandle.pm6",
         "DBDish::Pg"                  : "lib/DBDish/Pg.pm6",
         "DBDish::Pg::Connection"      : "lib/DBDish/Pg/Connection.pm6",
+        "DBDish::Pg::ErrorHandling"   : "lib/DBDish/Pg/ErrorHandling.pm6",
         "DBDish::Pg::Native"          : "lib/DBDish/Pg/Native.pm6",
         "DBDish::Pg::StatementHandle" : "lib/DBDish/Pg/StatementHandle.pm6",
         "DBDish::SQLite"                  : "lib/DBDish/SQLite.pm6",
