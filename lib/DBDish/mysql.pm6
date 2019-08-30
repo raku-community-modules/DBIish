@@ -5,8 +5,11 @@ need DBDish;
 unit class DBDish::mysql:auth<mberends>:ver<0.1.6> does DBDish::Driver;
 use DBDish::mysql::Native;
 need DBDish::mysql::Connection;
+use NativeLibs;
 
-#------------------ methods to be called from DBIish ------------------
+has $.library;
+has $.library-resolved = False;
+
 method connect(Str :$host = 'localhost', Int :$port = 3306, Str :$database = 'mysql', Str :$user, Str :$password, Str :$socket ) {
     my $connection;
     my $mysql_client = MYSQL.mysql_init;
@@ -26,7 +29,19 @@ method connect(Str :$host = 'localhost', Int :$port = 3306, Str :$database = 'my
             );
         }
     }
-    $errstr ??  self!conn-error(:$errstr) !!  $connection;
+    $errstr ?? self!conn-error(:$errstr) !! $connection;
+}
+
+my $wks = 'mysql_init'; # A well known symbol
+method new() {
+    with (%*ENV<DBIISH_MYSQL_LIB> andthen NativeLibs::Searcher.try-versions($_, $wks,0..99))
+    //   NativeLibs::Searcher.try-versions('mysqlclient', $wks, 16..21)
+    {
+        %_<library> = NativeLibs::Loader.load($_);
+        %_<library-resolved> = True;
+	try mysql_server_init(0, Pointer, Pointer);
+    }
+    self.bless(|%_);
 }
 
 method version() {

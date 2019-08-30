@@ -182,7 +182,11 @@ ok $dbh.do("DROP TABLE $table"), "Drop table $table"; # test 19
 #}
 ok($sth= $dbh.prepare("DROP TABLE IF EXISTS no_such_table"), "prepare drop no_such_table"); # test 20
 ok($sth.execute(), "execute drop no_such_table..."); # test 21
-is($sth.mysql_warning_count, 0, "...do not returns an error"); # test 22 (Now fixed in mysql)
+if $dbh.drv.library.name ~~ /mariadb/ {
+   is($sth.mysql_warning_count, 1, "...do returns an error"); # test 22
+} else {
+   is($sth.mysql_warning_count, 0, "...do not returns an error"); # test 22 (Now fixed in mysql)
+}
 
 #-----------------------------------------------------------------------
 # from perl5 DBD/mysql/t/30insertfetch.t

@@ -5,9 +5,8 @@ use NativeCall;
 use NativeLibs;
 use NativeHelpers::Blob;
 
-constant LIB = NativeLibs::Searcher.at-runtime(
-    Rakudo::Internals.IS-WIN ?? 'mysql' !! 'mysqlclient',
-    'mysql_init', 16..21);
+# Library preloaded when supported
+constant LIB = Rakudo::Internals.IS-WIN ?? 'mysql' !! Str;
 
 #From mysql_com.h
 enum mysql-field-type is export (
@@ -179,10 +178,10 @@ class MYSQL is export is repr('CPointer') {
     method mysql_close(MYSQL:D:                           ) is native(LIB) { * }
     method mysql_errno(MYSQL:D:                  --> int32) is native(LIB) { * }
     method mysql_error(MYSQL:D:                    --> Str) is native(LIB) { * }
-    method mysql_field_count( MYSQL:D:          --> uint32) is native(LIB) { * }
+    method mysql_field_count(MYSQL:D:           --> uint32) is native(LIB) { * }
     method mysql_init(MYSQL:U:                   --> MYSQL) is native(LIB) { * }
     method mysql_insert_id(MYSQL:D:             --> uint64) is native(LIB) { * }
-    method mysql_query( MYSQL:D: Str $sql        --> int32) is native(LIB) { * }
+    method mysql_query(MYSQL:D: Str $sql         --> int32) is native(LIB) { * }
     method mysql_real_connect(MYSQL:D:
 	Str $host, Str $user, Str $password,
 	Str $database, int32 $port, Str $socket,
@@ -197,6 +196,7 @@ class MYSQL is export is repr('CPointer') {
     method mysql_get_server_info(MYSQL:D:          --> Str) is native(LIB) { * }
 }
 
+sub mysql_server_init(int32, Pointer, Pointer --> int32) is export is native(LIB) { * }
 sub mysql_get_client_version(--> uint32) is export is native(LIB) { * }
 sub mysql_get_client_info(--> Str)       is export is native(LIB) { * }
 
