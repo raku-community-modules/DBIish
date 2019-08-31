@@ -154,7 +154,7 @@ string Pg can understand:
 
 =head3 B<pg-consume-input>
 
-Consume available input from the server, buffering the read data if there is any. 
+Consume available input from the server, buffering the read data if there is any.
 This is only necessary if you are planning on calling C<pg-notifies> without having
 requested input by other means (such as an C<execute>.)
 
@@ -239,7 +239,7 @@ Returns the file description number of the connection socket to the server.
 Supports basic CRUD operations and prepared statements with placeholders
 
     my $dbh = DBIish.connect('SQLite', :database<thefile>);
-    
+
 The C<:database> parameter can be an absolute file path as well (or even an
 C<IO::Path> object):
 
@@ -279,6 +279,30 @@ Supports basic CRUD operations and prepared statements with placeholders
 
 Since MariaDB uses the same wire protocol as MySQL, the `mysql` backend
 also works for MariaDB.
+
+=head3 Required Client-C libraries
+
+DBDish::mysql by default searchs for 'mysql' (libmysql.ddl) on Windows and
+'mysqlclient' (libmysqlclient.so.xx where xx in 16..21) on POSIX systems.
+
+Remember that Windows uses C<PATH> to locate the library. On POSIX,
+unversionized C<*.so> files installed by "dev" packages aren't needed nor used,
+you need the run-time versionized library.
+
+On POSIX you can use the C<$DBIISH_MYSQL_LIB> environment variable to request another
+client library to be searched and loaded.
+
+Example using the unadorned name:
+
+    DBIISH_MYSQL_LIB=mariadb perl6 t/25-mysql-common.t
+
+Using the absolute path in uninstalled DBIish:
+
+    DBIISH_MYSQL_LIB=/lib64/libmariadb.so.3 perl6 -t lib t/25-mysql-common.t
+
+With MariaBD-Embedded:
+
+    DBIISH_MYSQL_LIB=mariadbd perl6 -I lib t/01-basic.t
 
 =head2 Oracle
 
