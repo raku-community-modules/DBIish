@@ -4,7 +4,7 @@ use v6;
 use DBIish;
 use Test;
 
-plan 7;
+plan 8;
 my %con-parms;
 # If env var set, no parameter needed.
 %con-parms<database> = 'dbdishtest' unless %*ENV<PGDATABASE>;
@@ -47,6 +47,8 @@ $sth = $dbh.do(q:to/STATEMENT/);
       '{511.123, 622.345,1}'
     );
 STATEMENT
+
+ok $sth == 1, 'returns the insert count';
 
 $sth = $dbh.prepare(q:to/STATEMENT/);
     SELECT name, pay_by_quarter, schedule, salary_by_month

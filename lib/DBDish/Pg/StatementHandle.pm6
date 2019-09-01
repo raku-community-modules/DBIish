@@ -73,6 +73,17 @@ method execute(*@params) {
                                     Null, Null, 0)
         !! $!pg_conn.PQexec($!statement);
 
+    if $!statement ~~ /:i insert.*returning/ {
+      my @returns;
+
+      my $count = 0;
+      while $count < $!result.PQntuples {
+        @returns.push: $!result.PQgetvalue($count++, 0);
+      }
+
+      return @returns;
+    }
+
     self!set-err(PGRES_FATAL_ERROR, $!pg_conn.PQerrorMessage).fail unless $!result;
 
     $!current_row = 0;
