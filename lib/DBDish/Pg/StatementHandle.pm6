@@ -117,7 +117,7 @@ my grammar PgArrayGrammar {
     rule array       { '{' (<element> ','?)* '}' }
     rule TOP         { ^ <array> $ }
     rule element     { <array> | <float> | <integer> | <string> }
-    token float      { (\d+ '.' \d+) }
+    token float      { (\d+ '.' \d+ | \d '.' \d+ 'e+' \d+) }
     token integer    { (\d+) }
     rule string      { '"' $<value>=( [\w|\s]+ ) '"' | $<value>=( \w+ ) }
 };
