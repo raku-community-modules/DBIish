@@ -42,9 +42,9 @@ $sth = $dbh.do(q:to/STATEMENT/);
     INSERT INTO sal_emp
     VALUES (
       'Bill',
-      '{10000, 10000, 10000, 10000}',
-      '{{"meeting", "lunch"}, {"training day", "presentation"}}',
-      '{511.123, 622.345,1}'
+      ARRAY[10000, 10000, 10000, 1000],
+      ARRAY[['meeting', 'lunch'], ['training day', 'presentation']],
+      ARRAY[511.123, 622.345, 1]
     );
 STATEMENT
 
