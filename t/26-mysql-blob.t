@@ -22,15 +22,15 @@ without $dbh {
 }
 
 ok $dbh,    'Connected';
-lives-ok { $dbh.do('DROP TABLE IF EXISTS test') }, 'Clean';
+lives-ok { $dbh.do('DROP TABLE IF EXISTS test_blob') }, 'Clean';
 lives-ok {
     $dbh.do(q|
-    CREATE TABLE test (
+    CREATE TABLE test_blob (
 	id INT(3) NOT NULL DEFAULT 0, 
 	name BLOB)|)
 }, 'Table created';
 my $blob = Buf.new(^256);
-my $query = 'INSERT INTO test VALUES(?, ?)';
+my $query = 'INSERT INTO test_blob VALUES(?, ?)';
 
 with $dbh.prepare($query) {
     LEAVE { .dispose }
@@ -39,7 +39,7 @@ with $dbh.prepare($query) {
     ok .execute(2, Buf),		'Executed without buf';
 } else { .fail }
 
-with $dbh.prepare('SELECT name FROM test WHERE id = ?') {
+with $dbh.prepare('SELECT name FROM test_blob WHERE id = ?') {
     LEAVE { .dispose }
     ok $_,				'SELECT prepared';
     ok .execute(1),			'Executed for 1';
@@ -57,5 +57,5 @@ with $dbh.prepare('SELECT name FROM test WHERE id = ?') {
 } else { .fail }
 
 lives-ok {
-    $dbh.do('DROP TABLE IF EXISTS test');
+    $dbh.do('DROP TABLE IF EXISTS test_blob');
 },					'All clean';

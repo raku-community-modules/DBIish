@@ -28,20 +28,20 @@ ok $dbh,    'Connected';
 
 # Be less verbose;
 $dbh.do('SET client_min_messages TO WARNING');
-lives-ok { $dbh.do('DROP TABLE IF EXISTS test') }, 'Clean';
+lives-ok { $dbh.do('DROP TABLE IF EXISTS test_types') }, 'Clean';
 lives-ok {
     $dbh.do(q|
-    CREATE TABLE test (
+    CREATE TABLE test_types (
 	col1 text
     )|)
 }, 'Table created';
 
-my $sth = $dbh.prepare('INSERT INTO test (col1) VALUES(?)');
+my $sth = $dbh.prepare('INSERT INTO test_types (col1) VALUES(?)');
 lives-ok {
     $sth.execute('test');
 }, 'Insert Perl6 values';
 $sth.dispose;
-$sth = $dbh.prepare('SELECT col1 FROM test');
+$sth = $dbh.prepare('SELECT col1 FROM test_types');
 my @coltype = $sth.column-types;
 ok @coltype eqv [Str],	    'Column-types';
 
@@ -53,4 +53,4 @@ $dbh.Converter{Str} = sub ($) { 'changed' };
 is $sth.execute, 1,			    '1 row';
 ($col1) = $sth.row;
 is $col1, 'changed',		    'Changed';
-$dbh.do('DROP TABLE IF EXISTS test');
+$dbh.do('DROP TABLE IF EXISTS test_types');

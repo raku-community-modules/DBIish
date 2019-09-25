@@ -35,21 +35,21 @@ lives-ok {
 }, 'Type created';
 
 
-lives-ok { $dbh.do('DROP TABLE IF EXISTS test') }, 'Clean';
+lives-ok { $dbh.do('DROP TABLE IF EXISTS test_enum') }, 'Clean';
 lives-ok {
     $dbh.do(q|
-    CREATE TABLE test (
+    CREATE TABLE test_enum (
 	id INT NOT NULL DEFAULT 0, 
 	yeah yesno)|)
 }, 'Table created';
 
-my $query = 'INSERT INTO test VALUES(?, ?)';
+my $query = 'INSERT INTO test_enum VALUES(?, ?)';
 ok my $sth = $dbh.prepare($query), "Prepared '$query'";
 ok $sth.execute(1, 'Yes'),		 'Executed with Yes';
 ok $sth.execute(2, 'No'),		 'Executed with No';
 ok $sth.execute(3, Nil),		 'Executed with null';
 
-ok $sth = $dbh.prepare('SELECT yeah FROM test WHERE id = ?'), 'SELECT prepared';
+ok $sth = $dbh.prepare('SELECT yeah FROM test_enum WHERE id = ?'), 'SELECT prepared';
 ok $sth.execute(1), 'Executed for 1';
 ok (my @res = $sth.row), 'Get a row';
 
@@ -89,7 +89,7 @@ for @enum -> @option {
     };
     ok ($dbh.Converter{YesNo} = $yesno),   'Install the YesNo converter';
 
-    ok $sth = $dbh.prepare('SELECT yeah FROM test WHERE id = ?'), 'SELECT prepared';
+    ok $sth = $dbh.prepare('SELECT yeah FROM test_enum WHERE id = ?'), 'SELECT prepared';
     ok $sth.execute(1), 'Executed for 1';
     ok (@res = $sth.row), 'Get a row';
     is @res.elems,  1,	 'One field';
@@ -103,4 +103,4 @@ for @enum -> @option {
     is @res.elems,  1,	 'One field';
 }
 
-$dbh.do('DROP TABLE IF EXISTS test');
+$dbh.do('DROP TABLE IF EXISTS test_enum');

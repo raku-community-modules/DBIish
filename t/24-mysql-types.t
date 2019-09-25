@@ -33,24 +33,24 @@ without $dbh {
 }
 
 ok $dbh,    'Connected';
-lives-ok { $dbh.do('DROP TABLE IF EXISTS test') }, 'Clean';
+lives-ok { $dbh.do('DROP TABLE IF EXISTS test_types') }, 'Clean';
 my $hasjson = $dbh.drv.version after v5.7.8;
 my $field = $hasjson ?? 'JSON' !! 'varchar';
 diag "want test '$field'";
 lives-ok {
     $dbh.do(qq|
-    CREATE TABLE test (
+    CREATE TABLE test_types (
 	col1 $field
     )|)
 }, 'Table created';
 
-my $sth = $dbh.prepare('INSERT INTO test (col1) VALUES(?)');
+my $sth = $dbh.prepare('INSERT INTO test_types (col1) VALUES(?)');
 lives-ok {
     $sth.execute('{"key1": "value1"}');
 }, 'Insert Perl6 values';
 $sth.dispose;
 
-$sth = $dbh.prepare('SELECT col1 FROM test');
+$sth = $dbh.prepare('SELECT col1 FROM test_types');
 my @coltype = $sth.column-types;
 ok @coltype eqv [Str],			    'Column-types';
 
@@ -83,7 +83,7 @@ if $hasjson {
     $dbh.dynamic-types{245} = JSON;
     is $dbh.dynamic-types{245}, JSON,	    'Changed';
 
-    $sth = $dbh.prepare('SELECT col1 FROM test');
+    $sth = $dbh.prepare('SELECT col1 FROM test_types');
     ok $sth.execute,			    'Executed';
     isa-ok $sth.column-types[0], JSON;
     isa-ok $sth.row[0], Hash,	            'Converted';
@@ -91,4 +91,4 @@ if $hasjson {
     skip-rest "No suport for JSON type";
 }
 
-$dbh.do('DROP TABLE IF EXISTS test');
+$dbh.do('DROP TABLE IF EXISTS test_types');
