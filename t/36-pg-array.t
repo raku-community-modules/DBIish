@@ -4,7 +4,7 @@ use v6;
 use DBIish;
 use Test;
 
-plan 7;
+plan 13;
 my %con-parms;
 # If env var set, no parameter needed.
 %con-parms<database> = 'dbdishtest' unless %*ENV<PGDATABASE>;
@@ -42,9 +42,9 @@ $sth = $dbh.do(q:to/STATEMENT/);
     INSERT INTO sal_emp
     VALUES (
       'Bill',
-      '{10000, 10000, 10000, 10000}',
-      '{{"meeting", "lunch"}, {"training day", "presentation"}}',
-      '{511.123, 622.345,1}'
+      ARRAY[10000, 10000, 10000, 1000],
+      ARRAY[['meeting', 'lunch'], ['training day', 'presentation']],
+      ARRAY[511.123, 622.345, 1]
     );
 STATEMENT
 
@@ -54,8 +54,7 @@ $sth = $dbh.prepare(q:to/STATEMENT/);
 STATEMENT
 
 $sth.execute;
-
-my %h = $sth.row(:hash);;
+my %h = $sth.row(:hash);
 
 class SalEmp {
   has $.name;
@@ -77,6 +76,28 @@ isa-ok $obj.salary_by_month,  Array[Num], 'Array[Num]';
 isa-ok $obj.schedule, Array, 'schedule is array';
 is $obj.schedule.elems, 2,    'schedule with 2';
 isa-ok $obj.schedule[0], Array[Str];
+
+# Big integer
+{
+    $sth = $dbh.prepare(q{select ARRAY[12e12]::int8[]});
+    $sth.execute();
+
+    my ($col1) = $sth.row;
+    is $col1.elems, 1,    '1 element';
+    is $col1[0], '12000000000000', '12e12';
+    is $col1[0].^name, 'Int', 'Is Integer';
+}
+
+# Big Floats may be returned in scientific notation from the DB
+{
+    $sth = $dbh.prepare(q{select ARRAY[12e32]::float[]});
+    $sth.execute();
+
+    my ($col1) = $sth.row;
+    is $col1.elems, 1,    '1 element';
+    is $col1[0], '1.2e+33', 'Big Float Value';
+    is $col1[0].^name, 'Num', 'Is Number';
+}
 
 # Cleanup
 $dbh.dispose;
