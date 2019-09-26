@@ -111,9 +111,9 @@ or C<hash-of-array>
 
 Example:
 
-    my @data = $sth.allrows(); # [[1, 2, 3], [4, 5, 6]]
-    my @data = $sth.allrows(:array-of-hash); # [ ( a => 1, b => 2), ( a => 3, b => 4) ]
-    my %data = $sth.allrows(:hash-of-array); # a => [1, 3], b => [2, 4]
+    my @data = $sth.allrows(); # [[1, 'val1'], [3, 'val2']]
+    my @data = $sth.allrows(:array-of-hash); # [ ( a => 1, b => 'val1'), ( a => 3, b => 'val2') ]
+    my %data = $sth.allrows(:hash-of-array); # a => [1, 3], b => ['val1', 'val2']
 
 =head1 INSTALLATION
 
