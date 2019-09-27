@@ -116,10 +116,14 @@ method _row() {
 my grammar PgArrayGrammar {
     rule array       { '{' (<element> ','?)* '}' }
     rule TOP         { ^ <array> $ }
-    rule element     { <array> | <float> | <integer> | <string> }
+    rule element     { <array> | <float> | <integer> | <null> | <string> }
     token float      { (\d+ '.' \d+ | \d '.' \d+ 'e+' \d+) }
     token integer    { (\d+) }
-    rule string      { '"' $<value>=( [\w|\s]+ ) '"' | $<value>=( \w+ ) }
+
+    token null       { 'NULL' }
+    # Quoted strings may contain any byte sequence except a null. Characters like " and \
+    # are escaped by a \ and must be unescaped (\" => ", \\ => \)
+    rule string      { '"' $<value>=( [<-[\\"]>||'\"'||'\\\\']* ) '"' || $<value>=( \w+ ) }
 };
 
 sub _to-type($value, Mu:U $type) {
@@ -143,8 +147,13 @@ sub _to-array(Match $match, Mu:U $type) {
             $arr.push: $type($element.values[0]<float>);
         } elsif $element.values[0]<integer>.defined { # Integer
             $arr.push: $type($element.values[0]<integer>);
+        } elsif $element.values[0]<null>.defined { # Null string
+            $arr.push: Nil;
         } else { # Must be a String
-            $arr.push: ~$element.values[0]<string><value>;
+            my $val = ~$element.values[0]<string><value>;
+            $val ~~ s|'\\"'|"|;
+            $val ~~ s|'\\\\'|\\|;
+            $arr.push: $val;
         }
     }
     $arr;
