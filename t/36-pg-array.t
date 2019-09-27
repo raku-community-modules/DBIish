@@ -4,7 +4,7 @@ use v6;
 use DBIish;
 use Test;
 
-plan 13;
+plan 27;
 my %con-parms;
 # If env var set, no parameter needed.
 %con-parms<database> = 'dbdishtest' unless %*ENV<PGDATABASE>;
@@ -97,6 +97,44 @@ isa-ok $obj.schedule[0], Array[Str];
     is $col1.elems, 1,    '1 element';
     is $col1[0], '1.2e+33', 'Big Float Value';
     is $col1[0].^name, 'Num', 'Is Number';
+}
+
+# Text can be anything except a null. With different encodings, every byte combination is possible.
+{
+    $sth = $dbh.prepare(q:to/STATEMENT/);
+      SELECT ARRAY[(SELECT array_to_string(array_agg(chr(pos)), '')
+                      FROM generate_series(1, 256) AS g(pos)),
+
+                  $$\\"$$,
+                  $$"\\$$,
+                  NULL, 'NULL', ''
+                  ];
+STATEMENT
+    $sth.execute();
+
+    my ($col1) = $sth.row;
+    is $col1.elems, 6,    '6 elements';
+    is $col1[0].encode.elems, 385, 'String is expected length';
+    is $col1[1], q{\\"}, 'Handle slash/quote correctly';
+    is $col1[2], q{"\\}, 'Handle quote/slash correctly';
+    is $col1[3].defined, False, 'undefined string';
+    is $col1[4].defined, True, 'NULL value in string is defined';
+    is $col1[4], q{NULL}, 'NULL value in string';
+    is $col1[5], q{}, 'Empty string';
+}
+
+# Roundtrip corner-case values
+{
+    $sth = $dbh.prepare(q{SELECT ARRAY[?, ?, ?, ?, ?]});
+    $sth.execute(q{"}, Nil, q{}, q{NULL}, q{\\});
+
+    my ($col1) = $sth.row;
+    is $col1.elems, 5,    '5 elements';
+    is $col1[0], q{"}, 'Quote String value';
+    is $col1[1].defined, False, 'undefined string';
+    is $col1[2], q{}, 'Empty String';
+    is $col1[3], q{NULL}, 'NULL value in string';
+    is $col1[4], q{\\}, 'Backslash string value';
 }
 
 # Cleanup
