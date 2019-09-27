@@ -24,7 +24,7 @@ without $dbh {
 ok $dbh,    'Connected';
 my $dropper = q|
     BEGIN
-       EXECUTE IMMEDIATE 'DROP TABLE test';
+       EXECUTE IMMEDIATE 'DROP TABLE test_datetime';
     EXCEPTION
        WHEN OTHERS THEN
           IF SQLCODE != -942 THEN
@@ -35,14 +35,14 @@ my $dropper = q|
 lives-ok { $dbh.do($dropper) }, 'Clean';
 lives-ok {
     $dbh.do(qq|
-    CREATE TABLE test (
+    CREATE TABLE test_datetime (
 	adate DATE,
 	atimestamp TIMESTAMP(6) WITH TIME ZONE
     )|);
 }, 'Table created';
 
 my $sth = $dbh.prepare(
-    q|INSERT INTO test (adate, atimestamp) VALUES(?, ?)|);
+    q|INSERT INTO test_datetime (adate, atimestamp) VALUES(?, ?)|);
 my $now = DateTime.now;
 
 lives-ok {
@@ -53,7 +53,7 @@ lives-ok {
 },                                           'Can insert Perl6 values';
 $sth.dispose;
 
-$sth = $dbh.prepare('SELECT adate, atimestamp FROM test');
+$sth = $dbh.prepare('SELECT adate, atimestamp FROM test_datetime');
 my @coltype = $sth.column-types;
 ok @coltype eqv [Date, DateTime],	    'Column-types match';
 

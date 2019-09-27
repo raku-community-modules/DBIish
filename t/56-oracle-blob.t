@@ -24,7 +24,7 @@ without $dbh {
 
 my $dropper = q|
     BEGIN
-       EXECUTE IMMEDIATE 'DROP TABLE test';
+       EXECUTE IMMEDIATE 'DROP TABLE test_blob';
     EXCEPTION
        WHEN OTHERS THEN
 	  IF SQLCODE != -942 THEN
@@ -35,14 +35,14 @@ my $dropper = q|
 ok $dbh,    'Connected';
 lives-ok { $dbh.do($dropper) }, 'Clean';
 lives-ok {
-    $dbh.do(q|CREATE TABLE test (id NUMBER, name RAW(300) )|)
+    $dbh.do(q|CREATE TABLE test_blob (id NUMBER, name RAW(300) )|)
 }, 'Table created';
 my $blob = Buf.new(^256);
-my $query = 'INSERT INTO test VALUES(?, ?)';
+my $query = 'INSERT INTO test_blob VALUES(?, ?)';
 ok (my $sth = $dbh.prepare($query)),	 "Prepared '$query'";
 ok $sth.execute(1, $blob),		 'Executed with buf';
 ok $sth.execute(2, Buf),		 'Executed without buf';
-ok $sth = $dbh.prepare('SELECT name FROM test WHERE id = ?'), 'SELECT prepared';
+ok $sth = $dbh.prepare('SELECT name FROM test_blob WHERE id = ?'), 'SELECT prepared';
 ok $sth.execute(1), 'Executed for 1';
 ok (my @res = $sth.row), 'Get a row';
 is @res.elems,  1,	 'One field';
