@@ -100,9 +100,6 @@ class PGconn is export is repr('CPointer') {
 
     method PQconsumeInput( --> int32) is native(LIB) { * }
 
-    method pg-consume-input(--> Bool) {
-        ?self.PQconsumeInput();
-    }
     method PQnotifies(--> Pointer) is native(LIB) { * }
     method pg-notifies(--> pg-notify) {
         class PGnotify is repr('CStruct') {

@@ -8,7 +8,7 @@ need DBDish::TestMock;
 use DBIish::Common;
 
 has PGconn $!pg_conn handles <
-    pg-notifies pg-consume-input pg-socket pg-parameter-status
+    pg-notifies pg-socket pg-parameter-status
     pg-db pg-user pg-pass pg-host
     pg-port pg-options quote>;
 has $.AutoCommit is rw = True;
@@ -130,6 +130,14 @@ method ping {
     } else {
         False;
     }
+}
+
+method pg-consume-input(--> Bool) {
+    my $status = $!pg_conn.PQconsumeInput();
+    if (0 == $status) {
+        self!set-err(PGRES_FATAL_ERROR, $!pg_conn.PQerrorMessage);
+    }
+    return ?$status;
 }
 
 method _disconnect() {
