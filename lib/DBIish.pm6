@@ -32,6 +32,12 @@ unit class DBIish:auth<mberends>:ver<0.5.9>;
         # I catch here to avoid the drivers the need of this logic.
         CATCH {
             when $_.message ~~ m/
+            ^ "Cannot locate symbol '" <-[ ' ]>* "' in native library "
+                    ( "'" <-[ ' ]> * "'" )
+                    / {
+                X::DBIish::LibraryMissing.new(:library($/[0]), :$driver).fail;
+            }
+            when $_.message ~~ m/
             ^ "Cannot locate native library "
             ( "'" <-[ ' ]> * "'" )
             / {
