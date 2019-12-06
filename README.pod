@@ -201,7 +201,7 @@ and have the following additional attributes as provided by PostgreSQL
   * context ➡ PG_DIAG_CONTEXT
   * type ➡ PG_DIAG_SEVERITY_NONLOCALIZED
   * type-localized ➡ PG_DIAG_SEVERITY
-  * state ➡ PG_DIAG_SQLSTATE
+  * sqlstate ➡ PG_DIAG_SQLSTATE
   * statement-position ➡ PG_DIAG_STATEMENT_POSITION
   * internal-position ➡ PG_DIAG_INTERNAL_POSITION
   * internal-query ➡ PG_DIAG_INTERNAL_QUERY
