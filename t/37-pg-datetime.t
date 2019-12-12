@@ -27,6 +27,7 @@ without $dbh {
 ok $dbh,    'Connected';
 # Be less verbose;
 $dbh.do('SET client_min_messages TO WARNING');
+$dbh.do('SET timezone TO UTC');
 lives-ok { $dbh.do('DROP TABLE IF EXISTS test_datetime') }, 'Clean';
 lives-ok {
     $dbh.do(q|
@@ -39,7 +40,7 @@ lives-ok {
 }, 'Table created';
 
 my $sth = $dbh.prepare('INSERT INTO test_datetime (adate, atimestamp) VALUES(?, ?)');
-my $now = DateTime.now;
+my $now = DateTime.now( timezone => 0 );
 lives-ok {
     $sth.execute($now, $now);
 }, 'Insert Perl6 values';
