@@ -26,14 +26,20 @@ my grammar PgTokenizer {
         ]*
         \'
     }
+    token dollar_placeholder {\$<num>}
+    token dollar_quote {
+        ( \$\$ | \$<alpha><alnum>*\$ ) .*? $0
+    }
     token placeholder { '?' }
-    token normal { <-[?"']>+ }
+    token normal { <-[?"'$]>+ }
 
     token TOP {
         ^
         (
             | <normal>
             | <placeholder>
+            | <dollar_placeholder>
+            | <dollar_quote>
             | <single_quote>
             | <double_quote>
         )*
@@ -44,6 +50,8 @@ my grammar PgTokenizer {
 my class PgTokenizer::Actions {
     has $.counter = 0;
     method single_quote($/) { make $/.Str }
+    method dollar_placeholder($/) { make $/.Str }
+    method dollar_quote($/) { make $/.Str }
     method double_quote($/) { make $/.Str }
     method placeholder($/)  { make '$' ~ ++$!counter }
     method normal($/)       { make $/.Str }
