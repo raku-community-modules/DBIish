@@ -2,7 +2,7 @@ v6;
 use Test;
 use DBIish;
 
-plan 17;
+plan 19;
 
 my %con-parms;
 
@@ -36,6 +36,16 @@ ok $dbh.pg-socket, "There's a socket";
 is $dbh.quote('foo'),	    "'foo'",    'Quote literal';
 is $dbh.quote('foo'):as-id, '"foo"',    'Quote Id';
 
+# Dollar Quoting. Test our tokenizer
+my $sth = $dbh.prepare(q:to/STATEMENT/);
+    SELECT $$some string value$$ AS col1, $more$another string$$ "value 'here$more$ AS col2;
+STATEMENT
+$sth.execute();
+my $row = $sth.row(:hash);
+is $row<col1>, 'some string value', 'Basic dollar quoting';
+is $row<col2>, q{another string$$ "value 'here}, 'Named dollar quoting';
+
+# Listen/Notify
 lives-ok { $dbh.do('LISTEN test') }, 'Listen to test';
 my $note = $dbh.pg-notifies;
 isa-ok $note, Any, 'No notification';
