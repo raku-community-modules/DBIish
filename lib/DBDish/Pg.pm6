@@ -65,9 +65,6 @@ our sub pg-replace-placeholder(Str $query) is export {
         and $/.ast;
 }
 
-sub quote-and-escape($s) {
-    "'" ~ $s.trans([q{'}, q{\\]}] => [q{\\\'}, q{\\\\}]) ~ "'"
-}
 
 #------------------ methods to be called from DBIish ------------------
 
