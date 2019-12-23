@@ -21,6 +21,7 @@ unit class DBIish:auth<mberends>:ver<0.5.9>;
     }
 
     my %installed;
+    my Lock $installed-lock = Lock.new;
 
     my $err-handler = DBDish::ErrorHandling.new(:parent(Nil));
     method err { $err-handler.err };
@@ -50,30 +51,33 @@ unit class DBIish:auth<mberends>:ver<0.5.9>;
         my $d = self.install-driver( $driver, |%_ );
         $d.connect(|%_);
     }
+
     method install-driver( $drivername ) {
-        my $d = %installed{$drivername} //= do {
-            CATCH {
-                when X::CompUnit::UnsatisfiedDependency {
-                    X::DBIish::DriverNotFound.new(:bogus($drivername)).fail;
+        $installed-lock.protect: {
+            my $d = %installed{$drivername} //= do {
+                CATCH {
+                    when X::CompUnit::UnsatisfiedDependency {
+                        X::DBIish::DriverNotFound.new(:bogus($drivername)).fail;
+                    }
+                    default {
+                        .throw;
+                    }
                 }
-                default {
-                    .throw;
+                my $module = "DBDish::$drivername";
+                my \M = (require ::($module));
+                # The DBDish namespace isn't formally reserved for DBDish's drivers,
+                # and is a good place for related common code.
+                # An assurance at driver load time is in place,
+                unless M ~~ DBDish::Driver {
+                    # This warn will be converted in a die after the Role is settled,
+                    # it's an advice for authors for externally developed drivers
+                    warn "$module doesn't do DBDish::Driver role!";
                 }
+                M.new(:parent($err-handler), |%($*DBI-DEFS<ConnDefaults>), |%_);
             }
-            my $module = "DBDish::$drivername";
-            my \M = (require ::($module));
-            # The DBDish namespace isn't formally reserved for DBDish's drivers,
-            # and is a good place for related common code.
-            # An assurance at driver load time is in place,
-            unless M ~~ DBDish::Driver {
-                # This warn will be converted in a die after the Role is settled,
-                # it's an advice for authors for externally developed drivers
-                warn "$module doesn't do DBDish::Driver role!";
-            }
-            M.new(:parent($err-handler), |%($*DBI-DEFS<ConnDefaults>), |%_);
+            without $d { .throw; };
+            $d;
         }
-        without $d { .throw; };
-        $d;
     }
     method install_driver($drivername)
       is hidden-from-backtrace
@@ -83,7 +87,9 @@ unit class DBIish:auth<mberends>:ver<0.5.9>;
         self.install-driver($drivername)
     }
     method installed-drivers {
-        %installed.pairs.cache;
+        $installed-lock.protect: {
+            %installed.pairs.cache;
+        }
     }
 
 
