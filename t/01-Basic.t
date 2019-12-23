@@ -18,7 +18,7 @@ for <connect install-driver> {
 
 given DBIish.^ver {
     ok $_, 'DBIish Has version';
-    ok $_ gt v0.0.0, "Greter than v.0.0.0, (v$_)";
+    ok $_ gt v0.0.0, "Greater than v.0.0.0, (v$_)";
 }
 
 for drvs {
