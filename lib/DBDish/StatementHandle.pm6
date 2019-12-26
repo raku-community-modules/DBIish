@@ -19,6 +19,7 @@ my role IntTrue { method Bool { self.defined } };
 
 has Int $.Executed = 0;
 has Bool $.Finished = True;
+has Bool $!disposed = False;
 has Int $!affected_rows;
 has @!column-name;
 has @!column-type;
@@ -59,6 +60,7 @@ method new(*%args) {
 method dispose() {
     self.finish unless $!Finished;
     self._free;
+    $!disposed = True;
     with $.parent.unregister-statement-handle(self) {
         $.parent.last-rows = self.rows;
         True;
@@ -78,6 +80,10 @@ method rows {
 
 method row(:$hash) {
     self!ftr;
+    self!set-err( -1,
+            "row() called after Statement Handle disposed."
+            ).fail if ($!disposed);
+
     if my \r = self._row {
         $hash ?? (@!column-name Z=> @(r)).hash !! r.Array;
     } else {
@@ -95,6 +101,10 @@ method column-types {
 
 multi method allrows(:$array-of-hash!) {
     gather {
+        self!set-err( -1,
+                "Lazy data used after Statement Handle disposed. Retain statement handle or use allrows(:array-of-hash).eager"
+                ).fail if ($!disposed);
+
         while self.row(:hash) -> %r {
             take %r;
         }
@@ -113,6 +123,10 @@ multi method allrows(:$hash-of-array!) {
 
 multi method allrows() {
     gather {
+        self!set-err( -1,
+                "Lazy data used after Statement Handle disposed. Retain statement handle or use allrows().eager"
+                ).fail if ($!disposed);
+
         while self.row -> \r {
             take r;
         }
