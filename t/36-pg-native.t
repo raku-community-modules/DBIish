@@ -38,9 +38,9 @@ is $dbh.quote('foo'):as-id, '"foo"',    'Quote Id';
 
 # Dollar Quoting. Test our tokenizer
 my $sth = $dbh.prepare(q:to/STATEMENT/);
-    SELECT $$some string value$$ AS col1, $more$another string$$ "value 'here$more$ AS col2;
+    SELECT $$some string value$$ AS col1, $more$another string$$ "value 'here$more$ AS col2, $1::text AS col3;
 STATEMENT
-$sth.execute();
+$sth.execute('value');
 my $row = $sth.row(:hash);
 is $row<col1>, 'some string value', 'Basic dollar quoting';
 is $row<col2>, q{another string$$ "value 'here}, 'Named dollar quoting';

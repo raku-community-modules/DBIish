@@ -26,7 +26,7 @@ my grammar PgTokenizer {
         ]*
         \'
     }
-    token dollar_placeholder {\$<num>}
+    token dollar_placeholder {\$<digit>+}
     token dollar_quote {
         ( \$\$ | \$<alpha><alnum>*\$ ) .*? $0
     }
