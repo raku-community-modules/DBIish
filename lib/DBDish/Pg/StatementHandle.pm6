@@ -6,8 +6,8 @@ use DBDish::Pg::Native;
 use DBDish::Pg::ErrorHandling;
 
 has PGconn $!pg_conn;
-has Str $!statement_name;
-has $!statement;
+has Str $.statement-name;
+has $.statement;
 has @!param_type;
 has $!result;
 has $!row_count;
@@ -22,6 +22,8 @@ method !handle-errors {
             :code($!result.PQresultStatus),
             :native-message($!result.PQresultErrorField(PG_DIAG_MESSAGE_PRIMARY)),
             :driver-name<DBDish::Pg>,
+            :$!pg_conn,
+            statement-handle => self,
 
             :result($!result),
         );
@@ -44,10 +46,10 @@ submethod !get-meta($result) {
 }
 
 submethod BUILD(:$!parent!, :$!pg_conn!, # Per protocol
-    :$!statement, :$!statement_name = ''
+    :$!statement, :$!statement-name = ''
 ) {
-    if $!statement_name { # Prepared
-        with $!pg_conn.PQdescribePrepared($!statement_name) -> $info {
+    if $!statement-name { # Prepared
+        with $!pg_conn.PQdescribePrepared($!statement-name) -> $info {
             @!param_type.push($!parent.dynamic-types{$info.PQparamtype($_)}) for ^$info.PQnparams;
             self!get-meta($info);
             $info.PQclear;
@@ -68,8 +70,8 @@ method execute(*@params) {
         } else { @param_values[$k] = Str }
     }
 
-    $!result = $!statement_name
-        ?? $!pg_conn.PQexecPrepared($!statement_name, @params.elems, @param_values,
+    $!result = $!statement-name
+        ?? $!pg_conn.PQexecPrepared($!statement-name, @params.elems, @param_values,
                                     Null, Null, 0)
         !! $!pg_conn.PQexec($!statement);
 
