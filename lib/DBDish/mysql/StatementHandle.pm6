@@ -9,7 +9,7 @@ use NativeHelpers::CStruct;
 has MYSQL $!mysql_client;
 has MYSQL_STMT $!stmt;
 has int $!param-count;
-has $!statement;
+has $.statement;
 has MYSQL_RES $!result_set;
 has $!field_count;
 has Bool $.Prefetch;
