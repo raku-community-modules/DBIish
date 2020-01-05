@@ -23,9 +23,9 @@ submethod BUILD(:$!pg_conn!, :$!parent!, :$!AutoCommit) {
        :Buf(&str-to-blob);
 }
 
+has $!statement-posfix = 0;
 method prepare(Str $statement, *%args) {
-    state $statement_postfix = 0;
-    my $statement-name = join '_', 'pg', $*PID, $statement_postfix++;
+    my $statement-name = join '_', 'pg', $*PID, $!statement-posfix++;
     my $munged = DBDish::Pg::pg-replace-placeholder($statement);
     die "Can't prepare this: '$statement'!" unless $munged;
     my $result = $!pg_conn.PQprepare($statement-name, $munged, 0, OidArray);
