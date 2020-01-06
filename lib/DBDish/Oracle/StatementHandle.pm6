@@ -8,7 +8,7 @@ use DBDish::Oracle::Native;
 has OCISvcCtx $!svch;
 has OCIError  $!errh;
 has OCIStmt   $!stmth;
-has $!statement;
+has $.statement;
 has $!stmttype;
 # For input parameters
 has $!param-count;
