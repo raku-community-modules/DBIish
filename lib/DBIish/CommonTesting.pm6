@@ -42,7 +42,7 @@ method run-tests {
             when X::DBIish::LibraryMissing | X::DBDish::ConnectionFailed {
                 diag "$_\nCan't continue.";
             }
-            default { .throw; }
+            default { .rethrow; }
         }
     }
     without $dbh {

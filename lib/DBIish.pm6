@@ -45,7 +45,7 @@ unit class DBIish:auth<mberends>:ver<0.5.9>;
                 X::DBIish::LibraryMissing.new(:library($/[0]), :$driver).fail;
             }
             default {
-                .throw;
+                .rethrow;
             };
         }
         my $d = self.install-driver( $driver, |%_ );
@@ -60,7 +60,7 @@ unit class DBIish:auth<mberends>:ver<0.5.9>;
                         X::DBIish::DriverNotFound.new(:bogus($drivername)).fail;
                     }
                     default {
-                        .throw;
+                        .rethrow;
                     }
                 }
                 my $module = "DBDish::$drivername";
