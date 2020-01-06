@@ -202,9 +202,15 @@ and have the following additional attributes as provided by PostgreSQL
   * type ➡ PG_DIAG_SEVERITY_NONLOCALIZED
   * type-localized ➡ PG_DIAG_SEVERITY
   * sqlstate ➡ PG_DIAG_SQLSTATE
+  * statement ➡ Statement provided to prepare() or do()
+  * statement-name ➡ Statement Name provided to prepare() or created internally
   * statement-position ➡ PG_DIAG_STATEMENT_POSITION
   * internal-position ➡ PG_DIAG_INTERNAL_POSITION
   * internal-query ➡ PG_DIAG_INTERNAL_QUERY
+  * dbname ➡ Database Name from libpq pg-db()
+  * host ➡ Host from libpq pg-host()
+  * user ➡ User from libpq pg-user()
+  * port ➡ Port from libpq pg-port()
   * schema ➡ PG_DIAG_SCHEMA_NAME
   * table ➡ PG_DIAG_TABLE_NAME
   * column ➡ PG_DIAG_COLUMN_NAME

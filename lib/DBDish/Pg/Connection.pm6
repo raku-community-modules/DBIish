@@ -25,10 +25,10 @@ submethod BUILD(:$!pg_conn!, :$!parent!, :$!AutoCommit) {
 
 method prepare(Str $statement, *%args) {
     state $statement_postfix = 0;
-    my $statement_name = join '_', 'pg', $*PID, $statement_postfix++;
+    my $statement-name = join '_', 'pg', $*PID, $statement_postfix++;
     my $munged = DBDish::Pg::pg-replace-placeholder($statement);
     die "Can't prepare this: '$statement'!" unless $munged;
-    my $result = $!pg_conn.PQprepare($statement_name, $munged, 0, OidArray);
+    my $result = $!pg_conn.PQprepare($statement-name, $munged, 0, OidArray);
     LEAVE { $result.PQclear if $result }
     if $result && $result.is-ok {
         self.reset-err;
@@ -38,7 +38,7 @@ method prepare(Str $statement, *%args) {
             :parent(self),
             :$statement,
             :$.RaiseError,
-            :$statement_name,
+            :$statement-name,
             |%args
         );
     } else {
