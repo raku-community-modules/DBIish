@@ -115,6 +115,49 @@ Example:
     my @data = $sth.allrows(:array-of-hash); # [ ( a => 1, b => 'val1'), ( a => 3, b => 'val2') ]
     my %data = $sth.allrows(:hash-of-array); # a => [1, 3], b => ['val1', 'val2']
 
+=head2 Connection Pooling
+
+Connection pooling is supported for PostgreSQL databases. This can significantly improve performance when
+overhead from establishing a connection is a significant portion of the work such as a database server on a
+distant network or when a connection is created for a very short query.
+
+To use, create a pool, then take a connection from that pool. The connection is returned to the pool when
+dispose is called. Calling dispose is important as otherwise you may exhaust the pool due to garbage collection
+being unpredictable.
+
+See your database driver for a description of the connection parameters allowed. These are the same as the
+C<connect> call.
+
+    my $pool = DBH.pool('Pg', $initial-size = 1, :$max-connections = 10, :$min-spare-connections = 1,
+                       :$max-idle-duration = Duration.new(60), Code :$!connection-scrub, |%connection-parameters);
+    my $dbh = $pool.connect();
+
+    $dbh.do({SELECT 1});
+
+    $dbh.dispose;
+
+The connection pooler will attempt to keep C<min-spare-connections> available for use. For busy multi-threaded daemons,
+this should be raised from 1.
+
+Once C<max-connections> is reached, C<connect()> will wait for a connection to become available before returning.
+You may request that C<connect()> return a promise instead of waiting internally.
+
+    my $dbh = await $pool.connect(:async);
+
+=head3 stats
+
+A small Hash with pool connection statistics is available.
+
+   my %stats = $pool.stats();
+
+Statistics fields include:
+  * inuse ➡ Number of connections currently in use
+  * idle ➡ Number available for immediate use.
+  * starting ➡ Number starting up
+  * scrub ➡ Numbers recently disposed, currently being scrubbed
+  * total ➡ Total of the C<inuse>, C<idle>, C<starting>, and C<scrub> counters. Due to a few very short race conditions, this may not add up at times.
+  * waiting ➡ Number of unfilled C<connect> calls.
+
 =head1 INSTALLATION
 
     $ zef install DBIish

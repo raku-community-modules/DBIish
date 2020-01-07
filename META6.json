@@ -10,6 +10,7 @@
         "DBIish"                    : "lib/DBIish.pm6",
         "DBIish::Common"            : "lib/DBIish/Common.pm6",
         "DBIish::CommonTesting"     : "lib/DBIish/CommonTesting.pm6",
+        "DBIish::Pool"              : "lib/DBIish/Pool.pm6",
         "DBDish"                    : "lib/DBDish.pm6",
         "DBDish::Connection"        : "lib/DBDish/Connection.pm6",
         "DBDish::ErrorHandling"     : "lib/DBDish/ErrorHandling.pm6",

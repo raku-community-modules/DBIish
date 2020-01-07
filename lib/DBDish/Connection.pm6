@@ -25,16 +25,29 @@ has $.last-rows is rw;
 # Treated as a boolean
 has atomicint $!connection-lock = 0;
 
+# Dispose handler which may be overridden for connection pooling or other purposes.
 method dispose() {
+    self._dispose();
+}
+
+# Actual dispose.
+method _dispose() {
+    self.teardown-connection();
+
+    self._disconnect;
+    ?($.parent.unregister-connection(self))
+}
+
+method teardown-connection() {
     $!statements-lock.protect: {
         $_.dispose for %!statements.values;
         %!statements = ();
     }
-    self._disconnect;
-    ?($.parent.unregister-connection(self))
 }
+
+# Call _dispose rather than dispose.
 submethod DESTROY() {
-    self.dispose;
+    self._dispose;
 }
 
 method disconnect is hidden-from-backtrace is DEPRECATED("dispose") {
