@@ -4,7 +4,7 @@ use v6;
 use DBIish;
 use Test;
 
-plan 27;
+plan 30;
 my %con-parms;
 # If env var set, no parameter needed.
 %con-parms<database> = 'dbdishtest' unless %*ENV<PGDATABASE>;
@@ -125,16 +125,24 @@ STATEMENT
 
 # Roundtrip corner-case values
 {
-    $sth = $dbh.prepare(q{SELECT ARRAY[?, ?, ?, ?, ?]});
-    $sth.execute(q{"}, Nil, q{}, q{NULL}, q{\\});
+    $sth = $dbh.prepare(q{SELECT ARRAY[?, ?, ?, ?, ?, ?]});
+    $sth.execute(q{"}, Nil, q{}, q{NULL}, q{\\}, q{some=value});
 
     my ($col1) = $sth.row;
-    is $col1.elems, 5,    '5 elements';
+    is $col1.elems, 6,    '6 elements';
     is $col1[0], q{"}, 'Quote String value';
     is $col1[1].defined, False, 'undefined string';
     is $col1[2], q{}, 'Empty String';
     is $col1[3], q{NULL}, 'NULL value in string';
     is $col1[4], q{\\}, 'Backslash string value';
+    is $col1[5], q{some=value}, 'Not just \w characters in unquoted string';
+
+    # Bracket by itself can be tricky.
+    $sth = $dbh.prepare(q{SELECT ARRAY[?]});
+    $sth.execute('{');
+    ($col1) = $sth.row;
+    is $col1.elems, 1,'1 element';
+    is $col1[0], '{', 'Bracket';
 }
 
 # Cleanup

@@ -125,7 +125,7 @@ my grammar PgArrayGrammar {
     token null       { 'NULL' }
     # Quoted strings may contain any byte sequence except a null. Characters like " and \
     # are escaped by a \ and must be unescaped (\" => ", \\ => \)
-    rule string      { '"' $<value>=( [<-[\\"]>||'\"'||'\\\\']* ) '"' || $<value>=( \w+ ) }
+    rule string      { '"' $<value>=( [<-[\\"]>||'\"'||'\\\\']* ) '"' || $<value>=( <-["{}]>+ ) }
 };
 
 sub _to-type($value, Mu:U $type) {
