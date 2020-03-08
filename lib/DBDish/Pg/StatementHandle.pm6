@@ -49,46 +49,51 @@ submethod BUILD(:$!parent!, :$!pg_conn!, # Per protocol
     :$!statement, :$!statement-name = ''
 ) {
     if $!statement-name { # Prepared
-        with $!pg_conn.PQdescribePrepared($!statement-name) -> $info {
-            @!param_type.push($!parent.dynamic-types{$info.PQparamtype($_)}) for ^$info.PQnparams;
-            self!get-meta($info);
-            $info.PQclear;
-        }
+        $!parent.protect-connection: {
+            with $!pg_conn.PQdescribePrepared($!statement-name) -> $info {
+                @!param_type.push($!parent.dynamic-types{$info.PQparamtype($_)}) for ^$info.PQnparams;
+                self!get-meta($info);
+                $info.PQclear;
+            }
+        };
     }
 }
 
 method execute(*@params) {
     self!enter-execute(@params.elems, @!param_type.elems);
 
-    my @param_values := ParamArray.new;
-    for @params.kv -> $k, $v {
-        if $v.defined {
-            @param_values[$k] = @!param_type[$k] ~~ Buf
-                ?? $!pg_conn.escapeBytea(($v ~~ Buf) ?? $v !! ~$v.encode)
-                !! @!param_type[$k] ~~ Array ?? self.pg-array-str($v)
-                !! ~$v;
-        } else { @param_values[$k] = Str }
-    }
-
-    $!result = $!statement-name
-        ?? $!pg_conn.PQexecPrepared($!statement-name, @params.elems, @param_values,
-                                    Null, Null, 0)
-        !! $!pg_conn.PQexec($!statement);
-
-    self!set-err(PGRES_FATAL_ERROR, $!pg_conn.PQerrorMessage).fail unless $!result;
-
-    $!current_row = 0;
-    with self!handle-errors {
-        my $rows;
-        if $!result.PQresultStatus == PGRES_TUPLES_OK { # WAS SELECT
-            self!get-meta($!result) without $!field_count; # Unprepared
-            $rows = $!row_count = $!result.PQntuples;
-        } else { # Other stmt without data to return
-            $rows =  $!result.PQcmdTuples.Int;
+    $!parent.protect-connection: {
+        my @param_values := ParamArray.new;
+        for @params.kv -> $k, $v {
+            if $v.defined {
+                @param_values[$k] = @!param_type[$k] ~~ Buf
+                        ?? $!pg_conn.escapeBytea(($v ~~ Buf) ?? $v !! ~$v.encode)
+                        !! @!param_type[$k] ~~ Array ?? self.pg-array-str($v)
+                        !! ~$v;
+            } else { @param_values[$k] = Str }
         }
-        self!done-execute($rows, $!field_count);
-    } else {
-        .fail;
+
+        $!result = $!statement-name
+                ?? $!pg_conn.PQexecPrepared($!statement-name, @params.elems, @param_values,
+                        Null, Null, 0)
+                !! $!pg_conn.PQexec($!statement);
+
+        self!set-err(PGRES_FATAL_ERROR, $!pg_conn.PQerrorMessage).fail unless $!result;
+
+        $!current_row = 0;
+        with self!handle-errors {
+            my $rows;
+            if $!result.PQresultStatus == PGRES_TUPLES_OK { # WAS SELECT
+                self!get-meta($!result) without $!field_count;
+                # Unprepared
+                $rows = $!row_count = $!result.PQntuples;
+            } else { # Other stmt without data to return
+                $rows =  $!result.PQcmdTuples.Int;
+            }
+            self!done-execute($rows, $!field_count);
+        } else {
+            .fail;
+        }
     }
 }
 

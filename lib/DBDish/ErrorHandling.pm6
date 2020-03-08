@@ -22,6 +22,10 @@ package X::DBDish {
     class ConnectionFailed is DBError {
         has $.why = "Can't connect";
     }
+
+    class ConnectionInUse is DBError {
+        has $.why = 'Unsupported Concurrency';
+    }
 }
 
 role DBDish::ErrorHandling is export {
@@ -62,8 +66,8 @@ role DBDish::ErrorHandling is export {
         $!RaiseError and .throw or .fail;
     }
 
-    method !set-err(Int $code, Str $errstr) is hidden-from-backtrace {
-        self!error-dispatch: X::DBDish::DBError.new(
+    method !set-err(Int $code, Str $errstr, Str :$error-class = 'X::DBDish::DBError') is hidden-from-backtrace {
+        self!error-dispatch: ::($error-class).new(
             :$code, :native-message($errstr), :$.driver-name
         );
     }

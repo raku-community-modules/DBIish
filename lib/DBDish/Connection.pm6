@@ -22,6 +22,9 @@ has Lock $!statements-lock .= new;
 has $.last-sth-id is rw;
 has $.last-rows is rw;
 
+# Treated as a boolean
+has atomicint $!connection-lock = 0;
+
 method dispose() {
     $!statements-lock.protect: {
         $_.dispose for %!statements.values;
@@ -48,6 +51,34 @@ method new(*%args) {
 }
 
 method prepare(Str $statement, *%args) { ... }
+
+# Many DBs can only use the connection by a single thread at a time.
+# Lock this with a fast CAS operation for minimal overhead. Don't try to
+# wait for it to be free, just notify the user about the problem.
+#
+# DB level transactions make sharing a connection without some additional
+# coordination risky.
+method lock-connection(--> Bool) {
+    if cas($!connection-lock, 0, 1) != 0 {
+        self!set-err( -1, 'Connection used by multiple threads simultaneously', error-class => 'X::DBDish::ConnectionInUse').fail;
+        return False;
+    }
+    return True;
+}
+
+method unlock-connection() {
+    if cas($!connection-lock, 1, 0) != 1 {
+        warn "Driver error: Unlock requested on an already unlocked connection";
+    }
+}
+
+method protect-connection(Callable $code) {
+    my $locked = self.lock-connection();
+    LEAVE {
+        self.unlock-connection() if ($locked);
+    }
+    $code();
+}
 
 method do(Str $statement, *@params, *%args) {
     LEAVE {
