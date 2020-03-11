@@ -39,6 +39,7 @@
     "source-url" : "git://github.com/perl6/DBIish.git",
     "tags": [
       "database",
+      "mariadb",
       "mysql",
       "oracle",
       "postgres",
