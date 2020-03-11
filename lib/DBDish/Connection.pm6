@@ -72,12 +72,32 @@ method unlock-connection() {
     }
 }
 
+# Lock and Unlock around a block of driver code.
+#
+# Since CATCH in the caller fires before LEAVE in this method, we need to do
+# a bit of fiddly tracking to make unlock fire in both the success and error
+# case prior to passing control back upstream as the caller may wish to
+# $dbh.do('ROLLBACK') in a CATCH block.
 method protect-connection(Callable $code) {
     my $locked = self.lock-connection();
-    LEAVE {
-        self.unlock-connection() if ($locked);
+
+    my $ret = $code();
+
+    # Unlock if successful
+    if ($locked) {
+        self.unlock-connection();
+        $locked = False;
     }
-    $code();
+
+    # Unlock in the error case too
+    CATCH {
+        default {
+            self.unlock-connection() if $locked;
+            $_.rethrow;
+        }
+    }
+
+    return $ret;
 }
 
 method do(Str $statement, *@params, *%args) {
