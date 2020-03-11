@@ -126,22 +126,26 @@ method execute(*@params) {
             $!stmt.mysql_stmt_bind_param($!par-binds.typed-pointer);
             without self!handle-errors { .fail }
         }
-        $!stmt.mysql_stmt_execute
-        or $!Prefetch
-        and $!stmt.mysql_stmt_store_result;
+        $!parent.protect-connection: {
+            $!stmt.mysql_stmt_execute
+              or $!Prefetch
+              and $!stmt.mysql_stmt_store_result;
+        }
         without self!handle-errors { .fail }
     }
     else { # Unprepared path
-        my $status = $!mysql_client.mysql_query($!statement)
-            and self!set-err($status, $!mysql_client.mysql_error).fail;
+        $!parent.protect-connection: {
+            my $status = $!mysql_client.mysql_query($!statement)
+                    and self!set-err($status, $!mysql_client.mysql_error).fail;
 
-        $_ = $!mysql_client.mysql_field_count without $!field_count;
+            $_ = $!mysql_client.mysql_field_count without $!field_count;
 
-        if $!field_count {
-            $!result_set = $!Prefetch ?? $!mysql_client.mysql_store_result
-                                      !! $!mysql_client.mysql_use_result;
-            .fail without self!handle-errors;
-            self!get-meta($!result_set) unless $!Executed; # First execution
+            if $!field_count {
+                $!result_set = $!Prefetch ?? $!mysql_client.mysql_store_result
+                        !! $!mysql_client.mysql_use_result;
+                .fail without self!handle-errors;
+                self!get-meta($!result_set) unless $!Executed; # First execution
+            }
         }
     }
     my $rows = $!mysql_client.mysql_affected_rows;

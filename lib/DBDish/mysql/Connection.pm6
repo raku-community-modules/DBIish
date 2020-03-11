@@ -26,17 +26,19 @@ method !handle-errors($code) {
     }
 }
 method prepare(Str $statement, *%args) {
-    with $!mysql_client.mysql_stmt_init -> $stmt {
-        with self!handle-errors(
+    self.protect-connection: {
+        with $!mysql_client.mysql_stmt_init -> $stmt {
+            with self!handle-errors(
             $stmt.mysql_stmt_prepare($statement, $statement.encode.bytes)
-        ) {
-             DBDish::mysql::StatementHandle.new(
-                 :$!mysql_client, :parent(self), :$stmt
-                 :$statement, :$!RaiseError, |%args
-             );
-        } else { .fail }
-    } else {
-        self!set-err(-1, "Can't allocate memory");
+            ) {
+                DBDish::mysql::StatementHandle.new(
+                    :$!mysql_client, :parent(self), :$stmt
+                    :$statement, :$!RaiseError, |%args
+                );
+            } else { .fail }
+        } else {
+            self!set-err(-1, "Can't allocate memory");
+        }
     }
 }
 
@@ -62,7 +64,10 @@ method server-version() {
 
 method ping() {
     with $!mysql_client {
-        0 == $!mysql_client.mysql_ping;
+        # Protection appears to be required due to a reconnect race.
+        self.protect-connection: {
+            0 == $!mysql_client.mysql_ping;
+        }
     } else {
         False;
     }
