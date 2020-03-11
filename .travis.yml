@@ -8,8 +8,8 @@ env:
 
 perl6:
     - 2017.09
+    - 2019.11
     - latest
-    - nom
 sudo: false
 install:
     - rakudobrew build-zef && zef -v install .
