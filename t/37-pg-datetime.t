@@ -2,7 +2,7 @@ use v6;
 use Test;
 use DBIish;
 
-plan 13;
+plan 14;
 
 my %con-parms;
 # If env var set, no parameter needed.
@@ -63,3 +63,14 @@ is $date, $now.Date,			    'Today';
 isnt $datetime, $now,			    'Server drift';
 diag $datetime.Instant - $now.Instant;
 $dbh.do('DROP TABLE IF EXISTS test_datetime');
+
+
+
+# Tests for interval to ensure a naive numeric conversion isn't added back
+# Pg cannot convert years, months, days to an integer as those vary in length
+# Also note intervalStyle variations.
+my $sthint = $dbh.prepare(q{SELECT INTERVAL '1 century + 1 month - 5 days 4 hours - 32 minutes' AS intexample});
+$sthint.execute();
+my $row = $sthint.row(:hash);
+is $row<intexample>, '100 years 1 mon -5 days +03:28:00', 'Complex interval';
+
