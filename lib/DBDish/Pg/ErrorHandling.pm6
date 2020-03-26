@@ -79,7 +79,7 @@ package X::DBDish {
         #  - Class 57\w{3}: Operator Intervention (early/forced connection termination)
         #  - 72000 snapshot_too_old
         method is-temporary {
-           so $.sqlstate ~~ /^ '08'<[alnum]> ** 3 | '40001'| '40P01' | '57'<[alnum]> ** 3 | '72000' $/;
+           so $.sqlstate ~~ /^ '08'<alnum> ** 3 | '40001'| '40P01' | '57'<alnum> ** 3 | '72000' $/;
         }
     }
 }
