@@ -188,10 +188,6 @@ method pg-array-str(\arr) {
     '{' ~ @tmp.join(',') ~ '}';
 }
 
-method true_false(Str $s) {
-    $s eq 't';
-}
-
 method _free() { }
 
 method finish() {
