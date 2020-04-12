@@ -158,26 +158,12 @@ sub _to-array(Match $match, Mu:U $type) {
             $val ~~ s|'\\"'|"|;
             $val ~~ s|'\\\\'|\\|;
 
-            $arr.push: $val;
+            $arr.push: $type($val);
         } elsif $element.values[0]<null>.defined {
             $arr.push: Nil;
         } else {
-            # An unquoted string could be a number of different datatypes. These
-            # are difficult to put into the Grammar without enabling
-            # backtracking due to values like '123:123' matching part of the integer
-            # block.
-            given ~$element.values[0]<unquoted-string> {
-                when /^(\d+ '.' \d+ | \d '.' \d+ 'e+' \d+)$/ {
-                    $arr.push: $type($_);
-                }
-                when /^(\d+)$/ {
-                    $arr.push: $type($_);
-                }
-                default {
-                    my $val = $_;
-                    $arr.push: $val;
-                }
-            }
+            # Every element will be of the expected datatype.
+            $arr.push: $type(~$element.values[0]<unquoted-string>);
         }
     }
     $arr;
