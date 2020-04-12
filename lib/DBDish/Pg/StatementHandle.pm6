@@ -121,16 +121,16 @@ method _row() {
 }
 
 my grammar PgArrayGrammar {
-    rule array       { '{' (<element> ','?)* '}' }
     rule TOP         { ^ <array> $ }
-    rule element     { <array> | <float> | <integer> | <null> | <string> }
-    token float      { (\d+ '.' \d+ | \d '.' \d+ 'e+' \d+) }
-    token integer    { (\d+) }
+    rule array       { '{' ( <element> ','?)* '}' }
+    rule element     { <array> | <quoted-string> | <null> | <unquoted-string>}
 
-    token null       { 'NULL' }
     # Quoted strings may contain any byte sequence except a null. Characters like " and \
     # are escaped by a \ and must be unescaped (\" => ", \\ => \)
-    rule string      { '"' $<value>=( [<-[\\"]>||'\"'||'\\\\']* ) '"' || $<value>=( <-["{}]>+ ) }
+    rule quoted-string   { '"' $<value>=( [<-[\\"]>||'\"'||'\\\\']* ) '"' }
+    rule null            { "NULL" }
+    rule unquoted-string { <-["{},]>+ }
+
 };
 
 sub _to-type($value, Mu:U $type) {
@@ -147,20 +147,37 @@ sub _to-array(Match $match, Mu:U $type) {
     for $match.<array>.values -> $element {
         if $element.values[0]<array>.defined { # An array
             if $clean && $arr.of === $type { # Need to downgrade
-                $arr = Array.new; $clean = False;
+                $arr = Array.new;
+                $clean = False;
             }
             $arr.push: @(_to-array($element.values[0], $type));
-        } elsif $element.values[0]<float>.defined { # Floating point number
-            $arr.push: $type($element.values[0]<float>);
-        } elsif $element.values[0]<integer>.defined { # Integer
-            $arr.push: $type($element.values[0]<integer>);
-        } elsif $element.values[0]<null>.defined { # Null string
-            $arr.push: Nil;
-        } else { # Must be a String
-            my $val = ~$element.values[0]<string><value>;
+        } elsif $element.values[0]<quoted-string>.defined {
+            my $val = ~$element.values[0]<quoted-string><value>;
+
+            # Remove escape sequences
             $val ~~ s|'\\"'|"|;
             $val ~~ s|'\\\\'|\\|;
+
             $arr.push: $val;
+        } elsif $element.values[0]<null>.defined {
+            $arr.push: Nil;
+        } else {
+            # An unquoted string could be a number of different datatypes. These
+            # are difficult to put into the Grammar without enabling
+            # backtracking due to values like '123:123' matching part of the integer
+            # block.
+            given ~$element.values[0]<unquoted-string> {
+                when /^(\d+ '.' \d+ | \d '.' \d+ 'e+' \d+)$/ {
+                    $arr.push: $type($_);
+                }
+                when /^(\d+)$/ {
+                    $arr.push: $type($_);
+                }
+                default {
+                    my $val = $_;
+                    $arr.push: $val;
+                }
+            }
         }
     }
     $arr;
