@@ -4,7 +4,7 @@ use v6;
 use DBIish;
 use Test;
 
-plan 33;
+plan 36;
 my %con-parms;
 # If env var set, no parameter needed.
 %con-parms<database> = 'dbdishtest' unless %*ENV<PGDATABASE>;
@@ -108,6 +108,16 @@ isa-ok $obj.schedule[0], Array[Str];
     is $col1.elems, 1,    '1 element';
     is $col1[0], '14:00:2b:01:02:03:04:05', 'Mac in text';
     is $col1[0].^name, 'Str', 'Is String';
+}
+
+{
+    $sth = $dbh.prepare(q{select ARRAY[true, false]::bool[]});
+    $sth.execute();
+
+    my ($col1) = $sth.row;
+    is $col1.elems, 2,    '2 element';
+    is $col1[0], True, 'True value';
+    is $col1[1], False, 'False value';
 }
 
 # Text can be anything except a null. With different encodings, every byte combination is possible.

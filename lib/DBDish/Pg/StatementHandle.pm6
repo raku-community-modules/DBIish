@@ -107,7 +107,7 @@ method _row() {
             unless $!result.PQgetisnull($!current_row, $col) {
                 $value = $!result.PQgetvalue($!current_row, $col);
                 if ct ~~ Array {
-                    $value = _pg-to-array($value, ct.of);
+                    $value = _pg-to-array($value, ct.of, %Converter);
                 } elsif (ct.^name ne 'Any') {
                     $value = %Converter.convert($value, ct);
                 }
@@ -141,7 +141,7 @@ sub _to-type($value, Mu:U $type) {
     }
 }
 
-sub _to-array(Match $match, Mu:U $type) {
+sub _to-array(Match $match, Mu:U $type, %Converter) {
     my $arr = Array[$type].new;
     my $clean = True;
     for $match.<array>.values -> $element {
@@ -150,7 +150,7 @@ sub _to-array(Match $match, Mu:U $type) {
                 $arr = Array.new;
                 $clean = False;
             }
-            $arr.push: @(_to-array($element.values[0], $type));
+            $arr.push: @(_to-array($element.values[0], $type, %Converter));
         } elsif $element.values[0]<quoted-string>.defined {
             my $val = ~$element.values[0]<quoted-string><value>;
 
@@ -158,21 +158,22 @@ sub _to-array(Match $match, Mu:U $type) {
             $val ~~ s|'\\"'|"|;
             $val ~~ s|'\\\\'|\\|;
 
-            $arr.push: $type($val);
+            $arr.push: %Converter.convert($val, $type);
         } elsif $element.values[0]<null>.defined {
             $arr.push: Nil;
         } else {
             # Every element will be of the expected datatype.
-            $arr.push: $type(~$element.values[0]<unquoted-string>);
+            my $val = ~$element.values[0]<unquoted-string>;
+            $arr.push: %Converter.convert($val, $type);
         }
     }
     $arr;
 }
 
-sub _pg-to-array(Str $text, Mu:U $type) {
+sub _pg-to-array(Str $text, Mu:U $type, %Converter) {
     my $match = PgArrayGrammar.parse( $text );
     die "Failed to parse" unless $match.defined;
-    _to-array($match, $type);
+    _to-array($match, $type, %Converter);
 }
 
 method pg-array-str(\arr) {
