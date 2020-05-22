@@ -4,7 +4,7 @@ use v6;
 use DBIish;
 use Test;
 
-plan 36;
+plan 41;
 my %con-parms;
 # If env var set, no parameter needed.
 %con-parms<database> = 'dbdishtest' unless %*ENV<PGDATABASE>;
@@ -164,6 +164,21 @@ STATEMENT
     ($col1) = $sth.row;
     is $col1.elems, 1,'1 element';
     is $col1[0], '{', 'Bracket';
+}
+
+# Roundtrip a couple Raku arrays instead of building from individual elements.
+{
+    # Array type provided for older version of Pg
+    my @arr = <some array text here>;
+    my $sth = $dbh.prepare(q{SELECT $1::_int8 AS arr_int, $2::_text AS arr_text, $3::int AS one_int, $4::text AS one_text, 'array' = ANY($5::_text) AS qual});
+    $sth.execute([1,2,3], @arr, 5, 'a string', @arr);
+
+    my $row = $sth.row(:hash);
+    is $row<arr_int>, [1,2,3], 'Integer array';
+    is $row<arr_text>, @arr, 'Text array';
+    is $row<one_int>, 5, 'Integer';
+    is $row<one_text>, 'a string', 'String';
+    is $row<qual>, True, 'Qual evaluates as expected';
 }
 
 # Cleanup
