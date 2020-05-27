@@ -4,7 +4,7 @@
 
 DBIish - a simple database interface for Rakudo Perl 6
 
-=for HTML <a href="https://travis-ci.org/perl6/DBIish"><img src="https://travis-ci.org/perl6/DBIish.svg?branch=master"></a>
+=for HTML [![Build Status](https://travis-ci.org/raku-community-modules/DBIish.svg?branch=master)](https://travis-ci.org/raku-community-modules/DBIish)
 
 =head1 SYNOPSIS
 
