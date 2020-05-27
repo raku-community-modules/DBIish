@@ -2,7 +2,7 @@ use v6;
 use Test;
 use DBIish;
 
-plan 27;
+plan 26;
 
 my %con-parms;
 # If env var set, no parameter needed.
@@ -35,10 +35,9 @@ lives-ok {
 }, 'Type created';
 
 
-lives-ok { $dbh.do('DROP TABLE IF EXISTS test_enum') }, 'Clean';
 lives-ok {
     $dbh.do(q|
-    CREATE TABLE test_enum (
+    CREATE TEMPORARY TABLE test_enum (
 	id INT NOT NULL DEFAULT 0, 
 	yeah yesno)|)
 }, 'Table created';
@@ -103,4 +102,3 @@ for @enum -> @option {
     is @res.elems,  1,	 'One field';
 }
 
-$dbh.do('DROP TABLE IF EXISTS test_enum');

@@ -2,7 +2,7 @@ use v6;
 use Test;
 use DBIish;
 
-plan 10;
+plan 9;
 
 my %con-parms;
 # If env var set, no parameter needed.
@@ -28,10 +28,9 @@ ok $dbh,    'Connected';
 
 # Be less verbose;
 $dbh.do('SET client_min_messages TO WARNING');
-lives-ok { $dbh.do('DROP TABLE IF EXISTS test_types') }, 'Clean';
 lives-ok {
     $dbh.do(q|
-    CREATE TABLE test_types (
+    CREATE TEMPORARY TABLE test_types (
 	col1 text
     )|)
 }, 'Table created';
@@ -53,4 +52,3 @@ $dbh.Converter{Str} = sub ($) { 'changed' };
 is $sth.execute, 1,			    '1 row';
 ($col1) = $sth.row;
 is $col1, 'changed',		    'Changed';
-$dbh.do('DROP TABLE IF EXISTS test_types');

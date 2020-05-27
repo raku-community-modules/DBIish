@@ -114,7 +114,7 @@ try {
 }
 ok($dbh.defined, "Connected to database"); # test 5
 lives-ok({$dbh.do("DROP TABLE IF EXISTS $table")}, "making slate clean"); # test 6
-lives-ok({$dbh.do("CREATE TABLE $table (id INT(4), name VARCHAR(20))")}, "creating $table"); # test 7
+lives-ok({$dbh.do("CREATE TEMPORARY TABLE $table (id INT(4), name VARCHAR(20))")}, "creating $table"); # test 7
 lives-ok({$dbh.do("DROP TABLE $table")}, "dropping created $table"); # test 8
 
 #-----------------------------------------------------------------------
@@ -141,7 +141,7 @@ lives-ok({$dbh.do("DROP TABLE $table")}, "dropping created $table"); # test 8
 #ok $dbh->do("UNLOCK TABLES"), "Unlock tables";
 #ok $dbh->do("DROP TABLE $table"), "Drop table $table";
 my $create="
-CREATE TABLE $table (
+CREATE TEMPORARY TABLE $table (
     id int(4) NOT NULL default 0,
     name varchar(30) NOT NULL default ''
 )
@@ -231,7 +231,7 @@ if $dbh.drv.library.name ~~ /mariadb/ {
 #ok $dbh->disconnect();
 ok $dbh.do("DROP TABLE IF EXISTS $table"), "drop table if exists $table"; # test 23
 $create = "
-CREATE TABLE $table (
+CREATE TEMPORARY TABLE $table (
   id INT(3) PRIMARY KEY AUTO_INCREMENT NOT NULL,
   name VARCHAR(31))
 ";
@@ -287,7 +287,7 @@ try {
 #ok $dbh->disconnect();
 ok $dbh.do("DROP TABLE IF EXISTS $table"),"drop table if exists $table"; # test 39
 $create = "
-CREATE TABLE $table (
+CREATE TEMPORARY TABLE $table (
     id INT(3) PRIMARY KEY NOT NULL,
     name VARCHAR(32))
 ";
@@ -327,7 +327,7 @@ $sth.PrintError = Bool::True;
 #ok($sth->finish);
 #ok($dbh->do("DROP TABLE $table"));
 ok($dbh.do("DROP TABLE IF EXISTS $table"), "making slate clean"); # test 45
-ok($dbh.do("CREATE TABLE $table (id INT(4), name VARCHAR(35))"), "creating table"); # test 46
+ok($dbh.do("CREATE TEMPORARY TABLE $table (id INT(4), name VARCHAR(35))"), "creating table"); # test 46
 ok(($sth = $dbh.prepare("INSERT INTO $table (id,name) VALUES (?,?)")),"prepare insert with 2 params"); # test 47
 my ( %testInsertVals, $all_ok );
 $all_ok = Bool::True;
@@ -516,7 +516,7 @@ ok(!($sth.fetchrow_arrayref()),"Not Fetch - Testing bug #20153"); # test 81
 #ok $dbh->disconnect;
 ok ($dbh.do("DROP TABLE IF EXISTS $table")),"drop table before 40bindparam.t"; # test 82
 $create = "
-CREATE TABLE $table (
+CREATE TEMPORARY TABLE $table (
         id int(4) NOT NULL default 0,
         name varchar(40) default ''
         )
@@ -1090,7 +1090,7 @@ plan tests => 10;
 ok $dbh->do("DROP TABLE IF EXISTS $table"), "DROP TABLE IF EXISTS $table";
 
 my $create= <<EOT;
-CREATE TABLE $table (
+CREATE TEMPORARY TABLE $table (
   id INT(4),
   name VARCHAR(64)
   )
@@ -1143,7 +1143,7 @@ plan tests => 30;
 ok $dbh->do("DROP TABLE IF EXISTS $table");
 
 my $create= <<EOT;
-CREATE TABLE $table (
+CREATE TEMPORARY TABLE $table (
   id INT(4) NOT NULL DEFAULT 0,
   name varchar(64) NOT NULL DEFAULT ''
 )

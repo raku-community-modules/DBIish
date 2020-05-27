@@ -14,7 +14,7 @@ class JSON {
     # Used only as a marker for converter
 }
 
-plan 23;
+plan 22;
 my %con-parms = :database<dbdishtest>, :user<testuser>, :password<testpass>;
 my $dbh;
 
@@ -33,13 +33,12 @@ without $dbh {
 }
 
 ok $dbh,    'Connected';
-lives-ok { $dbh.do('DROP TABLE IF EXISTS test_types') }, 'Clean';
 my $hasjson = $dbh.drv.version after v5.7.8;
 my $field = $hasjson ?? 'JSON' !! 'varchar';
 diag "want test '$field'";
 lives-ok {
     $dbh.do(qq|
-    CREATE TABLE test_types (
+    CREATE TEMPORARY TABLE test_types (
 	col1 $field
     )|)
 }, 'Table created';
@@ -90,5 +89,3 @@ if $hasjson {
 } else {
     skip-rest "No suport for JSON type";
 }
-
-$dbh.do('DROP TABLE IF EXISTS test_types');

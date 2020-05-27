@@ -26,11 +26,7 @@ without $dbh {
 }
 
 my $sth = $dbh.do(q:to/STATEMENT/);
-  DROP TABLE IF EXISTS sal_emp;
-STATEMENT
-
-$sth = $dbh.do(q:to/STATEMENT/);
-  CREATE TABLE sal_emp (
+  CREATE TEMPORARY TABLE sal_emp (
     name               text,
     pay_by_quarter     integer[],
     schedule           text[][],

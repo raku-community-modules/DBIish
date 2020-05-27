@@ -2,7 +2,7 @@ use v6;
 use Test;
 use DBIish;
 
-plan 14;
+plan 13;
 
 my %con-parms;
 # If env var set, no parameter needed.
@@ -28,10 +28,9 @@ ok $dbh,    'Connected';
 # Be less verbose;
 $dbh.do('SET client_min_messages TO WARNING');
 $dbh.do('SET timezone TO UTC');
-lives-ok { $dbh.do('DROP TABLE IF EXISTS test_datetime') }, 'Clean';
 lives-ok {
     $dbh.do(q|
-    CREATE TABLE test_datetime (
+    CREATE TEMPORARY TABLE test_datetime (
 	adate DATE,
 	atime TIME,
 	atimestamp TIMESTAMP WITH TIME ZONE,
@@ -62,7 +61,6 @@ is $datetime, $now,			    'Right now';
 is $date, $now.Date,			    'Today';
 isnt $datetime, $now,			    'Server drift';
 diag $datetime.Instant - $now.Instant;
-$dbh.do('DROP TABLE IF EXISTS test_datetime');
 
 
 

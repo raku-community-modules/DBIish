@@ -2,7 +2,7 @@ use v6;
 use Test;
 use DBIish;
 
-plan 12;
+plan 11;
 
 my %con-parms = :database<dbdishtest>, :user<testuser>, :password<testpass>;
 my $dbh;
@@ -22,13 +22,12 @@ without $dbh {
 }
 
 ok $dbh,    'Connected';
-lives-ok { $dbh.do('DROP TABLE IF EXISTS test_datetime') }, 'Clean';
 my $subsec = $dbh.drv.version after v5.6.4;
 my $field = 'TIMESTAMP'; $field ~= '(6)' if $subsec;
 diag "Using $field";
 lives-ok {
     $dbh.do(qq|
-    CREATE TABLE test_datetime (
+    CREATE TEMPORARY TABLE test_datetime (
 	adate DATE,
 	atime TIME,
 	atimestamp $field 
@@ -62,4 +61,3 @@ if $subsec {
     skip "Without subsecond precision",  1;
 }
 diag $now.Instant - $datetime.Instant;
-$dbh.do('DROP TABLE IF EXISTS test_datetime');

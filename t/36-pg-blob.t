@@ -2,7 +2,7 @@ use v6;
 use Test;
 use DBIish;
 
-plan 18;
+plan 17;
 
 my %con-parms;
 # If env var set, no parameter needed.
@@ -25,10 +25,9 @@ without $dbh {
 }
 
 ok $dbh,    'Connected';
-lives-ok { $dbh.do('DROP TABLE IF EXISTS test_blob') }, 'Clean';
 lives-ok {
     $dbh.do(q|
-    CREATE TABLE test_blob (
+    CREATE TEMPORARY TABLE test_blob (
 	id INT NOT NULL DEFAULT 0, 
 	name bytea)|)
 }, 'Table created';
@@ -50,4 +49,3 @@ is @res.elems,  1,	 'One field';
 $data = @res[0];
 ok $data ~~ Buf,         'Data is-a Buf';
 ok not $data.defined,    'But is NULL';
-$dbh.do('DROP TABLE IF EXISTS test');

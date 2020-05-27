@@ -2,7 +2,7 @@ use v6;
 use Test;
 use DBIish;
 
-plan 19;
+plan 17;
 
 my %con-parms = :database<dbdishtest>, :user<testuser>, :password<testpass>;
 my $dbh;
@@ -22,10 +22,9 @@ without $dbh {
 }
 
 ok $dbh,    'Connected';
-lives-ok { $dbh.do('DROP TABLE IF EXISTS test_blob') }, 'Clean';
 lives-ok {
     $dbh.do(q|
-    CREATE TABLE test_blob (
+    CREATE TEMPORARY TABLE test_blob (
 	id INT(3) NOT NULL DEFAULT 0, 
 	name BLOB)|)
 }, 'Table created';
@@ -56,6 +55,3 @@ with $dbh.prepare('SELECT name FROM test_blob WHERE id = ?') {
     ok not $data.defined,		'But is NULL';
 } else { .fail }
 
-lives-ok {
-    $dbh.do('DROP TABLE IF EXISTS test_blob');
-},					'All clean';
