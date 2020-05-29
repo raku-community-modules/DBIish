@@ -332,6 +332,8 @@ The DBIish::CommonTesting module, now with over 100 tests, provides a common uni
 testing that allows a driver developer to test its driver capabilities and the
 minimum expected compatibility.
 
+Set environment variable DBIISH_WRITE_TEST=YES to run tests which may leave permanent state changes in the database.
+
 =head1 ROADMAP
 
 Add some more drivers. Improve robustness of all drivers. Improve the test suite.

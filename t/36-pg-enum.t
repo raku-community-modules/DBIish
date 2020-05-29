@@ -4,6 +4,11 @@ use DBIish;
 
 plan 26;
 
+without %*ENV<DBIISH_WRITE_TEST> {
+	skip-rest 'Set environment variable DBIISH_WRITE_TEST=YES to run this test';
+	exit;
+}
+
 my %con-parms;
 # If env var set, no parameter needed.
 %con-parms<database> = 'dbdishtest' unless %*ENV<PGDATABASE>;

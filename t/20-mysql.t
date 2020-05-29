@@ -37,6 +37,11 @@ plan 90;
 use DBIish;
 #use DBDish::mysql;
 
+without %*ENV<DBIISH_WRITE_TEST> {
+    skip-rest 'Set environment variable DBIISH_WRITE_TEST=YES to run this test';
+    exit;
+}
+
 # The file 'lib.pl' customizes the testing environment per DBD, but all
 # this test script currently needs is the variables listed here.
 my $mdriver       = 'mysql';

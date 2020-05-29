@@ -29,6 +29,12 @@ method run-tests {
     diag "Testing DBDish::$.dbd";
     plan 107;
 
+    # Convert to TEMPORARY table instead?
+    without %*ENV<DBIISH_WRITE_TEST> {
+        skip-rest 'Set environment variable DBIISH_WRITE_TEST=YES to run this test';
+        exit;
+    }
+
     # Verify that the driver loads before attempting a connect
     my $drh = DBIish.install-driver($.dbd);
     ok $drh, 'Install driver';

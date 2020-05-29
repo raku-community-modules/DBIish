@@ -4,7 +4,7 @@ services:
 
 language: perl6
 env:
-    - PERL=/usr/bin/perl
+    - PERL=/usr/bin/perl DBIISH_WRITE_TEST=YES
 
 perl6:
     - 2017.09

@@ -4,6 +4,12 @@ use DBIish;
 
 plan 18;
 
+# Convert to TEMPORARY table instead?
+without %*ENV<DBIISH_WRITE_TEST> {
+    skip-rest 'Set environment variable DBIISH_WRITE_TEST=YES to run this test';
+    exit;
+}
+
 my %con-parms;
 %con-parms = :database<XE>, :username<TESTUSER>, :password<Testpass>;
 my $dbh;
