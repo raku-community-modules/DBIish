@@ -12,7 +12,7 @@ perl6:
     - latest
 sudo: false
 install:
-    - rakudobrew build-zef && zef -v install .
+    - rakudobrew build-zef && zef -v install . && zef -v install JSON::Tiny
 before_install:
     # mysql
     - mysql -e "CREATE DATABASE dbdishtest;" -uroot
