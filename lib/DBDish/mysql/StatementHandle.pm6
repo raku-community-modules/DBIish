@@ -75,7 +75,7 @@ submethod BUILD(:$!mysql_client!, :$!parent!, :$!stmt = MYSQL_STMT,
                             ?? MYSQL_TYPE_BLOB !! MYSQL_TYPE_STRING;
                     } else {
                         $!isnull[$col] = 1;
-                        .buffer_type = MYSQL_TYPE_NULL
+                        .buffer_type = MYSQL_TYPE_NULL;
                     }
                 }
             }
