@@ -346,6 +346,20 @@ Attract more contributors.
 Integrate with the DBDI project (L<http://github.com/timbunce/DBDI>)
 once it has sufficient functionality.
 
+=head1 DEPRECATED
+
+These will be removed on June 2022.
+
+* $sth.fetchrow() deprecated in favour of $sth.row()
+* $sth.fetchrow_hashref() deprecated in favour of $sth.row(:hash)
+* $sth.fetchall_hashref() deprecated in favour of $sth.allrows(:hash-of-arrays)
+* $sth.fetchall-hash() deprecated in favour of $sth.allrows(:hash-of-arrays)
+* $sth.fetchall-AoH() deprecated in favour of $sth.allrows(:array-of-hash)
+* $sth.fetchrow_array() deprecated in favour of $sth.row()
+* $sth.fetchrow_hashref() deprecated in favour of $sth.row(:hash)
+* $sth.fetchrow_arrayref() deprecated in favour of $sth.row(:hash)
+* $sth.fetch() deprecated in favour of $sth.row()
+* $sth.fetchall_arrayref() deprecated in favour of $sth.allrows(:array-of-hash)
 
 =head1 SEE ALSO
 

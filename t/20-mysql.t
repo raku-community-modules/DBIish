@@ -163,7 +163,7 @@ try {
 ok defined($sth), "Prepare of select"; # test 14
 ok $sth.execute , "Execute"; # test 15
 my ($row, $errstr);
-$row = $sth.fetchrow_arrayref();
+$row = $sth.row();
 $errstr= $sth.errstr;
 nok $row, "Fetch should have failed"; # test 16
 nok $errstr, "Fetch should have failed"; # test 17
@@ -250,8 +250,8 @@ ok (my $sth2= $dbh.prepare("SELECT max(id) FROM $table")),"selectg max(id)"; # t
 ok $sth2.defined,"second prepared statement"; # test 30
 ok $sth2.execute(), "execute second prepared statement"; # test 31
 my $max_id;
-ok ($max_id= $sth2.fetch()),"fetch"; # test 32
-ok $max_id.defined,"fetch result defined"; # test 33
+ok ($max_id= $sth2.row()),"row"; # test 32
+ok $max_id.defined,"row result defined"; # test 33
 is $sth.insert-id, $max_id[0], 'sth insert id $sth.insert-id == max(id) $max_id[0] in '~$table; # test 34
 is $dbh.insert-id, $max_id[0], 'dbh insert id $dbh.insert-id == max(id) $max_id[0] in '~$table; # test 35
 ok $sth.finish(), "statement 1 finish"; #  test 36
@@ -346,8 +346,8 @@ ok( $all_ok,"insert 100 rows of random chars"); # test 48
 ok($sth = $dbh.prepare("SELECT * FROM $table LIMIT ?, ?"),"prepare of select statement with LIMIT placeholders:"); # test 49
 ok($sth.execute(20, 50),"exec of bind vars for LIMIT"); # test 50
 my ($array_ref);
-ok( (defined($array_ref = $sth.fetchall_arrayref) &&
-  (!defined($errstr = $sth.errstr) || $sth.errstr eq '')),"fetchall_arrayref"); # test 51
+ok( (defined($array_ref = $sth.allrows(:array-of-hash)) &&
+  (!defined($errstr = $sth.errstr) || $sth.errstr eq '')),"allrows"); # test 51
 is($array_ref.elems, 50,"limit 50 works"); # test 52
 
 
@@ -415,7 +415,7 @@ ok($dbh.do("CREATE TABLE t1 (id INT(4), name VARCHAR(35))"), "Creating table"); 
 ok($sth = $dbh.prepare("SHOW TABLES LIKE 't1'"),"prepare show tables"); # test 55
 ok($sth.execute(), "Executing 'show tables'"); # test 56
 my @row;
-ok((defined(@row = $sth.fetchrow_array) &&
+ok((defined(@row = $sth.row()) &&
   (!defined($errstr = $sth.errstr) || $sth.errstr eq '')),
   "Testing if result set and no errors"); # test 57
 is(@row[0], 't1', "Checking if results equal to 't1'"); # test 58
@@ -428,7 +428,7 @@ is($rows, 1, "One row should have been inserted"); # test 63
 ok($sth.finish, "Finishing up with statement handle"); # test 64
 ok($sth= $dbh.prepare("SELECT id, name FROM t1 WHERE id = 1"),"Testing prepare of query"); # test 65
 ok($sth.execute(), "Testing execute of query"); # test 66
-ok(my $ret_ref = $sth.fetchall_arrayref(),"Testing fetchall_arrayref of executed query"); # test 67
+ok(my $ret_ref = $sth.allrows(),"Testing fetchall_arrayref of executed query"); # test 67
 ok($sth= $dbh.prepare("INSERT INTO t1 values (?, ?)"),"Preparing insert, this time using placeholders"); # test 68
 %testInsertVals = ();
 $all_ok = Bool::True;
@@ -442,15 +442,15 @@ ok($all_ok, "Should have inserted one row (10 times)"); # test 69
 ok($sth.finish, "Testing closing of statement handle"); # test 70
 ok($sth= $dbh.prepare("SELECT * FROM t1 WHERE id = ? OR id = ?"),"Testing prepare of query with placeholders"); # test 71
 ok($rows = $sth.execute(1,2),"Testing execution with values id = 1 or id = 2"); # test 72
-ok($ret_ref = $sth.fetchall_arrayref(),"Testing fetchall_arrayref (should be four rows)"); # test 73
+ok($ret_ref = $sth.allrows(),"Testing fetchall_arrayref (should be four rows)"); # test 73
 is($ret_ref.elems, 4, "\$ret_ref should contain four rows in result set"); # test 74
 is($ret_ref[2][1], %testInsertVals{'1'}, "verify third row"); # test 75
 ok($sth= $dbh.prepare("DROP TABLE IF EXISTS t1"),"Testing prepare of dropping table"); # test 76
 ok($sth.execute(), "Executing drop table"); # test 77
 ok($sth= $dbh.prepare("SELECT 1"), "Prepare - Testing bug #20153"); # test 78
 ok($sth.execute(), "Execute - Testing bug #20153"); # test 79
-ok($sth.fetchrow_arrayref(), "Fetch - Testing bug #20153"); # test 80
-ok(!($sth.fetchrow_arrayref()),"Not Fetch - Testing bug #20153"); # test 81
+ok($sth.row(), "Fetch - Testing bug #20153"); # test 80
+ok(!($sth.row()),"Not Fetch - Testing bug #20153"); # test 81
 
 #-----------------------------------------------------------------------
 # from perl5 DBD/mysql/t/40bindparam.t

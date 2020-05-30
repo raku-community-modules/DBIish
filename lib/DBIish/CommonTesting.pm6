@@ -192,24 +192,30 @@ method run-tests {
     if $.dbd eq 'SQLite' | 'Oracle';
     is $rc, 6,          'In an ideal world should returns rows available';
 
-    #fetch stuff return Str
-    my @ref = [ Str, Str, "1", Str, Str],
-        [ Str, Str, Str, "4.85", Str ],
-        [ 'BEOM', 'Medium size orange juice', "2", "1.2", "2.4" ],
-        [ 'BUBH', 'Hot beef burrito', "1", "4.95", "4.95" ],
-        [ 'ONE', Str, Str, Str, Str ],
-        [ 'TAFM', 'Mild fish taco', "1", "4.85", "4.85" ];
+    #row and allrows return typed value, when possible
+    my @typed-ref = (
+        [ Str, Str, 1 , Rat, Rat],
+        [ Str, Str, Int, 4.85, Rat ],
+        [ 'BEOM', 'Medium size orange juice', 2, 1.2, 2.4 ],
+        [ 'BUBH', 'Hot beef burrito', 1, 4.95, 4.95 ],
+        [ 'ONE', Str, Int, Rat, Rat ],
+        [ 'TAFM', 'Mild fish taco', 1, 4.85, 4.85 ]
+    );
 
-    my @array = $sth.fetchall-array;
+    if $.dbd eq 'SQLite' { # Munge types
+        $sth.column-types[$_] = [Str, Str, Int, Rat, Rat][$_] for ^5;
+    }
+
+    my @array = $sth.allrows;
     is $sth.rows, 6,    '$sth.rows after fetch-array should report all';
     ok $sth.Finished,   'And marked Finished';
     is @array.elems, 6, 'fetchall-array returns 6 rows';
 
     my $ok = True;
     for ^6 -> $i {
-        $ok &&= @array[$i] eqv @ref[$i];
+        $ok &&= @array[$i] eqv @typed-ref[$i];
     }
-    ok $ok, 'selected data be fetchall-array matches';
+    ok $ok, 'selected data be allrows matches';
 
     # Re-execute the same statement
     ok $sth.execute,    'statement can be re-executed';
@@ -221,23 +227,11 @@ method run-tests {
 
     ok (@columns = $sth.column-types), 'called column-type';
     is @columns.elems, 5, "column-type returns 5 fields in a row";
-    ok @columns eqv ($.dbd ne 'SQLite' ??
-    [ Str, Str, Int, Rat, Rat ] !!
-    [ Any, Any, Any, Any, Any ]), 'column-types matches test data';
+    ok @columns eqv [ Str, Str, Int, Rat, Rat ], 'column-types matches test data';
 
     if $.dbd eq 'SQLite' { # Munge types
-    $sth.column-types[$_] = [Str, Str, Int, Rat, Rat][$_] for ^5;
+        $sth.column-types[$_] = [Str, Str, Int, Rat, Rat][$_] for ^5;
     }
-
-    #row and allrows return typed value, when possible
-    my @typed-ref = (
-        [ Str, Str, 1 , Rat, Rat],
-        [ Str, Str, Int, 4.85, Rat ],
-        [ 'BEOM', 'Medium size orange juice', 2, 1.2, 2.4 ],
-        [ 'BUBH', 'Hot beef burrito', 1, 4.95, 4.95 ],
-        [ 'ONE', Str, Int, Rat, Rat ],
-        [ 'TAFM', 'Mild fish taco', 1, 4.85, 4.85 ]
-    );
 
     # we skip some uninterested rows
     $sth.row(); $sth.row();
@@ -314,13 +308,10 @@ method run-tests {
 
     $sth.execute;
 
-    if $sth.^can('fetchrow_arrayref') {
-        ok my $arrayref = $sth.fetchrow_arrayref(), 'called fetchrow_arrayref'; #test 43
-        is $arrayref.elems, 4, "fetchrow_arrayref returns 4 fields in a row"; #test 44
-        is $arrayref, [ 'PICO', 'Delish piña colada', '5', 7.9 ],
-        'selected data matches test data of fetchrow_arrayref'; #test 45
-    }
-    else { skip 'fetchrow_arrayref not implemented', 2 }
+    ok my $arrayref = $sth.row(), 'called row'; #test 43
+    is $arrayref.elems, 4, "row returns 4 fields in a row"; #test 44
+    is $arrayref, [ 'PICO', 'Delish piña colada', '5', 7.9 ],
+    'selected data matches test data of row'; #test 45
 
     $sth.dispose;
 
@@ -333,7 +324,7 @@ method run-tests {
         if $lived {
             $sth = $dbh.prepare(q[SELECT description FROM nom WHERE name = ?]);
             lives-ok { $sth.execute('quot'); }, 'lived while retrieving result';
-            is $sth.fetchrow.join, q["';], 'got the right string back';
+            is $sth.row.join, q["';], 'got the right string back';
             $sth.dispose;
         }
         else {
@@ -348,7 +339,7 @@ method run-tests {
         if $lived {
             my $sth = $dbh.prepare(q[SELECT description FROM nom WHERE name = 'mark']);
             $sth.execute;
-            is $sth.fetchrow.join, '?"', 'correctly retrieved question mark';
+            is $sth.row.join, '?"', 'correctly retrieved question mark';
             $sth.dispose;
         }
         else {
@@ -361,7 +352,7 @@ method run-tests {
         $sth = $dbh.prepare('SELECT * FROM nom WHERE 1 = 0');
         $sth.execute;
 
-        my $row = $sth.fetchrow-hash;
+        my $row = $sth.row(:hash);
 
         ok !?$row, 'a query with no results should have a falsy value';
         $sth.dispose;
@@ -372,8 +363,8 @@ method run-tests {
         $sth = $dbh.prepare('SELECT COUNT(*) FROM nom');
         $sth.execute;
 
-        my $row = $sth.fetchrow-hash;
-           $row = $sth.fetchrow-hash;
+        my $row = $sth.row(:hash);
+           $row = $sth.row(:hash);
 
         ok !?$row, 'a query with no more results should have a falsy value';
         $sth.dispose;
@@ -386,7 +377,7 @@ method run-tests {
         $sth = $dbh.prepare('SELECT name, description, quantity FROM nom WHERE quantity = ?');
         $sth.execute($large-int);
 
-        my $row = $sth.fetchrow_arrayref;
+        my $row = $sth.row();
 
         ok $row, 'A row was successfully retrieved when using a large integer in a prepared statement';
         is $row[0], 'too', 'The contents of the row fetched via a large integer are correct';

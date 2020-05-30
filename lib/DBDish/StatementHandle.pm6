@@ -134,18 +134,18 @@ multi method allrows() {
 }
 
 # Legacy
-method fetchrow {
+method fetchrow is DEPRECATED('row()') {
     if my \r = self._row {
         my @ = (r.map: { .defined ?? ~$_ !! Str });
     } else { @ };
 }
 
-method fetchrow-hash {
+method fetchrow-hash is DEPRECATED('row(:hash)') {
     hash @!column-name Z=> self.fetchrow;
 }
-method fetchrow_hashref { self.fetchrow-hash }
+method fetchrow_hashref is DEPRECATED('row(:hash)'){ self.fetchrow-hash }
 
-method fetchall_hashref(Str $key) {
+method fetchall_hashref(Str $key) is DEPRECATED('allrows(:hash-of-arrays)') {
     my %results;
     while self.fetch-hash -> \h {
         %results{h{$key}} = h;
@@ -153,7 +153,7 @@ method fetchall_hashref(Str $key) {
     %results;
 }
 
-method fetchall-hash {
+method fetchall-hash is DEPRECATED('allrows(:hash-of-arrays)') {
     my @names := @!column-name;
     my %res = @names Z=> [] xx *;
     for self.fetchall-array -> @a {
@@ -164,7 +164,7 @@ method fetchall-hash {
     %res;
 }
 
-method fetchall-AoH {
+method fetchall-AoH is DEPRECATED('allrows(:array-of-hash)') {
     (0 xx *).flatmap({
         my $h = self.fetchrow-hash;
         last unless $h;
@@ -172,7 +172,7 @@ method fetchall-AoH {
     }).eager;
 }
 
-method fetchall-array {
+method fetchall-array is DEPRECATED('allrows(:array-of-hash)') {
     (0 xx *).flatmap({
         my $r = self.fetchrow;
         last unless $r;
@@ -180,8 +180,8 @@ method fetchall-array {
     }).eager;
 }
 
-method fetchrow_array { self.fetchrow }
-method fetchrow_arrayref { self.fetchrow; }
-method fetch { self.fetchrow; }
+method fetchrow_array is DEPRECATED('row(:array)') { self.fetchrow }
+method fetchrow_arrayref is DEPRECATED('row(:array)') { self.fetchrow; }
+method fetch is DEPRECATED('row()') { self.fetchrow; }
 
-method fetchall_arrayref  { [ self.fetchall-array.eager ] }
+method fetchall_arrayref is DEPRECATED('allrows(:array-of-hash)') { [ self.fetchall-array.eager ] }
