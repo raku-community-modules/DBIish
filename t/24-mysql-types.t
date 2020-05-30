@@ -32,6 +32,11 @@ without $dbh {
     exit;
 }
 
+if $dbh.server-version.Str ~~ /"MariaDB"/ {
+    skip-rest 'MariaDB returns the JSON as a BLOB type, not as a String type.';
+    exit;
+}
+
 ok $dbh,    'Connected';
 my $hasjson = $dbh.drv.version after v5.7.8;
 my $field = $hasjson ?? 'JSON' !! 'varchar';
