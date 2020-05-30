@@ -72,6 +72,7 @@ class MYSQL_RES is repr('CPointer') { ... }
 # so we use an 'intprt'
 constant ptrsize is export = nativesizeof(Pointer);
 constant intptr is export = ptrsize == 8 ?? uint64 !! uint32;
+our ulong constant ulong_zero is export = 0;
 class MYSQL_BIND is repr('CStruct') is export {
     #has Pointer[ulong]   $!length is rw;
     has intptr           $.length is rw;
@@ -135,6 +136,7 @@ class MYSQL_STMT is export is repr('CPointer') {
     method mysql_stmt_result_metadata(::?CLASS:D:       --> MYSQL_RES) is native(LIB) { * }
     method mysql_stmt_store_result(::?CLASS:D:          --> int32) is native(LIB) { * }
     method mysql_stmt_fetch(::?CLASS:D:                 --> int32) is native(LIB) { * }
+    method mysql_stmt_fetch_column(::?CLASS:D: MYSQL_BIND, int32, ulong --> int32) is native(LIB) { * }
     method mysql_stmt_bind_result(::?CLASS:D:
         MYSQL_BIND                                      --> my_bool) is native(LIB) { * }
     method mysql_stmt_errno(::?CLASS:D:                 --> int32) is native(LIB) { * }

@@ -67,6 +67,13 @@ submethod BUILD(:$!mysql_client!, :$!parent!, :$!stmt = MYSQL_STMT,
             for ^$!field_count -> $col {
                 given $!binds[$col] {
                     if .buffer_length = $!out-lengths[$col] {
+                        # The buffer requested is the maximum size for the datatype which may be several
+                        # GBs in size. Start with a low size and increase the buffer size as needed during
+                        # retrieval.
+                        if $!out-lengths[$col] > 8192 {
+                            $!out-lengths[$col] = 8192;
+                            .buffer_length = $!out-lengths[$col];
+                        }
                         @!out-bufs[$col] = blob-allocate(Buf, $!out-lengths[$col]);
                         .buffer = BPointer(@!out-bufs[$col]).Int;
                         .length = $lb + $col * ptrsize;
@@ -170,13 +177,29 @@ method _row {
     if $!field_count -> $fields {
         my $row;
         with $!stmt {
-            if .mysql_stmt_fetch == 0 { # Has data
+            my $ret = .mysql_stmt_fetch;
+            if $ret == 0 or $ret == 101 { # Has data, possibly truncated
                 my %Converter := $!parent.Converter;
                 $list = do for ^$fields {
                     my $val = my $t = @!column-type[$_];
                     if $!isnull[$_] {
                         $val;
                     } else {
+                        # Re-allocate buffer if the value is larger than the buffer previously allocated
+                        if $!out-lengths[$_] > $!binds[$_].buffer_length {
+                            @!out-bufs[$_] = blob-allocate(Buf, $!out-lengths[$_]);
+                            $!binds[$_].buffer = BPointer(@!out-bufs[$_]).Int;
+                            $!binds[$_].buffer_length = $!out-lengths[$_];
+
+                            # Repoint statement bind at this new buffer set. This allows future rows to use the larger buffer.
+                            $!stmt.mysql_stmt_bind_result($!binds.typed-pointer);
+
+                            # Fetch the specific column of interest.
+                            if $!stmt.mysql_stmt_fetch_column($!binds.typed-pointer, $_, 0) != 0 {
+                                .fail without self!handle-errors;
+                            }
+                        }
+
                         my $len = $!out-lengths[$_];
                         $val = @!out-bufs[$_].subbuf(0,$len);
                         if $t ~~ Blob {
