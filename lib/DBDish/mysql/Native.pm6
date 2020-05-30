@@ -41,27 +41,27 @@ enum mysql-field-type is export (
 );
 
 class MYSQL_FIELD is repr('CStruct') is export {
-    has	Str	$.name;
-    has Str	$.org_name;
-    has Str	$.table;
-    has Str	$.org_table;
-    has Str	$.db;
-    has Str	$.catalog;
-    has	Str	$.def;
-    has ulong	$.length;
-    has ulong	$.max_length;
-    has uint32	$.name_length;
-    has uint32	$.org_name_length;
-    has uint32	$.table_length;
-    has	uint32	$.org_table_length;
-    has uint32	$.db_length;
-    has uint32	$.catalog_length;
-    has uint32	$.def_length;
-    has uint32	$.flags;
-    has uint32	$.decimals;
-    has uint32	$.charsetnr;
-    has int32	$.type;
-    has Pointer $.extension;
+    has Str        $.name;
+    has Str        $.org_name;
+    has Str        $.table;
+    has Str        $.org_table;
+    has Str        $.db;
+    has Str        $.catalog;
+    has Str        $.def;
+    has ulong      $.length;
+    has ulong      $.max_length;
+    has uint32     $.name_length;
+    has uint32     $.org_name_length;
+    has uint32     $.table_length;
+    has uint32     $.org_table_length;
+    has uint32     $.db_length;
+    has uint32     $.catalog_length;
+    has uint32     $.def_length;
+    has uint32     $.flags;
+    has uint32     $.decimals;
+    has uint32     $.charsetnr;
+    has int32      $.type;
+    has Pointer    $.extension;
 }
 
 constant my_bool = int8;
@@ -74,27 +74,27 @@ constant ptrsize is export = nativesizeof(Pointer);
 constant intptr is export = ptrsize == 8 ?? uint64 !! uint32;
 class MYSQL_BIND is repr('CStruct') is export {
     #has Pointer[ulong]   $!length is rw;
-    has intptr		 $.length is rw;
+    has intptr           $.length is rw;
     #has Pointer[my_bool] $.is_null is rw;
-    has intptr		 $.is_null is rw;
-    #has Pointer	  $.buffer is rw;
-    has intptr		 $.buffer is rw;
+    has intptr           $.is_null is rw;
+    #has Pointer          $.buffer is rw;
+    has intptr           $.buffer is rw;
     has Pointer[my_bool] $.error;
     has Pointer[uint8]   $.row_ptr;
-    has Pointer		 $.store_param_func;
-    has Pointer		 $.fetch_result;
-    has Pointer		 $.skip_result;
-    has ulong		 $.buffer_length is rw;
-    has ulong		 $.offset;
-    has ulong		 $.lenght_value;
-    has uint32		 $.param_number is rw;
-    has uint32		 $.pack_length;
-    has uint32		 $.buffer_type is rw;
-    has my_bool		 $.error_value;
-    has my_bool		 $.is_unsigned;
-    has my_bool		 $.long_data_user;
-    has my_bool		 $.is_null_value;
-    has Pointer		 $.extension;
+    has Pointer          $.store_param_func;
+    has Pointer          $.fetch_result;
+    has Pointer          $.skip_result;
+    has ulong            $.buffer_length is rw;
+    has ulong            $.offset;
+    has ulong            $.lenght_value;
+    has uint32           $.param_number is rw;
+    has uint32           $.pack_length;
+    has uint32           $.buffer_type is rw;
+    has my_bool          $.error_value;
+    has my_bool          $.is_unsigned;
+    has my_bool          $.long_data_user;
+    has my_bool          $.is_null_value;
+    has Pointer          $.extension;
 }
 
 #note "MYSQL_BIND size: ", nativesizeof(MYSQL_BIND), nativesizeof(CArray[MYSQL_BIND]);
@@ -105,50 +105,52 @@ class MyRow does Positional is export {
     has $.lon;
 
     method AT-POS(int $idx) {
-	with $!car[$idx] {
-	    nativecast(Str, $_);
-	} else { Str }
+        with $!car[$idx] {
+            nativecast(Str, $_);
+        } else { Str }
     }
     method want(Int $idx, Mu $t) {
-	if $t ~~ Blob {
-	    self.blob($idx, $t);
-	} else {
-	    with self[$idx] { $t($_) } else { $t }
-	}
+        if $t ~~ Blob {
+            self.blob($idx, $t);
+        } else {
+            with self[$idx] { $t($_) } else { $t }
+        }
     }
     method blob(Int $idx, Mu $type) {
-	blob-from-pointer($!car[$idx], :elems($!lon[$idx]), :$type);
+        blob-from-pointer($!car[$idx], :elems($!lon[$idx]), :$type);
     }
 }
 
 class MYSQL_STMT is export is repr('CPointer') {
-    method mysql_stmt_prepare(::?CLASS:D: Str, ulong	--> int32) is native(LIB) { * }
-    method mysql_stmt_param_count(::?CLASS:D:		--> ulong) is native(LIB) { * }
+    method mysql_stmt_prepare(::?CLASS:D: Str, ulong    --> int32) is native(LIB) { * }
+    method mysql_stmt_param_count(::?CLASS:D:           --> ulong) is native(LIB) { * }
     method mysql_stmt_bind_param(::?CLASS:D: MYSQL_BIND --> int32) is native(LIB) { * }
-    method mysql_stmt_execute(::?CLASS:D:		--> int32) is native(LIB) { * }
-    method mysql_stmt_free_result(::?CLASS:D:	      --> my_bool) is native(LIB) { * }
-    method mysql_stmt_reset(::?CLASS:D:		      --> my_bool) is native(LIB) { * }
-    method mysql_stmt_field_count(::?CLASS:D:		--> int32) is native(LIB) { * }
-    method mysql_stmt_close(::?CLASS:D:	              --> my_bool) is native(LIB) { * }
-    method mysql_stmt_affected_rows(::?CLASS:D:        --> uint64) is native(LIB) { * }
-    method mysql_stmt_insert_id(::?CLASS:D:            --> uint64) is native(LIB) { * }
-    method mysql_stmt_result_metadata(::?CLASS:D:   --> MYSQL_RES) is native(LIB) { * }
-    method mysql_stmt_store_result(::?CLASS:D:		--> int32) is native(LIB) { * }
-    method mysql_stmt_fetch(::?CLASS:D:			--> int32) is native(LIB) { * }
+    method mysql_stmt_execute(::?CLASS:D:               --> int32) is native(LIB) { * }
+    method mysql_stmt_free_result(::?CLASS:D:           --> my_bool) is native(LIB) { * }
+    method mysql_stmt_reset(::?CLASS:D:                 --> my_bool) is native(LIB) { * }
+    method mysql_stmt_field_count(::?CLASS:D:           --> int32) is native(LIB) { * }
+    method mysql_stmt_close(::?CLASS:D:                 --> my_bool) is native(LIB) { * }
+    method mysql_stmt_affected_rows(::?CLASS:D:         --> uint64) is native(LIB) { * }
+    method mysql_stmt_insert_id(::?CLASS:D:             --> uint64) is native(LIB) { * }
+    method mysql_stmt_result_metadata(::?CLASS:D:       --> MYSQL_RES) is native(LIB) { * }
+    method mysql_stmt_store_result(::?CLASS:D:          --> int32) is native(LIB) { * }
+    method mysql_stmt_fetch(::?CLASS:D:                 --> int32) is native(LIB) { * }
     method mysql_stmt_bind_result(::?CLASS:D:
-	MYSQL_BIND				      --> my_bool) is native(LIB) { * }
+        MYSQL_BIND                                      --> my_bool) is native(LIB) { * }
+    method mysql_stmt_errno(::?CLASS:D:                 --> int32) is native(LIB) { * }
+    method mysql_stmt_error(::?CLASS:D:                 --> Str) is native(LIB) { * }
 };
 
 class MYSQL_RES is export {
 
     method mysql_fetch_row(--> CArray[Pointer]) is native(LIB) { * }
     method mysql_fetch_lengths(--> CArray[ulong]) is native(LIB) { * }
+
     method fetch_row(MYSQL_RES:D: --> MyRow) {
+        my $car = self.mysql_fetch_row;
+        my $lon = self.mysql_fetch_lengths;
 
-	my $car = self.mysql_fetch_row;
-	my $lon = self.mysql_fetch_lengths;
-
-	$car.defined ?? MyRow.new(:$car, :rs(self), :$lon) !! MyRow;
+        $car.defined ?? MyRow.new(:$car, :rs(self), :$lon) !! MyRow;
     }
 
     method mysql_fetch_field(MYSQL_RES:D: --> MYSQL_FIELD) is native(LIB) { * }
@@ -159,18 +161,18 @@ class MYSQL_RES is export {
 class MYSQL is export is repr('CPointer') {
 
     method mysql_real_escape_string(Blob, Blob, ulong)
-	returns ulong is native(LIB) { * };
+        returns ulong is native(LIB) { * };
     multi method escape(Blob $b, :$bin --> Str) {
-	if $bin { # HACK: mysql_real_scape assumes latin1 :(
-	    $b.list.fmt('%02x','');
-	} else {
-	    my \r = blob-allocate(Blob, $b.bytes * 2 + 1);
-	    my $res = self.mysql_real_escape_string(r, $b, $b.bytes);
-	    r.subbuf(0, $res).decode.Str;
-	}
+        if $bin { # HACK: mysql_real_scape assumes latin1 :(
+            $b.list.fmt('%02x','');
+        } else {
+            my \r = blob-allocate(Blob, $b.bytes * 2 + 1);
+            my $res = self.mysql_real_escape_string(r, $b, $b.bytes);
+            r.subbuf(0, $res).decode.Str;
+        }
     }
     multi method escape(Str $s --> Str) {
-	self.escape($s.encode);
+        self.escape($s.encode);
     }
 
     # Native methods
@@ -183,9 +185,9 @@ class MYSQL is export is repr('CPointer') {
     method mysql_insert_id(MYSQL:D:             --> uint64) is native(LIB) { * }
     method mysql_query(MYSQL:D: Str $sql         --> int32) is native(LIB) { * }
     method mysql_real_connect(MYSQL:D:
-	Str $host, Str $user, Str $password,
-	Str $database, int32 $port, Str $socket,
-	ulong $flag                              --> MYSQL) is native(LIB) { * }
+        Str $host, Str $user, Str $password,
+        Str $database, int32 $port, Str $socket,
+        ulong $flag                              --> MYSQL) is native(LIB) { * }
     method mysql_set_character_set(MYSQL:D:  Str --> int32) is native(LIB) { * }
     method mysql_character_set_name(MYSQL:D:       --> Str) is native(LIB) { * }
     method mysql_store_result(MYSQL:D:       --> MYSQL_RES) is native(LIB) { * }
@@ -193,6 +195,7 @@ class MYSQL is export is repr('CPointer') {
     method mysql_warning_count(MYSQL:D:         --> uint32) is native(LIB) { * }
     method mysql_ping(MYSQL:D:                   --> int32) is native(LIB) { * }
     method mysql_stmt_init(MYSQL:D:         --> MYSQL_STMT) is native(LIB) { * }
+
     method mysql_get_server_info(MYSQL:D:          --> Str) is native(LIB) { * }
 }
 
@@ -201,33 +204,33 @@ sub mysql_get_client_version(--> uint32) is export is native(LIB) { * }
 sub mysql_get_client_info(--> Str)       is export is native(LIB) { * }
 
 constant %mysql-type-conv is export = Map.new: map(
-    {+mysql-field-type::{.key} => .value}, (
-  MYSQL_TYPE_DECIMAL => Rat,
-  MYSQL_TYPE_TINY => Int,
-  MYSQL_TYPE_SHORT => Int,
-  MYSQL_TYPE_LONG => Int,
-  MYSQL_TYPE_FLOAT => Num,
-  MYSQL_TYPE_DOUBLE => Num,
-  MYSQL_TYPE_NULL => Any,
-  MYSQL_TYPE_TIMESTAMP => DateTime,
-  MYSQL_TYPE_LONGLONG => Int,
-  MYSQL_TYPE_INT24 => Int,
-  MYSQL_TYPE_DATE => Date,
-  MYSQL_TYPE_TIME => Str,
-  MYSQL_TYPE_DATETIME => DateTime,
-  MYSQL_TYPE_YEAR => Int,
-  MYSQL_TYPE_NEWDATE => Str,
-  MYSQL_TYPE_VARCHAR => Str,
-  MYSQL_TYPE_BIT => Int,
-  MYSQL_TYPE_JSON => Str,
-  MYSQL_TYPE_NEWDECIMAL => Rat,
-  MYSQL_TYPE_ENUM => Str,
-  MYSQL_TYPE_VAR_STRING  => Str,
-  MYSQL_TYPE_STRING  => Str,
-  MYSQL_TYPE_TINY_BLOB => Buf,
-  MYSQL_TYPE_MEDIUM_BLOB => Buf,
-  MYSQL_TYPE_LONG_BLOB => Buf,
-  MYSQL_TYPE_BLOB => Buf,
-));
+        {+mysql-field-type::{.key} => .value}, (
+        MYSQL_TYPE_DECIMAL => Rat,
+        MYSQL_TYPE_TINY => Int,
+        MYSQL_TYPE_SHORT => Int,
+        MYSQL_TYPE_LONG => Int,
+        MYSQL_TYPE_FLOAT => Num,
+        MYSQL_TYPE_DOUBLE => Num,
+        MYSQL_TYPE_NULL => Any,
+        MYSQL_TYPE_TIMESTAMP => DateTime,
+        MYSQL_TYPE_LONGLONG => Int,
+        MYSQL_TYPE_INT24 => Int,
+        MYSQL_TYPE_DATE => Date,
+        MYSQL_TYPE_TIME => Str,
+        MYSQL_TYPE_DATETIME => DateTime,
+        MYSQL_TYPE_YEAR => Int,
+        MYSQL_TYPE_NEWDATE => Str,
+        MYSQL_TYPE_VARCHAR => Str,
+        MYSQL_TYPE_BIT => Int,
+        MYSQL_TYPE_JSON => Str,
+        MYSQL_TYPE_NEWDECIMAL => Rat,
+        MYSQL_TYPE_ENUM => Str,
+        MYSQL_TYPE_VAR_STRING  => Str,
+        MYSQL_TYPE_STRING  => Str,
+        MYSQL_TYPE_TINY_BLOB => Buf,
+        MYSQL_TYPE_MEDIUM_BLOB => Buf,
+        MYSQL_TYPE_LONG_BLOB => Buf,
+        MYSQL_TYPE_BLOB => Buf,
+        ));
 
 
