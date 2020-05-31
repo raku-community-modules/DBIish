@@ -4,6 +4,12 @@ use DBIish;
 
 plan 1;
 
+# Thread tests may fail periodically under 2020.01
+unless $*PERL.compiler.version >= v2020.01 {
+    skip-rest 'Rakudo v2020.01 required for threading tests';
+    exit;
+}
+
 my %con-parms;
 # If env var set, no parameter needed.
 %con-parms<database> = 'dbdishtest' unless %*ENV<PGDATABASE>;

@@ -7,6 +7,12 @@ plan 1;
 my %con-parms = :database<dbdishtest>, :user<testuser>, :password<testpass>;
 my $dbh;
 
+# Thread tests may fail periodically under 2020.01
+unless $*PERL.compiler.version >= v2020.01 {
+    skip-rest 'Rakudo v2020.01 required for threading tests';
+    exit;
+}
+
 try {
     $dbh = DBIish.connect('mysql', |%con-parms);
     CATCH {
