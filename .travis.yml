@@ -8,7 +8,7 @@ env:
 
 perl6:
     - 2017.09
-    - 2019.11
+    - 2020.01
     - latest
 sudo: false
 install:
