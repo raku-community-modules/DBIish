@@ -186,8 +186,10 @@ method _row {
                         $val;
                     } else {
                         # Re-allocate buffer if the value is larger than the buffer previously allocated
+                        # Overallocate by 10% reduce number of reallocations if all tuples are close to but not exactly
+                        # the same size.
                         if $!out-lengths[$_] > $!binds[$_].buffer_length {
-                            @!out-bufs[$_] = blob-allocate(Buf, $!out-lengths[$_]);
+                            @!out-bufs[$_] = blob-allocate(Buf, $!out-lengths[$_] * 1.1);
                             $!binds[$_].buffer = BPointer(@!out-bufs[$_]).Int;
                             $!binds[$_].buffer_length = $!out-lengths[$_];
 
