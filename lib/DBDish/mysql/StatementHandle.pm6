@@ -191,9 +191,6 @@ method _row {
                             $!binds[$_].buffer = BPointer(@!out-bufs[$_]).Int;
                             $!binds[$_].buffer_length = $!out-lengths[$_];
 
-                            # Repoint statement bind at this new buffer set. This allows future rows to use the larger buffer.
-                            $!stmt.mysql_stmt_bind_result($!binds.typed-pointer);
-
                             # Fetch the specific column of interest.
                             if $!stmt.mysql_stmt_fetch_column($!binds.typed-pointer, $_, 0) != 0 {
                                 .fail without self!handle-errors;
