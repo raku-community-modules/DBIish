@@ -2,7 +2,7 @@
     "perl"          : "6.c",
     "name"          : "DBIish",
     "version"       : "0.5.19",
-    "description"   : "Database connectivity for Perl 6",
+    "description"   : "Database connectivity for Raku",
     "test-depends"  : [ ],
     "license"       : "BSD-2-Clause",
     "depends" : [ "NativeHelpers::Blob" ],
