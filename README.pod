@@ -149,9 +149,13 @@ Passing an array to C<execute/do> is now implemented. But you can also use the
 C<pg-array-str> method on your Pg StatementHandle to convert an Array to a
 string Pg can understand:
 
-  # Prepare an insertion of an array field;
+  # Insert an array via a do statement
+  my $sth = $db.do('INSERT INTO tab (array_column) VALUES ($1);', @data);
+
+  # Prepare an insertion of an array field
   my $sth = $db.prepare('INSERT INTO tab (array_column) VALUES ($1);');
-  $sth.execute(@data);   # or $sth.execute($sth.pg-array-str(@data));
+  $sth.execute(@data1);   # or $sth.execute($sth.pg-array-str(@data1));
+  $sth.execute(@data2);
 
   # Check if "value" is in the dataset. This is similar to an IN statement.
   my $sth = $db.prepare('SELECT * FROM tab WHERE value = ANY($1)');
