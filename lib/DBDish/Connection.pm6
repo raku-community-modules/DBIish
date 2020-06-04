@@ -100,7 +100,7 @@ method protect-connection(Callable $code) {
     return $ret;
 }
 
-method do(Str $statement, *@params, *%args) {
+method do(Str $statement, **@params, *%args) {
     LEAVE {
         with $!statements-lock.protect({ %!statements{$!last-sth-id} }) {
             warn "'do' should not be used for statements that return rows"
@@ -111,7 +111,7 @@ method do(Str $statement, *@params, *%args) {
     if !@params && self.can('execute') {
         self.execute($statement, |%args);
     } orwith self.prepare($statement, |%args) {
-        .execute(@params, |%args);
+        .execute(|@params, |%args);
     }
     else {
         .fail;

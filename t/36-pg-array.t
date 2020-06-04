@@ -4,7 +4,7 @@ use v6;
 use DBIish;
 use Test;
 
-plan 41;
+plan 42;
 my %con-parms;
 # If env var set, no parameter needed.
 %con-parms<database> = 'dbdishtest' unless %*ENV<PGDATABASE>;
@@ -175,6 +175,21 @@ STATEMENT
     is $row<one_int>, 5, 'Integer';
     is $row<one_text>, 'a string', 'String';
     is $row<qual>, True, 'Qual evaluates as expected';
+}
+
+# Roundtrip a Raku array via do().
+{
+    # Array type provided for older version of Pg
+    $dbh.do(q{CREATE TEMPORARY TABLE test_do_array (col1 text[]);});
+
+    my @arr = <some array text here>;
+
+    $dbh.do(q{INSERT INTO test_do_array VALUES ($1)}, @arr);
+    my $sth = $dbh.prepare(q{SELECT col1 FROM test_do_array});
+    $sth.execute();
+
+    my $row = $sth.row(:hash);
+    is $row<col1>, @arr, 'Text array';
 }
 
 # Cleanup
