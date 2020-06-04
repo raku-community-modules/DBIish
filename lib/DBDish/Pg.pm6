@@ -94,13 +94,11 @@ method version {
 
 method data-sources(*%params) {
     with self.connect(:dbname<template1>, |%params) {
-    LEAVE { .dispose }
-    with .prepare(
-        'SELECT pg_catalog.quote_ident(datname) FROM pg_catalog.pg_database ORDER BY 1'
-    ) {
-        .execute;
-        .allrows.map({ dbname => .[0] }) . eager; # 'cus this conn will be disposed
-    } else { .fail }
+        LEAVE { .dispose }
+        with .prepare('SELECT pg_catalog.quote_ident(datname) FROM pg_catalog.pg_database ORDER BY 1') {
+            .execute;
+            .allrows.map({ dbname => .[0] }) . eager; # 'cus this conn will be disposed
+        } else { .fail }
     } else { .fail }
 }
 
