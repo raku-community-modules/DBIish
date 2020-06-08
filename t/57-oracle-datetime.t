@@ -38,9 +38,9 @@ my $dropper = q|
           END IF;
     END;|;
 
-lives-ok { $dbh.do($dropper) }, 'Clean';
+lives-ok { $dbh.execute($dropper) }, 'Clean';
 lives-ok {
-    $dbh.do(qq|
+    $dbh.execute(qq|
     CREATE TABLE test_datetime (
 	adate DATE,
 	atimestamp TIMESTAMP(6) WITH TIME ZONE
@@ -85,4 +85,4 @@ my $datetime2 = $sth.row[0];
 isnt $datetime, $datetime2,		    'Server drift';
 diag $datetime2.Instant - $datetime.Instant;
 
-$dbh.do($dropper);
+$dbh.execute($dropper);

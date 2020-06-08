@@ -7,7 +7,6 @@ env:
     - PERL=/usr/bin/perl DBIISH_WRITE_TEST=YES
 
 perl6:
-    - 2017.09
     - 2020.01
     - latest
 sudo: false

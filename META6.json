@@ -1,7 +1,7 @@
 {
     "perl"          : "6.c",
     "name"          : "DBIish",
-    "version"       : "0.6.0",
+    "version"       : "0.6.1",
     "description"   : "Database connectivity for Raku",
     "test-depends"  : [ ],
     "license"       : "BSD-2-Clause",

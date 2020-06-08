@@ -30,9 +30,9 @@ without $dbh {
 }
 
 ok $dbh,    'Connected';
-lives-ok { $dbh.do('DROP TYPE IF EXISTS yesno') }, 'Clean';
+lives-ok { $dbh.execute('DROP TYPE IF EXISTS yesno') }, 'Clean';
 lives-ok {
-    $dbh.do(q|
+    $dbh.execute(q|
     CREATE TYPE yesno AS ENUM (
 	'Yes',
 	'No'
@@ -41,7 +41,7 @@ lives-ok {
 
 
 lives-ok {
-    $dbh.do(q|
+    $dbh.execute(q|
     CREATE TEMPORARY TABLE test_enum (
 	id INT NOT NULL DEFAULT 0, 
 	yeah yesno)|)

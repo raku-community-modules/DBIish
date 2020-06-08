@@ -13,11 +13,11 @@ DBIish - a simple database interface for Raku
 
     my $dbh = DBIish.connect("SQLite", :database<example-db.sqlite3>);
 
-    my $sth = $dbh.do(q:to/STATEMENT/);
+    my $sth = $dbh.execute(q:to/STATEMENT/);
         DROP TABLE IF EXISTS nom
         STATEMENT
 
-    $sth = $dbh.do(q:to/STATEMENT/);
+    $sth = $dbh.execute(q:to/STATEMENT/);
         CREATE TABLE nom (
             name        varchar(4),
             description varchar(30),
@@ -26,7 +26,7 @@ DBIish - a simple database interface for Raku
         )
         STATEMENT
 
-    $sth = $dbh.do(q:to/STATEMENT/);
+    $sth = $dbh.execute(q:to/STATEMENT/);
         INSERT INTO nom (name, description, quantity, price)
         VALUES ( 'BUBH', 'Hot beef burrito', 1, 4.95 )
         STATEMENT
@@ -39,6 +39,7 @@ DBIish - a simple database interface for Raku
     $sth.execute('TAFM', 'Mild fish taco', 1, 4.85);
     $sth.execute('BEOM', 'Medium size orange juice', 2, 1.20);
 
+    # For one-off execution
     $sth = $dbh.prepare(q:to/STATEMENT/);
         SELECT name, description, quantity, price, quantity*price AS amount
         FROM nom
@@ -50,6 +51,14 @@ DBIish - a simple database interface for Raku
     say @rows.elems; # 3
 
     $sth.dispose;
+
+    # For efficient multiple execution
+    $sth = $dbh.prepare('SELECT description FROM nom WHERE name = ?');
+    for <name1 name2> -> $name {
+        for $sth.execute($name).allrows(:array-of-hash) -> $row {
+            say $row<description>;
+        }
+    }
 
     $dbh.dispose;
 
@@ -145,12 +154,12 @@ See your PostgreSQL documentation for details.
 Pg arrays are supported when fetching array fields with C<row/allrows>. You will
 get the properly typed array according to the field type.
 
-Passing an array to C<execute/do> is now implemented. But you can also use the
+Passing an array to C<execute> is now implemented. But you can also use the
 C<pg-array-str> method on your Pg StatementHandle to convert an Array to a
 string Pg can understand:
 
-  # Insert an array via a do statement
-  my $sth = $db.do('INSERT INTO tab (array_column) VALUES ($1);', @data);
+  # Insert an array via an execute statement
+  my $sth = $db.execute('INSERT INTO tab (array_column) VALUES ($1);', @data);
 
   # Prepare an insertion of an array field
   my $sth = $db.prepare('INSERT INTO tab (array_column) VALUES ($1);');
@@ -192,7 +201,7 @@ commands in the meantime you will also need to execute C<pg-consume-input> first
 
 For example:
 
-    $db.do("LISTEN foo");
+    $db.execute("LISTEN foo");
 
     loop {
         $db.pg-consume-input
@@ -216,7 +225,7 @@ and have the following additional attributes as provided by PostgreSQL
   * type ➡ PG_DIAG_SEVERITY_NONLOCALIZED
   * type-localized ➡ PG_DIAG_SEVERITY
   * sqlstate ➡ PG_DIAG_SQLSTATE
-  * statement ➡ Statement provided to prepare() or do()
+  * statement ➡ Statement provided to prepare() or execute()
   * statement-name ➡ Statement Name provided to prepare() or created internally
   * statement-position ➡ PG_DIAG_STATEMENT_POSITION
   * internal-position ➡ PG_DIAG_INTERNAL_POSITION

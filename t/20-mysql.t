@@ -118,9 +118,9 @@ try {
     CATCH { die "ERROR: {DBIish.errstr}. Can't continue test\n"; }
 }
 ok($dbh.defined, "Connected to database"); # test 5
-lives-ok({$dbh.do("DROP TABLE IF EXISTS $table")}, "making slate clean"); # test 6
-lives-ok({$dbh.do("CREATE TEMPORARY TABLE $table (id INT(4), name VARCHAR(20))")}, "creating $table"); # test 7
-lives-ok({$dbh.do("DROP TABLE $table")}, "dropping created $table"); # test 8
+lives-ok({$dbh.execute("DROP TABLE IF EXISTS $table")}, "making slate clean"); # test 6
+lives-ok({$dbh.execute("CREATE TEMPORARY TABLE $table (id INT(4), name VARCHAR(20))")}, "creating $table"); # test 7
+lives-ok({$dbh.execute("DROP TABLE $table")}, "dropping created $table"); # test 8
 
 #-----------------------------------------------------------------------
 # from perl5 DBD/mysql/t/25lockunlock.t
@@ -151,11 +151,11 @@ CREATE TEMPORARY TABLE $table (
     name varchar(30) NOT NULL default ''
 )
 ";
-lives-ok { $dbh.do("DROP TABLE IF EXISTS $table") }, "drop table if exists $table"; # test 9
-lives-ok { $dbh.do($create) }, "create table $table"; # test 10
-ok $dbh.do("LOCK TABLES $table WRITE"), "lock tables $table write"; # test 11
-ok $dbh.do("INSERT INTO $table VALUES(1, 'Alligator Descartes test 12')"), "Insert"; # test 12
-lives-ok {$dbh.do("DELETE FROM $table WHERE id = 1") }, "Delete"; # test 13
+lives-ok { $dbh.execute("DROP TABLE IF EXISTS $table") }, "drop table if exists $table"; # test 9
+lives-ok { $dbh.execute($create) }, "create table $table"; # test 10
+ok $dbh.execute("LOCK TABLES $table WRITE"), "lock tables $table write"; # test 11
+ok $dbh.execute("INSERT INTO $table VALUES(1, 'Alligator Descartes test 12')"), "Insert"; # test 12
+lives-ok {$dbh.execute("DELETE FROM $table WHERE id = 1") }, "Delete"; # test 13
 my $sth;
 try {
     $sth= $dbh.prepare("SELECT * FROM $table WHERE id = 1");
@@ -167,8 +167,8 @@ $row = $sth.row();
 $errstr= $sth.errstr;
 nok $row, "Fetch should have failed"; # test 16
 nok $errstr, "Fetch should have failed"; # test 17
-ok $dbh.do("UNLOCK TABLES"), "Unlock tables"; # test 18
-ok $dbh.do("DROP TABLE $table"), "Drop table $table"; # test 19
+ok $dbh.execute("UNLOCK TABLES"), "Unlock tables"; # test 18
+ok $dbh.execute("DROP TABLE $table"), "Drop table $table"; # test 19
 
 #-----------------------------------------------------------------------
 # from perl5 DBD/mysql/t/29warnings.t
@@ -234,13 +234,13 @@ if $dbh.drv.library.name ~~ /mariadb/ {
 #ok $sth2->finish();
 #ok $dbh->do("DROP TABLE $table");
 #ok $dbh->disconnect();
-ok $dbh.do("DROP TABLE IF EXISTS $table"), "drop table if exists $table"; # test 23
+ok $dbh.execute("DROP TABLE IF EXISTS $table"), "drop table if exists $table"; # test 23
 $create = "
 CREATE TEMPORARY TABLE $table (
   id INT(3) PRIMARY KEY AUTO_INCREMENT NOT NULL,
   name VARCHAR(31))
 ";
-ok $dbh.do($create), "create $table"; # test 24
+ok $dbh.execute($create), "create $table"; # test 24
 my $query= "INSERT INTO $table (name) VALUES (?)";
 ok ($sth= $dbh.prepare($query)), "prepare insert with parameter"; # test 25
 ok $sth.execute("Jochen"), "execute insert with parameter"; # test 26
@@ -256,7 +256,7 @@ is $sth.insert-id, $max_id[0], 'sth insert id $sth.insert-id == max(id) $max_id[
 is $dbh.insert-id, $max_id[0], 'dbh insert id $dbh.insert-id == max(id) $max_id[0] in '~$table; # test 35
 ok $sth.finish(), "statement 1 finish"; #  test 36
 ok $sth2.finish(), "statement 2 finish"; # test 37
-ok $dbh.do("DROP TABLE $table"),"drop table $table"; # test 38
+ok $dbh.execute("DROP TABLE $table"),"drop table $table"; # test 38
 # Because the drop table might fail, disconnect and reconnect
 $dbh.dispose();
 try {
@@ -290,13 +290,13 @@ try {
 #ok $sth->finish;
 #ok $dbh->do("DROP TABLE $table");
 #ok $dbh->disconnect();
-ok $dbh.do("DROP TABLE IF EXISTS $table"),"drop table if exists $table"; # test 39
+ok $dbh.execute("DROP TABLE IF EXISTS $table"),"drop table if exists $table"; # test 39
 $create = "
 CREATE TEMPORARY TABLE $table (
     id INT(3) PRIMARY KEY NOT NULL,
     name VARCHAR(32))
 ";
-ok $dbh.do($create), "create $table"; # test 40
+ok $dbh.execute($create), "create $table"; # test 40
 $query = "INSERT INTO $table (id, name) VALUES (?,?)";
 ok ($sth = $dbh.prepare($query)),"prepare $query"; #  test 41
 ok $sth.execute(1, "Jocken"), "execute insert Jocken"; # test 42
@@ -331,8 +331,8 @@ $sth.PrintError = Bool::True;
 #ok(@$array_ref == 50);
 #ok($sth->finish);
 #ok($dbh->do("DROP TABLE $table"));
-ok($dbh.do("DROP TABLE IF EXISTS $table"), "making slate clean"); # test 45
-ok($dbh.do("CREATE TEMPORARY TABLE $table (id INT(4), name VARCHAR(35))"), "creating table"); # test 46
+ok($dbh.execute("DROP TABLE IF EXISTS $table"), "making slate clean"); # test 45
+ok($dbh.execute("CREATE TEMPORARY TABLE $table (id INT(4), name VARCHAR(35))"), "creating table"); # test 46
 ok(($sth = $dbh.prepare("INSERT INTO $table (id,name) VALUES (?,?)")),"prepare insert with 2 params"); # test 47
 my ( %testInsertVals, $all_ok );
 $all_ok = Bool::True;
@@ -410,8 +410,8 @@ is($array_ref.elems, 50,"limit 50 works"); # test 52
 ## Install a handler so that a warning about unfreed resources gets caught
 #$SIG{__WARN__} = sub { die @_ };
 #ok($dbh->disconnect(), "Testing disconnect");
-ok($dbh.do("DROP TABLE IF EXISTS t1"), "35prepare.t Making slate clean"); # test 53
-ok($dbh.do("CREATE TABLE t1 (id INT(4), name VARCHAR(35))"), "Creating table"); # test 54
+ok($dbh.execute("DROP TABLE IF EXISTS t1"), "35prepare.t Making slate clean"); # test 53
+ok($dbh.execute("CREATE TABLE t1 (id INT(4), name VARCHAR(35))"), "Creating table"); # test 54
 ok($sth = $dbh.prepare("SHOW TABLES LIKE 't1'"),"prepare show tables"); # test 55
 ok($sth.execute(), "Executing 'show tables'"); # test 56
 my @row;
@@ -420,10 +420,10 @@ ok((defined(@row = $sth.row()) &&
   "Testing if result set and no errors"); # test 57
 is(@row[0], 't1', "Checking if results equal to 't1'"); # test 58
 ok($sth.finish, "Finishing up with statement handle"); # test 59
-ok($dbh.do("INSERT INTO t1 VALUES (1,'1st first value')"),"Inserting first row"); # test 60
+ok($dbh.execute("INSERT INTO t1 VALUES (1,'1st first value')"),"Inserting first row"); # test 60
 ok($sth= $dbh.prepare("INSERT INTO t1 VALUES (2,'2nd second value')"),"Preparing insert of second row"); # test 61
 my $rows;
-ok(($rows = $sth.execute()), "Inserting second row"); # test 62
+ok(($rows = $sth.execute.rows), "Inserting second row"); # test 62
 is($rows, 1, "One row should have been inserted"); # test 63
 ok($sth.finish, "Finishing up with statement handle"); # test 64
 ok($sth= $dbh.prepare("SELECT id, name FROM t1 WHERE id = 1"),"Testing prepare of query"); # test 65
@@ -519,14 +519,14 @@ ok(!($sth.row()),"Not Fetch - Testing bug #20153"); # test 81
 #ok ($dbh->do("DROP TABLE $table"));
 #ok $sth->finish;
 #ok $dbh->disconnect;
-ok ($dbh.do("DROP TABLE IF EXISTS $table")),"drop table before 40bindparam.t"; # test 82
+ok ($dbh.execute("DROP TABLE IF EXISTS $table")),"drop table before 40bindparam.t"; # test 82
 $create = "
 CREATE TEMPORARY TABLE $table (
         id int(4) NOT NULL default 0,
         name varchar(40) default ''
         )
 ";
-ok ($dbh.do($create)),"create table with defaults"; # test 83
+ok ($dbh.execute($create)),"create table with defaults"; # test 83
 ok ($sth = $dbh.prepare("INSERT INTO $table VALUES (?, ?)")),"prepare parameterized insert"; # test 84
 my $numericVal = 1; # Automatic type detection
 my $charVal = "Alligator Descartes";
@@ -573,14 +573,14 @@ is $dbh.quote('foo'):as-id, '`foo`',    'Quote Id';
 #ok ($dbh->do("DROP TABLE $table"));
 #ok ($dbh->disconnect());
 
-#ok $dbh.do("DROP TABLE IF EXISTS $table"), "drop table $table"; # test 87
+#ok $dbh.execute("DROP TABLE IF EXISTS $table"), "drop table $table"; # test 87
 #$create= "
 #CREATE TABLE $table (
 #    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
 #    num INT(3))
 #";
-#ok $dbh.do($create), "create table $table"; # test 88
-#ok $dbh.do("INSERT INTO $table VALUES(NULL, 1)"), "insert into $table (null, 1)"; # test 89
+#ok $dbh.execute($create), "create table $table"; # test 88
+#ok $dbh.execute("INSERT INTO $table VALUES(NULL, 1)"), "insert into $table (null, 1)"; # test 89
 
 
 #-----------------------------------------------------------------------

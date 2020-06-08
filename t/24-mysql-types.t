@@ -14,7 +14,7 @@ class JSON {
     # Used only as a marker for converter
 }
 
-plan 22;
+plan 26;
 my %con-parms = :database<dbdishtest>, :user<testuser>, :password<testpass>;
 my $dbh;
 
@@ -42,7 +42,7 @@ my $hasjson = $dbh.drv.version after v5.7.8;
 my $field = $hasjson ?? 'JSON' !! 'varchar';
 diag "want test '$field'";
 lives-ok {
-    $dbh.do(qq|
+    $dbh.execute(qq|
     CREATE TEMPORARY TABLE test_types (
 	col1 $field
     )|)
@@ -54,14 +54,30 @@ lives-ok {
 }, 'Insert Perl6 values';
 $sth.dispose;
 
-$sth = $dbh.prepare('SELECT col1 FROM test_types');
+$sth = $dbh.prepare('SELECT col1 FROM test_types').execute();
 my @coltype = $sth.column-types;
-ok @coltype eqv [Str],			    'Column-types';
+ok @coltype eqv [Str],			    'prep-exec: Column-types';
 
-is $sth.execute, 1,			    '1 row';
+is $sth.rows, 1,			    'prep-exec: 1 row';
 my ($col1) = $sth.row;
 isa-ok $col1, Str;
-is $col1, '{"key1": "value1"}',		    "Value $col1";
+is $col1, '{"key1": "value1"}',		    "prep-exec: Value $col1";
+
+# Execute without prepare goes through a different type handler
+# than prepare($qry).execute
+if 0 {
+    $sth = $dbh.execute('SELECT col1 FROM test_types');
+    @coltype = $sth.column-types;
+    ok @coltype eqv [Str], 'exec: Column-types';
+
+    is $sth.rows, 1, 'exec: 1 row';
+    ($col1) = $sth.row;
+    isa-ok $col1, Str;
+    is $col1, '{"key1": "value1"}', "exec: Value $col1";
+}
+else {
+    skip 'Type converter not yet supported for MySQL queries without prepare', 4;
+}
 
 # Install new type handler
 nok $dbh.Converter{JSON},		    'No converter';

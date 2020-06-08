@@ -26,7 +26,7 @@ without $dbh {
 
 ok $dbh,    'Connected';
 lives-ok {
-    $dbh.do(q|
+    $dbh.execute(q|
     CREATE TEMPORARY TABLE test_blob (
 	id INT NOT NULL DEFAULT 0, 
 	name bytea)|)

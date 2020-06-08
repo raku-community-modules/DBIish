@@ -26,7 +26,7 @@ my $subsec = $dbh.drv.version after v5.6.4;
 my $field = 'TIMESTAMP'; $field ~= '(6)' if $subsec;
 diag "Using $field";
 lives-ok {
-    $dbh.do(qq|
+    $dbh.execute(qq|
     CREATE TEMPORARY TABLE test_datetime (
 	adate DATE,
 	atime TIME,
@@ -45,7 +45,7 @@ $sth = $dbh.prepare('SELECT adate, atimestamp FROM test_datetime');
 my @coltype = $sth.column-types;
 ok @coltype eqv [Date, DateTime],	    'Column-types';
 
-is $sth.execute, 1,			    'One row';
+is $sth.execute.rows, 1,			    'One row';
 my ($date, $datetime) = $sth.row;
 isa-ok $date, Date;
 isa-ok $datetime,  DateTime;
@@ -53,7 +53,7 @@ is $date, $now.Date,			    'Today';
 is $datetime, $now,			    'Right now';
 $sth.dispose;
 $sth = $dbh.prepare('SELECT NOW()');
-is $sth.execute, 1,			    'One now';
+is $sth.execute.rows, 1,			    'One now';
 $datetime = $sth.row[0];
 if $subsec {
     isnt $datetime, $now,		    'Server drift';

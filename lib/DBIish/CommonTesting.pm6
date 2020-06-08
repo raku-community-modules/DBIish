@@ -27,7 +27,7 @@ method !hash-str(%h) {
 
 method run-tests {
     diag "Testing DBDish::$.dbd";
-    plan 107;
+    plan 109;
 
     # Convert to TEMPORARY table instead?
     without %*ENV<DBIISH_WRITE_TEST> {
@@ -72,7 +72,7 @@ method run-tests {
     try EVAL '$.post-connect-cb.($dbh)';
 
     # Drop a table of the same name so that the following create can work.
-    ok $dbh.do($!drop-table-sql), "drop table if exists works";
+    ok $dbh.execute($!drop-table-sql), "drop table if exists works";
 
     ok (my $stid = $dbh.last-sth-id), 'Statement registered';
     with $dbh.Statements{$stid} {
@@ -83,8 +83,9 @@ method run-tests {
     }
 
     # Create a table
-    ok (my $rc = $dbh.do($.create-table-sql) ), 'do: create table returns True';
-    is $rc, 0, "do: create table nom returns 0";
+    my $sth = $dbh.execute($.create-table-sql);
+    ok($sth), 'execute: create table returns True';
+    is $sth.rows, 0, "do: create table nom returns 0";
 
     is $dbh.err, 0, 'err after successful create should be 0';
     is $dbh.errstr, '', 'errstr after successful create should be empty';
@@ -92,7 +93,7 @@ method run-tests {
     isnt $dbh.last-sth-id, $stid,   'A different statement id';
 
     # Insert rows using the various method calls
-    ok $dbh.do( "
+    ok $dbh.execute( "
         INSERT INTO nom (name, description, quantity, price)
         VALUES ( 'BUBH', 'Hot beef burrito', 1, 4.95 )
     "), "insert without parameters called from do";
@@ -100,7 +101,7 @@ method run-tests {
     is $dbh.rows, 1, "simple insert should report 1 row affected";
 
     # Test .prepare() and .execute() a few times while setting things up.
-    ok my $sth = $dbh.prepare( "
+    ok $sth = $dbh.prepare( "
         INSERT INTO nom (name)
         VALUES ( ? )
     "), "prepare an insert command with one string parameter";
@@ -109,7 +110,7 @@ method run-tests {
     ok $sth.Finished,       'So Finished';
     ok !$sth.rows.defined,  'Rows undefined';
 
-    ok $rc = $sth.execute('ONE'), "execute one with one string parameter";
+    ok my $rc = $sth.execute('ONE').rows, "execute one with one string parameter";
 
     ok $sth.Executed,       'Was executed';
     ok $sth.Finished,       'execute on DML statement should leave finished';
@@ -131,7 +132,7 @@ method run-tests {
     "), "prepare an insert command with one integer parameter";
 
     ok not $sth.Executed,   'New statement sould not be marked executed yet';
-    ok $rc = $sth.execute(1), "execute one with one integer parameter";
+    ok $rc = $sth.execute(1).rows, "execute one with one integer parameter";
     ok $sth.Finished,       'execute on DML statement should leave finished';
 
     is $rc, 1, "execute one with one integer parameter should return 1 row affected";
@@ -142,7 +143,7 @@ method run-tests {
         INSERT INTO nom (price)
         VALUES ( ? )
     " ), "prepare an insert command with one float parameter";
-    ok $rc = $sth.execute(4.85), "execute one with one float parameter";
+    ok $rc = $sth.execute(4.85).rows, "execute one with one float parameter";
     is $rc, 1, "execute one with one float parameter should return 1 row affected";
     is $sth.rows, 1, '$sth.rows for execute one with one float parameter should report 1 row affected';
     $sth.dispose;
@@ -182,7 +183,7 @@ method run-tests {
     "), "prepare a select command without parameters";
 
     ok not $sth.Executed,    'SELECT statement sould not be marked executed yet';
-    $rc = $sth.execute,
+    $rc = $sth.execute.rows,
     ok $rc.defined,      'execute a prepared select statement without parameters';
     ok $sth.Executed,        'SELECT statement sould now be marked executed';
 
@@ -333,7 +334,7 @@ method run-tests {
 
         $lived = False;
         lives-ok {
-            $dbh.do(q[INSERT INTO nom (name, description) VALUES(?, '?"')], 'mark'); 
+            $dbh.execute(q[INSERT INTO nom (name, description) VALUES(?, '?"')], 'mark');
             $lived = True
             }, 'can use question mark in quoted strings';
         if $lived {
@@ -373,7 +374,7 @@ method run-tests {
     # test that an integer >= 2**31 still works as an argument to execute
     {
         my $large-int = 2 ** 31;
-        $dbh.do(qq[INSERT INTO nom (name, description, quantity) VALUES ('too', 'many', $large-int)]);
+        $dbh.execute(qq[INSERT INTO nom (name, description, quantity) VALUES ('too', 'many', $large-int)]);
         $sth = $dbh.prepare('SELECT name, description, quantity FROM nom WHERE quantity = ?');
         $sth.execute($large-int);
 
@@ -387,8 +388,14 @@ method run-tests {
         $sth.dispose;
     }
 
+
+    # Tests for semi-deprecated do()
+    my $ret;
+    ok $ret = $dbh.do("INSERT INTO nom (name, description, quantity) VALUES ('too', 'many', ?)", 5), "do with parameter";
+    is $ret, 1, 'Record count for insert';
+
     # Drop the table when finished, and disconnect
-    ok $dbh.do("DROP TABLE nom"), "final cleanup";
+    ok $dbh.execute("DROP TABLE nom"), "final cleanup";
     if $dbh.can('ping') {
         ok $dbh.ping, '.ping is true on a working DB handle';
     }

@@ -59,7 +59,7 @@ submethod BUILD(:$!parent!, :$!pg_conn!, # Per protocol
     }
 }
 
-method execute(**@params) {
+method execute(**@params --> DBDish::StatementHandle) {
     self!enter-execute(@params.elems, @!param_type.elems);
 
     $!parent.protect-connection: {

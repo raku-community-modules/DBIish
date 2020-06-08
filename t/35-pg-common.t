@@ -12,7 +12,7 @@ DBIish::CommonTesting.new(
     :%opts,
     post_connect_cb => sub {
 	# We want to see some messages
-        $^dbh.do( 'SET client_min_messages = warning' );
+        $^dbh.execute( 'SET client_min_messages = warning' );
     }
 ).run-tests;
 

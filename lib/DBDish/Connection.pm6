@@ -8,6 +8,7 @@ Does the C<DBDish::ErrorHandling> role.
 =end pod
 
 need DBDish::ErrorHandling;
+need DBDish::StatementHandle;
 
 unit role DBDish::Connection does DBDish::ErrorHandling;
 
@@ -90,7 +91,7 @@ method unlock-connection() {
 # Since CATCH in the caller fires before LEAVE in this method, we need to do
 # a bit of fiddly tracking to make unlock fire in both the success and error
 # case prior to passing control back upstream as the caller may wish to
-# $dbh.do('ROLLBACK') in a CATCH block.
+# $dbh.execute('ROLLBACK') in a CATCH block.
 method protect-connection(Callable $code) {
     my $locked = self.lock-connection();
 
@@ -113,6 +114,11 @@ method protect-connection(Callable $code) {
     return $ret;
 }
 
+method execute(Str $statement, **@params, *%args --> DBDish::StatementHandle) {
+    return self.prepare($statement, |%args).execute(|@params);
+}
+
+# Kinda deprecated
 method do(Str $statement, **@params, *%args) {
     LEAVE {
         with $!statements-lock.protect({ %!statements{$!last-sth-id} }) {
@@ -122,9 +128,9 @@ method do(Str $statement, **@params, *%args) {
         }
     }
     if !@params && self.can('execute') {
-        self.execute($statement, |%args);
+        self.execute($statement, |%args).rows;
     } orwith self.prepare($statement, |%args) {
-        .execute(|@params, |%args);
+        .execute(|@params, |%args).rows;
     }
     else {
         .fail;

@@ -45,9 +45,7 @@ await $p1;
 
 # Test for query success
 lives-ok {
-    my $sth-select = $dbh.prepare('SELECT 1 AS value');
-    $sth-select.execute();
-    my $row = $sth-select.row(:hash);
+    my $row = $dbh.execute('SELECT 1 AS value').row(:hash);
     is($row<value>, 1, 'Query returned a result');
 }, 'DB Connection uncorrupted';
 

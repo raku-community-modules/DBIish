@@ -42,10 +42,18 @@ method prepare(Str $statement, *%args) {
     }
 }
 
-method execute(Str $statement, *%args) {
-    DBDish::mysql::StatementHandle.new(
-        :$!mysql_client, :parent(self), :$statement, :$!RaiseError, |%args
-    ).execute;
+# Override DBIish::Connection.execute as statements such as LOCK TABLE cannot
+# be prepared in MySQL.
+# Avoid looking into the query string by using a simple parameter count
+# and skipping the prepare step for queries without parameters.
+method execute(Str $statement, **@params, *%args) {
+    if @params.elems == 0 {
+        return DBDish::mysql::StatementHandle.new(
+                :$!mysql_client, :parent(self), :$statement, :$!RaiseError, |%args).execute;
+    } else {
+        # Copied from the DBIish::Connection.execute
+        return self.prepare($statement, |%args).execute(|@params);
+    }
 }
 
 method insert-id() {

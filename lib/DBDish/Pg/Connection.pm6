@@ -58,12 +58,6 @@ method prepare(Str $statement, *%args) {
     }
 }
 
-method execute(Str $statement, *%args) {
-    DBDish::Pg::StatementHandle.new(
-        :$!pg_conn, :parent(self), :$statement, |%args
-    ).execute;
-}
-
 method server-version() {
     $ = Version.new($!pg_conn.pg-parameter-status('server_version'));
 }

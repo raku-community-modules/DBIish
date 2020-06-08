@@ -27,9 +27,9 @@ without $dbh {
 ok $dbh,    'Connected';
 
 # Be less verbose;
-$dbh.do('SET client_min_messages TO WARNING');
+$dbh.execute('SET client_min_messages TO WARNING');
 lives-ok {
-    $dbh.do(q|
+    $dbh.execute(q|
     CREATE TEMPORARY TABLE test_types (
 	col1 text
     )|)
@@ -44,11 +44,14 @@ $sth = $dbh.prepare('SELECT col1 FROM test_types');
 my @coltype = $sth.column-types;
 ok @coltype eqv [Str],	    'Column-types';
 
-is $sth.execute, 1,			    '1 row';
+$sth.execute;
+is $sth.rows, 1,			    '1 row';
 my ($col1) = $sth.row;
 isa-ok $col1, Str;
 is $col1, 'test',			    'Test';
 $dbh.Converter{Str} = sub ($) { 'changed' };
-is $sth.execute, 1,			    '1 row';
+
+$sth.execute;
+is $sth.rows, 1,			    '1 row';
 ($col1) = $sth.row;
 is $col1, 'changed',		    'Changed';

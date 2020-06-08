@@ -20,11 +20,11 @@ if $*DISTRO.is-win {
 
 my $dbh = DBIish.connect("Pg", :database<postgres>, :user<postgres>, :password<sa>, :RaiseError);
 
-my $sth = $dbh.do(q:to/STATEMENT/);
+my $sth = $dbh.execute(q:to/STATEMENT/);
 	DROP TABLE IF EXISTS nom
 STATEMENT
 
-$sth = $dbh.do(q:to/STATEMENT/);
+$sth = $dbh.execute(q:to/STATEMENT/);
 	CREATE TABLE nom (
 		name        varchar(4),
 		description varchar(30),
@@ -33,7 +33,7 @@ $sth = $dbh.do(q:to/STATEMENT/);
 	)
 STATEMENT
 
-$sth = $dbh.do(q:to/STATEMENT/);
+$sth = $dbh.execute(q:to/STATEMENT/);
 	INSERT INTO nom (name, description, quantity, price)
 	VALUES ( 'BUBH', 'Hot beef burrito', 1, 4.95 )
 STATEMENT

@@ -25,7 +25,7 @@ without $dbh {
     exit;
 }
 
-my $sth = $dbh.do(q:to/STATEMENT/);
+my $sth = $dbh.execute(q:to/STATEMENT/);
   CREATE TEMPORARY TABLE sal_emp (
     name               text,
     pay_by_quarter     integer[],
@@ -34,7 +34,7 @@ my $sth = $dbh.do(q:to/STATEMENT/);
   );
 STATEMENT
 
-$sth = $dbh.do(q:to/STATEMENT/);
+$sth = $dbh.execute(q:to/STATEMENT/);
     INSERT INTO sal_emp
     VALUES (
       'Bill',
@@ -180,11 +180,11 @@ STATEMENT
 # Roundtrip a Raku array via do().
 {
     # Array type provided for older version of Pg
-    $dbh.do(q{CREATE TEMPORARY TABLE test_do_array (col1 text[]);});
+    $dbh.execute(q{CREATE TEMPORARY TABLE test_do_array (col1 text[]);});
 
     my @arr = <some array text here>;
 
-    $dbh.do(q{INSERT INTO test_do_array VALUES ($1)}, @arr);
+    $dbh.execute(q{INSERT INTO test_do_array VALUES ($1)}, @arr);
     my $sth = $dbh.prepare(q{SELECT col1 FROM test_do_array});
     $sth.execute();
 

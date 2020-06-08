@@ -22,7 +22,7 @@ END try $database.unlink;
 # Create a test table.
 my $dbh = DBIish.connect("SQLite", :$database);
 END try $dbh.dispose;
-$dbh.do('CREATE TABLE nom ( name varchar(50) )');
+$dbh.execute('CREATE TABLE nom ( name varchar(50) )');
 
 
 # Check that it is possible to work with the database from multiple threads
@@ -52,7 +52,7 @@ subtest 'Statements across threads on one connection' => {
         $sth.finish;
     }
 
-    $dbh.do('DELETE FROM nom');
+    $dbh.execute('DELETE FROM nom');
 }
 
 # Check that it is possible to work with the database from multiple threads
@@ -83,5 +83,5 @@ subtest 'Multiple connections, one per thread' => {
         $sth.finish;
     }
 
-    $dbh.do('DELETE FROM nom');
+    $dbh.execute('DELETE FROM nom');
 }

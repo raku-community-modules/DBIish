@@ -26,10 +26,10 @@ without $dbh {
 
 ok $dbh,    'Connected';
 # Be less verbose;
-$dbh.do('SET client_min_messages TO WARNING');
-$dbh.do('SET timezone TO UTC');
+$dbh.execute('SET client_min_messages TO WARNING');
+$dbh.execute('SET timezone TO UTC');
 lives-ok {
-    $dbh.do(q|
+    $dbh.execute(q|
     CREATE TEMPORARY TABLE test_datetime (
 	adate DATE,
 	atime TIME,
@@ -51,7 +51,8 @@ $sth = $dbh.prepare('SELECT adate, atimestamp FROM test_datetime');
 my @coltype = $sth.column-types;
 ok @coltype eqv [Date, DateTime],	    'Column-types';
 
-is $sth.execute, 2,			    'Two rows';
+$sth.execute;
+is $sth.rows, 2,			    'Two rows';
 my ($date, $datetime) = $sth.row;
 isa-ok $date, Date;
 isa-ok $datetime,  DateTime;
@@ -68,7 +69,6 @@ diag $datetime.Instant - $now.Instant;
 # Pg cannot convert years, months, days to an integer as those vary in length
 # Also note intervalStyle variations.
 my $sthint = $dbh.prepare(q{SELECT INTERVAL '1 century + 1 month - 5 days 4 hours - 32 minutes' AS intexample});
-$sthint.execute();
-my $row = $sthint.row(:hash);
+my $row = $sthint.execute().row(:hash);
 is $row<intexample>, '100 years 1 mon -5 days +03:28:00', 'Complex interval';
 

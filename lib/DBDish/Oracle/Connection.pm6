@@ -33,7 +33,7 @@ method prepare(Str $statement, :$RaiseError = $!RaiseError, *%attr) {
 }
 
 method set-defaults {
-    self.do(
+    self.execute(
 	q|ALTER SESSION SET nls_timestamp_tz_format='YYYY-MM-DD"T"HH24:MI:SS.FFTZR'|
     );
     $!last-sth-id = Nil; # Lie a little.
@@ -44,7 +44,7 @@ method commit {
         warn "Commit ineffective while AutoCommit is on";
         return;
     };
-    self.do("COMMIT");
+    self.execute("COMMIT");
     $.in_transaction = 0;
 }
 
@@ -53,7 +53,7 @@ method rollback {
         warn "Rollback ineffective while AutoCommit is on";
         return;
     };
-    self.do("ROLLBACK");
+    self.execute("ROLLBACK");
     $.in_transaction = 0;
 }
 

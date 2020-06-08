@@ -91,7 +91,7 @@ method !get-meta {
     }
 }
 
-method execute(*@params) {
+method execute(*@params --> DBDish::StatementHandle) {
     self!enter-execute(@params.elems, $!param-count);
 
     # bind placeholder values

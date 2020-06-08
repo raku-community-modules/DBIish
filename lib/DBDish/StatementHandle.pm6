@@ -26,7 +26,7 @@ has @!column-type;
 has $!which = self.WHICH;
 
 # My defined interface
-method execute(*@ --> Int) { ... }
+method execute(*@ --> DBDish::StatementHandle) { ... }
 method finish(--> Bool) { ... }
 method _row(--> Array) { ... }
 method _free() { ... }
@@ -49,7 +49,7 @@ method !done-execute(Int $rows, $fields) {
     $!Finished = False;
     $!affected_rows = $rows;
     self.finish unless $fields;
-    self.rows;
+    self;
 }
 
 method new(*%args) {

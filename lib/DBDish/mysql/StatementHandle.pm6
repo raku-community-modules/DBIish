@@ -96,7 +96,7 @@ submethod BUILD(:$!mysql_client!, :$!parent!, :$!stmt = MYSQL_STMT,
     }
 }
 
-method execute(*@params) {
+method execute(*@params --> DBDish::StatementHandle) {
     self!enter-execute(@params.elems, $!param-count);
     if $!stmt { # Prepared
         if $!param-count {
@@ -212,6 +212,7 @@ method _row {
                 $row = True;
             }
         } elsif $row = $!result_set.fetch_row {
+            # TODO: This should support $!parent.Converter.
             $list = do for ^$fields { $row.want($_, @!column-type[$_]) }
             $!affected_rows++ unless $!Prefetch;
         }

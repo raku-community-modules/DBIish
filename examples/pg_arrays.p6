@@ -25,11 +25,11 @@ my $dbh = DBIish.connect(
 	:password<sa>, :RaiseError
 );
 
-my $sth = $dbh.do(q:to/STATEMENT/);
+my $sth = $dbh.execute(q:to/STATEMENT/);
   DROP TABLE IF EXISTS sal_emp;
 STATEMENT
 
-$sth = $dbh.do(q:to/STATEMENT/);
+$sth = $dbh.execute(q:to/STATEMENT/);
   CREATE TABLE sal_emp (
     name               text,
     pay_by_quarter     integer[],
@@ -38,7 +38,7 @@ $sth = $dbh.do(q:to/STATEMENT/);
   );
 STATEMENT
 
-$sth = $dbh.do(q:to/STATEMENT/);
+$sth = $dbh.execute(q:to/STATEMENT/);
 	INSERT INTO sal_emp
     VALUES (
       'Bill',

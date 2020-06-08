@@ -25,8 +25,8 @@ ok not $dbh.err,    'Without errors en $dbh';
 ok not DBIish.err,  'Error cleared in DBIish';
 
 lives-ok {
-    $dbh.do('DROP TABLE IF EXISTS with_unique');
-    $dbh.do('CREATE TABLE with_unique(a integer not null, b integer not null, UNIQUE(a, b))');
+    $dbh.execute('DROP TABLE IF EXISTS with_unique');
+    $dbh.execute('CREATE TABLE with_unique(a integer not null, b integer not null, UNIQUE(a, b))');
 }, 'Can create table';
 
 my $insert = $dbh.prepare('INSERT INTO with_unique(a, b) VALUES(?, ?)');

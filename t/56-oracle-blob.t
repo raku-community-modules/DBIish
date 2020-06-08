@@ -39,9 +39,9 @@ my $dropper = q|
     END;|;
 
 ok $dbh,    'Connected';
-lives-ok { $dbh.do($dropper) }, 'Clean';
+lives-ok { $dbh.execute($dropper) }, 'Clean';
 lives-ok {
-    $dbh.do(q|CREATE TABLE test_blob (id NUMBER, name RAW(300) )|)
+    $dbh.execute(q|CREATE TABLE test_blob (id NUMBER, name RAW(300) )|)
 }, 'Table created';
 my $blob = Buf.new(^256);
 my $query = 'INSERT INTO test_blob VALUES(?, ?)';
@@ -61,4 +61,4 @@ is @res.elems,  1,	 'One field';
 $data = @res[0];
 ok $data ~~ Buf,         'Data is-a Buf';
 ok not $data.defined,    'But is NULL';
-$dbh.do($dropper);
+$dbh.execute($dropper);

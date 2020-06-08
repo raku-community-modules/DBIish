@@ -38,7 +38,7 @@ if $db-version !~~ /^ '9.'<[3 .. 6]> | 1\d / {
     my $ex;
     my $query = q{SELECT nocolumn FROM pg_class;};
     throws-like {
-        $dbh.do($query);
+        $dbh.execute($query);
 
         CATCH {
             default {
@@ -55,7 +55,7 @@ if $db-version !~~ /^ '9.'<[3 .. 6]> | 1\d / {
             source-line   => / \d+ /,
             source-function => 'errorMissingColumn',
             statement => $query,
-            statement-name => q{},
+            statement-name => / \w+ /,
             dbname => %*ENV<PGDATABASE>,
             host => / \w+ /,
             port => / \d+ /,
@@ -106,7 +106,7 @@ if $db-version !~~ /^ '9.'<[3 .. 6]> | 1\d / {
     _QUERY_
 
     throws-like {
-        $dbh.do($query);
+        $dbh.execute($query);
 
         # Copy needed for additional testing. throws-like cannot handle Bool type
         CATCH {
@@ -133,7 +133,7 @@ if $db-version !~~ /^ '9.'<[3 .. 6]> | 1\d / {
             source-line => / \d+ /,
             source-function => 'exec_stmt_raise',
             statement => $query,
-            statement-name => q{},
+            statement-name => /^ .+ $/,
             dbname => %*ENV<PGDATABASE>,
             host => / \w+ /,
             port => / \d+ /,
@@ -152,8 +152,7 @@ if $db-version !~~ /^ '9.'<[3 .. 6]> | 1\d / {
     _QUERY_
 
     throws-like {
-        my $sth = $dbh.prepare($query);
-        $sth.execute();
+        my $sth = $dbh.execute($query);
         CATCH {
             default {
                 $ex = $_;

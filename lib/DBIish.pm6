@@ -1,7 +1,7 @@
 use v6;
 # DBIish.pm6
 
-unit class DBIish:auth<mberends>:ver<0.6.0>;
+unit class DBIish:auth<mberends>:ver<0.6.1>:api<1>;
     use DBDish;
 
     package GLOBAL::X::DBIish {
@@ -106,11 +106,11 @@ unit class DBIish:auth<mberends>:ver<0.6.0>;
 
     my $dbh = DBIish.connect("SQLite", :database<example-db.sqlite3>);
 
-    my $sth = $dbh.do(q:to/STATEMENT/);
+    my $sth = $dbh.execute(q:to/STATEMENT/);
         DROP TABLE nom
         STATEMENT
 
-    $sth = $dbh.do(q:to/STATEMENT/);
+    $sth = $dbh.execute(q:to/STATEMENT/);
         CREATE TABLE nom (
             name        varchar(4),
             description varchar(30),
@@ -119,7 +119,7 @@ unit class DBIish:auth<mberends>:ver<0.6.0>;
         )
         STATEMENT
 
-    $sth = $dbh.do(q:to/STATEMENT/);
+    $sth = $dbh.execute(q:to/STATEMENT/);
         INSERT INTO nom (name, description, quantity, price)
         VALUES ( 'BUBH', 'Hot beef burrito', 1, 4.95 )
         STATEMENT

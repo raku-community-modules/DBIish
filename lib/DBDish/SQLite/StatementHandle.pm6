@@ -30,7 +30,7 @@ submethod BUILD(:$!conn!, :$!parent!, :$!statement_handle!,
     }
 }
 
-method execute(*@params is raw) {
+method execute(*@params is raw --> DBDish::StatementHandle) {
     self!enter-execute(@params.elems, $!param-count);
 
     my int $num-params = @params.elems;

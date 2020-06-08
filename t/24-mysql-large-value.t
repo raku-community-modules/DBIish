@@ -24,7 +24,7 @@ without $dbh {
 
 ok $dbh,    'Connected';
 lives-ok {
-    $dbh.do(qq|
+    $dbh.execute(qq|
     CREATE TEMPORARY TABLE test_long_string (
 	col1 varchar(16383)
     )|)
@@ -44,9 +44,9 @@ for @long-strings -> $string {
 }
 $sth.dispose;
 
-$sth = $dbh.prepare('SELECT col1 FROM test_long_string ORDER BY length(col1)');
+$sth = $dbh.execute('SELECT col1 FROM test_long_string ORDER BY length(col1)');
 
-is $sth.execute, @long-strings.elems, '%d row'.sprintf(@long-strings.elems);
+is $sth.rows, @long-strings.elems, '%d row'.sprintf(@long-strings.elems);
 
 # Compare both source and DB long strings in order by length.
 for @long-strings -> $string {

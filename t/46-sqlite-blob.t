@@ -24,9 +24,9 @@ without $dbh {
 }
 
 ok $dbh,    'Connected';
-lives-ok { $dbh.do('DROP TABLE IF EXISTS test_blob') }, 'Clean';
+lives-ok { $dbh.execute('DROP TABLE IF EXISTS test_blob') }, 'Clean';
 lives-ok {
-    $dbh.do(q|
+    $dbh.execute(q|
     CREATE TABLE test_blob (
 	id INT NOT NULL DEFAULT 0, 
 	name bytea)|)
@@ -50,6 +50,6 @@ is @res.elems,  1,	 'One field';
 $data = @res[0];
 ok $data ~~ Buf,         'Data is-a Buf';
 ok not $data.defined,    'But is NULL';
-$dbh.do('DROP TABLE IF EXISTS test_blob');
+$dbh.execute('DROP TABLE IF EXISTS test_blob');
 $dbh.dispose;
 $TDB.unlink;
