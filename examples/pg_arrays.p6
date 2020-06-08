@@ -72,5 +72,5 @@ say %h;
 #say $arrayref.perl;
 
 # Cleanup
-$sth.finish;
+$sth.dispose;
 $dbh.dispose;

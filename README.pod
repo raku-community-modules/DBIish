@@ -49,7 +49,7 @@ DBIish - a simple database interface for Rakudo Perl 6
     my @rows = $sth.allrows();
     say @rows.elems; # 3
 
-    $sth.finish;
+    $sth.dispose;
 
     $dbh.dispose;
 

@@ -49,5 +49,5 @@ my $arrayref = $sth.fetchall_arrayref();
 say $arrayref.elems; # 3
 
 # Cleanup
-$sth.finish;
+$sth.dispose;
 $dbh.dispose;
