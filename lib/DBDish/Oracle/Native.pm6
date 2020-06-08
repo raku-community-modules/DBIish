@@ -121,7 +121,7 @@ class OCIHandle is repr('CPointer') is export {
     method gen-error(OCIHandle:D:) {
         my $errtxt = blob-allocate(utf8, 512);
         self.OCIErrorGet(1, OraText, my sb4 $errcode, $errtxt, 512, self.h-type);
-        OCIErr.new(:Str(~$errtxt), :Numeric($errcode));
+        OCIErr.new(:Str($errtxt.decode), :Numeric($errcode));
     }
 
     method OCIHandleAlloc (OCIHandle $parenth:
