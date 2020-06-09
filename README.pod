@@ -361,6 +361,11 @@ These will be removed on June 2022.
 * $sth.fetch() deprecated in favour of $sth.row()
 * $sth.fetchall_arrayref() deprecated in favour of $sth.allrows(:array-of-hash)
 
+* $sth.mysql_insertid deprecated in favour of $sth.insert-id
+* $dbh.mysql_insertid deprecated in favour of $dbh.insert-id
+* $dbh.disconnect deprecated in favour of $sth.dispose
+* $dbh.install_driver deprecated in favour of $sth.install-driver
+
 =head1 SEE ALSO
 
 The Perl 6 Pod in the L<doc:DBIish> module.
