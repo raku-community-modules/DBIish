@@ -204,10 +204,6 @@ method column-info(:$catalog, :$schema, :$table, :$column) {
     @search.push(self!make-comp($table,  'c.relname')) if $table;
     @search.push(self!make-comp($column, 'a.attname')) if $column;
 
-    my $column_def = self.server-version ge v8.0.0
-            ?? 'pg_catalog.pg_get_expr(af.adbin, af.adrelid)'
-            !! 'af.adsrc';
-
     my $col-info-sql = qq«
       SELECT
         NULL::text AS "TABLE_CAT"
@@ -222,7 +218,7 @@ method column-info(:$catalog, :$schema, :$table, :$column) {
         , NULL::text AS "NUM_PREC_RADIX"
         , CASE a.attnotnull WHEN 't' THEN 0 ELSE 1 END AS "NULLABLE"
         , pg_catalog.col_description(a.attrelid, a.attnum) AS "REMARKS"
-        , $column_def AS "COLUMN_DEF"
+        , pg_catalog.pg_get_expr(af.adbin, af.adrelid) AS "COLUMN_DEF"
         , NULL::text AS "SQL_DATA_TYPE"
         , NULL::text AS "SQL_DATETIME_SUB"
         , NULL::text AS "CHAR_OCTET_LENGTH"
@@ -253,7 +249,8 @@ method column-info(:$catalog, :$schema, :$table, :$column) {
     my %col-map := ($sth.column-names Z=> (0..*)).Map;
 
     my $sth-info = self.prepare(q{
-        SELECT consrc FROM pg_catalog.pg_constraint
+        SELECT "substring"(pg_get_constraintdef(con.oid), 7) AS consrc
+        FROM pg_catalog.pg_constraint AS con
         WHERE contype = 'c' AND conrelid = ? AND conkey = ?
     });
 
@@ -278,10 +275,10 @@ method column-info(:$catalog, :$schema, :$table, :$column) {
         }
 
         if $typtype eq 'e'  {
-            @row.push: self.selectcol_arrayref( #TODO remove legacy
-                "SELECT enumlabel FROM pg_catalog.pg_enum WHERE enumtypid = $typoid ORDER BY " ~
-                (self.server-version ge v9.1.0 ?? 'enumsortorder' !! 'oid')
-            );
+            my $sth = self.prepare( "SELECT enumlabel FROM pg_catalog.pg_enum WHERE enumtypid = ? ORDER BY " ~
+                                    (self.server-version ~~ v9.1.0+ ?? 'enumsortorder' !! 'oid'));
+            $sth.execute($typoid);
+            @row.push( $sth.allrows() );
         }
         else {
             @row.push: Any;
