@@ -366,6 +366,12 @@ These will be removed on June 2022.
 * $dbh.disconnect deprecated in favour of $sth.dispose
 * $dbh.install_driver deprecated in favour of $sth.install-driver
 
+* $dbh.selectrow_arrayref deprecated in favor of $sth = $dbh.prepare.execute(); $sth.row
+* $dbh.selectrow_hashref deprecated in favor of $sth = $dbh.prepare.execute(); $sth.row(:hash)
+* $dbh.selectall_arrayref deprecated in favor of $sth = $dbh.prepare.execute(); $sth.allrows
+* $dbh.selectall_hashref deprecated in favor of $sth = $dbh.prepare.execute(); $sth.allrows(:array-of-hashes)
+* $dbh.selectcol_arrayref deprecated in favor of $sth = $dbh.prepare.execute(); $sth.allrows(:array-of-hashes)
+
 =head1 SEE ALSO
 
 The Perl 6 Pod in the L<doc:DBIish> module.

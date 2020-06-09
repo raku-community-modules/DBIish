@@ -60,7 +60,7 @@ method server-version() {
     $ = Version.new($!pg_conn.pg-parameter-status('server_version'));
 }
 
-method selectrow_arrayref(Str $statement, $attr?, *@bind is copy) {
+method selectrow_arrayref(Str $statement, $attr?, *@bind is copy) is DEPRECATED('prepare/execute/row') {
     with self.prepare($statement, $attr) {
         .execute(@bind) and .fetchrow_arrayref;
     } else {
@@ -68,7 +68,7 @@ method selectrow_arrayref(Str $statement, $attr?, *@bind is copy) {
     }
 }
 
-method selectrow_hashref(Str $statement, $attr?, *@bind is copy) {
+method selectrow_hashref(Str $statement, $attr?, *@bind is copy) is DEPRECATED('prepare/execute/row(:hash)') {
     with self.prepare($statement, $attr) {
         .execute(@bind) and .fetchrow_hashref;
     } else {
@@ -76,7 +76,7 @@ method selectrow_hashref(Str $statement, $attr?, *@bind is copy) {
     }
 }
 
-method selectall_arrayref(Str $statement, $attr?, *@bind is copy) {
+method selectall_arrayref(Str $statement, $attr?, *@bind is copy) is DEPRECATED('prepare/execute/allrows()') {
     with self.prepare($statement, $attr) {
         .execute(@bind) and .fetchall_arrayref;
     } else {
@@ -84,7 +84,7 @@ method selectall_arrayref(Str $statement, $attr?, *@bind is copy) {
     }
 }
 
-method selectall_hashref(Str $statement, Str $key, $attr?, *@bind is copy) {
+method selectall_hashref(Str $statement, Str $key, $attr?, *@bind is copy) is DEPRECATED('prepare/execute/allrows(:array-of-hash)') {
     with self.prepare($statement, $attr) {
         .execute(@bind) and .fetchall_hashref($key);
     } else {
@@ -92,7 +92,7 @@ method selectall_hashref(Str $statement, Str $key, $attr?, *@bind is copy) {
     }
 }
 
-method selectcol_arrayref(Str $statement, $attr?, *@bind is copy) {
+method selectcol_arrayref(Str $statement, $attr?, *@bind is copy) is DEPRECATED('prepare/execute/allrows') {
     with self.prepare($statement, $attr) {
         .execute(@bind) and do {
             my @results;
