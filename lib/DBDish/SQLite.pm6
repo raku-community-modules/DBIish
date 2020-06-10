@@ -26,6 +26,10 @@ method connect(:database(:$dbname)! is copy, *%params) {
     }
 
     my $status = sqlite3_open($dbname, $p);
+
+    # Enable extended result codes if available
+    sqlite3_extended_result_codes($p, 1);
+
     if $status == SQLITE_OK {
         given %params<busy-timeout> // 10000 {
             sqlite3_busy_timeout($p, .Int);
@@ -33,7 +37,10 @@ method connect(:database(:$dbname)! is copy, *%params) {
         DBDish::SQLite::Connection.new(:conn($p), :parent(self), |%params);
     }
     else {
-        self!conn-error: :code($status) :errstr(sqlite3_errmsg($p));
+        # Show the extended status code for the connection error
+        # if one is available
+        my $detailed-status = sqlite3_extended_errcode($p) // $status;
+        self!conn-error: :code($$detailed-status) :errstr(sqlite3_errmsg($p));
     }
 }
 

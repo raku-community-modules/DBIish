@@ -69,6 +69,18 @@ sub sqlite3_errmsg(SQLite $handle)
     is export
     { ... }
 
+sub sqlite3_extended_result_codes(SQLite $handle, int32)
+    returns int32
+    is native(LIB)
+    is export
+    { ... }
+
+sub sqlite3_extended_errcode(SQLite $handle)
+    returns int32
+    is native(LIB)
+    is export
+    { ... }
+
 sub sqlite3_open(Str $filename, SQLite $handle is rw)
     returns int32
     is native(LIB)
