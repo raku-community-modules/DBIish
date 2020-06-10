@@ -33,7 +33,7 @@ method connect(:database(:$dbname)! is copy, *%params) {
         DBDish::SQLite::Connection.new(:conn($p), :parent(self), |%params);
     }
     else {
-        self!conn-error: :code($status) :errstr(SQLITE($status));
+        self!conn-error: :code($status) :errstr(sqlite3_errmsg($p));
     }
 }
 
