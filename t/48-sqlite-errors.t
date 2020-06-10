@@ -15,6 +15,13 @@ unless DBIish.install-driver('SQLite').version {
     exit;
 }
 
+my $cwd = $*CWD;
+say "CWD: $cwd";
+say "IS DIR: ", ($cwd.IO ~~ :d);
+$cwd.IO.add('somefile').spurt('FILES ARE WRITABLE');
+say "TMPDIR: %s".sprintf($*TMPDIR);
+
+
 throws-like {
     DBIish.connect('SQLite', :database</no-such/database>);
 }, X::DBDish::ConnectionFailed, "Die on invalid database";
