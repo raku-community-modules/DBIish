@@ -9,7 +9,7 @@ throws-like {
     DBIish.connect('SQLite');
 }, X::AdHoc, 'Need database';
 
-my $dbfile = 'exec-error';
+my $dbfile = 'exec-error'; $dbfile.IO.e;
 unless DBIish.install-driver('SQLite').version {
     skip-rest 'No SQLite3 library installed';
     exit;
