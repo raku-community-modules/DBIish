@@ -28,28 +28,10 @@ unit class DBIish:auth<mberends>:ver<0.5.9>;
     method errstr { $err-handler.errstr };
 
     method connect( $driver ) {
-        # The first native call done by the driver can trigger an X::AdHoc
-        # to report missing libraries.
-        # I catch here to avoid the drivers the need of this logic.
-        CATCH {
-            when $_.message ~~ m/
-            ^ "Cannot locate symbol '" <-[ ' ]>* "' in native library "
-                    ( "'" <-[ ' ]> * "'" )
-                    / {
-                X::DBIish::LibraryMissing.new(:library($/[0]), :$driver).fail;
-            }
-            when $_.message ~~ m/
-            ^ "Cannot locate native library "
-            ( "'" <-[ ' ]> * "'" )
-            / {
-                X::DBIish::LibraryMissing.new(:library($/[0]), :$driver).fail;
-            }
-            default {
-                .rethrow;
-            };
-        }
-        my $d = self.install-driver( $driver, |%_ );
-        $d.connect(|%_);
+        my $d = self.install-driver( $driver );
+        return $d.connect(|%_);
+
+        CATCH {default {self!handle-library-exception($_, $driver)}}
     }
 
     method install-driver( $drivername ) {
@@ -89,6 +71,29 @@ unit class DBIish:auth<mberends>:ver<0.5.9>;
     method installed-drivers {
         $installed-lock.protect: {
             %installed.pairs.cache;
+        }
+    }
+
+    method !handle-library-exception($ex, $drivername) {
+        # The first native call done by the driver can trigger an X::AdHoc
+        # to report missing libraries.
+        # I catch here to avoid the drivers the need of this logic.
+        given $ex {
+            when $_.message ~~ m/
+            ^ "Cannot locate symbol '" <-[ ' ]>* "' in native library "
+                    ( "'" <-[ ' ]> * "'" )
+                    / {
+                X::DBIish::LibraryMissing.new(:library($/[0]), :driver($drivername)).fail;
+            }
+            when $_.message ~~ m/
+            ^ "Cannot locate native library "
+                    ( "'" <-[ ' ]> * "'" )
+                    / {
+                X::DBIish::LibraryMissing.new(:library($/[0]), :driver($drivername)).fail;
+            }
+            default {
+                .rethrow;
+            };
         }
     }
 
