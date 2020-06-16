@@ -52,4 +52,4 @@ ok $data ~~ Buf,         'Data is-a Buf';
 ok not $data.defined,    'But is NULL';
 $dbh.do('DROP TABLE IF EXISTS test_blob');
 $dbh.dispose;
-$TDB.unlink
+$TDB.unlink;
