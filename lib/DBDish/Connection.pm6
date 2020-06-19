@@ -26,12 +26,19 @@ has $.last-rows is rw;
 has atomicint $!connection-lock = 0;
 
 method dispose() {
+    self.teardown-connection-state();
+
+    self._disconnect;
+    ?($.parent.unregister-connection(self))
+}
+
+# Remove client-side information about the connection state. This is separate from dispose to
+# to enable connection reuse.
+method teardown-connection-state() {
     $!statements-lock.protect: {
         $_.dispose for %!statements.values;
         %!statements = ();
     }
-    self._disconnect;
-    ?($.parent.unregister-connection(self))
 }
 submethod DESTROY() {
     self.dispose;
