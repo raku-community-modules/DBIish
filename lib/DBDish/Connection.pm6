@@ -40,6 +40,12 @@ method teardown-connection-state() {
         %!statements = ();
     }
 }
+
+# A scrub-connection-for-reuse() function is implemented to allow cleaning the connection for reuse
+method supports-connection-reuse(--> Bool) {
+    return so self.^can('scrub-connection-for-reuse');
+}
+
 submethod DESTROY() {
     self.dispose;
 }
