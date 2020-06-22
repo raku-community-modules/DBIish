@@ -17,7 +17,7 @@ try {
         when X::DBIish::LibraryMissing | X::DBDish::ConnectionFailed {
             diag "$_\nCan't continue.";
         }
-        default { .throw; }
+        default { .rethrow; }
     }
 }
 without $dbh {
@@ -43,7 +43,7 @@ if $db-version !~~ /^ '9.'<[3 .. 6]> | 1\d / {
         CATCH {
             default {
                 $ex = $_;
-                .throw;
+                .rethrow;
             }
         }
     }, X::DBDish::DBError::Pg, 'Incorrect column',
@@ -83,7 +83,7 @@ if $db-version !~~ /^ '9.'<[3 .. 6]> | 1\d / {
         CATCH {
             default {
                 $ex = $_;
-                .throw;
+                .rethrow;
             }
         }
     }, X::DBDish::DBError::Pg, 'Raise Exception',
@@ -128,7 +128,7 @@ if $db-version !~~ /^ '9.'<[3 .. 6]> | 1\d / {
         CATCH {
             default {
                 $ex = $_;
-                .throw;
+                .rethrow;
             }
         }
     }, X::DBDish::DBError::Pg, 'Raise Temporary Exception',
