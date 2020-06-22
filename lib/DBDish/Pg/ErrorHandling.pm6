@@ -35,7 +35,7 @@ package X::DBDish {
 
         has $.result;
 
-        submethod BUILD(:$!result, :$statement-handle, :$pg_conn) {
+        submethod BUILD(:$!result, :$statement-handle, :$statement, :$statement-name = "", :$pg_conn) {
             $!sqlstate = $!result.PQresultErrorField(PG_DIAG_SQLSTATE);
 
             $!message-detail = $!result.PQresultErrorField(PG_DIAG_MESSAGE_DETAIL);
@@ -61,6 +61,11 @@ package X::DBDish {
             with $statement-handle {
                 $!statement = $statement-handle.statement;
                 $!statement-name = $statement-handle.statement-name;
+            } orwith $statement {
+                # If prepare failed then a statement name does not exist. "" matches
+                # what $statement-handle.statement-name would be if a name is not set.
+                $!statement = $statement;
+                $!statement-name = $statement-name;
             }
 
             # Copy data to ensure it survives dispose()

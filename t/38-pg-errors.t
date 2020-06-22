@@ -3,7 +3,7 @@ use Test;
 use DBIish;
 need DBDish::Pg::ErrorHandling;
 
-plan 7;
+plan 9;
 
 my %con-parms;
 # If env var set, no parameter needed.
@@ -63,6 +63,35 @@ if $db-version !~~ /^ '9.'<[3 .. 6]> | 1\d / {
     ok $ex.is-temporary === False, 'Incorrect column: not temporary';
 }
 
+# Typical error from Pg prepare
+{
+    my $ex;
+    my $query = q{SELECT nocolumn FROM pg_class;};
+    throws-like {
+        $dbh.prepare($query);
+
+        CATCH {
+            default {
+                $ex = $_;
+                .rethrow;
+            }
+        }
+    }, X::DBDish::DBError::Pg, 'Incorrect column for prepared statement',
+            message => /'column "nocolumn" does not exist'/,
+            sqlstate => '42703',
+            type => 'ERROR',
+            type-localized => /^ .+ $/,
+            source-file => 'parse_relation.c',
+            source-line => / \d+ /,
+            source-function => 'errorMissingColumn',
+            statement => $query,
+            statement-name => / \w+ /,
+            dbname => %*ENV<PGDATABASE>,
+            host => / \w+ /,
+            port => / \d+ /,
+            user => %*ENV<PGUSER>;
+    ok $ex.is-temporary === False, 'Incorrect column: not temporary';
+}
 
 # All parameters
 {

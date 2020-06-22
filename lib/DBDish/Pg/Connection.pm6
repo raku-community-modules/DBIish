@@ -43,7 +43,15 @@ method prepare(Str $statement, *%args) {
         );
     } else {
         if $result {
-            self!set-err($result.PQresultStatus, $result.PQresultErrorMessage);
+            self!error-dispatch: X::DBDish::DBError::Pg.new(
+                    :code($result.PQresultStatus),
+                    :native-message($result.PQresultErrorField(PG_DIAG_MESSAGE_PRIMARY)),
+                    :driver-name<DBDish::Pg>,
+                    :$!pg_conn,
+                    :$statement,
+                    :$statement-name,
+                    :result($result),
+                    );
         } else {
             self!set-err(PGRES_FATAL_ERROR, $!pg_conn.PQerrorMessage);
         }
