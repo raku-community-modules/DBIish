@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-DBIish - a simple database interface for Rakudo Perl 6
+DBIish - a simple database interface for Raku
 
 =for HTML <a href='https://travis-ci.org/raku-community-modules/DBIish'><img src='https://travis-ci.org/raku-community-modules/DBIish.svg?branch=master'></a>
 
@@ -55,15 +55,15 @@ DBIish - a simple database interface for Rakudo Perl 6
 
 =head1 DESCRIPTION
 
-The DBIish project provides a simple database interface for Perl 6.
+The DBIish project provides a simple database interface for Raku.
 
 It's not a port of the Perl 5 DBI and does not intend to become one.
-It is, however, a simple and useful database interface for Perl 6 that works
+It is, however, a simple and useful database interface for Raku that works
 now. It looks like a DBI, and it talks like a DBI (although it only offers
 a subset of the functionality).
 
 It is based on Martin Berends' MiniDBI project, but unlike MiniDBI, DBDish
-aims to provide an interface that takes advantage of Perl 6 idioms.
+aims to provide an interface that takes advantage of Raku idioms.
 
 =head2 Connecting to, and disconnecting from, a database
 
@@ -123,7 +123,7 @@ Example:
 
 Some DBDish drivers install together with DBIish.pm6 and are maintained as a single project.
 
-Search the Perl 6 ecosystem for additional DBDish drivers.
+Search the Raku ecosystem for additional DBDish drivers.
 
 Currently the following backends are included:
 
@@ -314,15 +314,15 @@ client library to be searched and loaded.
 
 Example using the unadorned name:
 
-    DBIISH_MYSQL_LIB=mariadb perl6 t/25-mysql-common.t
+    DBIISH_MYSQL_LIB=mariadb rakudo t/25-mysql-common.t
 
 Using the absolute path in uninstalled DBIish:
 
-    DBIISH_MYSQL_LIB=/lib64/libmariadb.so.3 perl6 -t lib t/25-mysql-common.t
+    DBIISH_MYSQL_LIB=/lib64/libmariadb.so.3 rakudo -t lib t/25-mysql-common.t
 
 With MariaBD-Embedded:
 
-    DBIISH_MYSQL_LIB=mariadbd perl6 -I lib t/01-basic.t
+    DBIISH_MYSQL_LIB=mariadbd rakudo -I lib t/01-basic.t
 
 =head2 Oracle
 
@@ -374,17 +374,17 @@ These will be removed on June 2022.
 
 =head1 SEE ALSO
 
-The Perl 6 Pod in the L<doc:DBIish> module.
+The Raku Pod in the L<doc:DBIish> module.
 The Perl 5 L<doc:DBI> and L<doc:DBI::DBD>.
 
 This README and the documention of the DBIish and the DBDish modules
 are in the Pod6 format. It can be extracted by running
 
-    perl6 --doc <filename>
+    rakudo --doc <filename>
 
 Or, if L<Pod::To::HTML> is installed,
 
-    perl6 --doc=html <filename>
+    rakudo --doc=html <filename>
 
 =head1 COPYRIGHT
 
