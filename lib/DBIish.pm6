@@ -139,7 +139,7 @@ unit class DBIish:auth<mberends>:ver<0.6.0>;
 
     $sth.execute();
 
-    my $arrayref = $sth.fetchall_arrayref();
+    my $arrayref = $sth.allrows();
     say $arrayref.elems; # 3
 
     $sth.finish;
