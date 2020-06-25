@@ -13,11 +13,11 @@ DBIish - a simple database interface for Raku
 
     my $dbh = DBIish.connect("SQLite", :database<example-db.sqlite3>);
 
-    my $sth = $dbh.execute(q:to/STATEMENT/);
+    $dbh.execute(q:to/STATEMENT/);
         DROP TABLE IF EXISTS nom
         STATEMENT
 
-    $sth = $dbh.execute(q:to/STATEMENT/);
+    $dbh.execute(q:to/STATEMENT/);
         CREATE TABLE nom (
             name        varchar(4),
             description varchar(30),
@@ -26,12 +26,12 @@ DBIish - a simple database interface for Raku
         )
         STATEMENT
 
-    $sth = $dbh.execute(q:to/STATEMENT/);
+    $dbh.execute(q:to/STATEMENT/);
         INSERT INTO nom (name, description, quantity, price)
         VALUES ( 'BUBH', 'Hot beef burrito', 1, 4.95 )
         STATEMENT
 
-    $sth = $dbh.prepare(q:to/STATEMENT/);
+    my $sth = $dbh.prepare(q:to/STATEMENT/);
         INSERT INTO nom (name, description, quantity, price)
         VALUES ( ?, ?, ?, ? )
         STATEMENT
@@ -39,22 +39,23 @@ DBIish - a simple database interface for Raku
     $sth.execute('TAFM', 'Mild fish taco', 1, 4.85);
     $sth.execute('BEOM', 'Medium size orange juice', 2, 1.20);
 
+
     # For one-off execution
-    $sth = $dbh.prepare(q:to/STATEMENT/);
+    $sth = $dbh.execute(q:to/STATEMENT/);
         SELECT name, description, quantity, price, quantity*price AS amount
         FROM nom
         STATEMENT
+    say $sth.rows; # 3
 
-    $sth.execute();
-
-    my @rows = $sth.allrows();
-    say @rows.elems; # 3
+    for $sth.allrows() -> $row {
+        say $row[0];  # BUBH␤TAFM␤BEOM
+    }
 
     $sth.dispose;
 
     # For efficient multiple execution
     $sth = $dbh.prepare('SELECT description FROM nom WHERE name = ?');
-    for <name1 name2> -> $name {
+    for <TAFM BEOM> -> $name {
         for $sth.execute($name).allrows(:array-of-hash) -> $row {
             say $row<description>;
         }
@@ -70,9 +71,6 @@ It's not a port of the Perl 5 DBI and does not intend to become one.
 It is, however, a simple and useful database interface for Raku that works
 now. It looks like a DBI, and it talks like a DBI (although it only offers
 a subset of the functionality).
-
-It is based on Martin Berends' MiniDBI project, but unlike MiniDBI, DBDish
-aims to provide an interface that takes advantage of Raku idioms.
 
 =head2 Connecting to, and disconnecting from, a database
 
@@ -98,21 +96,95 @@ C<dispose> method:
 
   $dbh.dispose;
 
-=head2 Fetching data
+=head2 Executing queries
 
-DBIish provides nearly all the perl5 DBI fetch* method to fetch values from the C<StatementHandle> object.
-However it's recommended to use the C<row> and C<allrows> methods. They provide you typed values
+=head3 C<execute>
 
-=head3 row
+For a single execution of a query you may use execute directly. This starts the query within the database and returns
+a C<StatementHandle> which will be used for [Retrieving Data](#retrieving-data).
+
+  $dbh.execute(q:to/SQL/);
+    CREATE TABLE tab (
+      id serial PRIMARY KEY
+      col text
+    );
+    SQL
+
+Errors occurring within the database for an SQL statement will typically throw an exception within Raku. The level of
+detail within the exception object depends on the database driver.
+
+  $dbh.execute('CREATE TABLE failtab ( id );');
+
+  CATCH {
+     when X::DBDish::DBError {
+        say .message;
+     }
+  }
+
+In order to build a query dynamically without risk of SQL injection you need to use parameter binding. The C<?>
+will be replaced by an escaped copy of the parameter provided after the query.
+
+  my $value-id = 19;
+  $dbh.execute('INSERT INTO tab (id) VALUES (?)', $value-id);
+
+  my $value-text = q{Complex text ' value " with quotes};
+  $dbh.execute('INSERT INTO tab (id, col) VALUES (?, ?)', $value-id, $value-text);
+
+  # Undefined or Nil values will be converted to NULL by parameter binding.
+  my $value-nil;
+  $dbh.execute('INSERT INTO tab (id, col) VALUES (?, ?), $value-id, $value-nil);
+
+
+Parameter binding should be used where-ever possible, even if the number of parameters is dynamic. In this case the
+number of elements for IN is dynamic. The number of C<?>'s is scaled to fit the list of items, and the list
+is provided to execute as individual items.
+
+  my @value-list = 1 .. 6;
+  my $parameter-bind-marks = @value-list.map({'?'}).join(',')  # ?,?,?,?,?,?
+  my $query = 'SELECT id FROM tab WHERE id IN (%s)'.sprintf($parameter-bind-marks);
+  $dbh.execute($query, |@value-list);
+
+All database drivers support basic Raku types like Int, Rat, Str, and Buf; some databases may support additional
+complex types such as an Array of Str or Array of Int which may simplify the above example significantly. Please see
+database specific documentation for additional type support.
+
+=head3 C<prepare>
+
+Execute performs a couple of steps on the client side, and often the database side as well, which may be cached
+if a query is going to be executed several times. For simple queries, prepare() may increase performance by up to 50%
+
+This is an inefficient example of running a query multiple times:
+
+  for 1 .. 100 -> $id {
+    $dbh.execute('INSERT INTO tab (id) VALUES (?)', $id);
+  }
+
+This example is more efficient as it uses prepare to decrease overhead on the client side; often on the
+server-side too as the database may only need to parse the SQL once.
+
+  my $sth = $dbh.prepare('INSERT INTO tab (id) VALUES (?)');
+  for 1 .. 100 -> $id {
+    $sth.execute($id);
+  }
+
+=head2 Retrieving data
+
+DBIish provides the C<row> and C<allrows> methods to fetch values from a C<StatementHandle> object returned by execute.
+These functions provide you typed values; for example an int4 field in the database will be provided as an Int
+ scalar in Raku.
+
+=head3 C<row>
 
 C<row> take the C<hash> adverb if you want to have the values in a Hash form instead of a plain Array
 
 Example:
 
+    my $sth = $dbh.execute('SELECT id, col FROM tab WHERE id = ?', $value-id);
+
     my @values = $sth.row();
     my %values = $sth.row(:hash);
 
-=head3 allrows
+=head3 C<allrows>
 
 C<allrows> lazily returns all the rows as a list of arrays.
 If you want to fetch the values in a hash form, use one of the two adverbs C<array-of-hash>
@@ -120,18 +192,75 @@ or C<hash-of-array>
 
 Example:
 
+    my $sth = $dbh.execute('SELECT id, col FROM tab');
+
     my @data = $sth.allrows(); # [[1, 'val1'], [3, 'val2']]
-    my @data = $sth.allrows(:array-of-hash); # [ ( a => 1, b => 'val1'), ( a => 3, b => 'val2') ]
-    my %data = $sth.allrows(:hash-of-array); # a => [1, 3], b => ['val1', 'val2']
+    my @data = $sth.allrows(:array-of-hash); # [ ( id => 1, col => 'val1'), ( id => 3, col => 'val2') ]
+    my %data = $sth.allrows(:hash-of-array); # id => [1, 3], col => ['val1', 'val2']
 
+    for $sth.allrows(:array-of-hash) -> $row {
+      say $row<id>;  # 1␤3
+    }
 
-=head2 Query Building
+    # Or as a shorter example:
+    for $dbh.execute('SELECT id, col FROM tab').allrows(:array-of-hash) -> $row {
+       say $row<id>  # 1␤3
+    }
+
+=head3 C<dispose>
+
+After you have fetched all data using the statement handle, you can free its memory immediately using C<dispose>.
+
+    $sth.dispose;
+
+=head3 C<server-version>
+
+C<server-version> returns a C<Version> object for the version of the server you are connected to. Not all drivers support
+this function (some may not connect to a server at all) so it's best to wrap in a C<can>.
+
+    my Version $version = $dbh.server-version() if $dbh.can('server-version');
+
+=head2 Statement Exceptions
+
+All exceptions for a query result are thrown as or inherit C<X::DBDish::DBError>. Additional functionality may
+ be provided by the database driver.
+
+=over 4
+
+=item C<driver-name>
+
+Database Driver name for the connection
+
+=item C<native-message>
+
+Unmodified message received from the database server.
+
+=item C<code>
+
+Int return code from the local client library for the call; typically -1. This is not an SQL state.
+
+=item C<why>
+
+A Str indicating why the exception was thrown. Typically 'Error'.
+
+=item C<message>
+
+Human friendly and more informative version of the database message.
+
+=item C<is-temporary>
+
+A Boolean flag which when true indicates that the transaction may succeed if retried. Connectivity issues,
+serialization issues and other temporary items may set this as True.
+
+=back
+
+=head2 Advanced Query Building
 
 In general you should use the C<?> parameter for substitution whenever possible. The database driver
 will ensure values are properly escaped prior to insertion into the database. However, if you need to create
 a query string by hand then you can use C<quote> to help prevent an SQL injection attack from being successful.
 
-=head3 quote
+=head3 C<quote($literal)> and C<quote($identifier, :as-id)>
 
 Using parameter substitution is preferred:
 
@@ -146,7 +275,7 @@ However, if you must build the query directly you can:
 
 To build a query with a dynamic identifier:
 
-  # Notice that C<?> is still used for the value being inserted; it really is strongly recommended.
+  # Notice that C<?> is still used for the value being inserted; it is still recommended where possible.
   my $id = 'table';
   my $val = 'literal';
   my $query = 'INSERT INTO %s VALUES (?)'.sprintf( $dbh.quote($id, :as-id) );
@@ -160,7 +289,8 @@ To build a query with a dynamic identifier:
 
 Some DBDish drivers install together with DBIish.pm6 and are maintained as a single project.
 
-Search the Raku ecosystem for additional DBDish drivers.
+Search the Raku ecosystem for additional L<DBDish|https://modules.raku.org/search/?q=dbdish> drivers such
+as L<ODBC|https://github.com/salortiz/DBDish-ODBC>.
 
 Currently the following backends are included:
 
@@ -169,7 +299,7 @@ Currently the following backends are included:
 Supports basic CRUD operations and prepared statements with placeholders
 
     my $dbh = DBIish.connect('Pg', :host<db01.yourdomain.com>, :port(5432),
-            :database<blerg>, :user<myuser>, :$password);
+            :database<blerg>, :user<myuser>, password => get-secret());
 
 Pg supports the following named arguments:
 C<host>, C<hostaddr>, C<port>, C<database> (or its alias C<dbname>), C<user>, C<password>,
@@ -177,39 +307,56 @@ C<connect-timeout>, C<client-encoding>, C<options>, C<application-name>, C<keepa
 C<keepalives-idle>, C<keepalives-interval>, C<sslmode>, C<requiressl>, C<sslcert>, C<sslkey>,
 C<sslrootcert>, C<sslcrl>, C<requirepeer>, C<krbsrvname>, C<gsslib>, and C<service>.
 
-See your PostgreSQL documentation for details.
+See your L<PostgreSQL documentation|https://www.postgresql.org/docs/current/libpq-envars.html> for details.
 
-Pg arrays are supported when fetching array fields with C<row/allrows>. You will
-get the properly typed array according to the field type.
+=head3 Parameter Substitution
+
+In addition to the C<?> style of parameter substitution supported by all drivers, PostgreSQL also supports numbered
+parameter. The advantage is that a numbered parameter may be reused
+
+   $dbh.execute('INSERT INTO tab VALUES ($1, $2, $2 - $1)', $var1, $var2);
+
+This is equivalent to the below statement except the subtraction operation is performed by PostgreSQL:
+
+   $dbh.execute('INSERT INTO tab VALUES (?, ?, ?)', $var1, $var2, $var2 - $var1);
+
+=head3 pg arrays
+
+Pg arrays are supported for both writing via execute and retrieval via C<row/allrows>.
+You will get the properly typed array according to the field type.
 
 Passing an array to C<execute> is now implemented. But you can also use the
 C<pg-array-str> method on your Pg StatementHandle to convert an Array to a
 string Pg can understand:
 
   # Insert an array via an execute statement
-  my $sth = $db.execute('INSERT INTO tab (array_column) VALUES ($1);', @data);
+  my $sth = $dbh.execute('INSERT INTO tab (array_column) VALUES ($1);', @data);
 
   # Prepare an insertion of an array field
-  my $sth = $db.prepare('INSERT INTO tab (array_column) VALUES ($1);');
+  my $sth = $dbh.prepare('INSERT INTO tab (array_column) VALUES ($1);');
   $sth.execute(@data1);   # or $sth.execute($sth.pg-array-str(@data1));
   $sth.execute(@data2);
 
+  # Retrieve the array values back again.
+  for $dbh.execute('SELECT array_column FROM tab').allrows() -> $row {
+     my @array-column = $row[0];
+  }
+
   # Check if "value" is in the dataset. This is similar to an IN statement.
-  my $sth = $db.prepare('SELECT * FROM tab WHERE value = ANY($1)');
+  my $sth = $dbh.prepare('SELECT * FROM tab WHERE value = ANY($1)');
   $sth.execute(@data);
 
   # If a datatype is needed you can cast the placeholder with the PostgreSQL datatype.
-  my $sth = $db.prepare('SELECT * FROM tab WHERE value = ANY($1::_cidr)');
+  my $sth = $dbh.prepare('SELECT * FROM tab WHERE value = ANY($1::_cidr)');
   $sth.execute(['127.0.0.1', '10.0.0.1']);
 
-
-=head3 B<pg-consume-input>
+=head3 C<pg-consume-input>
 
 Consume available input from the server, buffering the read data if there is any.
 This is only necessary if you are planning on calling C<pg-notifies> without having
 requested input by other means (such as an C<execute>.)
 
-=head3 B<pg-notifies>
+=head3 C<pg-notifies>
 
   $ret = $dbh.pg-notifies;
 
@@ -229,65 +376,182 @@ commands in the meantime you will also need to execute C<pg-consume-input> first
 
 For example:
 
-    $db.execute("LISTEN foo");
+    $dbh.execute("LISTEN foo");
 
     loop {
-        $db.pg-consume-input
-        if $db.pg-notifies -> $not {
+        $dbh.pg-consume-input
+        if $dbh.pg-notifies -> $not {
             say $not;
         }
     }
 
 The payload is optional and will always be an empty string for PostgreSQL servers less than version 9.0.
 
+=head3 C<ping>
+
+Test to see if the connection is still considered live.
+
+    $dbh.ping
+
 =head3 Statement Exceptions
 
-Exceptions for a query result are thrown as X::DBDish::DBError::Pg objects (inherits X::DBDish::DBError)
-and have the following additional attributes as provided by PostgreSQL
-(perl exception field ➡ PostgreSQL field name):
+Exceptions for a query result are thrown as C<X::DBDish::DBError::Pg> objects (inherits C<X::DBDish::DBError>)
+and have the following additional attributes (described with a C<PG_DIAG_*> source name) as provided by the
+L<PostgreSQL client library libpq|https://www.postgresql.org/docs/current/libpq-exec.html>:
 
-  * message ➡ PG_DIAG_MESSAGE_PRIMARY
-  * message-detail ➡ PG_DIAG_MESSAGE_DETAIL
-  * message-hint ➡ PG_DIAG_MESSAGE_HINT
-  * context ➡ PG_DIAG_CONTEXT
-  * type ➡ PG_DIAG_SEVERITY_NONLOCALIZED
-  * type-localized ➡ PG_DIAG_SEVERITY
-  * sqlstate ➡ PG_DIAG_SQLSTATE
-  * statement ➡ Statement provided to prepare() or execute()
-  * statement-name ➡ Statement Name provided to prepare() or created internally
-  * statement-position ➡ PG_DIAG_STATEMENT_POSITION
-  * internal-position ➡ PG_DIAG_INTERNAL_POSITION
-  * internal-query ➡ PG_DIAG_INTERNAL_QUERY
-  * dbname ➡ Database Name from libpq pg-db()
-  * host ➡ Host from libpq pg-host()
-  * user ➡ User from libpq pg-user()
-  * port ➡ Port from libpq pg-port()
-  * schema ➡ PG_DIAG_SCHEMA_NAME
-  * table ➡ PG_DIAG_TABLE_NAME
-  * column ➡ PG_DIAG_COLUMN_NAME
-  * datatype ➡ PG_DIAG_DATATYPE_NAME
-  * constraint ➡ PG_DIAG_CONSTRAINT_NAME
-  * source-file ➡ PG_DIAG_SOURCE_FILE
-  * source-line ➡ PG_DIAG_SOURCE_LINE
-  * source-function ➡ PG_DIAG_SOURCE_FUNCTION
+=over 4
+
+=item C<message>
+
+C<PG_DIAG_MESSAGE_PRIMARY> -
+The primary human-readable error message (typically one line). Always present.
+
+=item C<message-detail>
+
+C<PG_DIAG_MESSAGE_DETAIL> -
+Detail: an optional secondary error message carrying more detail about the problem. Might run to multiple lines.
+
+=item C<message-hint>
+
+C<PG_DIAG_MESSAGE_HINT> -
+Hint: an optional suggestion what to do about the problem. This is intended to differ from detail in that it offers advice (potentially inappropriate) rather than hard facts. Might run to multiple lines.
+
+=item C<context>
+
+C<PG_DIAG_CONTEXT> -
+An indication of the context in which the error occurred. Presently this includes a call stack traceback of active procedural language functions and internally-generated queries. The trace is one entry per line, most recent first.
+
+=item C<type>
+
+C<PG_DIAG_SEVERITY_NONLOCALIZED> -
+The severity; the field contents are ERROR, FATAL, or PANIC (in an error message), or WARNING, NOTICE, DEBUG, INFO, or LOG (in a notice message). This is identical to the PG_DIAG_SEVERITY field except that the contents are never localized. This is present only in reports generated by PostgreSQL versions 9.6 and later.
+
+=item C<type-localized>
+
+C<PG_DIAG_SEVERITY> -
+The severity; the field contents are ERROR, FATAL, or PANIC (in an error message), or WARNING, NOTICE, DEBUG, INFO, or LOG (in a notice message), or a localized translation of one of these. Always present.
+
+=item C<sqlstate>
+
+C<PG_DIAG_SQLSTATE> -
+The SQLSTATE code for the error. The SQLSTATE code identifies the type of error that has occurred; it can be used by front-end applications to perform specific operations (such as error handling) in response to a particular database error. For a list of the possible SQLSTATE codes, see Appendix A. This field is not localizable, and is always present.
+
+=item C<statement>
+
+Statement provided to prepare() or execute()
+
+=item C<statement-name>
+
+Statement Name provided to prepare() or created internally
+
+=item C<statement-position>
+
+C<PG_DIAG_STATEMENT_POSITION> -
+A string containing a decimal integer indicating an error cursor position as an index into the original statement string. The first character has index 1, and positions are measured in characters not bytes.
+
+=item C<internal-position>
+
+C<PG_DIAG_INTERNAL_POSITION> -
+This is defined the same as the C<PG_DIAG_STATEMENT_POSITION> field, but it is used when the cursor position refers to an internally generated command rather than the one submitted by the client. The C<PG_DIAG_INTERNAL_QUERY> field will always appear when this field appears.
+
+=item C<internal-query>
+
+C<PG_DIAG_INTERNAL_QUERY> -
+The text of a failed internally-generated command. This could be, for example, a SQL query issued by a PL/pgSQL function.
+
+=item C<dbname>
+
+Database Name from libpq C<pg-db()>
+
+=item C<host>
+
+Host from libpq C<pg-host()>
+
+=item C<user>
+
+User from libpq C<pg-user()>
+
+=item C<port>
+
+Port from libpq C<pg-port()>
+
+=item C<schema>
+
+C<PG_DIAG_SCHEMA_NAME> -
+If the error was associated with a specific database object, the name of the schema containing that object, if any.
+
+=item C<table>
+
+C<PG_DIAG_TABLE_NAME> -
+If the error was associated with a specific table, the name of the table. (Refer to the schema name field for the name of the table's schema.)
+
+=item C<column>
+
+C<PG_DIAG_COLUMN_NAME> -
+If the error was associated with a specific table column, the name of the column. (Refer to the schema and table name fields to identify the table.)
+
+=item C<datatype>
+
+C<PG_DIAG_DATATYPE_NAME> -
+If the error was associated with a specific data type, the name of the data type. (Refer to the schema name field for the name of the data type's schema.)
+
+=item C<constraint>
+
+C<PG_DIAG_CONSTRAINT_NAME> -
+If the error was associated with a specific constraint, the name of the constraint. Refer to fields listed above for the associated table or domain. (For this purpose, indexes are treated as constraints, even if they weren't created with constraint syntax.)
+
+=item C<source-file>
+
+C<PG_DIAG_SOURCE_FILE> -
+The file name of the source-code location where the error was reported.
+
+=item C<source-line>
+
+C<PG_DIAG_SOURCE_LINE> -
+The line number of the source-code location where the error was reported.
+
+=item C<source-function>
+
+C<PG_DIAG_SOURCE_FUNCTION> -
+The name of the source-code function reporting the error.
+
+=back
 
 Please see the L<PostgreSQL documentation|https://www.postgresql.org/docs/current/static/libpq-exec.html#LIBPQ-PQRESULTERRORFIELD>
-for a detailed description of what each field contains.
+for additional information.
 
 A special C<is-temporary()> method returns True if an immediate retry of the full transaction should be attempted:
 
 It is set to true when the L<SQLState|https://www.postgresql.org/docs/current/static/errcodes-appendix.html>
 is any of the following codes:
 
-  * Class 08\w{3}: All connection exceptions (possible network issues)
-  * 40001 serialization_failure
-  * 40P01 deadlock_detected
-  * Class 57\w{3}: Operator Intervention (early/forced connection termination)
-  * 72000 snapshot_too_old
+=over 4
 
-=head3 B<pg-socket>
+=item SQLState Class 08XXX
 
-	my Int $socket = $db.pg-socket;
+All connection exceptions (possible temporary network issues)
+
+=item SQLState 40001
+
+serialization_failure - Two or more transactions conflicted in a manner which may succeed if executed later.
+
+=item SQLState 40P01
+
+deadlock_detected - Two or more transactions had locking conflicts resulting in a deadlock and this transaction being rolled back.
+
+=item SQLState Class 57XXX
+
+Operator Intervention (early/forced connection termination).
+
+=item SQLState 72000
+
+snapshot_too_old - The transaction took too long to execute. It may succeed during a quieter period.
+
+=back
+
+=head3 C<pg-socket>
+
+	my Int $socket = $dbh.pg-socket;
 
 Returns the file description number of the connection socket to the server.
 
@@ -324,12 +588,13 @@ Passing a value less than or equal to zero will disable the timeout, resulting
 in any operation that cannot take place immediately producing a database
 locked error.
 
-=head2 mysql
+=head2 MySQL
 
 Supports basic CRUD operations and prepared statements with placeholders
 
     my $dbh = DBIish.connect('mysql', :host<db02.yourdomain.com>, :port(3306),
             :database<blerg>, :user<myuser>, :$password);
+
     # Or via socket:
     my $dbh = DBIish.connect('mysql', :socket<mysql.sock>,
             :database<blerg>, :user<myuser>, :$password);
@@ -361,6 +626,18 @@ With MariaBD-Embedded:
 
     DBIISH_MYSQL_LIB=mariadbd rakudo -I lib t/01-basic.t
 
+
+=head3 C<insert-id>
+
+Returns the AUTO_INCREMENT value of the most recently inserted record.
+
+    my $sth = $dbh.execute( 'INSERT INTO tab (description) VALUES (?)', $description );
+
+    my $id = $sth.insert-id;
+
+    # or
+    my $id = $dbh.insert-id;
+
 =head2 Oracle
 
 Supports basic CRUD operations and prepared statements with placeholders
@@ -369,52 +646,103 @@ Supports basic CRUD operations and prepared statements with placeholders
 
 =head1 TESTING
 
-The DBIish::CommonTesting module, now with over 100 tests, provides a common unit
+The C<DBIish::CommonTesting> module, now with over 100 tests, provides a common unit
 testing that allows a driver developer to test its driver capabilities and the
 minimum expected compatibility.
 
-Set environment variable DBIISH_WRITE_TEST=YES to run tests which may leave permanent state changes in the database.
-
-=head1 ROADMAP
-
-Add some more drivers. Improve robustness of all drivers. Improve the test suite.
-Attract more contributors.
-
-Integrate with the DBDI project (L<http://github.com/timbunce/DBDI>)
-once it has sufficient functionality.
+Set environment variable C<DBIISH_WRITE_TEST=YES> to run tests which may leave permanent state changes in the database.
 
 =head1 DEPRECATED
 
 These will be removed on June 2022.
 
-* $sth.fetchrow() deprecated in favour of $sth.row()
-* $sth.fetchrow_hashref() deprecated in favour of $sth.row(:hash)
-* $sth.fetchall_hashref() deprecated in favour of $sth.allrows(:hash-of-arrays)
-* $sth.fetchall-hash() deprecated in favour of $sth.allrows(:hash-of-arrays)
-* $sth.fetchall-AoH() deprecated in favour of $sth.allrows(:array-of-hash)
-* $sth.fetchrow_array() deprecated in favour of $sth.row()
-* $sth.fetchrow_hashref() deprecated in favour of $sth.row(:hash)
-* $sth.fetchrow_arrayref() deprecated in favour of $sth.row(:hash)
-* $sth.fetch() deprecated in favour of $sth.row()
-* $sth.fetchall_arrayref() deprecated in favour of $sth.allrows(:array-of-hash)
+=over 4
 
-* $sth.mysql_insertid deprecated in favour of $sth.insert-id
-* $dbh.mysql_insertid deprecated in favour of $dbh.insert-id
-* $dbh.disconnect deprecated in favour of $sth.dispose
-* $dbh.install_driver deprecated in favour of $sth.install-driver
+=item $sth.fetchrow()
 
-* $dbh.selectrow_arrayref deprecated in favor of $sth = $dbh.prepare.execute(); $sth.row
-* $dbh.selectrow_hashref deprecated in favor of $sth = $dbh.prepare.execute(); $sth.row(:hash)
-* $dbh.selectall_arrayref deprecated in favor of $sth = $dbh.prepare.execute(); $sth.allrows
-* $dbh.selectall_hashref deprecated in favor of $sth = $dbh.prepare.execute(); $sth.allrows(:array-of-hashes)
-* $dbh.selectcol_arrayref deprecated in favor of $sth = $dbh.prepare.execute(); $sth.allrows(:array-of-hashes)
+deprecated in favour of $sth.row()
 
-* $dbh.quote-identity($str) deprecated in favor of $dbh.quote($str, :as-id)
+=item $sth.fetchrow_hashref()
+
+deprecated in favour of $sth.row(:hash)
+
+=item $sth.fetchall_hashref()
+
+deprecated in favour of $sth.allrows(:hash-of-arrays)
+
+=item $sth.fetchall-hash()
+
+deprecated in favour of $sth.allrows(:hash-of-arrays)
+
+=item $sth.fetchall-AoH()
+
+deprecated in favour of $sth.allrows(:array-of-hash)
+
+=item $sth.fetchrow_array()
+
+deprecated in favour of $sth.row()
+
+=item $sth.fetchrow_hashref()
+
+deprecated in favour of $sth.row(:hash)
+
+=item $sth.fetchrow_arrayref()
+
+deprecated in favour of $sth.row(:hash)
+
+=item $sth.fetch()
+
+deprecated in favour of $sth.row()
+
+=item $sth.fetchall_arrayref()
+
+deprecated in favour of $sth.allrows(:array-of-hash)
+
+=item $sth.mysql_insertid
+
+deprecated in favour of $sth.insert-id
+
+=item $dbh.mysql_insertid
+
+deprecated in favour of $dbh.insert-id
+
+=item $dbh.disconnect
+
+deprecated in favour of $sth.dispose
+
+=item $dbh.install_driver
+
+deprecated in favour of $sth.install-driver
+
+=item $dbh.selectrow_arrayref
+
+deprecated in favor of $sth = $dbh.prepare.execute(); $sth.row
+
+=item $dbh.selectrow_hashref
+
+deprecated in favor of $sth = $dbh.prepare.execute(); $sth.row(:hash)
+
+=item $dbh.selectall_arrayref
+
+deprecated in favor of $sth = $dbh.prepare.execute(); $sth.allrows
+
+=item $dbh.selectall_hashref
+
+deprecated in favor of $sth = $dbh.prepare.execute(); $sth.allrows(:array-of-hashes)
+
+=item $dbh.selectcol_arrayref
+
+deprecated in favor of $sth = $dbh.prepare.execute(); $sth.allrows(:array-of-hashes)
+
+=item $dbh.quote-identity($str)
+
+deprecated in favor of $dbh.quote($str, :as-id)
+
+=back
 
 =head1 SEE ALSO
 
-The Raku Pod in the L<doc:DBIish> module.
-The Perl 5 L<doc:DBI> and L<doc:DBI::DBD>.
+The Raku Pod in the L<doc:DBIish> module and examples in the L<examples|https://github.com/raku-community-modules/DBIish/tree/master/examples> directory.
 
 This README and the documention of the DBIish and the DBDish modules
 are in the Pod6 format. It can be extracted by running
@@ -425,11 +753,36 @@ Or, if L<Pod::To::HTML> is installed,
 
     rakudo --doc=html <filename>
 
+
+Additional modules of interest may include:
+
+=over 4
+
+=item L<DBIish::Transaction|https://modules.raku.org/dist/DBIish::Transaction:cpan:RBT>
+
+A wrapper for managing transactions, including automatic retry for temporary failures.
+
+=item L<DBIish::Pool|https://modules.raku.org/dist/DBIish::Pool:cpan:RBT>
+
+Connection reuse for DBIish to reduce loads on high-volume or heavily encrypted database sessions.
+
+=back
+
+=head2 HISTORY
+
+DBIish is based on Martin Berends' L<MiniDBI|https://github.com/mberends/MiniDBI> project, but unlike MiniDBI, DBDish
+aims to provide an interface that takes advantage of Raku idioms.
+
+There is/was an intention to integrate with the L<DBDI project|http://github.com/timbunce/DBDI>
+once it has sufficient functionality.
+
+So, while it is indirectly inspired by L<Perl 5 DBI|https://metacpan.org/pod/DBI>, there are also many differences.
+
 =head1 COPYRIGHT
 
 Written by Moritz Lenz, based on the MiniDBI code by Martin Berends.
 
-See the F<CREDITS> file for a list of all contributors.
+See the L<CREDITS|https://github.com/raku-community-modules/DBIish/blob/master/CREDITS> file for a list of all contributors.
 
 =head1 LICENSE
 
@@ -439,12 +792,20 @@ All rights reserved.
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
 
- * Redistributions of source code must retain the above copyright notice,
-   this list of conditions and the following disclaimer.
+=over 4
 
- * Redistributions in binary form must reproduce the above copyright
-   notice, this list of conditions and the following disclaimer in the
-   documentation and/or other materials provided with the distribution.
+=item *
+
+Redistributions of source code must retain the above copyright notice,
+this list of conditions and the following disclaimer.
+
+=item *
+
+Redistributions in binary form must reproduce the above copyright
+notice, this list of conditions and the following disclaimer in the
+documentation and/or other materials provided with the distribution.
+
+=back
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
