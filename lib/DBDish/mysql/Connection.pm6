@@ -94,7 +94,3 @@ method quote(Str $x, :$as-id) {
     }
 }
 
-#legacy, user should prefer 'quote'
-method quote-identifier(Str:D $name) {
-    qq[`$name`];
-}

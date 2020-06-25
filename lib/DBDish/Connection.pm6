@@ -165,15 +165,28 @@ method Statements() {
 }
 
 =begin pod
-=head5 quote-identifier
+=head5 quote
 
-Returns the string parameter as a quoted identifier
+Returns the string parameter quoted as a literal by default.
+
+quote($str, :as-id) will return it as a quoted identifier.
 
 =end pod
 
-method quote-identifier(Str:D $name) {
-    # a first approximation
-    qq["$name"];
+# Implement basic SQL spec escaping. Individual drivers should override this function with their
+# own implementation if the database driver provides quoting/escaping routines. Even if this is
+# sufficient today, it may not be for future releases of that database.
+# Many database products also require backslash escaping.
+method quote(Str $x, :$as-id) {
+    if $as-id {
+        q["] ~ $x.subst(q{"}, q{""}, :global) ~ q["]
+    } else {
+        q['] ~ $x.subst(q{'}, q{''}, :global) ~ q[']
+    }
+}
+
+method quote-identifier(Str:D $name) is DEPRECATED('quote($name, :as-id)') {
+    return self.quote($name, :as-id);
 }
 
 =begin pod

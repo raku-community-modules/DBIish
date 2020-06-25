@@ -32,7 +32,7 @@ GRANT ALL PRIVILEGES ON dbdishtest.* TO 'testuser'@'localhost';
 
 use Test;
 
-plan 90;
+plan 89;
 
 use DBIish;
 #use DBDish::mysql;
@@ -536,10 +536,10 @@ ok ($sth.execute("3", "Jochen Wiedmann")),"insert with string for numeric field"
 $numericVal = 2;
 $charVal = "Tim Bunce";
 ok ($sth.execute($numericVal, $charVal)),"insert with number for numeric"; # test 87
-# Test quote methods
-is $dbh.quote-identifier('ID'), '`ID`',  "Proper legacy quoted identifier";
-is $dbh.quote('foo'),       "'foo'",    'Quote literal';
-is $dbh.quote('foo'):as-id, '`foo`',    'Quote Id';
+
+# Test quote methods, ensure escaping is correct
+is $dbh.quote(q{fo'o}),       q{'fo\'o'},    'Quote complex literal';
+is $dbh.quote(q{fo"表o}):as-id, q{`fo\"表o`},    'Quote complex Id';
 
 # Now try the explicit type settings
 #ok ($sth.bind_param(1, " 4", SQL_INTEGER())),"bind_param SQL_INTEGER"; # test 88

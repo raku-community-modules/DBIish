@@ -33,8 +33,8 @@ ok (my $sv = $dbh.server-version), "server-version ($sv)";
 
 ok $dbh.pg-socket, "There's a socket";
 
-is $dbh.quote('foo'),	    "'foo'",    'Quote literal';
-is $dbh.quote('foo'):as-id, '"foo"',    'Quote Id';
+is $dbh.quote(q{fo'o}),	    q{'fo''o'},    'Quote literal';
+is $dbh.quote(q{fo"表o}):as-id, q{"fo""表o"},    'Quote Id';
 
 # Dollar Quoting. Test our tokenizer
 my $sth = $dbh.prepare(q:to/STATEMENT/);

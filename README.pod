@@ -124,6 +124,34 @@ Example:
     my @data = $sth.allrows(:array-of-hash); # [ ( a => 1, b => 'val1'), ( a => 3, b => 'val2') ]
     my %data = $sth.allrows(:hash-of-array); # a => [1, 3], b => ['val1', 'val2']
 
+
+=head2 Query Building
+
+In general you should use the C<?> parameter for substitution whenever possible. The database driver
+will ensure values are properly escaped prior to insertion into the database. However, if you need to create
+a query string by hand then you can use C<quote> to help prevent an SQL injection attack from being successful.
+
+=head3 quote
+
+Using parameter substitution is preferred:
+
+  my $val = 'literal';
+  $dbh.execute('INSERT INTO tab VALUES (?)', $val);
+
+However, if you must build the query directly you can:
+
+  my $val = 'literal';
+  my $query = 'INSERT INTO tab VALUES (%s)'.sprintf( $dbh.quote($val) );
+  $dbh.execute($query);
+
+To build a query with a dynamic identifier:
+
+  # Notice that C<?> is still used for the value being inserted; it really is strongly recommended.
+  my $id = 'table';
+  my $val = 'literal';
+  my $query = 'INSERT INTO %s VALUES (?)'.sprintf( $dbh.quote($id, :as-id) );
+  $dbh.execute($query, $val);
+
 =head1 INSTALLATION
 
     $ zef install DBIish
@@ -380,6 +408,8 @@ These will be removed on June 2022.
 * $dbh.selectall_arrayref deprecated in favor of $sth = $dbh.prepare.execute(); $sth.allrows
 * $dbh.selectall_hashref deprecated in favor of $sth = $dbh.prepare.execute(); $sth.allrows(:array-of-hashes)
 * $dbh.selectcol_arrayref deprecated in favor of $sth = $dbh.prepare.execute(); $sth.allrows(:array-of-hashes)
+
+* $dbh.quote-identity($str) deprecated in favor of $dbh.quote($str, :as-id)
 
 =head1 SEE ALSO
 
