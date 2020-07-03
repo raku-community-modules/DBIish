@@ -30,7 +30,7 @@ method dispose() {
     self.teardown-connection-state();
 
     self._disconnect;
-    ?($.parent.unregister-connection(self))
+    ?($.parent.unregister-connection(self));
 }
 
 # Remove client-side information about the connection state. This is separate from dispose to
