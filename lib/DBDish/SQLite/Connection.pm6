@@ -21,8 +21,8 @@ method !handle-error(Int $status) {
 method prepare(Str $statement, *%args) {
     my STMT $statement_handle .= new;
     my $status = (sqlite3_libversion_number() >= 3003009)
-        ?? sqlite3_prepare_v2($!conn, $statement, -1, $statement_handle, Null)
-        !! sqlite3_prepare($!conn, $statement, -1, $statement_handle, Null);
+            ?? sqlite3_prepare_v2($!conn, $statement, -1, $statement_handle, Null)
+            !! sqlite3_prepare($!conn, $statement, -1, $statement_handle, Null);
     with self!handle-error($status) {
         DBDish::SQLite::StatementHandle.new(
             :$!conn,

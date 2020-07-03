@@ -9,7 +9,7 @@ package X::DBDish {
         has $.why = 'Error';
         method message {
             "$!driver-name: $.why: $!native-message" ~
-            ($!code ?? " ($!code)" !! '');
+                    ($!code ?? " ($!code)" !! '');
         }
 
         # Individual drivers are expected to override this to return true for

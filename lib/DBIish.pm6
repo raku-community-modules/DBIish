@@ -2,9 +2,9 @@ use v6;
 # DBIish.pm6
 
 unit class DBIish:auth<mberends>:ver<0.6.1>:api<1>;
-    use DBDish;
+use DBDish;
 
-    package GLOBAL::X::DBIish {
+package GLOBAL::X::DBIish {
     class DriverNotFound is Exception {
         has $.bogus;
         method message { "DBIish: No DBDish driver found: $.bogus" };
@@ -18,84 +18,84 @@ unit class DBIish:auth<mberends>:ver<0.6.1>:api<1>;
         has $.who;
         method message { "$.who is not a DBDish::Driver" };
     }
-    }
+}
 
-    my %installed;
-    my Lock $installed-lock = Lock.new;
+my %installed;
+my Lock $installed-lock = Lock.new;
 
-    my $err-handler = DBDish::ErrorHandling.new(:parent(Nil));
-    method err { $err-handler.err };
-    method errstr { $err-handler.errstr };
+my $err-handler = DBDish::ErrorHandling.new(:parent(Nil));
+method err { $err-handler.err };
+method errstr { $err-handler.errstr };
 
-    method connect( $driver ) {
-        my $d = self.install-driver( $driver );
-        return $d.connect(|%_);
+method connect( $driver ) {
+    my $d = self.install-driver( $driver );
+    return $d.connect(|%_);
 
-        CATCH {default {self!handle-library-exception($_, $driver)}}
-    }
+    CATCH {default {self!handle-library-exception($_, $driver)}}
+}
 
-    method install-driver( $drivername ) {
-        $installed-lock.protect: {
-            my $d = %installed{$drivername} //= do {
-                CATCH {
-                    when X::CompUnit::UnsatisfiedDependency {
-                        X::DBIish::DriverNotFound.new(:bogus($drivername)).fail;
-                    }
-                    default {
-                        .rethrow;
-                    }
+method install-driver( $drivername ) {
+    $installed-lock.protect: {
+        my $d = %installed{$drivername} //= do {
+            CATCH {
+                when X::CompUnit::UnsatisfiedDependency {
+                    X::DBIish::DriverNotFound.new(:bogus($drivername)).fail;
                 }
-                my $module = "DBDish::$drivername";
-                my \M = (require ::($module));
-                # The DBDish namespace isn't formally reserved for DBDish's drivers,
-                # and is a good place for related common code.
-                # An assurance at driver load time is in place,
-                unless M ~~ DBDish::Driver {
-                    # This warn will be converted in a die after the Role is settled,
-                    # it's an advice for authors for externally developed drivers
-                    warn "$module doesn't do DBDish::Driver role!";
+                default {
+                    .rethrow;
                 }
-                M.new(:parent($err-handler), |%($*DBI-DEFS<ConnDefaults>), |%_);
             }
-            without $d { .throw; };
-            $d;
+            my $module = "DBDish::$drivername";
+            my \M = (require ::($module));
+            # The DBDish namespace isn't formally reserved for DBDish's drivers,
+            # and is a good place for related common code.
+            # An assurance at driver load time is in place,
+            unless M ~~ DBDish::Driver {
+                # This warn will be converted in a die after the Role is settled,
+                # it's an advice for authors for externally developed drivers
+                warn "$module doesn't do DBDish::Driver role!";
+            }
+            M.new(:parent($err-handler), |%($*DBI-DEFS<ConnDefaults>), |%_);
         }
+        without $d { .throw; };
+        $d;
     }
-    method install_driver($drivername)
-      is hidden-from-backtrace
-      is DEPRECATED("install-driver")
-    {
+}
+method install_driver($drivername)
+        is hidden-from-backtrace
+        is DEPRECATED("install-driver")
+{
 
-        self.install-driver($drivername)
+    self.install-driver($drivername)
+}
+method installed-drivers {
+    $installed-lock.protect: {
+        %installed.pairs.cache;
     }
-    method installed-drivers {
-        $installed-lock.protect: {
-            %installed.pairs.cache;
-        }
-    }
+}
 
-    method !handle-library-exception($ex, $drivername) {
-        # The first native call done by the driver can trigger an X::AdHoc
-        # to report missing libraries.
-        # I catch here to avoid the drivers the need of this logic.
-        given $ex {
-            when $_.message ~~ m/
-            ^ "Cannot locate symbol '" <-[ ' ]>* "' in native library "
-                    ( "'" <-[ ' ]> * "'" )
-                    / {
-                X::DBIish::LibraryMissing.new(:library($/[0]), :driver($drivername)).fail;
-            }
-            when $_.message ~~ m/
-            ^ "Cannot locate native library "
-                    ( "'" <-[ ' ]> * "'" )
-                    / {
-                X::DBIish::LibraryMissing.new(:library($/[0]), :driver($drivername)).fail;
-            }
-            default {
-                .rethrow;
-            };
+method !handle-library-exception($ex, $drivername) {
+    # The first native call done by the driver can trigger an X::AdHoc
+    # to report missing libraries.
+    # I catch here to avoid the drivers the need of this logic.
+    given $ex {
+        when $_.message ~~ m/
+        ^ "Cannot locate symbol '" <-[ ' ]>* "' in native library "
+        ( "'" <-[ ' ]> * "'" )
+        / {
+            X::DBIish::LibraryMissing.new(:library($/[0]), :driver($drivername)).fail;
         }
+        when $_.message ~~ m/
+        ^ "Cannot locate native library "
+        ( "'" <-[ ' ]> * "'" )
+        / {
+            X::DBIish::LibraryMissing.new(:library($/[0]), :driver($drivername)).fail;
+        }
+        default {
+            .rethrow;
+        };
     }
+}
 
 
 =begin pod

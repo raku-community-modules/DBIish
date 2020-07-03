@@ -18,9 +18,9 @@ has %.dynamic-types = %oid-to-type;
 
 submethod BUILD(:$!pg_conn!, :$!parent!, :$!AutoCommit) {
     %!Converter =
-       method (--> Bool) { self eq 't' },
-       method (--> DateTime) { DateTime.new(self.split(' ').join('T')) },
-       :Buf(&str-to-blob);
+            method (--> Bool) { self eq 't' },
+            method (--> DateTime) { DateTime.new(self.split(' ').join('T')) },
+            :Buf(&str-to-blob);
 }
 
 has $!statement-posfix = 0;
@@ -209,7 +209,7 @@ my sub calc-col-size($mod, $size) {
 
 my sub prepare-from-data($parent, $statement, List() $rows, $col-names, $col-types) {
     my $mock = DBDish::TestMock.new(:$parent).connect
-        .prepare('col-info',:$rows,:$col-names,:$col-types);
+            .prepare('col-info',:$rows,:$col-names,:$col-types);
     $mock.execute;
     $mock;
 }
@@ -280,7 +280,7 @@ method column-info(:$catalog, :$schema, :$table, :$column) {
     my $data = $sth.allrows.map(-> @row {
         # The last five are internal only
         my ($aid, $attnum, $typmod, $typtype, $typoid) =
-          @row[%col-map<pg_attrelid pg_attnum pg_atttypmod _pg_typtype _pg_oid>]:delete;
+                @row[%col-map<pg_attrelid pg_attnum pg_atttypmod _pg_typtype _pg_oid>]:delete;
 
         @row[%col-map<COLUMN_SIZE>] = calc-col-size($typmod, @row[%col-map<COLUMN_SIZE>]);
 
@@ -297,7 +297,7 @@ method column-info(:$catalog, :$schema, :$table, :$column) {
 
         if $typtype eq 'e'  {
             my $sth = self.prepare( "SELECT enumlabel FROM pg_catalog.pg_enum WHERE enumtypid = ? ORDER BY " ~
-                                    (self.server-version ~~ v9.1.0+ ?? 'enumsortorder' !! 'oid'));
+                    (self.server-version ~~ v9.1.0+ ?? 'enumsortorder' !! 'oid'));
             $sth.execute($typoid);
             @row.push( $sth.allrows() );
         }
@@ -413,15 +413,15 @@ method table-info(:$catalog, :$schema, :$table, :$type) {
     else { # Default SQL
         $extracols = q{,n.nspname AS pg_schema, c.relname AS pg_table};
         my @search =
-            q{c.relkind IN ('r', 'v', 'm')}, # No sequences, etc. for now
-            q{NOT (quote_ident(n.nspname) ~ '^pg_(toast_)?temp_' AND NOT has_schema_privilege(n.nspname, 'USAGE'))}; # No others' temp objects
+                q{c.relkind IN ('r', 'v', 'm')}, # No sequences, etc. for now
+                q{NOT (quote_ident(n.nspname) ~ '^pg_(toast_)?temp_' AND NOT has_schema_privilege(n.nspname, 'USAGE'))}; # No others' temp objects
 
         my $showtablespace =
-            ', quote_ident(t.spcname) AS "pg_tablespace_name", quote_ident(' ~
-            ( self.server-version ge v9.2.0
-              ?? 'pg_tablespace_location(t.oid)'
-              !! 't.spclocation'
-            ) ~ ') AS "pg_tablespace_location"';
+                ', quote_ident(t.spcname) AS "pg_tablespace_name", quote_ident(' ~
+                        ( self.server-version ge v9.2.0
+                                ?? 'pg_tablespace_location(t.oid)'
+                                !! 't.spclocation'
+                        ) ~ ') AS "pg_tablespace_location"';
 
         if $schema.defined && $schema.chars {
             @search.push: self!make-comp($schema, 'n.nspname');
@@ -431,8 +431,8 @@ method table-info(:$catalog, :$schema, :$table, :$type) {
         }
 
         my $TSJOIN = self.server-version lt v8.0.0
-            ?? '(SELECT 0 AS oid, 0 AS spcname, 0 AS spclocation LIMIT 0) AS t ON (t.oid=1)'
-            !! 'pg_catalog.pg_tablespace t ON (t.oid = c.reltablespace)';
+                ?? '(SELECT 0 AS oid, 0 AS spcname, 0 AS spclocation LIMIT 0) AS t ON (t.oid=1)'
+                !! 'pg_catalog.pg_tablespace t ON (t.oid = c.reltablespace)';
 
         my $whereclause = @search.join("\n\t\t\t\t\tAND ");
         $tbl_sql = qq{
@@ -472,12 +472,12 @@ method table-info(:$catalog, :$schema, :$table, :$type) {
 
         if $type && $type ne '%' {
             my $type_restrict =
-                join ', ',
-                    map({ / ^ "'"/ ?? $_ !! self.quote($_) }, #
-                        grep({ .chars },
-                            split(',', $type)
-                        )
-                    );
+                    join ', ',
+                            map({ / ^ "'"/ ?? $_ !! self.quote($_) }, #
+                                    grep({ .chars },
+                                            split(',', $type)
+                                    )
+                            );
 
             $tbl_sql = qq{
                 SELECT * FROM ($tbl_sql) ti

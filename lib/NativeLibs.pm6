@@ -8,11 +8,11 @@ our constant is-win = Rakudo::Internals.IS-WIN();
 our proto sub cannon-name(|) { * }
 multi sub cannon-name(Str $libname, Version $version = Version) {
     with $libname.IO {
-	if .extension {
-	    .Str; # Assume resolved, so don't touch
-	} else {
-	    $*VM.platform-library-name($_, :$version).Str;
-	}
+        if .extension {
+            .Str; # Assume resolved, so don't touch
+        } else {
+            $*VM.platform-library-name($_, :$version).Str;
+        }
     }
 }
 multi sub cannon-name(Str $libname, Cool $ver) {
@@ -31,14 +31,14 @@ class Loader {
     my sub dlerror(--> Str)         is native { * } # For linux or darwin/OS X
     my sub GetLastError(--> uint32) is native('kernel32') { * } # On Microsoft land
     method !dlerror() {
-	given $*VM.config<osname>.lc {
-	    when 'linux' | 'darwin' {
-		dlerror() // '';
-	    }
-	    when 'mswin32' | 'mingw' | 'msys' | 'cygwin' {
-		"error({ GetLastError })";
-	    }
-	}
+        given $*VM.config<osname>.lc {
+            when 'linux' | 'darwin' {
+                dlerror() // '';
+            }
+            when 'mswin32' | 'mingw' | 'msys' | 'cygwin' {
+                "error({ GetLastError })";
+            }
+        }
     }
 
     my sub dlLoadLibrary(Str --> DLLib)  is native { * } # dyncall
@@ -52,52 +52,52 @@ class Loader {
     }
 
     method load(::?CLASS:U: $libname) {
-	with self!dlLoadLibrary($libname) {
-	    self.bless(:name($libname), :library($_));
-	} else {
-	    fail "Cannot load native library '$libname'" ~ self!dlerror();
-	}
+        with self!dlLoadLibrary($libname) {
+            self.bless(:name($libname), :library($_));
+        } else {
+            fail "Cannot load native library '$libname'" ~ self!dlerror();
+        }
     }
 
     sub dlFreeLibrary(DLLib) is native { * };
     method dispose {
-	with $!library {
-	    dlFreeLibrary($_);
-	    $_ = Nil;
-	}
+        with $!library {
+            dlFreeLibrary($_);
+            $_ = Nil;
+        }
     }
 }
 
 class Searcher {
     method !test(Str() $try, $wks) {
-	(try cglobal($try, $wks, Pointer)) ~~ Pointer ?? $try !! Nil
+        (try cglobal($try, $wks, Pointer)) ~~ Pointer ?? $try !! Nil
     }
     method try-versions(Str $libname, Str $wks, *@vers) {
-	my $wlibname;
-	return $wlibname unless $libname; # Nothing to test
-	for @vers {
-	    my $ver = $_.defined ?? Version.new($_) !! Version;
-	    $wlibname = $_ and last with self!test:
-		cannon-name($libname, $ver), $wks;
-	}
-	# Try unversionized
-	$wlibname //= self!test: cannon-name($libname), $wks unless @vers;
-	# Try common practice in Windows;
-	$wlibname //= self!test: "lib$libname.dll", $wks;
-	$wlibname;
+        my $wlibname;
+        return $wlibname unless $libname; # Nothing to test
+        for @vers {
+            my $ver = $_.defined ?? Version.new($_) !! Version;
+            $wlibname = $_ and last with self!test:
+                    cannon-name($libname, $ver), $wks;
+        }
+        # Try unversionized
+        $wlibname //= self!test: cannon-name($libname), $wks unless @vers;
+        # Try common practice in Windows;
+        $wlibname //= self!test: "lib$libname.dll", $wks;
+        $wlibname;
     }
     method at-runtime($libname, $wks, *@vers) {
-	-> {
-	    with self.try-versions($libname, $wks, |@vers) {
-		$_
-	    } else {
-		# The sensate thing to do is die, but somehow that don't work
-		#   ( 'Cannot invoke this object' ... )
-		# so let NC::!setup die for us returning $libname.
-		# die "Cannot locate native library '$libname'"
-		$libname;
-	    }
-	}
+        -> {
+            with self.try-versions($libname, $wks, |@vers) {
+                $_
+            } else {
+                # The sensate thing to do is die, but somehow that don't work
+                #   ( 'Cannot invoke this object' ... )
+                # so let NC::!setup die for us returning $libname.
+                # die "Cannot locate native library '$libname'"
+                $libname;
+            }
+        }
     }
 }
 # Reexport on demand all of NativeCall

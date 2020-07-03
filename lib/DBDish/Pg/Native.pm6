@@ -41,10 +41,10 @@ class PGresult    is export is repr('CPointer') {
     method PQgetlength(int32, int32 --> int32) is native(LIB) { * }
     method PQfformat(int32 --> int32) is native(LIB) { * }
     method PQgetvaluePtr(int32, int32 --> Pointer)
-    is symbol('PQgetvalue') is native(LIB) { * }
+            is symbol('PQgetvalue') is native(LIB) { * }
 
     method is-ok {
-    self.PQresultStatus ~~ (0 .. 4);
+        self.PQresultStatus ~~ (0 .. 4);
     }
 }
 
@@ -69,11 +69,11 @@ class PGconn is export is repr('CPointer') {
     method PQdescribePrepared(Str --> PGresult) is native(LIB) { * }
     method PQstatus(--> int32) is native(LIB) { * }
     method PQprepare(Str $sth_name, Str $query, int32 $n_params, OidArray --> PGresult)
-    is native(LIB) { * }
+            is native(LIB) { * }
     method PQfinish is native(LIB) { * }
 
     method PQescapeByteaConn(Buf, size_t, size_t is rw --> Pointer)
-        is native(LIB) { * }
+            is native(LIB) { * }
     method escapeBytea(Buf:D $buf) {
         my size_t $sz;
         with self.PQescapeByteaConn($buf, $buf.elems * nativesizeof($buf.of), $sz) {
@@ -88,7 +88,7 @@ class PGconn is export is repr('CPointer') {
     method PQescapeLiteral(utf8, size_t --> Pointer) is native(LIB) { * }
     method quote(Str $str, :$as-id --> Str) {
         with $as-id ?? self.PQescapeIdentifier(|buf-sized($str))
-                !! self.PQescapeLiteral(|buf-sized($str)) {
+        !! self.PQescapeLiteral(|buf-sized($str)) {
             LEAVE { PQfreemem($_) }
             nativecast(Str, $_);
         } else {
@@ -116,26 +116,26 @@ class PGconn is export is repr('CPointer') {
     }
 
     method pg-parameter-status(Str --> Str) is symbol('PQparameterStatus')
-    is native(LIB) { * }
+                                            is native(LIB) { * }
 
     sub PQconnectdb(str --> PGconn) is native(LIB) { * };
     multi method new(Str $conninfo) { # Our legacy constructor
-    PQconnectdb($conninfo);
+        PQconnectdb($conninfo);
     }
 
     sub PQconnectdbParams(CArray[Str], CArray[Str], int32 --> PGconn)
-    is native(LIB) { * };
+            is native(LIB) { * };
     multi method new(%connparms) { # Our named constructor
 
-    my $keys = CArray[Str].new; my $vals = CArray[Str].new;
-    my int $i = 0;
-    for %connparms.kv -> $k,$v {
-        next without $v;
-        $keys[$i] = $k.subst('-','_');
-        $vals[$i] = ~$v; $i++;
-    }
-    $keys[$i] = Str; $vals[$i] = Str;
-    PQconnectdbParams($keys, $vals, 1);
+        my $keys = CArray[Str].new; my $vals = CArray[Str].new;
+        my int $i = 0;
+        for %connparms.kv -> $k,$v {
+            next without $v;
+            $keys[$i] = $k.subst('-','_');
+            $vals[$i] = ~$v; $i++;
+        }
+        $keys[$i] = Str; $vals[$i] = Str;
+        PQconnectdbParams($keys, $vals, 1);
     }
     method pg-db(--> Str) is symbol('PQdb') is native(LIB) { * }
     method pg-user(--> Str) is symbol('PQuser') is native(LIB) { * }

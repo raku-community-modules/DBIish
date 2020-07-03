@@ -44,8 +44,8 @@ role TypeConverter does Associative {
     method convert (::?CLASS:D: Str $datum, Mu:U $type) {
         with %!Conversions{$type} -> &converter {
             &converter.signature.params.any ~~ .named
-                ?? converter($datum, :$type)
-                !! converter($datum);
+                    ?? converter($datum, :$type)
+                    !! converter($datum);
         } else { # Common case
             Str.can($type.^name) ?? $type($datum) !! $type.new($datum);
         }

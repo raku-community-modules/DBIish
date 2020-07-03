@@ -12,10 +12,10 @@ has %.dynamic-types = %mysql-type-conv;
 
 submethod BUILD(:$!mysql_client!, :$!parent!) {
     %!Converter =
-        method (--> DateTime) {
-            # Mysql don't report offset, and perl assume Z, so…
-            DateTime.new(self.split(' ').join('T')):timezone($*TZ);
-        };
+            method (--> DateTime) {
+                # Mysql don't report offset, and perl assume Z, so…
+                DateTime.new(self.split(' ').join('T')):timezone($*TZ);
+            };
 }
 
 method !handle-errors($code) {

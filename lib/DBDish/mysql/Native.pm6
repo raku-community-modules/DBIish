@@ -163,7 +163,7 @@ class MYSQL_RES is export {
 class MYSQL is export is repr('CPointer') {
 
     method mysql_real_escape_string(Blob, Blob, ulong)
-        returns ulong is native(LIB) { * };
+            returns ulong is native(LIB) { * };
     multi method escape(Blob $b, :$bin --> Str) {
         if $bin { # HACK: mysql_real_scape assumes latin1 :(
             $b.list.fmt('%02x','');

@@ -39,7 +39,7 @@ method new() {
     {
         %_<library> = NativeLibs::Loader.load($_);
         %_<library-resolved> = True;
-	try mysql_server_init(0, Pointer, Pointer);
+        try mysql_server_init(0, Pointer, Pointer);
     }
     self.bless(|%_);
 }

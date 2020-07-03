@@ -79,7 +79,7 @@ submethod BUILD(:$!mysql_client!, :$!parent!, :$!stmt = MYSQL_STMT,
                         .length = $lb + $col * ptrsize;
                         .is_null = $nb + $col * ptrsize;
                         .buffer_type = @!column-type[$col] ~~ Blob
-                            ?? MYSQL_TYPE_BLOB !! MYSQL_TYPE_STRING;
+                                ?? MYSQL_TYPE_BLOB !! MYSQL_TYPE_STRING;
                     } else {
                         $!isnull[$col] = 1;
                         .buffer_type = MYSQL_TYPE_NULL;

@@ -25,8 +25,8 @@ submethod BUILD(:$!conn!, :$!parent!, :$!statement_handle!,
     $!param-count = sqlite3_bind_parameter_count($!statement_handle);
     $!field_count = sqlite3_column_count($!statement_handle);
     for ^$!field_count {
-	@!column-name.push: sqlite3_column_name($!statement_handle, $_);
-	@!column-type.push: Any;
+        @!column-name.push: sqlite3_column_name($!statement_handle, $_);
+        @!column-type.push: Any;
     }
 }
 
@@ -50,23 +50,23 @@ method execute(*@params is raw --> DBDish::StatementHandle) {
 method _row() {
     my $list = ();
     if $!row_status == SQLITE_ROW {
-       $list = do for ^$!field_count -> $col {
+        $list = do for ^$!field_count -> $col {
             my $value = do {
-		given sqlite3_column_type($!statement_handle, $col) {
-		    when SQLITE_INTEGER { sqlite3_column_int64($!statement_handle, $col) }
-		    when SQLITE_FLOAT {
-			 sqlite3_column_double($!statement_handle, $col) }
-		    when SQLITE_BLOB {
-			 my \p = sqlite3_column_blob($!statement_handle, $col);
-			 my $elems = sqlite3_column_bytes($!statement_handle, $col);
-			 blob-from-pointer(p, :$elems);
-		    }
-		    when SQLITE_NULL { @!column-type[$col] }
-		    default { sqlite3_column_text($!statement_handle, $col) }
-		}
-	    }
-	    my $ct = @!column-type[$col];
-	    ($ct === Any || $value ~~ $ct) ?? $value !! $value.$ct;
+                given sqlite3_column_type($!statement_handle, $col) {
+                    when SQLITE_INTEGER { sqlite3_column_int64($!statement_handle, $col) }
+                    when SQLITE_FLOAT {
+                        sqlite3_column_double($!statement_handle, $col) }
+                    when SQLITE_BLOB {
+                        my \p = sqlite3_column_blob($!statement_handle, $col);
+                        my $elems = sqlite3_column_bytes($!statement_handle, $col);
+                        blob-from-pointer(p, :$elems);
+                    }
+                    when SQLITE_NULL { @!column-type[$col] }
+                    default { sqlite3_column_text($!statement_handle, $col) }
+                }
+            }
+            my $ct = @!column-type[$col];
+            ($ct === Any || $value ~~ $ct) ?? $value !! $value.$ct;
         }
         $!affected_rows++;
         self.reset-err;

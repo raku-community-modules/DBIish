@@ -11,8 +11,8 @@ my grammar PgTokenizer {
     token double_quote {
         \"
         [
-            | <.double_quote_normal>
-            | <.double_quote_escape>
+        | <.double_quote_normal>
+        | <.double_quote_escape>
         ]*
         \"
     }
@@ -21,8 +21,8 @@ my grammar PgTokenizer {
     token single_quote {
         \'
         [
-            | <.single_quote_normal>
-            | <.single_quote_escape>
+        | <.single_quote_normal>
+        | <.single_quote_escape>
         ]*
         \'
     }
@@ -36,12 +36,12 @@ my grammar PgTokenizer {
     token TOP {
         ^
         (
-            | <normal>
-            | <placeholder>
-            | <dollar_placeholder>
-            | <dollar_quote>
-            | <single_quote>
-            | <double_quote>
+        | <normal>
+        | <placeholder>
+        | <dollar_placeholder>
+        | <dollar_quote>
+        | <single_quote>
+        | <double_quote>
         )*
         $
     }
@@ -62,7 +62,7 @@ my class PgTokenizer::Actions {
 
 our sub pg-replace-placeholder(Str $query) is export {
     PgTokenizer.parse($query, :actions(PgTokenizer::Actions.new))
-        and $/.ast;
+            and $/.ast;
 }
 
 
