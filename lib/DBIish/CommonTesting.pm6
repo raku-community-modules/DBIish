@@ -84,7 +84,7 @@ method run-tests {
 
     # Create a table
     my $sth = $dbh.execute($.create-table-sql);
-    ok($sth), 'execute: create table returns True';
+    ok $sth, 'execute: create table returns True';
     is $sth.rows, 0, "do: create table nom returns 0";
 
     is $dbh.err, 0, 'err after successful create should be 0';
