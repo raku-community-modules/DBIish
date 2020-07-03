@@ -112,11 +112,11 @@ method commit {
     if $!AutoCommit {
         warn "Commit ineffective while AutoCommit is on";
         return;
-    };
+    }
 
     $!parent.protect-connection: {
         $!pg_conn.PQexec("COMMIT");
-    };
+    }
     $.in_transaction = False;
 }
 
@@ -124,11 +124,11 @@ method rollback {
     if $!AutoCommit {
         warn "Rollback ineffective while AutoCommit is on";
         return;
-    };
+    }
 
     $!parent.protect-connection: {
         $!pg_conn.PQexec("ROLLBACK");
-    };
+    }
     $.in_transaction = False;
 }
 
