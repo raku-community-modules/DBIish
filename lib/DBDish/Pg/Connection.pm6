@@ -155,20 +155,22 @@ method _disconnect() {
 
 # Rollback any in-progress transaction and discard all state
 method scrub-connection-for-reuse() {
-    self.teardown-connection-state();
+    self.protect-connection: {
+        self.teardown-connection-state();
 
-    # Silence the warning for a ROLLBACK without a transaction in progress. DISCARD is not allowed
-    # within a transaction. Since the user called dispose() without committing they should be
-    # expecting the transaction to rollback.
-    my $trans-result = $!pg_conn.PQexec(q{SET client_min_messages = 'ERROR'; ROLLBACK;});
-    $.in_transaction = False;
+        # Silence the warning for a ROLLBACK without a transaction in progress. DISCARD is not allowed
+        # within a transaction. Since the user called dispose() without committing they should be
+        # expecting the transaction to rollback.
+        my $trans-result = $!pg_conn.PQexec(q{SET client_min_messages = 'ERROR'; ROLLBACK;});
+        $.in_transaction = False;
 
-    # An error during DISCARD ALL is considered fatal to prevent leaking the environment to
-    # other sections of the code. Let the pooler figure out this issue on it's own.
-    my $result = $!pg_conn.PQexec(q{DISCARD ALL});
-    unless $result && $result.is-ok {
-        self._disconnect;
-        self!set-err($result.PQresultStatus, $result.PQresultErrorMessage);
+        # An error during DISCARD ALL is considered fatal to prevent leaking the environment to
+        # other sections of the code. Let the pooler figure out this issue on it's own.
+        my $result = $!pg_conn.PQexec(q{DISCARD ALL});
+        unless $result && $result.is-ok {
+            self._disconnect;
+            self!set-err($result.PQresultStatus, $result.PQresultErrorMessage);
+        }
     }
 }
 
