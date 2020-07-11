@@ -84,6 +84,10 @@ method row(:$hash) {
             "row() called after Statement Handle disposed."
             ).fail if ($!disposed);
 
+    self!set-err(-1,
+            "row() called before execute()"
+            ).fail if ($.Executed == 0);
+
     if my \r = self._row {
         $hash ?? (@!column-name Z=> @(r)).hash !! r.Array;
     } else {
