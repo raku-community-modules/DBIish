@@ -5,14 +5,14 @@ unit class DBDish::Pg::StatementHandle does DBDish::StatementHandle;
 use DBDish::Pg::Native;
 use DBDish::Pg::ErrorHandling;
 
-has PGconn $!pg_conn;
+has PGconn $!pg-conn;
 has Str $.statement-name;
 has $.statement;
-has @!param_type;
+has @!param-type;
 has $!result;
-has $!row_count;
-has $!field_count;
-has $!current_row = 0;
+has $!row-count;
+has $!field-count;
+has $!current-row = 0;
 
 method !handle-errors {
     if $!result.is-ok {
@@ -22,7 +22,7 @@ method !handle-errors {
             :code($!result.PQresultStatus),
             :native-message($!result.PQresultErrorField(PG_DIAG_MESSAGE_PRIMARY)),
             :driver-name<DBDish::Pg>,
-            :$!pg_conn,
+            :$!pg-conn,
             statement-handle => self,
 
             :result($!result),
@@ -31,8 +31,8 @@ method !handle-errors {
 }
 
 submethod !get-meta($result) {
-    if $!field_count = $result.PQnfields {
-        for ^$!field_count {
+    if $!field-count = $result.PQnfields {
+        for ^$!field-count {
             @!column-name.push: $result.PQfname($_);
             @!column-type.push: do {
                 my $pt = $result.PQftype($_);
@@ -45,13 +45,13 @@ submethod !get-meta($result) {
     }
 }
 
-submethod BUILD(:$!parent!, :$!pg_conn!, # Per protocol
+submethod BUILD(:$!parent!, :$!pg-conn!, # Per protocol
     :$!statement, :$!statement-name = ''
 ) {
     if $!statement-name { # Prepared
         $!parent.protect-connection: {
-            with $!pg_conn.PQdescribePrepared($!statement-name) -> $info {
-                @!param_type.push($!parent.dynamic-types{$info.PQparamtype($_)}) for ^$info.PQnparams;
+            with $!pg-conn.PQdescribePrepared($!statement-name) -> $info {
+                @!param-type.push($!parent.dynamic-types{$info.PQparamtype($_)}) for ^$info.PQnparams;
                 self!get-meta($info);
                 $info.PQclear;
             }
@@ -60,37 +60,37 @@ submethod BUILD(:$!parent!, :$!pg_conn!, # Per protocol
 }
 
 method execute(**@params --> DBDish::StatementHandle) {
-    self!enter-execute(@params.elems, @!param_type.elems);
+    self!enter-execute(@params.elems, @!param-type.elems);
 
     $!parent.protect-connection: {
         my @param_values := ParamArray.new;
         for @params.kv -> $k, $v {
             if $v.defined {
-                @param_values[$k] = @!param_type[$k] ~~ Buf
-                        ?? $!pg_conn.escapeBytea(($v ~~ Buf) ?? $v !! ~$v.encode)
-                        !! @!param_type[$k] ~~ Array ?? self.pg-array-str($v)
+                @param_values[$k] = @!param-type[$k] ~~ Buf
+                        ?? $!pg-conn.escapeBytea(($v ~~ Buf) ?? $v !! ~$v.encode)
+                        !! @!param-type[$k] ~~ Array ?? self.pg-array-str($v)
                         !! ~$v;
             } else { @param_values[$k] = Str }
         }
 
         $!result = $!statement-name
-                ?? $!pg_conn.PQexecPrepared($!statement-name, @params.elems, @param_values,
+                ?? $!pg-conn.PQexecPrepared($!statement-name, @params.elems, @param_values,
                         Null, Null, 0)
-                !! $!pg_conn.PQexec($!statement);
+                !! $!pg-conn.PQexec($!statement);
 
-        self!set-err(PGRES_FATAL_ERROR, $!pg_conn.PQerrorMessage).fail unless $!result;
+        self!set-err(PGRES_FATAL_ERROR, $!pg-conn.PQerrorMessage).fail unless $!result;
 
-        $!current_row = 0;
+        $!current-row = 0;
         with self!handle-errors {
             my $rows;
             if $!result.PQresultStatus == PGRES_TUPLES_OK { # WAS SELECT
-                self!get-meta($!result) without $!field_count;
+                self!get-meta($!result) without $!field-count;
                 # Unprepared
-                $rows = $!row_count = $!result.PQntuples;
+                $rows = $!row-count = $!result.PQntuples;
             } else { # Other stmt without data to return
                 $rows =  $!result.PQcmdTuples.Int;
             }
-            self!done-execute($rows, $!field_count);
+            self!done-execute($rows, $!field-count);
         } else {
             .fail;
         }
@@ -99,13 +99,13 @@ method execute(**@params --> DBDish::StatementHandle) {
 
 method _row() {
     my $l = ();
-    if $!Executed && $!field_count && $!current_row < $!row_count {
+    if $!Executed && $!field-count && $!current-row < $!row-count {
         my $col = 0;
         my %Converter := $!parent.Converter;
         $l = do for @!column-type -> \ct {
             my $value = ct;
-            unless $!result.PQgetisnull($!current_row, $col) {
-                $value = $!result.PQgetvalue($!current_row, $col);
+            unless $!result.PQgetisnull($!current-row, $col) {
+                $value = $!result.PQgetvalue($!current-row, $col);
                 if ct ~~ Array {
                     $value = _pg-to-array($value, ct.of, %Converter);
                 } elsif (ct.^name ne 'Any') {
@@ -115,7 +115,7 @@ method _row() {
             $col++;
             $value;
         }
-        self.finish if ++$!current_row == $!row_count;
+        self.finish if ++$!current-row == $!row-count;
     }
     $l;
 }

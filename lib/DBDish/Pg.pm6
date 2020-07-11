@@ -71,17 +71,17 @@ our sub pg-replace-placeholder(Str $query) is export {
 method connect(:database(:$dbname), *%params) {
 
     %params.push((:$dbname)) with $dbname;
-    my $pg_conn = PGconn.new(%(%params<
+    my $pg-conn = PGconn.new(%(%params<
     host hostaddr port dbname user password connect-timeout
     client-encoding options application-name keepalives keepalives-idle
     keepalives-interval sslmode requiressl sslcert sslkey sslrootcert
     sslcrl requirepeer krbsrvname gsslib service>:p:delete));
-    my $status = $pg_conn.PQstatus;
+    my $status = $pg-conn.PQstatus;
     if $status == CONNECTION_OK {
-        DBDish::Pg::Connection.new(:$pg_conn, :parent(self), |%params);
+        DBDish::Pg::Connection.new(:$pg-conn, :parent(self), |%params);
     }
     else {
-        self!conn-error: :code($status) :errstr($pg_conn.PQerrorMessage);
+        self!conn-error: :code($status) :errstr($pg-conn.PQerrorMessage);
     }
 }
 

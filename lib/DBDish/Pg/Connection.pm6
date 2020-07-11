@@ -7,16 +7,16 @@ need DBDish::Pg::StatementHandle;
 need DBDish::TestMock;
 use DBIish::Common;
 
-has PGconn $!pg_conn handles <
+has PGconn $!pg-conn handles <
     pg-notifies pg-socket pg-parameter-status
     pg-db pg-user pg-pass pg-host
     pg-port pg-options quote>;
 has $.AutoCommit is rw = True;
-has $.in_transaction is rw = False;
+has $.in-transaction is rw = False;
 has %.Converter is DBDish::TypeConverter;
 has %.dynamic-types = %oid-to-type;
 
-submethod BUILD(:$!pg_conn!, :$!parent!, :$!AutoCommit) {
+submethod BUILD(:$!pg-conn!, :$!parent!, :$!AutoCommit) {
     %!Converter =
             method (--> Bool) { self eq 't' },
             method (--> DateTime) { DateTime.new(self.split(' ').join('T')) },
@@ -28,13 +28,13 @@ method prepare(Str $statement, *%args) {
     my $statement-name = join '_', 'pg', $*PID, $!statement-posfix++;
     my $munged = DBDish::Pg::pg-replace-placeholder($statement);
     die "Can't prepare this: '$statement'!" unless $munged;
-    my $result = $!pg_conn.PQprepare($statement-name, $munged, 0, OidArray);
+    my $result = $!pg-conn.PQprepare($statement-name, $munged, 0, OidArray);
     LEAVE { $result.PQclear if $result }
     if $result && $result.is-ok {
         self.reset-err;
 
         DBDish::Pg::StatementHandle.new(
-            :$!pg_conn,
+            :$!pg-conn,
             :parent(self),
             :$statement,
             :$.RaiseError,
@@ -47,19 +47,19 @@ method prepare(Str $statement, *%args) {
                     :code($result.PQresultStatus),
                     :native-message($result.PQresultErrorField(PG_DIAG_MESSAGE_PRIMARY)),
                     :driver-name<DBDish::Pg>,
-                    :$!pg_conn,
+                    :$!pg-conn,
                     :$statement,
                     :$statement-name,
                     :result($result),
                     );
         } else {
-            self!set-err(PGRES_FATAL_ERROR, $!pg_conn.PQerrorMessage);
+            self!set-err(PGRES_FATAL_ERROR, $!pg-conn.PQerrorMessage);
         }
     }
 }
 
 method server-version() {
-    $ = Version.new($!pg_conn.pg-parameter-status('server_version'));
+    $ = Version.new($!pg-conn.pg-parameter-status('server_version'));
 }
 
 method selectrow_arrayref(Str $statement, $attr?, *@bind is copy) is DEPRECATED('prepare/execute/row') {
@@ -115,9 +115,9 @@ method commit {
     }
 
     $!parent.protect-connection: {
-        $!pg_conn.PQexec("COMMIT");
+        $!pg-conn.PQexec("COMMIT");
     }
-    $.in_transaction = False;
+    $.in-transaction = False;
 }
 
 method rollback {
@@ -127,13 +127,13 @@ method rollback {
     }
 
     $!parent.protect-connection: {
-        $!pg_conn.PQexec("ROLLBACK");
+        $!pg-conn.PQexec("ROLLBACK");
     }
-    $.in_transaction = False;
+    $.in-transaction = False;
 }
 
 method ping {
-    with $!pg_conn {
+    with $!pg-conn {
         $_.PQstatus == CONNECTION_OK;
     } else {
         False;
@@ -141,16 +141,16 @@ method ping {
 }
 
 method pg-consume-input(--> Bool) {
-    my $status = $!pg_conn.PQconsumeInput();
+    my $status = $!pg-conn.PQconsumeInput();
     if (0 == $status) {
-        self!set-err(PGRES_FATAL_ERROR, $!pg_conn.PQerrorMessage);
+        self!set-err(PGRES_FATAL_ERROR, $!pg-conn.PQerrorMessage);
     }
     return ?$status;
 }
 
 method _disconnect() {
-    .PQfinish with $!pg_conn;
-    $!pg_conn = Nil;
+    .PQfinish with $!pg-conn;
+    $!pg-conn = Nil;
 }
 
 # Rollback any in-progress transaction and discard all state
@@ -161,12 +161,12 @@ method scrub-connection-for-reuse() {
         # Silence the warning for a ROLLBACK without a transaction in progress. DISCARD is not allowed
         # within a transaction. Since the user called dispose() without committing they should be
         # expecting the transaction to rollback.
-        my $trans-result = $!pg_conn.PQexec(q{SET client_min_messages = 'ERROR'; ROLLBACK;});
-        $.in_transaction = False;
+        my $trans-result = $!pg-conn.PQexec(q{SET client_min_messages = 'ERROR'; ROLLBACK;});
+        $.in-transaction = False;
 
         # An error during DISCARD ALL is considered fatal to prevent leaking the environment to
         # other sections of the code. Let the pooler figure out this issue on it's own.
-        my $result = $!pg_conn.PQexec(q{DISCARD ALL});
+        my $result = $!pg-conn.PQexec(q{DISCARD ALL});
         unless $result && $result.is-ok {
             self._disconnect;
             self!set-err($result.PQresultStatus, $result.PQresultErrorMessage);

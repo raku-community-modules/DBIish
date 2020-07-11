@@ -35,7 +35,7 @@ package X::DBDish {
 
         has $.result;
 
-        submethod BUILD(:$!result, :$statement-handle, :$statement, :$statement-name = "", :$pg_conn) {
+        submethod BUILD(:$!result, :$statement-handle, :$statement, :$statement-name = "", :$pg-conn) {
             $!sqlstate = $!result.PQresultErrorField(PG_DIAG_SQLSTATE);
 
             $!message-detail = $!result.PQresultErrorField(PG_DIAG_MESSAGE_DETAIL);
@@ -69,11 +69,11 @@ package X::DBDish {
             }
 
             # Copy data to ensure it survives dispose()
-            with $pg_conn {
-                $!dbname = $pg_conn.pg-db;
-                $!user = $pg_conn.pg-user;
-                $!host = $pg_conn.pg-host;
-                $!port = $pg_conn.pg-port;
+            with $pg-conn {
+                $!dbname = $pg-conn.pg-db;
+                $!user = $pg-conn.pg-user;
+                $!host = $pg-conn.pg-host;
+                $!port = $pg-conn.pg-port;
             }
         }
 

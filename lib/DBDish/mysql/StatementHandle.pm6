@@ -6,12 +6,12 @@ use DBDish::mysql::Native;
 use NativeHelpers::Blob;
 use NativeHelpers::CStruct;
 
-has MYSQL $!mysql_client;
+has MYSQL $!mysql-client;
 has MYSQL_STMT $!stmt;
 has int $!param-count;
 has $.statement;
-has MYSQL_RES $!result_set;
-has $!field_count;
+has MYSQL_RES $!result-set;
+has $!field-count;
 has Bool $.Prefetch;
 # For prepared stmts
 has $!par-binds;
@@ -22,16 +22,16 @@ has $!out-lengths;
 has $!isnull;
 
 method !handle-errors {
-    if $!mysql_client.mysql_errno -> $code {
-        self!set-err($code, $!mysql_client.mysql_error);
+    if $!mysql-client.mysql_errno -> $code {
+        self!set-err($code, $!mysql-client.mysql_error);
     } else {
         self.reset-err;
     }
 }
 
 method !get-meta(MYSQL_RES $res) {
-    my $lengths = blob-allocate(Buf[intptr], $!field_count);
-    loop (my $i = 0; $i < $!field_count; $i++) {
+    my $lengths = blob-allocate(Buf[intptr], $!field-count);
+    loop (my $i = 0; $i < $!field-count; $i++) {
         with $res.mysql_fetch_field {
             @!column-name.push: .name;
             @!column-type.push: do {
@@ -48,7 +48,7 @@ method !get-meta(MYSQL_RES $res) {
     $lengths;
 }
 
-submethod BUILD(:$!mysql_client!, :$!parent!, :$!stmt = MYSQL_STMT,
+submethod BUILD(:$!mysql-client!, :$!parent!, :$!stmt = MYSQL_STMT,
     :$!statement, Bool :$!Prefetch = True
 ) {
     with $!stmt { #Prepared
@@ -59,12 +59,12 @@ submethod BUILD(:$!mysql_client!, :$!parent!, :$!stmt = MYSQL_STMT,
             ).Int;
             $!par-binds[$_].length = $lb + $_ * ptrsize for ^$pc;
         }
-        if ($!field_count = .mysql_stmt_field_count) && .mysql_stmt_result_metadata -> $res {
-            $!binds = LinearArray[MYSQL_BIND].new($!field_count);
+        if ($!field-count = .mysql_stmt_field_count) && .mysql_stmt_result_metadata -> $res {
+            $!binds = LinearArray[MYSQL_BIND].new($!field-count);
             my $lb = BPointer($!out-lengths = self!get-meta($res)).Int;
-            $!isnull = blob-allocate(Buf[intptr], $!field_count);
+            $!isnull = blob-allocate(Buf[intptr], $!field-count);
             my $nb = BPointer($!isnull).Int;
-            for ^$!field_count -> $col {
+            for ^$!field-count -> $col {
                 given $!binds[$col] {
                     if .buffer_length = $!out-lengths[$col] {
                         # The buffer requested is the maximum size for the datatype which may be several
@@ -86,7 +86,7 @@ submethod BUILD(:$!mysql_client!, :$!parent!, :$!stmt = MYSQL_STMT,
                     }
                 }
             }
-            $!result_set = $res; # To be free at finish time;
+            $!result-set = $res; # To be free at finish time;
             $!stmt.mysql_stmt_bind_result($!binds.typed-pointer);
         }
         without self!handle-errors { .fail }
@@ -142,39 +142,39 @@ method execute(*@params --> DBDish::StatementHandle) {
     }
     else { # Unprepared path
         $!parent.protect-connection: {
-            my $status = $!mysql_client.mysql_query($!statement)
-                    and self!set-err($status, $!mysql_client.mysql_error).fail;
+            my $status = $!mysql-client.mysql_query($!statement)
+                    and self!set-err($status, $!mysql-client.mysql_error).fail;
 
-            $_ = $!mysql_client.mysql_field_count without $!field_count;
+            $_ = $!mysql-client.mysql_field_count without $!field-count;
 
-            if $!field_count {
-                $!result_set = $!Prefetch ?? $!mysql_client.mysql_store_result
-                        !! $!mysql_client.mysql_use_result;
+            if $!field-count {
+                $!result-set = $!Prefetch ?? $!mysql-client.mysql_store_result
+                        !! $!mysql-client.mysql_use_result;
                 .fail without self!handle-errors;
-                self!get-meta($!result_set) unless $!Executed; # First execution
+                self!get-meta($!result-set) unless $!Executed; # First execution
             }
         }
     }
-    my $rows = $!mysql_client.mysql_affected_rows;
+    my $rows = $!mysql-client.mysql_affected_rows;
     $rows++ if $rows == -1;
-    self!done-execute($rows, $!field_count);
+    self!done-execute($rows, $!field-count);
 }
 
 method escape(|a) {
-    $!mysql_client.escape(a);
+    $!mysql-client.escape(a);
 }
 
 multi method quote(Str $x) {
-    q['] ~ $!mysql_client.escape($x) ~ q['];
+    q['] ~ $!mysql-client.escape($x) ~ q['];
 }
 
 multi method quote(Blob $b) {
-    "X'" ~ $!mysql_client.escape($b,:bin) ~ "'";
+    "X'" ~ $!mysql-client.escape($b,:bin) ~ "'";
 }
 
 method _row {
     my $list = ();
-    if $!field_count -> $fields {
+    if $!field-count -> $fields {
         my $row;
         with $!stmt {
             my $ret = .mysql_stmt_fetch;
@@ -211,7 +211,7 @@ method _row {
                 }
                 $row = True;
             }
-        } elsif $row = $!result_set.fetch_row {
+        } elsif $row = $!result-set.fetch_row {
             # TODO: This should support $!parent.Converter.
             $list = do for ^$fields { $row.want($_, @!column-type[$_]) }
             $!affected_rows++ unless $!Prefetch;
@@ -229,7 +229,7 @@ method insert-id() {
     with $!stmt {
         $!stmt.mysql_stmt_insert_id;
     } else {
-        $!mysql_client.mysql_insert_id;
+        $!mysql-client.mysql_insert_id;
     }
 }
 
@@ -238,7 +238,7 @@ method mysql_insertid is DEPRECATED('insert-id'){
 }
 
 method mysql_warning_count {
-    $!mysql_client.mysql_warning_count;
+    $!mysql-client.mysql_warning_count;
 }
 
 method _free() {
@@ -258,7 +258,7 @@ method finish() {
         .mysql_stmt_free_result;
         .mysql_stmt_reset;
     }
-    with $!result_set {
+    with $!result-set {
         .mysql_free_result;
         $_ = Nil;
     }

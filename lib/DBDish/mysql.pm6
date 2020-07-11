@@ -12,20 +12,20 @@ has $.library-resolved = False;
 
 method connect(Str :$host = 'localhost', Int :$port = 3306, Str :$database = 'mysql', Str :$user, Str :$password, Str :$socket ) {
     my $connection;
-    my $mysql_client = MYSQL.mysql_init;
-    my $errstr  = $mysql_client.mysql_error;
+    my $mysql-client = MYSQL.mysql_init;
+    my $errstr  = $mysql-client.mysql_error;
 
     unless $errstr {
 
         # real_connect() returns either the same client pointer or null
-        my $result   = $mysql_client.mysql_real_connect(
+        my $result   = $mysql-client.mysql_real_connect(
             $host, $user, $password, $database, $port, $socket, 0
         );
 
-        unless $errstr = $mysql_client.mysql_error {
-            $mysql_client.mysql_set_character_set('utf8'); # A sane default
+        unless $errstr = $mysql-client.mysql_error {
+            $mysql-client.mysql_set_character_set('utf8'); # A sane default
             $connection = DBDish::mysql::Connection.new(
-                :$mysql_client, :parent(self), :$host, :$user, :$password, :$database, :$port, :$socket
+                :$mysql-client, :parent(self), :$host, :$user, :$password, :$database, :$port, :$socket
             );
         }
     }
