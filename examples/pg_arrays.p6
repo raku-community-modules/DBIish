@@ -48,28 +48,22 @@ $sth = $dbh.execute(q:to/STATEMENT/);
     );
 STATEMENT
 
-# $sth = $dbh.prepare(q:to/STATEMENT/);
-#	INSERT INTO sal_emp (name, pay_by_quarter, schedule)
-#	VALUES ( ?, ?, ? )
-#STATEMENT
-
-# $sth.execute('TAFM', 'Mild fish taco', 1, 4.85);
-
-# $sth.execute('BEOM', 'Medium size orange juice', 2, 1.20);
-
 $sth = $dbh.prepare(q:to/STATEMENT/);
 	SELECT name, pay_by_quarter, schedule, salary_by_month
 	FROM sal_emp
 STATEMENT
 
-$sth.execute;
+for $sth.execute.allrows(:array-of-hash) -> $row {
+    say $row<name>;  # Bill
+    say $row<pay_by_quarter>.join(", ");  # 10000, 10000, 10000, 10000
+    say $row<salary_by_month>.join(", "); # 511.123, 622.345, 1
 
-my %h = $sth.fetchrow_typedhash;
-say %h;
-
-#my $arrayref = $sth.fetchall_arrayref();
-#say $arrayref.elems;
-#say $arrayref.perl;
+    # Schedule is a multi-dimensional array
+    for $row<schedule>.list -> $schedule {
+        say $schedule.join(' : ');  # meeting : lunch
+                                    # training day : presentation
+    }
+}
 
 # Cleanup
 $sth.dispose;

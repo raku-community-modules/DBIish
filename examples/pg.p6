@@ -54,8 +54,8 @@ STATEMENT
 
 $sth.execute;
 
-my $arrayref = $sth.fetchall_arrayref();
-say $arrayref.elems; # 3
+my @array = $sth.allrows();
+say @array.elems; # 3
 
 # Cleanup
 $sth.dispose;
