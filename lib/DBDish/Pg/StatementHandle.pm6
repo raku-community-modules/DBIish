@@ -155,8 +155,7 @@ sub _to-array(Match $match, Mu:U $type, %Converter) {
             my $val = ~$element.values[0]<quoted-string><value>;
 
             # Remove escape sequences
-            $val ~~ s|'\\"'|"|;
-            $val ~~ s|'\\\\'|\\|;
+            $val = $val.subst('\\"', '"', :g).subst('\\\\', '\\', :g);
 
             $arr.push: %Converter.convert($val, $type);
         } elsif $element.values[0]<null>.defined {
