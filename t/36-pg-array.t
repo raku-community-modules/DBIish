@@ -166,6 +166,9 @@ STATEMENT
 {
     # Array type provided for older version of Pg
     my @arr = <some array text here>;
+    @arr.push('\\'); # Backslash needs escape
+    @arr.push('"'); # Quote needs escape
+    @arr.push(q{** \\ \" " '**}); # Mix of values needing escaping
     my $sth = $dbh.prepare(q{SELECT $1::_int8 AS arr_int, $2::_text AS arr_text, $3::int AS one_int, $4::text AS one_text, 'array' = ANY($5::_text) AS qual});
     $sth.execute([1,2,3], @arr, 5, 'a string', @arr);
 

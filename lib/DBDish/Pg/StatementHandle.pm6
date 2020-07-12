@@ -184,7 +184,7 @@ method pg-array-str(\arr) {
         } elsif $c ~~ Numeric {
             @tmp.push($c);
         } else {
-            my $t = $c.subst('"', '\\"');
+            my $t = $c.subst('\\', '\\\\', :g).subst('"', '\\"', :g);
             @tmp.push('"'~$t~'"');
         }
     }
