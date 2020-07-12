@@ -3,6 +3,8 @@
     "name"          : "DBIish",
     "version"       : "0.6.2",
     "description"   : "Database connectivity for Raku",
+    "auth": "github:raku-community-modules",
+    "meta-version": "1",
     "test-depends"  : [ ],
     "license"       : "BSD-2-Clause",
     "depends" : [ "NativeHelpers::Blob" ],
@@ -36,7 +38,10 @@
         "DBDish::SQLite::StatementHandle" : "lib/DBDish/SQLite/StatementHandle.pm6",
         "NativeLibs"                      : "lib/NativeLibs.pm6"
     },
-    "source-url" : "git://github.com/perl6/DBIish.git",
+    "support": {
+      "bugtracker": "https://github.com/raku-community-modules/DBIish/issues",
+      "source": "https://github.com/raku-community-modules/DBIish.git"
+    },
     "tags": [
       "database",
       "mariadb",
