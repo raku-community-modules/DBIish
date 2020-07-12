@@ -4,7 +4,7 @@ use v6;
 use DBIish;
 use Test;
 
-plan 42;
+plan 46;
 my %con-parms;
 # If env var set, no parameter needed.
 %con-parms<database> = 'dbdishtest' unless %*ENV<PGDATABASE>;
@@ -169,8 +169,15 @@ STATEMENT
     @arr.push('\\'); # Backslash needs escape
     @arr.push('"'); # Quote needs escape
     @arr.push(q{** \\ \" " '**}); # Mix of values needing escaping
-    my $sth = $dbh.prepare(q{SELECT $1::_int8 AS arr_int, $2::_text AS arr_text, $3::int AS one_int, $4::text AS one_text, 'array' = ANY($5::_text) AS qual});
-    $sth.execute([1,2,3], @arr, 5, 'a string', @arr);
+
+    # Create a multi-dimensional array avoiding List which is not yet supported.
+    my @part1 = ['some', 'text', 'here'];
+    my @part2 = ['and', 'more', 'here'];
+    my @part3 = ['\\', '"', '" foo " \\ '];
+    my @complex-arr = [ @part1, @part2, @part3 ];
+    my $sth = $dbh.execute(q:to/STMT/, [1, 2, 3], @arr, 5, 'a string', @arr, @complex-arr);
+    SELECT $1::_int8 AS arr_int, $2::_text AS arr_text, $3::int AS one_int, $4::text AS one_text, 'array' = ANY($5::_text) AS qual, $6::_text AS complex;
+    STMT
 
     my $row = $sth.row(:hash);
     is $row<arr_int>, [1,2,3], 'Integer array';
@@ -178,6 +185,11 @@ STATEMENT
     is $row<one_int>, 5, 'Integer';
     is $row<one_text>, 'a string', 'String';
     is $row<qual>, True, 'Qual evaluates as expected';
+    my @value = $row<complex>.list;
+    is @value[0], @part1, 'Part 1 of array';
+    is @value[1], @part2, 'Part 2 of array';
+    is @value[2], @part3, 'Part 3 of array';
+    is @value, @complex-arr, 'Multi-dimensional array';
 }
 
 # Roundtrip a Raku array via do().
