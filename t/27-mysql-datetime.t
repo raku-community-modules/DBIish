@@ -34,18 +34,15 @@ lives-ok {
     )|);
 }, 'Table created';
 
-my $sth = $dbh.prepare('INSERT INTO test_datetime (adate, atimestamp) VALUES(?, ?)');
 my $now = DateTime.now;
 $now .= truncated-to('second') unless $subsec;
 lives-ok {
-    $sth.execute($now.Date, $now);
+    $dbh.execute('INSERT INTO test_datetime (adate, atimestamp) VALUES(?, ?)', $now.Date, $now);
 }, 'Insert Perl6 values';
-$sth.dispose;
-$sth = $dbh.prepare('SELECT adate, atimestamp FROM test_datetime');
+my $sth = $dbh.execute('SELECT adate, atimestamp FROM test_datetime');
 my @coltype = $sth.column-types;
 ok @coltype eqv [Date, DateTime],	    'Column-types';
-
-is $sth.execute.rows, 1,			    'One row';
+is $sth.rows, 1,			    'One row';
 my ($date, $datetime) = $sth.row;
 isa-ok $date, Date;
 isa-ok $datetime,  DateTime;

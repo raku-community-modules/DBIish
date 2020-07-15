@@ -114,7 +114,7 @@ class MyRow does Positional is export {
         if $t ~~ Blob {
             self.blob($idx, $t);
         } else {
-            with self[$idx] { $t($_) } else { $t }
+            self[$idx];
         }
     }
     method blob(Int $idx, Mu $type) {

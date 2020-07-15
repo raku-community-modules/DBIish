@@ -175,11 +175,11 @@ multi method quote(Blob $b) {
 method _row {
     my $list = ();
     if $!field-count -> $fields {
+        my %Converter := $!parent.Converter;
         my $row;
         with $!stmt {
             my $ret = .mysql_stmt_fetch;
             if $ret == 0 or $ret == 101 { # Has data, possibly truncated
-                my %Converter := $!parent.Converter;
                 $list = do for ^$fields {
                     my $val = my $t = @!column-type[$_];
                     if $!isnull[$_] {
@@ -212,8 +212,18 @@ method _row {
                 $row = True;
             }
         } elsif $row = $!result-set.fetch_row {
-            # TODO: This should support $!parent.Converter.
-            $list = do for ^$fields { $row.want($_, @!column-type[$_]) }
+            # Differs from .mysql_stmt_fetch case in handling of NULLS and pulling the value out of the buffer.
+            $list = do for ^$fields {
+                my $t = @!column-type[$_];
+                my $val = $row.want($_, $t);
+
+                if $t ~~ Blob {
+                    # Don't touch
+                } elsif ($t.^name ne 'Any') {
+                    $val = %Converter.convert($val, $t);
+                }
+                $val;
+            }
             $!affected_rows++ unless $!Prefetch;
         }
         unless $row {
