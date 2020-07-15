@@ -7,7 +7,10 @@
     "meta-version": "1",
     "test-depends"  : [ ],
     "license"       : "BSD-2-Clause",
-    "depends" : [ "NativeHelpers::Blob" ],
+    "depends": [
+      "NativeHelpers::Blob",
+      "NativeLibs:auth<github:salortiz>"
+    ],
     "provides" : {
         "DBIish"                    : "lib/DBIish.pm6",
         "DBIish::Common"            : "lib/DBIish/Common.pm6",
@@ -35,8 +38,7 @@
         "DBDish::SQLite"                  : "lib/DBDish/SQLite.pm6",
         "DBDish::SQLite::Connection"      : "lib/DBDish/SQLite/Connection.pm6",
         "DBDish::SQLite::Native"          : "lib/DBDish/SQLite/Native.pm6",
-        "DBDish::SQLite::StatementHandle" : "lib/DBDish/SQLite/StatementHandle.pm6",
-        "NativeLibs"                      : "lib/NativeLibs.pm6"
+        "DBDish::SQLite::StatementHandle" : "lib/DBDish/SQLite/StatementHandle.pm6"
     },
     "support": {
       "bugtracker": "https://github.com/raku-community-modules/DBIish/issues",
