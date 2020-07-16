@@ -1,6 +1,6 @@
 use v6;
 
-unit module NativeLibs:auth<sortiz>:ver<0.0.8>;
+unit module NativeLibs:auth<sortiz>:ver<0.0.3>;
 use NativeCall :ALL;
 
 our constant is-win = Rakudo::Internals.IS-WIN();
