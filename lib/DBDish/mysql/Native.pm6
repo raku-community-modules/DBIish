@@ -2,7 +2,7 @@ use v6;
 
 unit module DBDish::mysql::Native;
 use NativeCall;
-use NativeLibs:auth<github:salortiz>;
+use NativeLibs;
 use NativeHelpers::Blob;
 
 # Library preloaded when supported

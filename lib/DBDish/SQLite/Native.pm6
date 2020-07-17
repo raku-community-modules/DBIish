@@ -1,6 +1,6 @@
 use v6;
 
-use NativeLibs:auth<github:salortiz>;
+use NativeLibs;
 use NativeCall;
 
 unit module DBDish::SQLite::Native;

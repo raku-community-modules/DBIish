@@ -2,7 +2,7 @@ use v6;
 
 unit module DBDish::Pg::Native;
 use NativeCall;
-use NativeLibs:auth<github:salortiz>;
+use NativeLibs;
 use NativeHelpers::Blob;
 
 constant LIB = NativeLibs::Searcher.at-runtime('pq', 'PQstatus', 5);

@@ -9,7 +9,7 @@
     "license"       : "BSD-2-Clause",
     "depends": [
       "NativeHelpers::Blob",
-      "NativeLibs:auth<github:salortiz>"
+      "NativeLibs"
     ],
     "provides" : {
         "DBIish"                    : "lib/DBIish.pm6",
