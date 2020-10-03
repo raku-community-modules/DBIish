@@ -66,15 +66,21 @@ submethod BUILD(:$!parent!, :$!pg-conn!, # Per protocol
 method execute(**@params --> DBDish::StatementHandle) {
     self!enter-execute(@params.elems, @!param-type.elems);
 
+    my %Converter := $!parent.Converter-To-DB;
+
     $!parent.protect-connection: {
         my @param-values := ParamArray.new;
-        for @params.kv -> $k, $v {
-            if $v.defined {
-                @param-values[$k] = @!param-type[$k] ~~ Buf
-                        ?? $!pg-conn.escapeBytea(($v ~~ Buf) ?? $v !! ~$v.encode)
-                        !! @!param-type[$k] ~~ Array ?? self.pg-array-str($v)
-                        !! ~$v;
-            } else { @param-values[$k] = Str }
+        for @params.kv -> $k, $val {
+            if $val.defined {
+                my $have-type = $val.WHAT;
+                if $have-type ~~ Array {
+                    @param-values[$k] = self.pg-array-str($val);
+                } else {
+                    @param-values[$k] = %Converter.convert($val);
+                }
+            } else {
+                @param-values[$k] = Str;
+            }
         }
 
         $!result = $!statement-name
@@ -105,7 +111,7 @@ method _row() {
     # Cache type conversion functions. Allow column-type to be configured by the client
     # after prepare/execute
     if @!import-func.elems != $!field-count {
-        my %Converter := $!parent.Converter;
+        my %Converter := $!parent.Converter-From-DB;
 
         for @!column-type -> $type {
             @!import-func.push: do {
@@ -197,15 +203,19 @@ sub _pg-to-array(Str $text, Mu:U $type, %Converter) {
 }
 
 method pg-array-str(\arr) {
+    my %Converter := $!parent.Converter-To-DB;
+
     my @tmp;
     my @data := arr ~~ Array ?? arr !! [ arr ];
     for @data -> $c {
         if $c ~~ Array {
             @tmp.push(self.pg-array-str($c));
-        } elsif $c ~~ Numeric {
-            @tmp.push($c);
         } else {
-            my $t = $c.subst('\\', '\\\\', :g).subst('"', '\\"', :g);
+            # Convert $c from Raku object value to DB string value if necessary.
+            my $t = %Converter.convert($c);
+
+            # Escape the converted value and push it into the array string.
+            $t = $t.subst('\\', '\\\\', :g).subst('"', '\\"', :g);
             @tmp.push('"'~$t~'"');
         }
     }

@@ -181,6 +181,12 @@ method Statements() {
     $!statements-lock.protect: { %!statements.clone }
 }
 
+multi method register-type-conversion(Int :$db-type is required, Mu :$raku-type is required, Callable :$from-db-sub, Callable :$to-db-sub) {
+    self.dynamic-types{$db-type} = $raku-type with $db-type;
+    self.Converter-From-DB{$raku-type} = $from-db-sub with $from-db-sub;
+    self.Converter-To-DB{$raku-type} = $to-db-sub with $to-db-sub;
+}
+
 =begin pod
 =head5 quote
 

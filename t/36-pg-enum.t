@@ -2,7 +2,7 @@ use v6;
 use Test;
 use DBIish;
 
-plan 26;
+plan 17;
 
 without %*ENV<DBIISH_WRITE_TEST> {
 	skip-rest 'Set environment variable DBIISH_WRITE_TEST=YES to run this test';
@@ -54,56 +54,69 @@ ok $sth.execute(2, 'No'),		 'Executed with No';
 ok $sth.execute(3, Nil),		 'Executed with null';
 
 ok $sth = $dbh.prepare('SELECT yeah FROM test_enum WHERE id = ?'), 'SELECT prepared';
-ok $sth.execute(1), 'Executed for 1';
-ok (my @res = $sth.row), 'Get a row';
+subtest {
+    ok $sth.execute(1), 'Executed for 1';
+    ok (my @res = $sth.row), 'Get a row';
+    # Returns a simple cast to a string by default if a converter isn't configured.
+    is @res[0], 'Yes', 'String version of value';
+}, 'String value for "1"';
+subtest {
+    ok $sth.execute(3), 'Executed for 3';
+    ok (my @res = $sth.row), 'Get a row';
+    not @res[0].defined, 'Nil';
+}, 'String value for "3"';
 
-#
+# FIXME: Remove this?
 $sth = $dbh.prepare(q|
-	SELECT pg_type.typarray AS enumtype, 
-	    pg_type.typname AS enumname, 
-	    pg_enum.enumtypid AS enumoptid, 
-	    pg_enum.enumlabel AS enumlabel
+	SELECT pg_enum.enumlabel AS enumlabel
 	 FROM pg_type
-	 JOIN pg_enum
-	     ON pg_enum.enumtypid = pg_type.oid
+	 JOIN pg_enum ON pg_enum.enumtypid = pg_type.oid
 	ORDER BY enumsortorder;
 |);
-ok my $res = $sth.execute, 'Find the enum';
-ok (my @enum = $sth.allrows(:hash)), 'Get the rows';
-my (@enumtypes, @options);
+ok (my @enum = $sth.execute.allrows(:hash)), 'Get the enumlabels';
+my @options;
 for @enum -> @option {
-	@enumtypes.push(@option[2]);	
-	@options.push(@option[3]);	
+	@options.push(@option[0]);
 }
+
 {
-    # This is required as the compiler sees the empty
-    # @options being passed to the enum before it is
-    # populated at run-time
-    no worries;
+    # Setup an Enum. Doing this dynamically from DB values is very tricky.
+    # FIXME: @options fails to setup the enum correctly
+    enum YesNo (Yes => 'Yes', No => 'No');
 
-    my enum YesNo (@options);
-    for @enumtypes -> $type {
-        $dbh.dynamic-types{$type} = YesNo;
-    }
+    lives-ok {
+        my $convert-sub = sub ($value) {
+            # Returning YesNo(Nil) doesn't quite work with a --> YesNo signature on the function.
+            $value.defined ?? YesNo($value) !! Nil;
+        }
+        $dbh.register-type-conversion(:schema<public>, :db-type<yesno>, raku-type => YesNo,
+        from-db-sub => $convert-sub);
+    }, 'Install the YesNo converter';
 
-    my Str $expected = 'Yes';
-    my $yesno =  sub (Str $value) {
-        is $value, $expected, "Value OK ($value eq $expected)";
-        $value;
-    };
-    ok ($dbh.Converter{YesNo} = $yesno),   'Install the YesNo converter';
+    ok $sth = $dbh.prepare('SELECT yeah FROM test_enum WHERE id = ?'), 'Prepare statement';
+    subtest {
+        ok $sth.execute(1), 'Executed for 1';
+        ok (my @res = $sth.row), 'Get a row';
+        is @res.elems, 1, 'One field';
+        my $data = @res[0];
+        ok $data ~~ YesNo, 'Data is an YesNo enum';
+        is $data, Yes, 'Data match with original';
+    }, 'Enum value for "1"';
 
-    ok $sth = $dbh.prepare('SELECT yeah FROM test_enum WHERE id = ?'), 'SELECT prepared';
-    ok $sth.execute(1), 'Executed for 1';
-    ok (@res = $sth.row), 'Get a row';
-    is @res.elems,  1,	 'One field';
-    ok (my $data = @res[0]), 'With data at 0';
-    ok $data ~~ Str,         'Data is-a Str';
-    is $data, 'Yes',         'Data match with original';
+    subtest {
+        ok $sth.execute(2), 'Executed for 2';
+        ok (my @res = $sth.row), 'Get a row';
+        is @res.elems, 1, 'One field';
+        my $data = @res[0];
+        ok $data ~~ YesNo, 'Data is an YesNo enum';
+        is $data, No, 'Data match with original';
+    }, 'Enum value for "2"';
 
-    $expected = 'No';
-    ok $sth.execute(2),      'Executed for 2';
-    ok (@res = $sth.row),	 'Get a row';
-    is @res.elems,  1,	 'One field';
+    subtest {
+        ok $sth.execute(3), 'Executed for 3';
+        ok (my @res = $sth.row), 'Get a row';
+        is @res.elems, 1, 'One field';
+        my $data = @res[0];
+        nok $data.defined, 'Data match with original';
+    }, 'Enum value for "3"';
 }
-

@@ -13,14 +13,40 @@ has PGconn $!pg-conn handles <
     pg-port pg-options quote>;
 has $.AutoCommit is rw = True;
 has $.in-transaction is rw = False;
-has %.Converter is DBDish::TypeConverter;
+has %.Converter-From-DB is DBDish::TypeConverterFromDB;
+has %.Converter-To-DB is DBDish::TypeConverterToDB;
 has %.dynamic-types = %oid-to-type;
 
-submethod BUILD(:$!pg-conn!, :$!parent!, :$!AutoCommit) {
-    %!Converter =
+submethod BUILD(:$!pg-conn!, :$!parent!, :$!AutoCommit) { }
+submethod TWEAK() {
+    %!Converter-From-DB =
             method (--> Bool) { self eq 't' },
             method (--> DateTime) { DateTime.new(self.split(' ').join('T')) },
             :Buf(&str-to-blob);
+
+    %!Converter-To-DB =
+            sub (Buf $val) {$!pg-conn.escapeBytea(($val ~~ Buf) ?? $val !! ~$val.encode)};
+    # TODO: Array needs 2 layers of conversion; one for individual elements and the other for the array itself
+    #        method (Array $val) {self.pg-array-str($val)};
+}
+
+multi method register-type-conversion(Str :$schema = 'pg_catalog', Str :$db-type is required, Mu :$raku-type is required,
+                                      Callable :$from-db-sub, Callable :$to-db-sub)
+{
+    my $sql = q:to/SQL/;
+       SELECT pg_type.oid
+         FROM pg_type
+         JOIN pg_namespace ON (pg_namespace.oid = typnamespace)
+        WHERE nspname = $1
+          AND typname = $2
+    SQL
+
+    # Expecting a single result, silently fail if not applicable.
+    for self.execute($sql, $schema, $db-type).row() -> $row {
+        my Int $type-id = $row[0].Int;
+
+        self.register-type-conversion(db-type => $type-id, :$from-db-sub, :$to-db-sub, :$raku-type);
+    }
 }
 
 has $!statement-posfix = 0;

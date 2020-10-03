@@ -37,7 +37,7 @@ role Driver does DBDish::ErrorHandling {
     }
 }
 
-role TypeConverter does Associative {
+role TypeConverterFromDB does Associative {
     has Callable %!Conversions{Mu:U} handles <AT-KEY EXISTS-KEY>;
 
     # The role implements the conversion
@@ -63,9 +63,39 @@ role TypeConverter does Associative {
             }
         }
     }
+
     method STORE(::?CLASS:D: \to_store) {
         for @(to_store) {
             when Callable { %!Conversions{$_.signature.returns} = $_ }
+            when Pair { %!Conversions{::($_.key)} = $_.value }
+        }
+    }
+}
+
+role TypeConverterToDB does Associative {
+    has Callable %!Conversions{Mu:U} handles <AT-KEY EXISTS-KEY>;
+
+    # The role implements the conversion:
+    method convert (::?CLASS:D: Mu $datum --> Str) {
+        my Mu:U $type = $datum.WHAT;
+
+        # Normalize Buf. Due to an implementation quirk, Buf != Buf.new(^256)
+        # but whateverable can handle it. Convert to a static term for hash lookup purposes.
+        $type = Buf if ($type ~~ Buf);
+
+        with %!Conversions{$type} -> &converter {
+            converter($datum);
+        } else { # Common case. Convert using simple stringification.
+            Str($datum);
+        }
+    }
+    method STORE(::?CLASS:D: \to_store) {
+        for @(to_store) {
+            when Callable {
+                my Mu:U $type = $_.signature.params[0].type;
+                $type = Buf if ($type ~~ Buf);
+                %!Conversions{$type} = $_;
+            }
             when Pair { %!Conversions{::($_.key)} = $_.value }
         }
     }

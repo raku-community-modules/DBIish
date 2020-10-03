@@ -7,7 +7,7 @@ use DBDish::mysql::Native;
 need DBDish::mysql::StatementHandle;
 
 has MYSQL $!mysql-client;
-has %.Converter is DBDish::TypeConverter;
+has %.Converter is DBDish::TypeConverterFromDB;
 has %.dynamic-types = %mysql-type-conv;
 
 submethod BUILD(:$!mysql-client!, :$!parent!) {

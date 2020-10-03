@@ -5,7 +5,7 @@ need DBDish;
 plan 12;
 
 class type-test {
-	has %.Converter is DBDish::TypeConverter;
+	has %.Converter is DBDish::TypeConverterFromDB;
 
 	method test-str(Str $value) {
 		$value.flip;
