@@ -42,7 +42,7 @@ ok so $dbh.err,         'Has error at $dbh level';
 ok so $dbh.drv.err,     'Has error at $drv level';
 ok so DBIish.err,     'Has error at DBIish level';
 is DBIish.errstr, $e,      'Propagated to DBIish';
-like $e, /UNIQUE/;
+like $e, rx:i/UNIQUE/;
 $dbh.dispose; # Close the connection
 
 
