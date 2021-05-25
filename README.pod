@@ -644,6 +644,21 @@ Supports basic CRUD operations and prepared statements with placeholders
 
     my $dbh = DBIish.connect('Oracle', database => 'XE', :user<sysadm>, :password('secret'));
 
+By default connections to Oracle will apply these session alterations in an attempt to
+make the formatted date/timestamp strings compatible with DateTime class and will be
+provided to the consumer as DateTime.new($str).
+
+    ALTER SESSION SET time_zone               = '-00:00'
+    ALTER SESSION SET nls_date_format         = 'YYYY-MM-DD"T"HH24:MI:SS"Z"'
+    ALTER SESSION SET nls_timestamp_format    = 'YYYY-MM-DD"T"HH24:MI:SS.FF"Z"' # updated
+    ALTER SESSION SET nls_timestamp_tz_format = 'YYYY-MM-DD"T"HH24:MI:SS.FF"Z"'
+
+For consumer purists wanting DBIish to stay out of the way, the above behaviors can
+be disabled using these options in the connect method.
+
+   :no-alter-session      # don't apply the alter session defaults
+   :no-datetime-container # return the date/timestamps as stings
+
 =head1 TESTING
 
 The C<DBIish::CommonTesting> module, now with over 100 tests, provides a common unit
