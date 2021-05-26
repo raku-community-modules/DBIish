@@ -659,6 +659,11 @@ be disabled using these options in the connect method.
    :no-alter-session      # don't apply the alter session defaults
    :no-datetime-container # return the date/timestamps as stings
 
+Prior versions of DBDish coerced Oracle field names to lower-case when data is a hash.
+If you still require/want this ability use this option. This option is not recommended.
+
+   :lc-field-names
+
 =head1 TESTING
 
 The C<DBIish::CommonTesting> module, now with over 100 tests, provides a common unit
