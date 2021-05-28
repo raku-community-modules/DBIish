@@ -644,6 +644,44 @@ Supports basic CRUD operations and prepared statements with placeholders
 
     my $dbh = DBIish.connect('Oracle', database => 'XE', :user<sysadm>, :password('secret'));
 
+By default connections to Oracle will apply this session alteration in an attempt to
+ensure the formatted "TIMESTAMP WITH TIME ZONE" field string will be compatable with DateTime
+and returned to the user as DateTime.new($ts_str).
+
+    ALTER SESSION SET nls_timestamp_tz_format = 'YYYY-MM-DD"T"HH24:MI:SS.FFTZR'
+
+WARNING: This alteration does not include support for these field types
+
+    TIMESTAMP
+    TIMESTAMP WITH LOCAL TIME ZONE
+
+WARNING: And any form of TIMESTAMP(0) will produce a string not compatible with DateTime
+due to the ".FF" and the lack of fractional seconds to fulfill it.
+
+
+You can choose to use this set of session alterations in an attempt to simply the use of
+ISO-8601 timestamps; strictly speaking, formatted as "YYYY-MM-DDTHH:MI:SSZ"; no offsets etc.
+This session management forces all clients to UTC and sets formats for all DATE and TIMESTAMP
+types; it does however sacrifice any fraction seconds TIMESTAMPS may be storing.
+
+    :alter-session-iso8601
+
+    ALTER SESSION SET time_zone               = '-00:00'
+    ALTER SESSION SET nls_date_format         = 'YYYY-MM-DD"T"HH24:MI:SS"Z"'
+    ALTER SESSION SET nls_timestamp_format    = 'YYYY-MM-DD"T"HH24:MI:SS"Z"'
+    ALTER SESSION SET nls_timestamp_tz_format = 'YYYY-MM-DD"T"HH24:MI:SS"Z"'
+
+WARNING: Preexisting databases that used local time zones other than UTC/GMT/-00:00 will need
+to convert current timestamps to -00:00 to ensure timestamp correctness.
+
+For consumer purists wanting DBIish to leave session management to yourself, the above behaviors can
+be disabled using these options in the connect method. These options will allow DBIish to more closely
+behave like Perl5's DBI defaults.
+
+   :no-alter-session      # don't alter session
+   :no-datetime-container # return the date/timestamps as stings
+
+
 =head1 TESTING
 
 The C<DBIish::CommonTesting> module, now with over 100 tests, provides a common unit

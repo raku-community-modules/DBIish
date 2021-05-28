@@ -72,7 +72,9 @@ method !get-meta {
                     when SQLT_INT { $wtype = $_; Buf[int64].new(0); }
                     when SQLT_BIN { $wtype = $_; proceed; }
                     when SQLT_DAT { $wtype = $_; proceed; }
-                    when SQLT_TIMESTAMP_TZ { $datalen = 50; proceed; }
+                    when SQLT_TIMESTAMP     { $datalen = 50; proceed; }
+                    when SQLT_TIMESTAMP_TZ  { $datalen = 50; proceed; }
+                    when SQLT_TIMESTAMP_LTZ { $datalen = 50; proceed; }
                     default { blob-allocate(Buf, $datalen); }
                 }
                 my $bind = OCIDefine.new;
@@ -162,14 +164,22 @@ method _row() {
                                 Date.new(:$year,:month($res[2]),:day($res[3]));
                             }
                             when DateTime {
-                                if $res.bytes == 7 {
+                              # $*ERR.say: "BYTES: ", $res.bytes, ' ', $res;
+                                if $res.bytes == 7 && ! $!parent.no-datetime-container
+                                {
                                     my $year = ($res[0]-100)*100 + $res[1]-100;
                                     DateTime.new(:$year,:month($res[2]),:day($res[3]),
                                          :hour($res[4]),:minute($res[5]),:second($res[6]));
                                 } else { proceed; }
                             }
                             $res .= decode;
-                            when DateTime { DateTime.new($res) }
+                            when DateTime {
+                                if ! $!parent.no-datetime-container
+                                {
+                                  DateTime.new($res);
+                                }
+                                else { proceed }
+                            }
                             when Rat { $res.Rat }
                             default { $res }
                         }
