@@ -2,7 +2,7 @@ use v6;
 use Test;
 use DBIish;
 
-plan 33;
+plan 42;
 
 # Convert to TEMPORARY table instead?
 without %*ENV<DBIISH_WRITE_TEST> {
@@ -98,9 +98,15 @@ ok $dbh.dispose, 'Close session';
 
 note '#+ -------------------------------------------------------- +';
 note '## Issue #204 - ADD Missing TIMESTAMP Support tests (BEGIN)';
+note '## Issue #203 - Timezone not always taken into account';
+note '##   As with all things Oracle there is no single solution';
+note '##   This test and newly added connect options provide';
+note '##   *an* example';
 note '#+ -------------------------------------------------------- +';
 
-%con-parms = :database<XE>, :username<TESTUSER>, :password<Testpass>, :!AutoCommit;
+# use :alter-session-iso8601 (support all DATE & TIMESTAMP types)
+# all should work with DateTime($st)
+%con-parms = :database<XE>, :username<TESTUSER>, :password<Testpass>, :!AutoCommit, :alter-session-iso8601;
 
 try {
   $dbh = DBIish.connect('Oracle', |%con-parms);
@@ -111,13 +117,6 @@ try {
       default { .rethrow; }
   }
 }
-
-# session mgmt comming soon
-is $dbh.do('ALTER SESSION SET time_zone               = \'-00:00\''), 0, 'ALTER SESSION ...';
-is $dbh.do('ALTER SESSION SET nls_date_format         = \'YYYY-MM-DD"T"HH24:MI:SS"Z"\''), 0, 'ALTER SESSION ...';
-is $dbh.do('ALTER SESSION SET nls_timestamp_format    = \'YYYY-MM-DD"T"HH24:MI:SS"Z"\''), 0, 'ALTER SESSION ...';
-is $dbh.do('ALTER SESSION SET nls_timestamp_tz_format = \'YYYY-MM-DD"T"HH24:MI:SS"Z"\''), 0, 'ALTER SESSION ...';
-is $dbh.execute('SELECT * FROM test_datetime').allrows, (), 'Perfect table is empty!';
 
 $sth = $dbh.prepare(
     q|INSERT INTO test_datetime
@@ -150,9 +149,75 @@ is $dbh.execute('SELECT atimestamp6ltz FROM test_datetime').allrows, $now.Str, '
 $dbh.rollback;
 ok $sth.dispose,  'dispose';
 is $dbh.execute('SELECT * FROM test_datetime').allrows.elems, 0, 'Perfect table is empty!';
+ok $dbh.dispose, 'Close session';
 
 note '#+ -------------------------------------------------------- +';
 note '## Issue #204 - ADD Missing TIMESTAMP Support tests (END)';
+note '## Issue #203 - Timezone not always taken into account (END)';
+note '#+ -------------------------------------------------------- +';
+note '## Issue #203 & #204 - Not everyone wants DBHish in their';
+note '##         session business!';
+note '##   :no-alter-session, :no-datetime-container';
+note '#+ -------------------------------------------------------- +';
+
+# use
+#  :no-alter-session      # don't alter session
+#  :no-datetime-container # return the date/timestamps as stings
+%con-parms = :database<XE>, :username<TESTUSER>, :password<Testpass>, :!AutoCommit
+  , :no-alter-session, :no-datetime-container;
+
+try {
+  $dbh = DBIish.connect('Oracle', |%con-parms);
+  CATCH {
+      when X::DBIish::LibraryMissing | X::DBDish::ConnectionFailed {
+          diag "$_\nCan't continue.";
+      }
+      default { .rethrow; }
+  }
+}
+
+# Session: Something arbitrary but predictable
+is $dbh.do(qq|ALTER SESSION SET time_zone               = '-02:00'|), 0, 'ALTER SESSION ...';
+is $dbh.do(qq|ALTER SESSION SET nls_date_format         = 'YYYY-MM-DD'|), 0, 'ALTER SESSION ...';
+is $dbh.do(qq|ALTER SESSION SET nls_timestamp_format    = 'YYYY-MM-DD"T"HH24:MI:SS.FF'|), 0, 'ALTER SESSION ...';
+is $dbh.do(qq|ALTER SESSION SET nls_timestamp_tz_format = 'YYYY-MM-DD"T"HH24:MI:SS.FFTZH:TZM'|), 0, 'ALTER SESSION ...';
+is $dbh.execute('SELECT * FROM test_datetime').allrows, (), 'Perfect table is empty!';
+
+ $sth = $dbh.prepare(
+     q|INSERT INTO test_datetime
+     FIELDS (adate, atimestamp0, atimestamp6, atimestamp0tz, atimestamp6tz, atimestamp0ltz, atimestamp6ltz)
+     VALUES (?,?,?,?,?,?,?)|);
+
+ lives-ok {
+     $sth.execute(
+       '2021-06-12',                       # DATE
+       '2021-06-12T18:30:00.0',            # TIMESTAMP(0)
+       '2021-06-12T18:30:00.019866',       # TIMESTAMP(6)
+       '2021-06-12T18:30:00.0-05:00',      # TIMESTAMP(0) WITH TIME ZONE
+       '2021-06-12T18:30:00.019866-05:00', # TIMESTAMP(6) WITH TIME ZONE
+       '2021-06-12T18:30:00.0',            # TIMESTAMP(0) WITH LOCAL TIME ZONE
+       '2021-06-12T18:30:00.019866'        # TIMESTAMP(6) WITH LCOAL TIME ZONE
+     );
+ },                                           'Can insert Raku values (strings - containerless)';
+
+note '# See what Oracle is formatting for us...';
+for $dbh.execute('SELECT * FROM test_datetime').allrows -> $row { say '# ', $row.perl; }
+
+# DATE
+is $dbh.execute('SELECT adate FROM test_datetime').allrows, '2021-06-12', 'DATE smells right!';
+# TIMESTAMP(0)/(N)
+is $dbh.execute('SELECT atimestamp0 FROM test_datetime').allrows, '2021-06-12T18:30:00.',       'TIMESTAMP(0) as a string';
+is $dbh.execute('SELECT atimestamp6 FROM test_datetime').allrows, '2021-06-12T18:30:00.019866', 'TIMESTAMP(6) as a string';
+# TIMESTAMP(0)/(N) WITH TIME ZONE
+is $dbh.execute('SELECT atimestamp0tz FROM test_datetime').allrows, '2021-06-12T18:30:00.-05:00',       'TIMESTAMP(0) W TZ as a string';
+is $dbh.execute('SELECT atimestamp6tz FROM test_datetime').allrows, '2021-06-12T18:30:00.019866-05:00', 'TIMESTAMP(6) W TZ as a string';
+# TIMESTAMP(0)/(N) WITH LOCAL TIME ZONE
+is $dbh.execute('SELECT atimestamp0ltz FROM test_datetime').allrows, '2021-06-12T18:30:00.',       'TIMESTAMP(0) W LTZ as a string';
+is $dbh.execute('SELECT atimestamp6ltz FROM test_datetime').allrows, '2021-06-12T18:30:00.019866', 'TIMESTAMP(6) W LTZ as a string';
+
+note '#+ -------------------------------------------------------- +';
+note '## Issue #204 - ADD Missing TIMESTAMP Support tests (END)';
+note '## Issue #203 - Timezone not always taken into account (END)';
 note '#+ -------------------------------------------------------- +';
 
 # Done
