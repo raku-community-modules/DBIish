@@ -16,6 +16,7 @@ class JSON {
 
 plan 26;
 my %con-parms = :database<dbdishtest>, :user<testuser>, :password<testpass>;
+%con-parms<host> = %*ENV<MYSQL_HOST> if %*ENV<MYSQL_HOST>;
 my $dbh;
 
 try {

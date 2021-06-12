@@ -46,6 +46,7 @@ without %*ENV<DBIISH_WRITE_TEST> {
 # this test script currently needs is the variables listed here.
 my $mdriver       = 'mysql';
 my $host          = 'localhost';
+$host = %*ENV<MYSQL_HOST> if %*ENV<MYSQL_HOST>;
 my $port          = 3306;
 my $database      = 'dbdishtest';
 my $test_user     = 'testuser';

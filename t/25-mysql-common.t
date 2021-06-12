@@ -2,13 +2,12 @@
 use v6;
 need DBIish::CommonTesting;
 
+my %con-parms = :database<dbdishtest>, :user<testuser>, :password<testpass>;
+%con-parms<host> = %*ENV<MYSQL_HOST> if %*ENV<MYSQL_HOST>;
+
 DBIish::CommonTesting.new(
     :dbd<mysql>,
-    opts => {
-	:database<dbdishtest>,
-	:user<testuser>,
-	:password<testpass>,
-    },
+    opts => %con-parms,
 ).run-tests;
 
 =begin pod

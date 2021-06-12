@@ -5,6 +5,7 @@ use DBIish;
 plan 1;
 
 my %con-parms = :database<dbdishtest>, :user<testuser>, :password<testpass>;
+%con-parms<host> = %*ENV<MYSQL_HOST> if %*ENV<MYSQL_HOST>;
 my $dbh;
 
 # Thread tests may fail periodically under 2020.01
