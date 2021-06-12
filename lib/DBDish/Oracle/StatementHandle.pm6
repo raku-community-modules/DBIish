@@ -72,7 +72,9 @@ method !get-meta {
                     when SQLT_INT { $wtype = $_; Buf[int64].new(0); }
                     when SQLT_BIN { $wtype = $_; proceed; }
                     when SQLT_DAT { $wtype = $_; proceed; }
-                    when SQLT_TIMESTAMP_TZ { $datalen = 50; proceed; }
+                    when SQLT_TIMESTAMP     { $datalen = 50; proceed; }
+                    when SQLT_TIMESTAMP_TZ  { $datalen = 50; proceed; }
+                    when SQLT_TIMESTAMP_LTZ { $datalen = 50; proceed; }
                     default { blob-allocate(Buf, $datalen); }
                 }
                 my $bind = OCIDefine.new;

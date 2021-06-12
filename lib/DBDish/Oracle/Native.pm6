@@ -87,17 +87,21 @@ constant SQLT_STR               is export = 5;
 constant SQLT_DAT               is export = 12;
 constant SQLT_BIN               is export = 23;
 constant SQLT_CLOB              is export = 112;
+constant SQLT_TIMESTAMP         is export = 187;
 constant SQLT_TIMESTAMP_TZ      is export = 188;
+constant SQLT_TIMESTAMP_LTZ     is export = 232;
 
 constant %sqltype-map is export = {
     +(SQLT_CHR)  => Str,
     +(SQLT_NUM)  => Rat,
     +(SQLT_INT)  => Int,
     +(SQLT_FLT)  => Num,
+    +(SQLT_DAT)  => Date,
     +(SQLT_BIN)  => Buf,
     +(SQLT_CLOB) => Str,
-    +(SQLT_TIMESTAMP_TZ) => DateTime,
-    +(SQLT_DAT) => Date,
+    +(SQLT_TIMESTAMP)     => DateTime,
+    +(SQLT_TIMESTAMP_TZ)  => DateTime,
+    +(SQLT_TIMESTAMP_LTZ) => DateTime,
 };
 
 constant OCISnapshot  is export = Pointer;
