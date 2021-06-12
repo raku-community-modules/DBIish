@@ -161,7 +161,10 @@ method _row() {
                             when Blob { $res }
                             when Date {
                                 my $year = ($res[0]-100)*100 + $res[1]-100;
-                                Date.new(:$year,:month($res[2]),:day($res[3]));
+                                if ! $!parent.no-datetime-container
+                                {
+                                  Date.new(:$year,:month($res[2]),:day($res[3]));
+                                } else { sprintf '%04d-%02d-%02d', $year, |$res[2,3] }
                             }
                             when DateTime {
                               # $*ERR.say: "BYTES: ", $res.bytes, ' ', $res;
