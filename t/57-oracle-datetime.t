@@ -2,7 +2,7 @@ use v6;
 use Test;
 use DBIish;
 
-plan 42;
+plan 58;
 
 # Convert to TEMPORARY table instead?
 without %*ENV<DBIISH_WRITE_TEST> {
@@ -146,6 +146,13 @@ is $dbh.execute('SELECT atimestamp6tz FROM test_datetime').allrows, $now.Str, 'T
 is $dbh.execute('SELECT atimestamp0ltz FROM test_datetime').allrows, $now.Str, 'TIMESTAMP(0) W LTZ is read into DateTime.new()';
 is $dbh.execute('SELECT atimestamp6ltz FROM test_datetime').allrows, $now.Str, 'TIMESTAMP(6) W LTZ is read into DateTime.new()';
 
+note '# Issue #207, (DEFAULT) FIELD NAMES ARE .lc';
+
+for $dbh.execute('SELECT * FROM test_datetime').row(:hash).keys -> $i
+{
+  is $i, $i.lc, 'Field-names default as lower-case (' ~ $i ~ ')';
+}
+
 $dbh.rollback;
 ok $sth.dispose,  'dispose';
 is $dbh.execute('SELECT * FROM test_datetime').allrows.elems, 0, 'Perfect table is empty!';
@@ -164,7 +171,7 @@ note '#+ -------------------------------------------------------- +';
 #  :no-alter-session      # don't alter session
 #  :no-datetime-container # return the date/timestamps as stings
 %con-parms = :database<XE>, :username<TESTUSER>, :password<Testpass>, :!AutoCommit
-  , :no-alter-session, :no-datetime-container;
+  , :no-alter-session, :no-datetime-container, :no-lc-field-name;
 
 try {
   $dbh = DBIish.connect('Oracle', |%con-parms);
@@ -215,9 +222,28 @@ is $dbh.execute('SELECT atimestamp6tz FROM test_datetime').allrows, '2021-06-12T
 is $dbh.execute('SELECT atimestamp0ltz FROM test_datetime').allrows, '2021-06-12T18:30:00.',       'TIMESTAMP(0) W LTZ as a string';
 is $dbh.execute('SELECT atimestamp6ltz FROM test_datetime').allrows, '2021-06-12T18:30:00.019866', 'TIMESTAMP(6) W LTZ as a string';
 
+
 note '#+ -------------------------------------------------------- +';
 note '## Issue #204 - ADD Missing TIMESTAMP Support tests (END)';
 note '## Issue #203 - Timezone not always taken into account (END)';
+note '#+ -------------------------------------------------------- +';
+note '## Issue #207 - Oracle field names coerc-ed.lc;';
+note '##         :no-lc-field-name';
+note '#+ -------------------------------------------------------- +';
+
+note '# Issue #207, (Oracle-Default) FIELD NAMES ARE .uc';
+
+for $dbh.execute('SELECT * FROM test_datetime').row(:hash).keys -> $i
+{
+  is $i, $i.uc, 'Field-names as Oracle sent them (' ~ $i ~ ')';
+}
+
+$dbh.rollback;
+ok $sth.dispose,  'dispose';
+is $dbh.execute('SELECT * FROM test_datetime').allrows.elems, 0, 'Perfect table is empty!';
+
+note '#+ -------------------------------------------------------- +';
+note '## Issue #207 - Option to leave field names as-is';
 note '#+ -------------------------------------------------------- +';
 
 # Done

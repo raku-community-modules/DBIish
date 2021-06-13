@@ -650,8 +650,8 @@ and returned to the user as DateTime.new($ts_str).
 
     ALTER SESSION SET nls_timestamp_tz_format = 'YYYY-MM-DD"T"HH24:MI:SS.FFTZR'
 
-WARNING: This alteration does not include support for these field types and until now these
-types would have thrown and exception.
+WARNING: This alteration does not include support for these field types. Also until now these
+types would have thrown and exception as an unknown TYPE.
 
     TIMESTAMP
     TIMESTAMP WITH LOCAL TIME ZONE
@@ -661,12 +661,13 @@ due to the ".FF" and the lack of fractional seconds to fulfill it.
 
 
 You can choose to use this session alteration in an attempt to simplify the use of
-ISO-8601 timestamps; strictly speaking, formatted as "YYYY-MM-DDTHH:MI:SSZ"; no offsets etc.
+ISO-8601 timestamps; strictly speaking, formatted as "YYYY-MM-DDTHH:MI:SSZ"; no offsets
+etc show but Oracle outo converts to GMT(00:00).
 This session management forces all client sessions to UTC and sets formats for all DATE
 and TIMESTAMP types; it does however sacrifice any fraction seconds TIMESTAMPS may be
 storing. It also insures TIMSTAMP(0) works without causing DateTime.new($ts) to fault.
 
-    :alter-session-iso8601
+    DBIish.connect( 'Oracle', :alter-session-iso8601, ... );
 
     ALTER SESSION SET time_zone               = '-00:00'
     ALTER SESSION SET nls_date_format         = 'YYYY-MM-DD"T"HH24:MI:SS"Z"'
@@ -675,7 +676,10 @@ storing. It also insures TIMSTAMP(0) works without causing DateTime.new($ts) to 
 
 WARNING: Preexisting databases that used time zones other than UTC/GMT/-00:00 may need
 to convert current timestamps to -00:00 to ensure timestamp correctness. It will depend
-on the type of TIMESTAMP used.
+on the type of TIMESTAMP used and how Oracle was configured.
+
+NOTICE: By default DBIish lower-cases FIELD names. This is noticed when data is returned
+as a hash.
 
 For consumer purists that desire DBIish to leave session management alone, the above
 behaviors can be disabled using these options in the connect method. These options will
@@ -684,20 +688,21 @@ favorite settings.
 
    :no-alter-session      # don't alter session
    :no-datetime-container # return the date/timestamps as stings
+   :no-lc-field-names     # return field names unaltered
 
 =head2 Threads
 
 I have a long history of using Threads, Oracle and Perl5. As I have yet to read any
-notes on online regarding successful usage of Raku, threads & DBIish. So I thought
+notes on online regarding successful usage of Raku, threads & DBIish; I thought
 I'd share recent experience.
 
 Over the last two weeks I've successfully implemented my Raku solution for using as
-many as Eight(8) threads all connected to Oracle performing simultaneous Reads and 
-writes. As with the Perl-5 the number one requirement is to ensure each thread 
-creates is own connection handle with Oracle. In case you're interested; its 
-implemented as a layer on top of DBIish that when .enable(N) is used determines 
-the number of worker threads; each capable to handling reads or writes. The 
-primary application delegates writes to the workers and reads are asynchronously 
+many as Eight(8) threads all connected to Oracle performing simultaneous Reads and
+writes. As with Perl-5 the number one requirement is to ensure each thread
+creates is own connection handle with Oracle. In case you're interested; its
+implemented as a layer on top of DBIish that when .enable(N) is used determines
+the number of worker threads; each capable to handling reads or writes. The
+primary application delegates writes to the workers and reads are asynchronously
 delivered where requested.
 
 Regards,
