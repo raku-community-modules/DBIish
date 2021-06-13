@@ -10,15 +10,15 @@ has OCISvcCtx $!svch;
 has OCIError  $!errh;
 has $.AutoCommit is rw;
 has $.in_transaction is rw;
-has $.lc-field-names is rw;
 has $.no-alter-session is rw;
+has $.no-lc-field-name is rw;
 has $.no-datetime-container is rw;
 has $.alter-session-iso8601 is rw;
 
 submethod BUILD(:$!parent!, :$!envh!, :$!svch!, :$!errh!
     , :$!AutoCommit = 1
-    , :$!lc-field-names = False
     , :$!no-alter-session = False
+    , :$!no-lc-field-name = False
     , :$!no-datetime-container = False
     , :$!alter-session-iso8601 = False
   ) { }

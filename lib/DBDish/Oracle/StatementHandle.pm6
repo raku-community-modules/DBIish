@@ -84,7 +84,7 @@ method !get-meta {
                     and self!handle-err($!errh.gen-error).fail;
                 @!out-binds.push:   $bind;
                 @!out-buffs.push:   $buff;
-                @!column-name.push: $col_name.decode.lc;
+                @!column-name.push: $!parent.no-lc-field-name ?? $col_name.decode !! $col_name.decode.lc;
                 warn "No map defined for Oracle type $dtype at column $col\n"
                     unless %sqltype-map{$dtype}:exists;
                 @!column-type.push: %sqltype-map{$dtype};
