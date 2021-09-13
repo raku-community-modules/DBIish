@@ -47,6 +47,7 @@ constant OCI_COMMIT_ON_SUCCESS        is export = 0x00000020;
 constant OCI_SUCCESS            is export =   0;
 constant OCI_SUCCESS_WITH_INFO  is export =   1;
 constant OCI_ERROR              is export =  -1;
+constant OCI_INVALID_HANDLE     is export =  -2;
 constant OCI_NO_DATA            is export = 100;
 
 constant OCI_LOGON2_STMTCACHE   is export = 4;
@@ -62,7 +63,7 @@ constant OCI_ATTR_ROW_COUNT     is export = 9;
 constant OCI_ATTR_PARAM_COUNT   is export = 18;
 constant OCI_ATTR_STMT_TYPE     is export = 24;
 constant OCI_ATTR_BIND_COUNT    is export = 190;
-constant PCI_ATTR_HANDLE_POSITION is export = 192;
+constant OCI_ATTR_HANDLE_POSITION is export = 192;
 constant OCI_ATTR_ROWS_FETCHED  is export = 197;
 constant OCI_ATTR_TYPECODE      is export = 216;
 constant OCI_ATTR_IMPLICIT_RESULT_COUNT is export = 463;
@@ -139,6 +140,12 @@ class OCIHandle is repr('CPointer') is export {
         self.OCIHandleAlloc($nh, $want.h-type, 0, Pointer)
             ?? self.gen-error
             !! $nh;
+    }
+
+    method OCIStmtRelease(OCIHandle: OCIHandle $errh, OraText $key, ub4 $sz, ub4 $mode --> sword ) is native(lib) { * }
+    method HandleRelease (OCIHandle: OCIHandle $errh )
+    {
+      self.OCIStmtRelease( $errh, Pointer, 0, OCI_DEFAULT );
     }
 
     method OCIHandleFree (OCIHandle: ub4 --> sword ) is native(lib) { * }

@@ -693,18 +693,19 @@ favorite settings.
 
 =head2 Threads
 
-I have a long history of using Threads, Oracle and Perl5. As I have yet to read any
-notes on online regarding successful usage of Raku, threads & DBIish; I thought
+I have a long history of using Threads, Oracle and Perl5. I have yet to read any
+useful online notes regarding successful usage of Raku, threads & DBIish; I thought
 I'd share recent experience.
 
-Over the last two weeks I've successfully implemented my Raku solution for using as
+Since early 2021 I've successfully implemented my Raku solution for using as
 many as Eight(8) threads all connected to Oracle performing simultaneous Reads and
 writes. As with Perl-5 the number one requirement is to ensure each thread
 creates is own connection handle with Oracle. In case you're interested; its
 implemented as a layer on top of DBIish that when .enable(N) is used determines
 the number of worker threads; each capable to handling reads or writes. The
 primary application delegates writes to the workers and reads are asynchronously
-delivered where requested.
+delivered where requested. This solution allows the application to stay focused on
+it's primary purpose while dedicated writers handle the DB updates.
 
 Regards,
 ancient-wizard
