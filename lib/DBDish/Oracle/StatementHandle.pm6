@@ -204,9 +204,33 @@ method _row() {
 }
 
 method _free() {
-    with $!stmth {
-        .HandleFree;
-        $_ = Nil;
+    if $!stmth
+    {
+        my $errcode = $!stmth.HandleRelease($!errh);
+
+        given $errcode
+        {
+            when OCI_INVALID_HANDLE {
+                self!handle-err(OCIErr.new( Str => sprintf('Invalid Statement Handle from OCIHandleRelease(%s,%d)'
+                    , $!stmth.WHICH, $!stmth.h-type ), Numeric => 0 ))
+            }
+
+            when OCI_ERROR {
+                self!handle-err(OCIErr.new( Str => sprintf('General error from OCIHandleRelease(%s,%d)'
+                    , $!stmth.WHICH, $!stmth.h-type ), Numeric => 0 ))
+            }
+
+            when OCI_SUCCESS { }
+            when OCI_SUCCESS_WITH_INFO { }
+
+            default {
+                say OCIErr.new( Str => sprintf('Unexpected error type from OCIHandleRelease(%s,%d)'
+                    , $!stmth.WHICH, $!stmth.h-type ), Numeric => $errcode );
+                self!handle-err(OCIErr.new( Str => sprintf('Invalid Statement Handle from OCIHandleRelease(%s,%d)'
+                    , $!stmth.WHICH, $!stmth.h-type ), Numeric => $errcode ))
+            }
+        }
+        $!stmth = Nil;
     }
 }
 method finish() {

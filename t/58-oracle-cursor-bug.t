@@ -107,6 +107,11 @@ SCOPE:
 }
 
 ## CURSOR BUG
+##  The BUG was created by using OCIHandleFree() on statment-handles created by OCIStmtPrepare2()
+##  which returned OCI_ERROR because that operation is in error. These handles must be "released"
+##  using OCIStmtRelease() which correctly returns OCI_SUCCESS and we dont run out of cursors ..
+##  for this reason anyway.
+
 if %*ENV<RUN_CURSOR_CHECK>
 {
   ## Known fields
