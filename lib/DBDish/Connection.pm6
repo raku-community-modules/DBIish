@@ -23,6 +23,23 @@ has Lock $!statements-lock .= new;
 has $.last-sth-id is rw;
 has $.last-rows is rw;
 
+## Introspection methods added to facilitate better testing of statement handle management!
+## While the Oracle specific driver does have this issue I suspect others do as well for
+## the same reasons. Connection methods such as .execute, .do, .commit, .rollback perhaps
+## others have been know to leak handles until Oracle runs out of cursors.
+method inspect-statement-count { return $!statements-lock.protect: { %!statements.keys.elems }}
+method inspect-statement-keys  { return $!statements-lock.protect: { %!statements.keys }}
+method inspect-statement-sql
+{
+  return $!statements-lock.protect: {
+    my @sql-statements;
+    for %!statements.values -> $sth {
+      @sql-statements.push: $sth.statement;
+    }
+    @sql-statements;
+  }
+}
+
 # Treated as a boolean
 has atomicint $!connection-lock = 0;
 
