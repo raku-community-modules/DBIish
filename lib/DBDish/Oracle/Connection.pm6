@@ -15,6 +15,10 @@ has $.no-lc-field-name is rw;
 has $.no-datetime-container is rw;
 has $.alter-session-iso8601 is rw;
 
+## Cached common handles reused
+has $.statement-cached-commit;
+has $.statement-cached-rollback;
+
 submethod BUILD(:$!parent!, :$!envh!, :$!svch!, :$!errh!
     , :$!AutoCommit = 1
     , :$!no-alter-session = False
@@ -60,7 +64,7 @@ method set-defaults {
            -> $alter-session-stmt
         {
           # $*ERR.say: '# ', $alter-session-stmt;
-          self.execute($alter-session-stmt);
+          self.execute($alter-session-stmt).dispose;
         }
       }
       else
@@ -69,7 +73,7 @@ method set-defaults {
 	##  See: README.pod for details
         self.execute(
            q|ALTER SESSION SET nls_timestamp_tz_format = 'YYYY-MM-DD"T"HH24:MI:SS.FFTZR'|
-        );
+        ).dispose;
       }
       $!last-sth-id = Nil; # Lie a little.
     }
@@ -80,7 +84,9 @@ method commit {
         warn "Commit ineffective while AutoCommit is on";
         return;
     };
-    self.execute("COMMIT");
+    $!statement-cached-commit
+      ?? $!statement-cached-commit.execute
+      !! do { $!statement-cached-commit = self.execute("COMMIT"); };
     $.in_transaction = 0;
 }
 
@@ -89,7 +95,9 @@ method rollback {
         warn "Rollback ineffective while AutoCommit is on";
         return;
     };
-    self.execute("ROLLBACK");
+    $!statement-cached-rollback
+      ?? $!statement-cached-rollback.execute
+      !! do { $!statement-cached-rollback = self.execute("ROLLBACK"); };
     $.in_transaction = 0;
 }
 

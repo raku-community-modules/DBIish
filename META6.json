@@ -1,7 +1,7 @@
 {
     "perl"          : "6.c",
     "name"          : "DBIish",
-    "version"       : "0.6.2",
+    "version"       : "0.6.3",
     "description"   : "Database connectivity for Raku",
     "auth": "github:raku-community-modules",
     "meta-version": "1",

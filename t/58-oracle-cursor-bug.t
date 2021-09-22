@@ -2,7 +2,7 @@ use v6;
 use Test;
 use DBIish;
 
-plan 122;
+plan 135;
 
 # Convert to TEMPORARY table instead?
 without %*ENV<DBIISH_WRITE_TEST> {
@@ -10,7 +10,7 @@ without %*ENV<DBIISH_WRITE_TEST> {
     exit;
 }
 
-my %con-parms = :database<XE>, :username<TESTUSER>, :password<Testpass>;
+my %con-parms = :database<XE>, :username<TESTUSER>, :password<Testpass>, :AutoCommit<0>;
 my $dbh;
 
 try {
@@ -22,12 +22,15 @@ try {
         default { .rethrow; }
     }
 }
+
 without $dbh {
     skip-rest 'prerequisites failed';
     exit;
 }
 
 ok $dbh,    'Connected';
+is $dbh.AutoCommit, 0,    'AutoCommit is Off';
+
 my $dropper = q|
     BEGIN
     -- Saved for a rainy day -or- spring cleaning
@@ -40,7 +43,7 @@ my $dropper = q|
           END IF;
     END;|;
 
-lives-ok { $dbh.execute($dropper) }, 'Clean';
+lives-ok { $dbh.execute($dropper).dispose }, 'Clean';
 lives-ok {
     $dbh.execute(qq|
     CREATE TABLE test_cursor (
@@ -51,7 +54,7 @@ lives-ok {
         zipcode  VARCHAR2(12),
         province VARCHAR2(12),
         country  VARCHAR2(12)
-    )|);
+    )|).dispose;
 }, 'Table created';
 
 my $sth = $dbh.prepare(
@@ -133,9 +136,35 @@ if %*ENV<RUN_CURSOR_CHECK>
 is $dbh.execute('DELETE FROM test_cursor WHERE ID IS NOT NULL').dispose, True, 'Delete all rows';
 is $dbh.execute('SELECT * FROM test_cursor').allrows.elems, 0, 'Perfect table is empty!';
 
-# Done
-ok $dbh.execute($dropper), 'Table Cleanup';
+# ALL Handles should have been released except those expected!
+# in the past these leaked handles; they now reuse
+is $dbh.commit,   0, '.commit   handle cleanup';
+is $dbh.commit,   0, '.commit   handle cleanup';
+is $dbh.rollback, 0, '.rollback handle cleanup';
+is $dbh.rollback, 0, '.rollback handle cleanup';
+
+is $dbh.inspect-statement-count, 3, 'Three expected, commit=1, rollback=1, and one we leaked above in an excute';
+for $dbh.inspect-statement-keys -> $sk
+{
+  ok $sk, 'key ' ~ $sk;
+}
+my %SQL-HITS;
+for $dbh.inspect-statement-sql -> $sql
+{
+  note '# SQL: ', $sql;
+  %SQL-HITS{ $sql }++;
+}
+
+my $leaked = 'SELECT * FROM test_cursor';
+is %SQL-HITS< COMMIT   >, 1, 'Only one (1) cached COMMIT   statement handle';
+is %SQL-HITS< ROLLBACK >, 1, 'Only one (1) cached ROLLBACK statement handle';
+is %SQL-HITS{ $leaked  }, 1, 'Only one (1) leaked expected statement handle';
+
+# Clean-up
+ok $dbh.execute($dropper).dispose, 'Table Cleanup';
 ok $dbh.dispose, 'Say good night!';
+
+is $dbh.inspect-statement-count, 0, 'Remaining cached statment handles released';
 
 # vim: ft=perl6 expandtab
 ## END
