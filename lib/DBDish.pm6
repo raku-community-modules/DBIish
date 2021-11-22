@@ -42,12 +42,25 @@ role TypeConverter does Associative {
 
     # The role implements the conversion
     method convert (::?CLASS:D: Str $datum, Mu:U $type) {
+        my $func = self.convert-function($type);
+        $func($datum);
+    }
+    # Return a function which will perform conversion based on the type provided
+    # Since databases return the same types for each record, this information may be gathered
+    # ahead of time and cached by the driver.
+    method convert-function (::?CLASS:D: Mu:U $type) {
         with %!Conversions{$type} -> &converter {
-            &converter.signature.params.any ~~ .named
-                    ?? converter($datum, :$type)
-                    !! converter($datum);
+            if (&converter.signature.params.any ~~ .named) {
+                sub ($datum) { converter($datum, :$type) };
+            } else {
+                sub ($datum) { converter($datum) };
+            }
         } else { # Common case
-            Str.can($type.^name) ?? $type($datum) !! $type.new($datum);
+            if (Str.can($type.^name)) {
+                sub ($datum) { $type($datum) };
+            } else {
+                sub ($datum) { $type.new($datum) };
+            }
         }
     }
     method STORE(::?CLASS:D: \to_store) {

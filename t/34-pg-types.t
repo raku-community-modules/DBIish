@@ -49,8 +49,11 @@ is $sth.rows, 1,			    '1 row';
 my ($col1) = $sth.row;
 isa-ok $col1, Str;
 is $col1, 'test',			    'Test';
-$dbh.Converter{Str} = sub ($) { 'changed' };
 
+# Change the type conversion and start a new statement handle. Type conversions are fixed
+# after the statement handle is prepared.
+$dbh.Converter{Str} = sub ($) { 'changed' };
+$sth = $dbh.prepare('SELECT col1 FROM test_types');
 $sth.execute;
 is $sth.rows, 1,			    '1 row';
 ($col1) = $sth.row;

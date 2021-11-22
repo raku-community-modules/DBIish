@@ -14,6 +14,8 @@ has $!row-count;
 has $!field-count;
 has $!current-row = 0;
 
+has @!import-func;
+
 method !handle-errors {
     if $!result.is-ok {
         self.reset-err;
@@ -31,15 +33,28 @@ method !handle-errors {
 }
 
 submethod !get-meta($result) {
+    my %Converter := $!parent.Converter;
+
     if $!field-count = $result.PQnfields {
-        for ^$!field-count {
-            @!column-name.push: $result.PQfname($_);
-            @!column-type.push: do {
-                my $pt = $result.PQftype($_);
-                if (my \t = $!parent.dynamic-types{$pt}) === Nil {
-                    warn "No type map defined for postgresql type $pt at column $_";
-                    Str;
-                } else { t }
+        for ^$!field-count -> $col {
+            @!column-name.push: $result.PQfname($col);
+
+            my $type = Str;
+            my $pt = $result.PQftype($col);
+            if ($type = $!parent.dynamic-types{$pt}) === Nil {
+                warn "No type map defined for postgresql type $pt at column $col";
+            }
+
+            @!column-type.push($type);
+
+            @!import-func.push: do {
+                if $type ~~ Array {
+                    sub ($value) {_pg-to-array($value, $type.of, %Converter)}
+                } elsif ($type.^name ne 'Any') {
+                    %Converter.convert-function($type);
+                } else {
+                    sub ($value) { $value };
+                }
             }
         }
     }
@@ -98,26 +113,21 @@ method execute(**@params --> DBDish::StatementHandle) {
 }
 
 method _row() {
-    my $l = ();
+    my @l;
     if $!Executed && $!field-count && $!current-row < $!row-count {
         my $col = 0;
-        my %Converter := $!parent.Converter;
-        $l = do for @!column-type -> \ct {
-            my $value = ct;
+        for @!import-func -> $func {
+            my $value = @!column-type[$col];
             unless $!result.PQgetisnull($!current-row, $col) {
-                $value = $!result.PQgetvalue($!current-row, $col);
-                if ct ~~ Array {
-                    $value = _pg-to-array($value, ct.of, %Converter);
-                } elsif (ct.^name ne 'Any') {
-                    $value = %Converter.convert($value, ct);
-                }
+                $value = $func($!result.PQgetvalue($!current-row, $col));
             }
+
             $col++;
-            $value;
+            @l.push($value);
         }
         self.finish if ++$!current-row == $!row-count;
     }
-    $l;
+    @l;
 }
 
 my grammar PgArrayGrammar {
