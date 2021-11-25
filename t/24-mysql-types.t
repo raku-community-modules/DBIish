@@ -14,7 +14,7 @@ class JSON {
     # Used only as a marker for converter
 }
 
-plan 26;
+plan 25;
 my %con-parms = :database<dbdishtest>, :user<testuser>, :password<testpass>;
 %con-parms<host> = %*ENV<MYSQL_HOST> if %*ENV<MYSQL_HOST>;
 my $dbh;
@@ -89,9 +89,10 @@ $dbh.Converter = :JSON(sub ($json) {
 });
 ok $dbh.Converter{JSON},		    'Installed';
 
-# Change column type for *this* statement
+# Change column type for future statements
+# Resetup the statement as column type manipulations are only handled once.
+$sth = $dbh.execute('SELECT col1 FROM test_types');
 $sth.column-types[0] = JSON;
-ok $sth.execute,			    're execute';
 $col1 = $sth.row;
 ok $col1[0],		                    'Has value';
 isa-ok $col1[0], Hash;

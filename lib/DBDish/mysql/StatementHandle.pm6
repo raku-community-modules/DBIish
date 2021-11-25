@@ -20,6 +20,7 @@ has $!binds;
 has @!out-bufs;
 has $!out-lengths;
 has $!isnull;
+has @!import-func;
 
 method !handle-errors {
     if $!mysql-client.mysql_errno -> $code {
@@ -173,57 +174,80 @@ multi method quote(Blob $b) {
 }
 
 method _row {
-    my $list = ();
+    # Setup import functions on the first row retrieval
+    if @!import-func.elems != $!field-count {
+        my %Converter := $!parent.Converter;
+        for @!column-type -> $type {
+            @!import-func.push: do {
+                if $type ~~ Blob {
+                    # Don't touch blob values
+                    sub ($value) {
+                        $value
+                    };
+                } elsif ($type.^name ne 'Any') {
+                    %Converter.convert-function($type);
+                } else {
+                    sub ($value) {
+                        $value
+                    };
+                }
+            }
+        }
+    }
+
+    my @list;
     if $!field-count -> $fields {
         my %Converter := $!parent.Converter;
         my $row;
         with $!stmt {
             my $ret = .mysql_stmt_fetch;
             if $ret == 0 or $ret == 101 { # Has data, possibly truncated
-                $list = do for ^$fields {
-                    my $val = my $t = @!column-type[$_];
-                    if $!isnull[$_] {
-                        $val;
-                    } else {
+                my $col = 0;
+                for @!import-func -> $import-func {
+                    my $val = my $t = @!column-type[$col];
+                    if not $!isnull[$col] {
                         # Re-allocate buffer if the value is larger than the buffer previously allocated
                         # Overallocate by 10% reduce number of reallocations if all tuples are close to but not exactly
                         # the same size.
-                        if $!out-lengths[$_] > $!binds[$_].buffer_length {
-                            @!out-bufs[$_] = blob-allocate(Buf, $!out-lengths[$_] * 1.1);
-                            $!binds[$_].buffer = BPointer(@!out-bufs[$_]).Int;
-                            $!binds[$_].buffer_length = $!out-lengths[$_];
+                        if $!out-lengths[$col] > $!binds[$col].buffer_length {
+                            @!out-bufs[$col] = blob-allocate(Buf, $!out-lengths[$col] * 1.1);
+                            $!binds[$col].buffer = BPointer(@!out-bufs[$col]).Int;
+                            $!binds[$col].buffer_length = $!out-lengths[$col];
 
                             # Fetch the specific column of interest.
-                            if $!stmt.mysql_stmt_fetch_column($!binds.typed-pointer, $_, 0) != 0 {
+                            if $!stmt.mysql_stmt_fetch_column($!binds.typed-pointer, $col, 0) != 0 {
                                 .fail without self!handle-errors;
                             }
                         }
 
-                        my $len = $!out-lengths[$_];
-                        $val = @!out-bufs[$_].subbuf(0,$len);
-                        if $t ~~ Blob {
-                            # Don't touch
-                        } elsif ($t.^name ne 'Any') {
-                            $val = %Converter.convert($val.decode, $t);
+                        my $len = $!out-lengths[$col];
+                        $val = @!out-bufs[$col].subbuf(0,$len);
+
+                        # Most values need to be decoded prior to being passed to import-func. This is not easy
+                        # to push into import-func as fetch_row type result sets do not require this step.
+                        if ($t !~~ Blob and $t.^name ne 'Any') {
+                           $val = $val.decode;
                         }
-                        $val;
+                        $val = $import-func($val);
                     }
+
+                    $col++;
+                    @list.push($val);
                 }
                 $row = True;
             }
         } elsif $row = $!result-set.fetch_row {
             # Differs from .mysql_stmt_fetch case in handling of NULLS and pulling the value out of the buffer.
-            $list = do for ^$fields {
-                my $t = @!column-type[$_];
-                my $val = $row.want($_, $t);
+            my $col = 0;
+            for @!import-func -> $import-func {
+                my $t = @!column-type[$col];
+                my $val = $row.want($col, $t);
+                $val = $import-func($val);
 
-                if $t ~~ Blob {
-                    # Don't touch
-                } elsif ($t.^name ne 'Any') {
-                    $val = %Converter.convert($val, $t);
-                }
-                $val;
+                $col++;
+                @list.push($val);
             }
+
             $!affected_rows++ unless $!Prefetch;
         }
         unless $row {
@@ -231,7 +255,7 @@ method _row {
             self.finish;
         }
     }
-    $list;
+    @list;
 }
 
 method insert-id() {
