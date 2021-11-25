@@ -37,10 +37,11 @@ submethod !get-meta($result) {
         for ^$!field-count -> $col {
             @!column-name.push: $result.PQfname($col);
 
-            my $type = Str;
             my $pt = $result.PQftype($col);
+            my $type;
             if ($type = $!parent.dynamic-types{$pt}) === Nil {
                 warn "No type map defined for postgresql type $pt at column $col";
+                $type = Str;
             }
 
             @!column-type.push($type);
