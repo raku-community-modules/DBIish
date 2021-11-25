@@ -4,8 +4,6 @@
 
 DBIish - a simple database interface for Raku
 
-=for HTML <a href='https://travis-ci.org/raku-community-modules/DBIish'><img src='https://travis-ci.org/raku-community-modules/DBIish.svg?branch=master'></a>
-
 =head1 SYNOPSIS
 
     use v6;
