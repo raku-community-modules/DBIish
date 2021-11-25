@@ -33,8 +33,6 @@ method !handle-errors {
 }
 
 submethod !get-meta($result) {
-    my %Converter := $!parent.Converter;
-
     if $!field-count = $result.PQnfields {
         for ^$!field-count -> $col {
             @!column-name.push: $result.PQfname($col);
@@ -46,16 +44,6 @@ submethod !get-meta($result) {
             }
 
             @!column-type.push($type);
-
-            @!import-func.push: do {
-                if $type ~~ Array {
-                    sub ($value) {_pg-to-array($value, $type.of, %Converter)}
-                } elsif ($type.^name ne 'Any') {
-                    %Converter.convert-function($type);
-                } else {
-                    sub ($value) { $value };
-                }
-            }
         }
     }
 }
@@ -113,6 +101,28 @@ method execute(**@params --> DBDish::StatementHandle) {
 }
 
 method _row() {
+    # Cache type conversion functions. Allow column-type to be configured by the client
+    # after prepare/execute
+    if @!import-func.elems != $!field-count {
+        my %Converter := $!parent.Converter;
+
+        for @!column-type -> $type {
+            @!import-func.push: do {
+                if $type ~~ Array {
+                    sub ($value) {
+                        _pg-to-array($value, $type.of, %Converter)
+                    }
+                } elsif ($type.^name ne 'Any') {
+                    %Converter.convert-function($type);
+                } else {
+                    sub ($value) {
+                        $value
+                    };
+                }
+            }
+        }
+    }
+
     my @l;
     if $!Executed && $!field-count && $!current-row < $!row-count {
         my $col = 0;
