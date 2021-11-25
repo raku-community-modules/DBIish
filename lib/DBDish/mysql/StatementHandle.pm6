@@ -197,7 +197,7 @@ method _row {
     }
 
     my @list;
-    if $!field-count -> $fields {
+    if $!field-count {
         my %Converter := $!parent.Converter;
         my $row;
         with $!stmt {
