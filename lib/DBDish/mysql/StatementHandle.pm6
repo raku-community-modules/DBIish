@@ -35,14 +35,13 @@ method !get-meta(MYSQL_RES $res) {
     loop (my $i = 0; $i < $!field-count; $i++) {
         with $res.mysql_fetch_field {
             @!column-name.push: .name;
-
-            my $type;
-            my $pt = .type;
-            if ($type = $!parent.dynamic-types{$pt}) === Nil {
-                warn "No type map defined for mysql type #$pt at column $i";
-                $type = Str;
+            @!column-type.push: do {
+                my $pt = .type;
+                if (my \t = $!parent.dynamic-types{$pt}) === Nil {
+                    warn "No type map defined for mysql type #$pt at column $i";
+                    Str;
+                } else { t }
             }
-            @!column-type.push($type);
             $lengths[$i] = .length;
         }
         else { die 'mysql: Opps! mysql_fetch_field'; }
