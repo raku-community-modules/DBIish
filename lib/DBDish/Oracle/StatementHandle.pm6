@@ -192,7 +192,7 @@ method _row() {
                     }
                 }
             }
-            $!affected_rows++;
+            $!affected-rows++;
             self.reset-err;
         } elsif $errcode == OCI_NO_DATA {
             self.finish;

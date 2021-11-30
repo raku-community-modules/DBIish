@@ -20,7 +20,7 @@ my role IntTrue { method Bool { self.defined } };
 has Int $.Executed = 0;
 has Bool $.Finished = True;
 has Bool $!disposed = False;
-has Int $!affected_rows;
+has Int $!affected-rows;
 has @!column-name;
 has @!column-type;
 has $!which = self.WHICH;
@@ -37,7 +37,7 @@ method !ftr() {
 
 method !enter-execute(int $got = 0, int $expect = 0) {
     self.finish unless $!Finished;
-    $!affected_rows = Nil;
+    $!affected-rows = Nil;
     self!ftr;
     self!set-err( -1,
             "Wrong number of arguments to method execute: got $got, expected $expect"
@@ -47,7 +47,7 @@ method !enter-execute(int $got = 0, int $expect = 0) {
 method !done-execute(Int $rows, $fields) {
     $!Executed++;
     $!Finished = False;
-    $!affected_rows = $rows;
+    $!affected-rows = $rows;
     self.finish unless $fields;
     self;
 }
@@ -75,8 +75,8 @@ method rows() {self._rows}
 
 method _rows {
     my constant TRUE_ZERO = 0 but IntTrue;
-    $!affected_rows.defined
-            ?? $!affected_rows || TRUE_ZERO
+    $!affected-rows.defined
+            ?? $!affected-rows || TRUE_ZERO
             !! Int;
 }
 

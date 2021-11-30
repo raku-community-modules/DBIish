@@ -102,8 +102,8 @@ sub sqlite3_busy_timeout(SQLite, int32)
 sub sqlite3_prepare_v2 (
         SQLite,
         Str  $statement is encoded('utf8'),
-        int32 $statement_length,
-        STMT $statement_handle is rw,
+        int32 $statement-length,
+        STMT $statement-handle is rw,
         Pointer
     )
     returns int32
@@ -114,8 +114,8 @@ sub sqlite3_prepare_v2 (
 sub sqlite3_prepare (
         SQLite,
         Str $statement is encoded('utf8'),
-        int32 $statement_length,
-        STMT $statement_handle is rw,
+        int32 $statement-length,
+        STMT $statement-handle is rw,
         Pointer
     )
     returns int32
@@ -123,7 +123,7 @@ sub sqlite3_prepare (
     is export
     { ... }
 
-sub sqlite3_step(STMT $statement_handle)
+sub sqlite3_step(STMT $statement-handle)
     returns int32
     is native(LIB)
     is export

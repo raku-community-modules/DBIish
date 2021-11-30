@@ -248,7 +248,7 @@ method _row {
                 @list.push($val);
             }
 
-            $!affected_rows++ unless $!Prefetch;
+            $!affected-rows++ unless $!Prefetch;
         }
         unless $row {
             .fail without self!handle-errors;
