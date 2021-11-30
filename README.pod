@@ -586,6 +586,33 @@ Passing a value less than or equal to zero will disable the timeout, resulting
 in any operation that cannot take place immediately producing a database
 locked error.
 
+=head3 Function rows()
+
+Since SQLite may retrieve records in the background, the C<rows()> method will not be accurate
+until all records have been retrieved from the database. A warning is thrown when this may be the case.
+
+This warning message may be suppressed using a C<CONTROL> phaser:
+
+    CONTROL {
+        when CX::Warn {
+            when .message.starts-with('SQLite rows()') { .resume }
+            default { .rethrow }
+        }
+    }
+
+Making C<rows()> accurate for all calls would require the driver pre-retrieving and caching
+all records with a large performance and memory penalty, then providing the records as requested.
+
+For best performance you are recommended to use:
+
+    while my $row = $sth.row {
+        # Do something with all records as retrieved
+    }
+
+    if my $row = $sth.row {
+        # Do something with a single record
+    }
+
 =head2 MySQL
 
 Supports basic CRUD operations and prepared statements with placeholders

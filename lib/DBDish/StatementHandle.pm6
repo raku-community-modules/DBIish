@@ -71,7 +71,9 @@ submethod DESTROY() {
     self.dispose;
 }
 
-method rows {
+method rows() {self._rows}
+
+method _rows {
     my constant TRUE_ZERO = 0 but IntTrue;
     $!affected_rows.defined
             ?? $!affected_rows || TRUE_ZERO

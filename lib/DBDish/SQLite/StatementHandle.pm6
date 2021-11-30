@@ -12,6 +12,7 @@ has $!statement_handle;
 has $!param-count;
 has Int $!row_status;
 has $!field_count;
+has Bool $!rows-is-accurate = False;
 
 method !handle-error(Int $status) {
     unless $status == SQLITE_OK {
@@ -39,12 +40,27 @@ method execute(*@params is raw --> DBDish::StatementHandle) {
     }
     $!row_status = sqlite3_step($!statement_handle);
     if $!row_status == SQLITE_ROW | SQLITE_DONE {
-        my $rows = $!field_count ?? 0 !! sqlite3_changes($!conn); # Non SELECT
+        my $rows = 0;
+        if $!field_count == 0 { # Non-SELECT
+            $!rows-is-accurate = True;
+            $rows = sqlite3_changes($!conn);
+        }
+
         self.reset-err;
         self!done-execute($rows, $!field_count);
     } else {
         self!set-err($!row_status, sqlite3_errmsg($!conn));
     }
+}
+
+# Override DBDish::StatementHandle to throw this error
+method rows() {
+    # Warn if rows is inaccurate. Message may be suppressed with a CONTROL block.
+    if (not $!rows-is-accurate) {
+        warn "SQLite rows() result may not be accurate. See SQLite rows section of README for details."
+    }
+
+    self._rows();
 }
 
 method _row() {
@@ -71,8 +87,13 @@ method _row() {
         $!affected_rows++;
         self.reset-err;
         if ($!row_status = sqlite3_step($!statement_handle)) == SQLITE_DONE {
+            # Only after retrieving the final record is the rows value considered accurate.
+            $!rows-is-accurate = True;
             self.finish;
         }
+    } elsif $!row_status == SQLITE_DONE {
+        # An empty result is considered accurate immediately.
+        $!rows-is-accurate = True;
     }
     $list;
 }
