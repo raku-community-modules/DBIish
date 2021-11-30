@@ -75,7 +75,7 @@ method rows {
     my constant TRUE_ZERO = 0 but IntTrue;
     $!affected_rows.defined
             ?? $!affected_rows || TRUE_ZERO
-            !! Int
+            !! Int;
 }
 
 method row(:$hash) {
