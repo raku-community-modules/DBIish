@@ -82,7 +82,7 @@ jobs:
 
     # Install client libraries
     - name: Install native dependencies
-      run:  sudo apt-get install -y postgresql-client libpq-dev mysql-client libmysqlclient-dev sqlite3 libsqlite3-dev
+      run:  sudo apt-get install -y postgresql-client libpq-dev libmysqlclient-dev sqlite3 libsqlite3-dev
 
     - name: Install dependencies
       run: zef install --deps-only --/test --test-depends .
