@@ -67,18 +67,18 @@ method execute(**@params --> DBDish::StatementHandle) {
     self!enter-execute(@params.elems, @!param-type.elems);
 
     $!parent.protect-connection: {
-        my @param_values := ParamArray.new;
+        my @param-values := ParamArray.new;
         for @params.kv -> $k, $v {
             if $v.defined {
-                @param_values[$k] = @!param-type[$k] ~~ Buf
+                @param-values[$k] = @!param-type[$k] ~~ Buf
                         ?? $!pg-conn.escapeBytea(($v ~~ Buf) ?? $v !! ~$v.encode)
                         !! @!param-type[$k] ~~ Array ?? self.pg-array-str($v)
                         !! ~$v;
-            } else { @param_values[$k] = Str }
+            } else { @param-values[$k] = Str }
         }
 
         $!result = $!statement-name
-                ?? $!pg-conn.PQexecPrepared($!statement-name, @params.elems, @param_values,
+                ?? $!pg-conn.PQexecPrepared($!statement-name, @params.elems, @param-values,
                         Null, Null, 0)
                 !! $!pg-conn.PQexec($!statement);
 
