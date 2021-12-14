@@ -76,6 +76,10 @@ jobs:
     - name: Update apt
       run:  sudo apt-get update
 
+    # Debug information. This is mostly useful when the dependencies suddenly fail to install
+    - name: Environment Information
+      run: lsb_release -a
+
     # Install client libraries
     - name: Install native dependencies
       run:  sudo apt-get install -y postgresql-client libpq-dev mysql-client libmysqlclient-dev sqlite3 libsqlite3-dev
