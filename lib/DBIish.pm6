@@ -146,7 +146,7 @@ method !handle-library-exception($ex, $drivername) {
 
     $dbh.dispose;
 
-See also F<README.pod> for more documentation.
+See also F<README.md> for more documentation.
 
 =head1 DESCRIPTION
 The name C<DBIish> has two meanings.  In lowercase it indicates the

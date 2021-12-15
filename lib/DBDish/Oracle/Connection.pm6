@@ -70,7 +70,7 @@ method set-defaults {
       else
       {
         ## Default format; but only works for "TIMESTAMP WITH TIME ZONE" fields
-	##  See: README.pod for details
+	##  See: README.md for details
         self.execute(
            q|ALTER SESSION SET nls_timestamp_tz_format = 'YYYY-MM-DD"T"HH24:MI:SS.FFTZR'|
         ).dispose;
