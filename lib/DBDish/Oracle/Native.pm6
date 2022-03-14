@@ -327,7 +327,7 @@ class OCIEnv is OCIHandle is repr('CPointer') is export {
             ub2     $ncharset
             --> sword ) is native(lib) { * }
 
-    method NlsCreate(:$mode = OCI_DEFAULT) {
+    method NlsCreate(:$mode = OCI_THREADED) {
         # Buffer to string decoding relies on UTF-8 being sent by the server. The
         # client environment characterset can be made adjustable but requires fixes
         # in a number of locations.
