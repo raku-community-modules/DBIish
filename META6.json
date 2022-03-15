@@ -1,56 +1,64 @@
 {
-    "perl"          : "6.c",
-    "name"          : "DBIish",
-    "version"       : "0.6.3",
-    "description"   : "Database connectivity for Raku",
-    "auth": "github:raku-community-modules",
-    "meta-version": "1",
-    "test-depends"  : [ ],
-    "license"       : "BSD-2-Clause",
-    "depends": [
-      "NativeHelpers::Blob",
-      "NativeLibs"
-    ],
-    "provides" : {
-        "DBIish"                    : "lib/DBIish.pm6",
-        "DBIish::Common"            : "lib/DBIish/Common.pm6",
-        "DBIish::CommonTesting"     : "lib/DBIish/CommonTesting.pm6",
-        "DBDish"                    : "lib/DBDish.pm6",
-        "DBDish::Connection"        : "lib/DBDish/Connection.pm6",
-        "DBDish::ErrorHandling"     : "lib/DBDish/ErrorHandling.pm6",
-        "DBDish::StatementHandle"   : "lib/DBDish/StatementHandle.pm6",
-        "DBDish::TestMock"                  : "lib/DBDish/TestMock.pm6",
-        "DBDish::TestMock::StatementHandle" : "lib/DBDish/TestMock/StatementHandle.pm6",
-        "DBDish::TestMock::Connection"      : "lib/DBDish/TestMock/Connection.pm6",
-        "DBDish::mysql"                  : "lib/DBDish/mysql.pm6",
-        "DBDish::mysql::Connection"      : "lib/DBDish/mysql/Connection.pm6",
-        "DBDish::mysql::Native"          : "lib/DBDish/mysql/Native.pm6",
-        "DBDish::mysql::StatementHandle" : "lib/DBDish/mysql/StatementHandle.pm6",
-        "DBDish::Oracle"                    : "lib/DBDish/Oracle.pm6",
-        "DBDish::Oracle::Connection"        : "lib/DBDish/Oracle/Connection.pm6",
-        "DBDish::Oracle::Native"            : "lib/DBDish/Oracle/Native.pm6",
-        "DBDish::Oracle::StatementHandle"   : "lib/DBDish/Oracle/StatementHandle.pm6",
-        "DBDish::Pg"                  : "lib/DBDish/Pg.pm6",
-        "DBDish::Pg::Connection"      : "lib/DBDish/Pg/Connection.pm6",
-        "DBDish::Pg::ErrorHandling"   : "lib/DBDish/Pg/ErrorHandling.pm6",
-        "DBDish::Pg::Native"          : "lib/DBDish/Pg/Native.pm6",
-        "DBDish::Pg::StatementHandle" : "lib/DBDish/Pg/StatementHandle.pm6",
-        "DBDish::SQLite"                  : "lib/DBDish/SQLite.pm6",
-        "DBDish::SQLite::Connection"      : "lib/DBDish/SQLite/Connection.pm6",
-        "DBDish::SQLite::Native"          : "lib/DBDish/SQLite/Native.pm6",
-        "DBDish::SQLite::StatementHandle" : "lib/DBDish/SQLite/StatementHandle.pm6"
-    },
-    "support": {
-      "bugtracker": "https://github.com/raku-community-modules/DBIish/issues",
-      "source": "https://github.com/raku-community-modules/DBIish.git"
-    },
-    "tags": [
-      "database",
-      "dbdish",
-      "mariadb",
-      "mysql",
-      "oracle",
-      "postgres",
-      "sqlite"
-    ]
+  "api": 1,
+  "auth": "zef:raku-community-modules",
+  "build-depends": [
+  ],
+  "depends": [
+    "NativeHelpers::Blob",
+    "NativeLibs"
+  ],
+  "description": "Database connectivity for Raku",
+  "license": "BSD-2-Clause",
+  "meta-version": "1",
+  "name": "DBIish",
+  "perl": "6.c",
+  "provides": {
+    "DBDish": "lib/DBDish.pm6",
+    "DBDish::Connection": "lib/DBDish/Connection.pm6",
+    "DBDish::ErrorHandling": "lib/DBDish/ErrorHandling.pm6",
+    "DBDish::Oracle": "lib/DBDish/Oracle.pm6",
+    "DBDish::Oracle::Connection": "lib/DBDish/Oracle/Connection.pm6",
+    "DBDish::Oracle::Native": "lib/DBDish/Oracle/Native.pm6",
+    "DBDish::Oracle::StatementHandle": "lib/DBDish/Oracle/StatementHandle.pm6",
+    "DBDish::Pg": "lib/DBDish/Pg.pm6",
+    "DBDish::Pg::Connection": "lib/DBDish/Pg/Connection.pm6",
+    "DBDish::Pg::ErrorHandling": "lib/DBDish/Pg/ErrorHandling.pm6",
+    "DBDish::Pg::Native": "lib/DBDish/Pg/Native.pm6",
+    "DBDish::Pg::StatementHandle": "lib/DBDish/Pg/StatementHandle.pm6",
+    "DBDish::SQLite": "lib/DBDish/SQLite.pm6",
+    "DBDish::SQLite::Connection": "lib/DBDish/SQLite/Connection.pm6",
+    "DBDish::SQLite::Native": "lib/DBDish/SQLite/Native.pm6",
+    "DBDish::SQLite::StatementHandle": "lib/DBDish/SQLite/StatementHandle.pm6",
+    "DBDish::StatementHandle": "lib/DBDish/StatementHandle.pm6",
+    "DBDish::TestMock": "lib/DBDish/TestMock.pm6",
+    "DBDish::TestMock::Connection": "lib/DBDish/TestMock/Connection.pm6",
+    "DBDish::TestMock::StatementHandle": "lib/DBDish/TestMock/StatementHandle.pm6",
+    "DBDish::mysql": "lib/DBDish/mysql.pm6",
+    "DBDish::mysql::Connection": "lib/DBDish/mysql/Connection.pm6",
+    "DBDish::mysql::Native": "lib/DBDish/mysql/Native.pm6",
+    "DBDish::mysql::StatementHandle": "lib/DBDish/mysql/StatementHandle.pm6",
+    "DBIish": "lib/DBIish.pm6",
+    "DBIish::Common": "lib/DBIish/Common.pm6",
+    "DBIish::CommonTesting": "lib/DBIish/CommonTesting.pm6"
+  },
+  "raku": "6.c",
+  "resources": [
+  ],
+  "source-url": "https://github.com/raku-community-modules/DBIish.git",
+  "support": {
+    "bugtracker": "https://github.com/raku-community-modules/DBIish/issues",
+    "source": "https://github.com/raku-community-modules/DBIish.git"
+  },
+  "tags": [
+    "database",
+    "dbdish",
+    "mariadb",
+    "mysql",
+    "oracle",
+    "postgres",
+    "sqlite"
+  ],
+  "test-depends": [
+  ],
+  "version": "0.6.3"
 }

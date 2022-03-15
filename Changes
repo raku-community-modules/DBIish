@@ -1,0 +1,5 @@
+Revision history for DBIish
+
+{{$NEXT}}
+    - Allow support for threads in Oracle driver
+    - Switch to zef ecosystem
