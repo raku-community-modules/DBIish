@@ -1,6 +1,7 @@
 use v6;
 use Test;
 use NativeCall::TypeDiag;
+use NativeCall :TEST;
 use DBDish::Oracle::Native;
 
 #my @headers = <oci.h>;
@@ -20,7 +21,20 @@ for DBDish::Oracle::Native::EXPORT::DEFAULT::.keys -> $export {
   }
 }
 
-plan 1;
+plan +@fun;
 
 #ok diag-cstructs(:cheaders(@headers), :types(%typ), :clibs(@libs)), "CStruct definition are correct";
-ok diag-functions(:functions(@fun)), "Functions signature are good";
+for @fun -> &func {
+    my $sane = True;
+    my $msg;
+    CONTROL {
+        when CX::Warn {
+            $sane = False;
+            $msg = .message;
+            .resume;
+        }
+    }
+    check_routine_sanity(&func);
+    ok $sane, &func.name ~ " is sane";
+    diag $msg unless $sane;
+}
