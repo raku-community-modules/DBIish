@@ -1,5 +1,7 @@
 Revision history for DBIish
 
 {{$NEXT}}
+
+0.6.4  2022-03-15T16:59:30-04:00
     - Allow support for threads in Oracle driver
     - Switch to zef ecosystem
