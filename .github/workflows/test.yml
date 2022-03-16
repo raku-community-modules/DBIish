@@ -107,5 +107,5 @@ jobs:
         PGPASSWORD: postgres
         PGPORT: ${{ job.services.postgres.ports[5432] }}
         PGDATABASE: postgres
-      run: prove6 -l -v t
+      run: prove6 -I lib -v t
 
