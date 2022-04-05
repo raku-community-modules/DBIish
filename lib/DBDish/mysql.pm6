@@ -35,6 +35,7 @@ method connect(Str :$host = 'localhost', Int :$port = 3306, Str :$database = 'my
 my $wks = 'mysql_init'; # A well known symbol
 method new() {
     with (%*ENV<DBIISH_MYSQL_LIB> andthen NativeLibs::Searcher.try-versions($_, $wks,0..99))
+    //   NativeLibs::Searcher.try-versions('mariadb', $wks, 0..4)
     //   NativeLibs::Searcher.try-versions('mysqlclient', $wks, 16..21)
     {
         %_<library> = NativeLibs::Loader.load($_);
