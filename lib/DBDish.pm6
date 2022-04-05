@@ -57,7 +57,7 @@ role TypeConverter does Associative {
             }
         } else { # Common case
             if (Str.can($type.^name)) {
-                sub ($datum) { $type($datum) };
+                sub ($datum) { try $type($datum) };
             } else {
                 sub ($datum) { $type.new($datum) };
             }
