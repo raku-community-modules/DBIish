@@ -10,12 +10,28 @@ use NativeLibs;
 has $.library;
 has $.library-resolved = False;
 
-method connect(Str :$host = 'localhost', Int :$port = 3306, Str :$database = 'mysql', Str :$user, Str :$password, Str :$socket ) {
+method connect(Str :$host = 'localhost', Int :$port = 3306, Str :$database = 'mysql', Str :$user, Str :$password, Str :$socket,
+               Int :$connection-timeout, Int :$read-timeout, Int :$write-timeout ) {
     my $connection;
     my $mysql-client = MYSQL.mysql_init;
     my $errstr  = $mysql-client.mysql_error;
 
     unless $errstr {
+
+        with $connection-timeout {
+            my uint32 $value = $_;
+            $mysql-client.mysql_options: MYSQL_OPT_CONNECT_TIMEOUT, $value
+        }
+
+        with $read-timeout {
+            my uint32 $value = $_;
+            $mysql-client.mysql_options: MYSQL_OPT_READ_TIMEOUT, $value
+        }
+
+        with $write-timeout {
+            my uint32 $value = $_;
+            $mysql-client.mysql_options: MYSQL_OPT_WRITE_TIMEOUT, $value
+        }
 
         # real_connect() returns either the same client pointer or null
         my $result   = $mysql-client.mysql_real_connect(

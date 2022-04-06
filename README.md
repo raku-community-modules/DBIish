@@ -609,6 +609,13 @@ Supports basic CRUD operations and prepared statements with placeholders
     my $dbh = DBIish.connect('mysql', :socket<mysql.sock>,
             :database<blerg>, :user<myuser>, :$password);
 
+
+MySQL driver supports the following named arguments:
+`connection-timeout`, `read-timeout`, `write-timeout`
+
+See your [MySQL documentation](https://dev.mysql.com/doc/c-api/5.6/en/mysql-options.html) for details.
+
+
 Since MariaDB uses the same wire protocol as MySQL, the \`mysql\` backend
 also works for MariaDB.
 

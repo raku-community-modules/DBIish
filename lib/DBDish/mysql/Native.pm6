@@ -199,7 +199,15 @@ class MYSQL is export is repr('CPointer') {
     method mysql_stmt_init(MYSQL:D:         --> MYSQL_STMT) is native(LIB) { * }
 
     method mysql_get_server_info(MYSQL:D:          --> Str) is native(LIB) { * }
+    method mysql_options(MYSQL:D:
+        uint32 $flag, uint32 $value is rw        --> int32) is native(LIB) { * }
 }
+
+enum mysql-option is export (
+  MYSQL_OPT_CONNECT_TIMEOUT => 0,
+  MYSQL_OPT_READ_TIMEOUT => 11,
+  MYSQL_OPT_WRITE_TIMEOUT => 12,
+);
 
 sub mysql_server_init(int32, Pointer, Pointer --> int32) is export is native(LIB) { * }
 sub mysql_get_client_version(--> uint32) is export is native(LIB) { * }
