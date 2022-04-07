@@ -205,6 +205,8 @@ class MYSQL is export is repr('CPointer') {
 
 enum mysql-option is export (
   MYSQL_OPT_CONNECT_TIMEOUT => 0,
+  MYSQL_OPT_READ_TIMEOUT => 11,
+  MYSQL_OPT_WRITE_TIMEOUT => 12,
 );
 
 sub mysql_server_init(int32, Pointer, Pointer --> int32) is export is native(LIB) { * }
