@@ -114,11 +114,13 @@ class MyRow does Positional is export {
         if $t ~~ Blob {
             self.blob($idx, $t);
         } else {
-            self[$idx];
+            self[$idx] // $t;
         }
     }
     method blob(Int $idx, Mu $type) {
-        blob-from-pointer($!car[$idx], :elems($!lon[$idx]), :$type);
+        with $!car[$idx] {
+            blob-from-pointer($!car[$idx], :elems($!lon[$idx]), :$type);
+        } else { Str }
     }
 }
 
