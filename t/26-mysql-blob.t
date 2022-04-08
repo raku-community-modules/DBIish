@@ -2,7 +2,7 @@ use v6;
 use Test;
 use DBIish;
 
-plan 9;
+plan 10;
 
 my %con-parms = :database<dbdishtest>, :user<testuser>, :password<testpass>;
 %con-parms<host> = %*ENV<MYSQL_HOST> if %*ENV<MYSQL_HOST>;
@@ -37,9 +37,10 @@ with $dbh.prepare($query) {
     ok $_,				"Prepared '$query'";
     ok .execute(1, $blob),		'Executed with buf';
     ok .execute(2, Buf),		'Executed without buf';
+    ok .execute(3, Nil),		'Executed with NULL';
 } else { .fail }
 
-with $dbh.prepare('SELECT name FROM test_blob WHERE id = ?') {
+with $dbh.prepare('SELECT name, name is null as name_is_null FROM test_blob WHERE id = ?') {
     LEAVE { .dispose }
     ok $_,				'SELECT prepared';
     subtest 'Data is Blob with value' => {
@@ -49,6 +50,7 @@ with $dbh.prepare('SELECT name FROM test_blob WHERE id = ?') {
         ok (my $data = @res[0]), 'With data at 0';
         ok $data ~~ Buf, 'Data is-a Buf';
         is $data, $blob, 'Data in Buf match with original';
+        is @res[1], '0', 'DB Value is NOT NULL';
     }
 
     subtest 'Data from Empty buf' => {
@@ -58,6 +60,17 @@ with $dbh.prepare('SELECT name FROM test_blob WHERE id = ?') {
         my $data = @res[0];
         ok $data ~~ Buf, 'Data is-a Buf';
         ok not $data.defined, 'But is NULL';
+        is @res[1], '1', 'DB Value is NULL';
+    }
+
+    subtest 'Data from NULL' => {
+        ok .execute(3), 'Executed for 3';
+        ok (my @res = .row), 'Get a row';
+        is @res.elems, 2, 'One field';
+        my $data = @res[0];
+        ok $data ~~ Buf, 'Data is-a Buf';
+        ok not $data.defined, 'But is NULL';
+        is @res[1], '1', 'DB Value is NULL';
     }
 } else { .fail }
 
