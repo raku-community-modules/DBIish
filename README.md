@@ -621,7 +621,8 @@ also works for MariaDB.
 
 ### Required Client-C libraries
 
-DBDish::mysql by default searchs for 'mysql' (libmysql.ddl) on Windows and
+DBDish::mysql by default searches for 'mysql' (libmysql.ddl) on Windows, and
+'mariadb' (libmariadb.so.xx where xx in 0 .. 4) then
 'mysqlclient' (libmysqlclient.so.xx where xx in 16..21) on POSIX systems.
 
 Remember that Windows uses `PATH` to locate the library. On POSIX,
