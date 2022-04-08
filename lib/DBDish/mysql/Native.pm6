@@ -182,6 +182,7 @@ class MYSQL is export is repr('CPointer') {
     method mysql_close(MYSQL:D:                           ) is native(LIB) { * }
     method mysql_errno(MYSQL:D:                  --> int32) is native(LIB) { * }
     method mysql_error(MYSQL:D:                    --> Str) is native(LIB) { * }
+    method mysql_sqlstate(MYSQL:D:                 --> Str) is native(LIB) { * }
     method mysql_field_count(MYSQL:D:           --> uint32) is native(LIB) { * }
     method mysql_init(MYSQL:U:                   --> MYSQL) is native(LIB) { * }
     method mysql_insert_id(MYSQL:D:             --> uint64) is native(LIB) { * }

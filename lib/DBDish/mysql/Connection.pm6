@@ -20,7 +20,14 @@ submethod BUILD(:$!mysql-client!, :$!parent!) {
 
 method !handle-errors($code) {
     if $code {
-        self!set-err($code, $!mysql-client.mysql_error);
+        self!error-dispatch: X::DBDish::DBError::mysql.new(
+                :code($!mysql-client.mysql_errno),
+                :native-message($!mysql-client.mysql_error),
+                :driver-name<DBDish::mysql>,
+                statement-handle => self,
+
+                :sqlstate($!mysql-client.mysql_sqlstate),
+                );
     } else {
         self.reset-err;
     }

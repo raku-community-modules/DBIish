@@ -3,6 +3,7 @@ need DBDish;
 
 unit class DBDish::mysql::StatementHandle does DBDish::StatementHandle;
 use DBDish::mysql::Native;
+use DBDish::mysql::ErrorHandling;
 use NativeHelpers::Blob;
 use NativeHelpers::CStruct;
 
@@ -24,7 +25,14 @@ has @!import-func;
 
 method !handle-errors {
     if $!mysql-client.mysql_errno -> $code {
-        self!set-err($code, $!mysql-client.mysql_error);
+        self!error-dispatch: X::DBDish::DBError::mysql.new(
+                :code($!mysql-client.mysql_errno),
+                :native-message($!mysql-client.mysql_error),
+                :driver-name<DBDish::mysql>,
+                statement-handle => self,
+
+                :sqlstate($!mysql-client.mysql_sqlstate),
+                );
     } else {
         self.reset-err;
     }

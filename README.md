@@ -619,6 +619,27 @@ See your [MySQL documentation](https://dev.mysql.com/doc/c-api/5.6/en/mysql-opti
 Since MariaDB uses the same wire protocol as MySQL, the \`mysql\` backend
 also works for MariaDB.
 
+### Statement Exceptions
+
+Exceptions for a query result are thrown as `X::DBDish::DBError::mysql` objects (inherits `X::DBDish::DBError`)
+and have the following additional attributes as provided by the MySQL client libraries.
+
+- `message`
+
+  `mysql_error` -
+  The primary human-readable error message (typically one line). Always present.
+
+- `code`
+
+  `mysql_errno` -
+  Integer code. Always present.
+
+- `sqlstate`
+
+  `mysql_sqlstate` -
+  The SQLSTATE code for the error. The SQLSTATE code identifies the type of error that has occurred; it can be used by front-end applications to perform specific operations (such as error handling) in response to a particular database error. For a list of the possible SQLSTATE codes, see Appendix A. This field is not localizable, and is always present.
+
+
 ### Required Client-C libraries
 
 DBDish::mysql by default searches for 'mysql' (libmysql.ddl) on Windows, and
