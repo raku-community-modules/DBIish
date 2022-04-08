@@ -29,12 +29,12 @@ method prepare(Str $statement, *%args) {
     self.protect-connection: {
         with $!mysql-client.mysql_stmt_init -> $stmt {
             with self!handle-errors(
-            $stmt.mysql_stmt_prepare($statement, $statement.encode.bytes)
-            ) {
+                    $stmt.mysql_stmt_prepare($statement, $statement.encode.bytes)
+                    ) {
                 DBDish::mysql::StatementHandle.new(
-                    :$!mysql-client, :parent(self), :$stmt
-                    :$statement, :$!RaiseError, |%args
-                );
+                        :$!mysql-client, :parent(self), :$stmt
+                        :$statement, :$!RaiseError, |%args
+                        );
             } else { .fail }
         } else {
             self!set-err(-1, "Can't allocate memory");
