@@ -1,6 +1,7 @@
 Revision history for DBIish
 
 {{$NEXT}}
+    - Use MySQL 4.1 API when possible. This improves consistency of .execute($sql, @vars) and .execute($sql).
     - Add SQL State to MySQL exceptions
 
 0.6.4  2022-03-15T16:59:30-04:00

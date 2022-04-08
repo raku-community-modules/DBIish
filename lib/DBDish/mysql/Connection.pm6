@@ -51,15 +51,28 @@ method prepare(Str $statement, *%args) {
 
 # Override DBIish::Connection.execute as statements such as LOCK TABLE cannot
 # be prepared in MySQL.
-# Avoid looking into the query string by using a simple parameter count
-# and skipping the prepare step for queries without parameters.
 method execute(Str $statement, **@params, *%args) {
-    if @params.elems == 0 {
-        return DBDish::mysql::StatementHandle.new(
-                :$!mysql-client, :parent(self), :$statement, :$!RaiseError, |%args).execute;
-    } else {
+    try {
         # Copied from the DBIish::Connection.execute
         return self.prepare($statement, |%args).execute(|@params);
+
+        # A small number of statements cannot be executed using prepare/execute. Handle these
+        # by calling the older protocol. We try very hard to use the newer protocol first as
+        # it has several bug and minor behaviour fixes such as the handling of NULLs.
+        #
+        # Code 1295 means ER_UNSUPPORTED_PS:
+        #   This command is not supported in the prepared statement protocol yet
+        CATCH {
+            when X::DBDish::DBError::mysql {
+                when $_.code == 1295 and $_.sqlstate eq 'HY000' {
+                    return DBDish::mysql::StatementHandle.new(
+                            :$!mysql-client, :parent(self), :$statement, :$!RaiseError, |%args).execute;
+                }
+                default {
+                    .rethrow;
+                }
+            }
+        }
     }
 }
 

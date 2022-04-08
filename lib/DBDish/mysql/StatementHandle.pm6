@@ -149,7 +149,7 @@ method execute(*@params --> DBDish::StatementHandle) {
         }
         without self!handle-errors { .fail }
     }
-    else { # Unprepared path
+    else { # Unprepared path, seldome used.
         $!parent.protect-connection: {
             my $status = $!mysql-client.mysql_query($!statement)
                     and self!set-err($status, $!mysql-client.mysql_error).fail;
