@@ -35,6 +35,7 @@
     "DBDish::TestMock::StatementHandle": "lib/DBDish/TestMock/StatementHandle.pm6",
     "DBDish::mysql": "lib/DBDish/mysql.pm6",
     "DBDish::mysql::Connection": "lib/DBDish/mysql/Connection.pm6",
+    "DBDish::mysql::ErrorHandling": "lib/DBDish/mysql/ErrorHandling.pm6",
     "DBDish::mysql::Native": "lib/DBDish/mysql/Native.pm6",
     "DBDish::mysql::StatementHandle": "lib/DBDish/mysql/StatementHandle.pm6",
     "DBIish": "lib/DBIish.pm6",
