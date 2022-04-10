@@ -1,7 +1,7 @@
 use v6;
 need DBDish;
 
-unit class DBDish::Pg:auth<mberends>:ver<0.6.4> does DBDish::Driver;
+unit class DBDish::Pg:ver($?DISTRIBUTION.meta<ver>):api($?DISTRIBUTION.meta<api>):auth($?DISTRIBUTION.meta<auth>) does DBDish::Driver;
 use DBDish::Pg::Native;
 need DBDish::Pg::Connection;
 

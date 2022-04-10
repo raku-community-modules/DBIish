@@ -1,7 +1,7 @@
 use v6;
 need DBDish;     # roles for drivers
 
-unit class DBDish::Oracle:auth<mberends>:ver<0.6.4> does DBDish::Driver;
+unit class DBDish::Oracle:ver($?DISTRIBUTION.meta<ver>):api($?DISTRIBUTION.meta<api>):auth($?DISTRIBUTION.meta<auth>) does DBDish::Driver;
 use DBDish::Oracle::Native;
 need DBDish::Oracle::Connection;
 
