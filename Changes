@@ -1,6 +1,8 @@
 Revision history for DBIish
 
 {{$NEXT}}
+
+0.6.5  2022-04-11T08:36:33-04:00
     - Use MySQL 4.1 API when possible. This improves consistency of .execute($sql, @vars) and .execute($sql).
     - Add SQL State to MySQL exceptions
     - Use MariaDB client library when available. Mysql client library as a fallback.
