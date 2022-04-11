@@ -562,7 +562,7 @@ objects).
 
 When using a SQLite database concurrently (from multiple threads, or even
 multiple processes), operations may not be able to happen immediately due to
-the database being locked. DBIish sets a default timeout of 10000 miliseconds;
+the database being locked. DBIish sets a default timeout of 10000 milliseconds;
 this can be changed by passing the `busy-timeout` option to `connect`.
 
     my $dbh = DBIish.connect('SQLite', :database<thefile>, :60000busy-timeout);
@@ -683,7 +683,7 @@ Supports basic CRUD operations and prepared statements with placeholders
     my $dbh = DBIish.connect('Oracle', database => 'XE', :user<sysadm>, :password('secret'));
 
 By default connections to Oracle will apply this session alteration in an attempt to
-ensure the formatted "TIMESTAMP WITH TIME ZONE" field string will be compatable with DateTime
+ensure the formatted "TIMESTAMP WITH TIME ZONE" field string will be compatible with DateTime
 and returned to the user as DateTime.new($ts\_str).
 
     ALTER SESSION SET nls_timestamp_tz_format = 'YYYY-MM-DD"T"HH24:MI:SS.FFTZR'
@@ -842,7 +842,7 @@ These will be removed on June 2022.
 
 The Raku Pod in the [doc:DBIish](doc:DBIish) module and examples in the [examples](https://github.com/raku-community-modules/DBIish/tree/master/examples) directory.
 
-This README and the documention of the DBIish and the DBDish modules
+This README and the documentation of the DBIish and the DBDish modules
 are in the Pod6 format. It can be extracted by running
 
     rakudo --doc <filename>
