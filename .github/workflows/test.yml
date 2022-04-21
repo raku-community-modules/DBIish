@@ -4,7 +4,8 @@ on:
   push:
   pull_request:
   schedule:
-    - cron: "0 8 * * *"
+    # Run at an odd minute to improve odds of dependency installation success
+    - cron: "17 8 * * *"
 
 jobs:
   test:
