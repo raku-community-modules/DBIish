@@ -6,7 +6,7 @@ on:
 
 jobs:
   test:
-    runs-on: macos-latest
+    runs-on: macOS-latest
 
     steps:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
@@ -19,7 +19,7 @@ jobs:
 
     - uses: Raku/setup-raku@v1
       with:
-        raku-version: raku-latest
+        raku-version: latest
 
     - name: Install dependencies
       run: zef install --deps-only --/test --test-depends .
