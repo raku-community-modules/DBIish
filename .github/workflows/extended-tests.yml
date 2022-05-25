@@ -25,6 +25,9 @@ jobs:
       with:
         raku-version: latest
 
+    - name: Driver Check
+      run: brew list libpq
+
     - name: Install dependencies
       run: zef install --deps-only --/test --test-depends .
 
