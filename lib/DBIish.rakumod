@@ -12,7 +12,8 @@ package GLOBAL::X::DBIish {
     class LibraryMissing is Exception {
         has $.driver;
         has $.library;
-        method message { "DBIish: DBDish::$.driver needs $.library, not found" }
+        has $.detail;
+        method message { "DBIish: DBDish::$.driver needs $.library, not found.\n\tDetail: $.detail" }
     }
     class NotADBDishDriver is Exception {
         has $.who;
@@ -83,13 +84,13 @@ method !handle-library-exception($ex, $drivername) {
         ^ "Cannot locate symbol '" <-[ ' ]>* "' in native library "
         ( "'" <-[ ' ]> * "'" )
         / {
-            X::DBIish::LibraryMissing.new(:library($/[0]), :driver($drivername)).fail;
+            X::DBIish::LibraryMissing.new(:library($/[0]), :driver($drivername), :detail($_.message)).fail;
         }
         when $_.message ~~ m/
         ^ "Cannot locate native library "
         ( "'" <-[ ' ]> * "'" )
         / {
-            X::DBIish::LibraryMissing.new(:library($/[0]), :driver($drivername)).fail;
+            X::DBIish::LibraryMissing.new(:library($/[0]), :driver($drivername), :detail($_.message)).fail;
         }
         default {
             .rethrow;
