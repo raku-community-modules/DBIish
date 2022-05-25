@@ -17,11 +17,14 @@ jobs:
       with:
         postgres-version: 14
 
+    - name: Create User
+      run:  createuser --no-password runtest
+
+    - name: CreateDB
+      run:  createdb --owner=runtest runtest
+
     - name: Check DB Stuff
       run: psql --list
-
-    - name: Check DB Stuff 2
-      run:  psql -c 'select * from pg_user'
 
     - uses: Raku/setup-raku@v1
       with:
@@ -40,9 +43,9 @@ jobs:
       env:
         DBIISH_WRITE_TEST: YES
         PGHOST: localhost
-        PGUSER: postgres
+        PGUSER: runtest
         PGPASSWORD: postgres
         PGPORT: 5432
-        PGDATABASE: postgres
+        PGDATABASE: runtest
       run: prove6 -I lib -v t
 
