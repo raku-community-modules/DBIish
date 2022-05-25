@@ -17,6 +17,12 @@ jobs:
       with:
         postgres-version: 14
 
+    - name: Check DB Stuff
+      run: psql --list
+
+    - name: Check DB Stuff 2
+      run:  psql -c 'select * from pg_user'
+
     - uses: Raku/setup-raku@v1
       with:
         raku-version: latest
