@@ -1,0 +1,42 @@
+name: Extended CI Tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: macos-latest
+
+    steps:
+    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+    - uses: actions/checkout@v2
+
+    # Allow PostgreSQL use on Macos and Windows:
+    - uses: ankane/setup-postgres@v1
+      with:
+        postgres-version: 14
+
+    - uses: Raku/setup-raku@v1
+      with:
+        raku-version: raku-latest
+
+    - name: Install dependencies
+      run: zef install --deps-only --/test --test-depends .
+
+    - name: Install prove6
+      run: zef install --/test App::Prove6
+
+    - name: Install dependencies for extended tests
+      run: zef install --/test JSON::Tiny Test::META
+
+    - name: Run tests
+      env:
+        DBIISH_WRITE_TEST: YES
+        PGHOST: localhost
+        PGUSER: postgres
+        PGPASSWORD: postgres
+        PGPORT: 5432
+        PGDATABASE: postgres
+      run: prove6 -I lib -v t
+
