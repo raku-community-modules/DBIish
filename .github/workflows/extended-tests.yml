@@ -16,12 +16,7 @@ jobs:
     - uses: ankane/setup-postgres@v1
       with:
         postgres-version: 14
-
-    - name: Create User
-      run:  createuser --no-password runtest
-
-    - name: CreateDB
-      run:  createdb --owner=runtest runtest
+        database: testdb
 
     - name: Check DB Stuff
       run: psql --list
@@ -43,9 +38,8 @@ jobs:
       env:
         DBIISH_WRITE_TEST: YES
         PGHOST: localhost
-        PGUSER: runtest
-        PGPASSWORD: postgres
+        PGUSER: runner
         PGPORT: 5432
-        PGDATABASE: runtest
+        PGDATABASE: testdb
       run: prove6 -I lib -v t
 
