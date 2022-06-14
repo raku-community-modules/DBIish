@@ -368,6 +368,12 @@ class OCISvcCtx is OCIHandle is repr('CPointer') is export {
         ub1 $csfrm
         --> sword) is symbol('OCILobRead2') is native(lib) { * }
 
+    method LobLocatorAssign (OCISvcCtx:D:
+        OCIError $errh,
+        OCILobLocator $src_locp,
+        OCILobLocator $dst_locpp is rw
+        --> sword) is symbol('OCILobLocatorAssign') is native(lib) { * }
+
     method Ping(OCISvcCtx:D: OCIError $errh, ub4 $mode --> sword)
         is symbol('OCIPing') is native(lib) { * }
 

@@ -182,13 +182,20 @@ method _row() {
                                     # This block could and is likely to be ran in a different thread. Thus we cannot
                                     # share $!errh.
                                     my $errh = $!parent.allocate-handle(OCIError);
+                                    my $locp = $!parent.allocate-descriptor(OCILobLocator);
+
+                                    $!svch.LobLocatorAssign($errh, $res, $locp);
 
                                     LEAVE {
-                                        $res.DescriptorFree;
+                                        $locp.DescriptorFree;
                                         $errh.HandleFree;
                                     }
 
-                                    my ub8 $loblen = self!handle-err: $!svch.LobGetLength($!errh, $res);
+                                    my $loblen = self!handle-err: $!svch.LobGetLength($errh, $locp);
+                                    if $loblen ~~ Failure {
+                                        emit $loblen;
+                                        last;
+                                    }
                                     if $loblen == 0 {
                                         emit Buf.new;
                                         last;
@@ -201,7 +208,7 @@ method _row() {
                                     my ub8 $bs = $remaining min $chunk-size;
                                     while $remaining > 0 {
                                         my $buff = blob-allocate(Buf, $bs);
-                                        my $rc = $!svch.LobRead($errh, $res, $amtpp, NULL, 1, $buff, $bs, 
+                                        my $rc = $!svch.LobRead($errh, $locp, $amtpp, NULL, 1, $buff, $bs, 
                                                             0, 0, 0, SQLCS_IMPLICIT);
                                         if $rc == OCI_SUCCESS | OCI_NEED_DATA {
                                             emit $buff;
