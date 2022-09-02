@@ -406,5 +406,5 @@ method run-tests {
     is $dbh.drv.Connections.elems, 0, 'Driver has no connections';
     lives-ok {
         nok $dbh.dispose, 'Already disconnected';
-    }, 'Safe to call disconnect on a disconnected handle';
+    }, 'Safe to call dispose on a disconnected handle';
 }

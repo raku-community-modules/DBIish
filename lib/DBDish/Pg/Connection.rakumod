@@ -62,52 +62,6 @@ method server-version() {
     $ = Version.new($!pg-conn.pg-parameter-status('server_version'));
 }
 
-method selectrow_arrayref(Str $statement, $attr?, *@bind is copy) is DEPRECATED('prepare/execute/row') {
-    with self.prepare($statement, $attr) {
-        .execute(@bind) and .fetchrow_arrayref;
-    } else {
-        .fail;
-    }
-}
-
-method selectrow_hashref(Str $statement, $attr?, *@bind is copy) is DEPRECATED('prepare/execute/row(:hash)') {
-    with self.prepare($statement, $attr) {
-        .execute(@bind) and .fetchrow_hashref;
-    } else {
-        .fail;
-    }
-}
-
-method selectall_arrayref(Str $statement, $attr?, *@bind is copy) is DEPRECATED('prepare/execute/allrows()') {
-    with self.prepare($statement, $attr) {
-        .execute(@bind) and .fetchall_arrayref;
-    } else {
-        .fail;
-    }
-}
-
-method selectall_hashref(Str $statement, Str $key, $attr?, *@bind is copy) is DEPRECATED('prepare/execute/allrows(:array-of-hash)') {
-    with self.prepare($statement, $attr) {
-        .execute(@bind) and .fetchall_hashref($key);
-    } else {
-        .fail;
-    }
-}
-
-method selectcol_arrayref(Str $statement, $attr?, *@bind is copy) is DEPRECATED('prepare/execute/allrows') {
-    with self.prepare($statement, $attr) {
-        .execute(@bind) and do {
-            my @results;
-            while (my $row = .fetchrow_arrayref) {
-                @results.push($row[0]);
-            }
-            item @results;
-        }
-    } else {
-        .fail;
-    }
-}
-
 method commit {
     if $!AutoCommit {
         warn "Commit ineffective while AutoCommit is on";

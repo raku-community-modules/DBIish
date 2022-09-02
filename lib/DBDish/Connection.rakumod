@@ -68,10 +68,6 @@ submethod DESTROY() {
     self.dispose;
 }
 
-method disconnect is hidden-from-backtrace is DEPRECATED("dispose") {
-    self.dispose;
-}
-
 method drv { $.parent }
 
 method new(*%args) {
@@ -200,10 +196,6 @@ method quote(Str $x, :$as-id) {
     } else {
         q['] ~ $x.subst(q{'}, q{''}, :global) ~ q[']
     }
-}
-
-method quote-identifier(Str:D $name) is DEPRECATED('quote($name, :as-id)') {
-    return self.quote($name, :as-id);
 }
 
 =begin pod

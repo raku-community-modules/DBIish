@@ -62,13 +62,7 @@ method install-driver( $drivername ) {
         $d;
     }
 }
-method install_driver($drivername)
-        is hidden-from-backtrace
-        is DEPRECATED("install-driver")
-{
 
-    self.install-driver($drivername)
-}
 method installed-drivers {
     $installed-lock.protect: {
         %installed.pairs.cache;

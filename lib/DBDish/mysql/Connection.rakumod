@@ -82,10 +82,6 @@ method insert-id() {
     }
 }
 
-method mysql_insertid is DEPRECATED('insert-id') {
-    self.insert-id;
-}
-
 method server-version() {
     Version.new($!mysql-client.mysql_get_server_info);
 }

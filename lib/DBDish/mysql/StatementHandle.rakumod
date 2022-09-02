@@ -275,10 +275,6 @@ method insert-id() {
     }
 }
 
-method mysql_insertid is DEPRECATED('insert-id'){
-    self.insert-id;
-}
-
 method mysql_warning_count {
     $!mysql-client.mysql_warning_count;
 }
