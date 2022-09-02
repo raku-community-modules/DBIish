@@ -92,6 +92,10 @@ jobs:
     - name: Install native dependencies
       run:  sudo apt-get install -y postgresql-client libpq-dev libmysqlclient-dev sqlite3 libsqlite3-dev
 
+    # Raku image 2020.12 does not understand the fez module network. App::Prove only installs via fez
+    - name: Upgrade Zef
+      run: zef install zef --force-install
+
     - name: Install dependencies
       run: zef install --deps-only --/test --test-depends .
 
