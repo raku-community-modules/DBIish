@@ -31,10 +31,10 @@ method connect-or-skip($driver-name) {
         $dbh = DBIish.connect($driver-name, |%_);
         CATCH {
             when X::DBIish::LibraryMissing | X::DBDish::ConnectionFailed {
-                diag "Skipping $driver-name tests in $*PROGRAM due to:\n\t{$_.detail}";
+                diag "Skipping $driver-name tests in $*PROGRAM due to:\n" ~ $_.message.indent(4);
             }
             when X::DBDish::ConnectionFailed {
-                diag "Skipping $driver-name tests in $*PROGRAM due to:\n\t{$_.message}";
+                diag "Skipping $driver-name tests in $*PROGRAM due to:\n" ~ $_.message.indent(4);
             }
             default { .rethrow; }
         }
