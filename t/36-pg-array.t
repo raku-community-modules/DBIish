@@ -1,7 +1,7 @@
 #!/usr/bin/env perl6
 
 use v6;
-use DBIish;
+use DBIish::CommonTesting;
 use Test;
 
 plan 46;
@@ -9,21 +9,7 @@ my %con-parms;
 # If env var set, no parameter needed.
 %con-parms<database> = 'dbdishtest' unless %*ENV<PGDATABASE>;
 %con-parms<user> = 'postgres' unless %*ENV<PGUSER>;
-my $dbh;
-
-try {
-  $dbh = DBIish.connect('Pg', |%con-parms);
-  CATCH {
-        when X::DBIish::LibraryMissing | X::DBDish::ConnectionFailed {
-        diag "$_\nCan't continue.";
-        }
-            default { .rethrow; }
-  }
-}
-without $dbh {
-    skip-rest 'prerequisites failed';
-    exit;
-}
+my $dbh = DBIish::CommonTesting.connect-or-skip('Pg', |%con-parms);
 
 my $sth = $dbh.execute(q:to/STATEMENT/);
   CREATE TEMPORARY TABLE sal_emp (

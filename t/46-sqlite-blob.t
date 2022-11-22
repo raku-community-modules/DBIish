@@ -1,27 +1,13 @@
 use v6;
 use Test;
-use DBIish;
+use DBIish::CommonTesting;
 
 plan 18;
 
 my $TDB = IO::Path.new('dbdishtest.sqlite3');
 my %con-parms;
 %con-parms<database> = ~$TDB;
-my $dbh;
-
-try {
-  $dbh = DBIish.connect('SQLite', |%con-parms);
-  CATCH {
-	    when X::DBIish::LibraryMissing | X::DBDish::ConnectionFailed {
-		diag "$_\nCan't continue.";
-	    }
-            default { .rethrow; }
-  }
-}
-without $dbh {
-    skip-rest 'prerequisites failed';
-    exit;
-}
+my $dbh = DBIish::CommonTesting.connect-or-skip('SQLite', |%con-parms);
 
 ok $dbh,    'Connected';
 lives-ok { $dbh.execute('DROP TABLE IF EXISTS test_blob') }, 'Clean';

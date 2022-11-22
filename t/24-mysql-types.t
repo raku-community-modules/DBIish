@@ -1,6 +1,6 @@
 use v6;
 use Test;
-use DBIish;
+use DBIish::CommonTesting;
 our &from-json;
 BEGIN {
     require ::('JSON::Tiny');
@@ -17,21 +17,7 @@ class JSON {
 plan 25;
 my %con-parms = :database<dbdishtest>, :user<testuser>, :password<testpass>;
 %con-parms<host> = %*ENV<MYSQL_HOST> if %*ENV<MYSQL_HOST>;
-my $dbh;
-
-try {
-  $dbh = DBIish.connect('mysql', |%con-parms);
-  CATCH {
-            when X::DBIish::LibraryMissing | X::DBDish::ConnectionFailed {
-                diag "$_\nCan't continue.";
-            }
-            default { .rethrow; }
-  }
-}
-without $dbh {
-    skip-rest 'prerequisites failed';
-    exit;
-}
+my $dbh = DBIish::CommonTesting.connect-or-skip('mysql', |%con-parms);
 
 if $dbh.server-version.Str ~~ /"MariaDB"/ {
     skip-rest 'MariaDB returns the JSON as a BLOB type, not as a String type.';

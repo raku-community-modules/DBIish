@@ -1,6 +1,6 @@
 use v6;
 use Test;
-use DBIish;
+use DBIish::CommonTesting;
 
 plan 13;
 
@@ -8,21 +8,7 @@ my %con-parms;
 # If env var set, no parameter needed.
 %con-parms<database> = 'dbdishtest' unless %*ENV<PGDATABASE>;
 %con-parms<user> = 'postgres' unless %*ENV<PGUSER>;
-my $dbh;
-
-try {
-  $dbh = DBIish.connect('Pg', |%con-parms);
-  CATCH {
-	    when X::DBIish::LibraryMissing | X::DBDish::ConnectionFailed {
-		diag "$_\nCan't continue.";
-	    }
-            default { .rethrow; }
-  }
-}
-without $dbh {
-    skip-rest 'prerequisites failed';
-    exit;
-}
+my $dbh = DBIish::CommonTesting.connect-or-skip('Pg', |%con-parms);
 
 ok $dbh,    'Connected';
 # Be less verbose;

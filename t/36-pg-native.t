@@ -1,6 +1,6 @@
 v6;
 use Test;
-use DBIish;
+use DBIish::CommonTesting;
 
 plan 19;
 
@@ -11,21 +11,7 @@ my %con-parms;
 %con-parms<user> = 'postgres' unless %*ENV<PGUSER>;
 %con-parms<port> = 5432; # Test for issue #62
 
-my $dbh;
-
-try {
-  $dbh = DBIish.connect('Pg', |%con-parms);
-  CATCH {
-	    when X::DBIish::LibraryMissing | X::DBDish::ConnectionFailed {
-		diag "$_\nCan't continue.";
-	    }
-            default { .rethrow; }
-  }
-}
-without $dbh {
-    skip-rest 'prerequisites failed';
-    exit;
-}
+my $dbh = DBIish::CommonTesting.connect-or-skip('Pg', |%con-parms);
 
 ok $dbh,    'Connected';
 

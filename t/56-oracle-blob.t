@@ -1,6 +1,6 @@
 use v6;
 use Test;
-use DBIish;
+use DBIish::CommonTesting;
 
 plan 18;
 
@@ -12,21 +12,7 @@ without %*ENV<DBIISH_WRITE_TEST> {
 
 my %con-parms;
 %con-parms = :database<XE>, :username<TESTUSER>, :password<Testpass>;
-my $dbh;
-
-try {
-  $dbh = DBIish.connect('Oracle', |%con-parms);
-  CATCH {
-	    when X::DBIish::LibraryMissing | X::DBDish::ConnectionFailed {
-		diag "$_\nCan't continue.";
-	    }
-            default { .rethrow; }
-  }
-}
-without $dbh {
-    skip-rest 'prerequisites failed';
-    exit;
-}
+my $dbh = DBIish::CommonTesting.connect-or-skip('Oracle', |%con-parms);
 
 my $dropper = q|
     BEGIN

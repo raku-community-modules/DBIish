@@ -25,6 +25,28 @@ method !hash-str(%h) {
     %h.sort.flatmap({ join '', .key, '=«', .value, '»' }).join('; ');
 }
 
+method connect-or-skip($driver-name) {
+    my $dbh;
+    try {
+        $dbh = DBIish.connect($driver-name, |%_);
+        CATCH {
+            when X::DBIish::LibraryMissing | X::DBDish::ConnectionFailed {
+                diag "Skipping $driver-name tests in $*PROGRAM due to:\n\t{$_.detail}";
+            }
+            when X::DBDish::ConnectionFailed {
+                diag "Skipping $driver-name tests in $*PROGRAM due to:\n\t{$_.message}";
+            }
+            default { .rethrow; }
+        }
+    }
+    without $dbh {
+        skip-rest 'prerequisites failed';
+        exit;
+    }
+
+    return $dbh;
+}
+
 method run-tests {
     diag "Testing DBDish::$.dbd";
     plan 109;
@@ -41,20 +63,8 @@ method run-tests {
     my $aversion = $drh.Version;
     ok $aversion ~~ Version:D, "DBDish::{$.dbd} version $aversion";
     # Connect to the data source
-    my $dbh;
-    try {
-        $dbh = DBIish.connect( $.dbd, |%.opts, :RaiseError );
-        CATCH {
-            when X::DBIish::LibraryMissing | X::DBDish::ConnectionFailed {
-                diag "$_\nCan't continue.";
-            }
-            default { .rethrow; }
-        }
-    }
-    without $dbh {
-        skip-rest 'prerequisites failed';
-        exit;
-    }
+    my $dbh = $.connect-or-skip($.dbd, |%.opts, :RaiseError);
+
     ok $aversion = $drh.version, "{$.dbd} library version $aversion";
     ok $dbh, "connect to '{%.opts<database> || "default"}'";
     is $dbh.drv.Connections.elems, 1, 'Driver has one connection';

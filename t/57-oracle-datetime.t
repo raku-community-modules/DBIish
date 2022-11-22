@@ -1,6 +1,6 @@
 use v6;
 use Test;
-use DBIish;
+use DBIish::CommonTesting;
 
 plan 58;
 
@@ -11,21 +11,7 @@ without %*ENV<DBIISH_WRITE_TEST> {
 }
 
 my %con-parms = :database<XE>, :username<TESTUSER>, :password<Testpass>;
-my $dbh;
-
-try {
-    $dbh = DBIish.connect('Oracle', |%con-parms);
-    CATCH {
-        when X::DBIish::LibraryMissing | X::DBDish::ConnectionFailed {
-            diag "$_\nCan't continue.";
-        }
-        default { .rethrow; }
-    }
-}
-without $dbh {
-    skip-rest 'prerequisites failed';
-    exit;
-}
+my $dbh = DBIish::CommonTesting.connect-or-skip('Oracle', |%con-parms);
 
 ok $dbh,    'Connected';
 my $dropper = q|
@@ -107,16 +93,7 @@ note '#+ -------------------------------------------------------- +';
 # use :alter-session-iso8601 (support all DATE & TIMESTAMP types)
 # all should work with DateTime($st)
 %con-parms = :database<XE>, :username<TESTUSER>, :password<Testpass>, :!AutoCommit, :alter-session-iso8601;
-
-try {
-  $dbh = DBIish.connect('Oracle', |%con-parms);
-  CATCH {
-      when X::DBIish::LibraryMissing | X::DBDish::ConnectionFailed {
-          diag "$_\nCan't continue.";
-      }
-      default { .rethrow; }
-  }
-}
+$dbh = DBIish::CommonTesting.connect-or-skip('Oracle', |%con-parms);
 
 $sth = $dbh.prepare(
     q|INSERT INTO test_datetime
@@ -172,16 +149,7 @@ note '#+ -------------------------------------------------------- +';
 #  :no-datetime-container # return the date/timestamps as stings
 %con-parms = :database<XE>, :username<TESTUSER>, :password<Testpass>, :!AutoCommit
   , :no-alter-session, :no-datetime-container, :no-lc-field-name;
-
-try {
-  $dbh = DBIish.connect('Oracle', |%con-parms);
-  CATCH {
-      when X::DBIish::LibraryMissing | X::DBDish::ConnectionFailed {
-          diag "$_\nCan't continue.";
-      }
-      default { .rethrow; }
-  }
-}
+$dbh = DBIish::CommonTesting.connect-or-skip('Oracle', |%con-parms);
 
 # Session: Something arbitrary but predictable
 is $dbh.do(qq|ALTER SESSION SET time_zone               = '-02:00'|), 0, 'ALTER SESSION ...';

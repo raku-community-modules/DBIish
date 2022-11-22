@@ -1,26 +1,12 @@
 use v6;
 use Test;
-use DBIish;
+use DBIish::CommonTesting;
 
 plan 3;
 
 my %con-parms = :database<dbdishtest>, :user<testuser>, :password<testpass>;
 %con-parms<host> = %*ENV<MYSQL_HOST> if %*ENV<MYSQL_HOST>;
-my $dbh;
-
-try {
-    $dbh = DBIish.connect('mysql', |%con-parms);
-    CATCH {
-        when X::DBIish::LibraryMissing | X::DBDish::ConnectionFailed {
-            diag "$_\nCan't continue.";
-        }
-        default { .rethrow; }
-    }
-}
-without $dbh {
-    skip-rest 'prerequisites failed';
-    exit;
-}
+my $dbh = DBIish::CommonTesting.connect-or-skip('mysql', |%con-parms);
 
 # Use the connection for some activity
 my $sth = $dbh.prepare('SELECT sleep(1)');
