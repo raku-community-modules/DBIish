@@ -5,7 +5,7 @@
   ],
   "depends": [
     "NativeHelpers::Blob",
-    "NativeLibs"
+    "NativeLibs:auth<github:salortiz>:ver<0.0.9+>"
   ],
   "description": "Database connectivity for Raku",
   "license": "BSD-2-Clause",
