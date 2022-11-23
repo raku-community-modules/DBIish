@@ -11,6 +11,6 @@ my $sub = Util.at-runtime(is-win ?? 'libmysql' !! 'mysqlclient', 'mysql_init', 1
 does-ok $sub, Callable;
 my $lib = $sub.();
 todo "Can fail if the mysqlclient library isn't installed", 1;
-like $lib,  / 'mysql' /,		"Indeed $lib";
+like $lib,  / 'mysql' /,		"Indeed "~ ($lib // '<not set>');
 todo "Can fail if the pq library isn't installed", 1;
-ok $lib = Util.try-versions('pq', 'PQstatus', 4,5,6),	"Postgres is $lib";
+ok $lib = Util.try-versions('pq', 'PQstatus', 4,5,6), "Postgres is "~ ($lib // '<not set>');
