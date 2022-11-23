@@ -116,7 +116,17 @@ method execute(*@params --> DBDish::StatementHandle) {
                     @Bufs[$k] = do {
                         when Blob { $st = MYSQL_TYPE_BLOB; $_ }
                         when Str  { .encode }
-                        when Int  { $st = MYSQL_TYPE_LONGLONG; Blob[int64].new($_) }
+                        when Int  {
+                            # Handle anything larger than int64 as a string. This has a small
+                            # performance penalty but so does using int128 for everything or
+                            # detecting a best fit range. Assume most numbers are small.
+                            if $_ > -2**63 and $_ < 2**63 {
+                                $st = MYSQL_TYPE_LONGLONG;
+                                Blob[int64].new($_);
+                            } else {
+                                .Str.encode;
+                            }
+                        }
                         when DateTime {
                             # mysql knows nothing of timezones, all assumed local-time
                             # but in Windows the parser chokes with the offset,
