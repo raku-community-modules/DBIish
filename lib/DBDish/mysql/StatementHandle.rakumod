@@ -125,6 +125,34 @@ method execute(*@params --> DBDish::StatementHandle) {
                                 .Str.encode;
                             }
                         }
+                        when Num {
+                            $st = MYSQL_TYPE_DOUBLE;
+                            my $buf = buf8.new();
+                            $buf.write-num64(0, $_);
+                            $buf;
+                        }
+                        when Rat {
+                            # Similar to Num above but the conversion to Num can be lossy. Fallback to Decimal
+                            # if precision would be lost. Most smaller numbers, like decimalized currency,
+                            # will work as a Double.
+                            #
+                            # TODO: It might be possible to look at Rats denominator length instead.
+                            my Num $cast-num = $_.Num;
+                            my Str $cast-string = $cast-num.Str;
+                            if $_.Str eq $cast-string {
+                                $st = MYSQL_TYPE_DOUBLE;
+                                my $buf = buf8.new();
+                                $buf.write-num64(0, $cast-num);
+                                $buf;
+                            } else {
+                                $st = MYSQL_TYPE_NEWDECIMAL;
+                                .Str.encode;
+                            }
+                        }
+                        when FatRat {
+                            $st = MYSQL_TYPE_NEWDECIMAL;
+                            .Str.encode;
+                        }
                         when DateTime {
                             # mysql knows nothing of timezones, all assumed local-time
                             # but in Windows the parser chokes with the offset,
