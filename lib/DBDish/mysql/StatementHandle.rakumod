@@ -117,10 +117,8 @@ method execute(*@params --> DBDish::StatementHandle) {
                         when Blob { $st = MYSQL_TYPE_BLOB; $_ }
                         when Str  { .encode }
                         when Int  {
-                            # Handle anything larger than int64 as a string. This has a small
-                            # performance penalty but so does using int128 for everything or
-                            # detecting a best fit range. Assume most numbers are small.
-                            if $_ > -2**63 and $_ < 2**63 {
+                            # Handle anything larger than int64 as a string.
+                            if -2**63 <= $_ <= 2**63 -1 {
                                 $st = MYSQL_TYPE_LONGLONG;
                                 Blob[int64].new($_);
                             } else {
