@@ -122,6 +122,7 @@ method execute(*@params --> DBDish::StatementHandle) {
                                 $st = MYSQL_TYPE_LONGLONG;
                                 Blob[int64].new($_);
                             } else {
+                                $st = MYSQL_TYPE_NEWDECIMAL;
                                 .Str.encode;
                             }
                         }
