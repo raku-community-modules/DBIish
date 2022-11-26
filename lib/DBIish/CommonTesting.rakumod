@@ -205,16 +205,16 @@ method run-tests {
 
     #row and allrows return typed value, when possible
     my @typed-ref = (
-        [ Str, Str, 1 , Rat, Rat],
-        [ Str, Str, Int, 4.85, Rat ],
-        [ 'BEOM', 'Medium size orange juice', 2, 1.2, 2.4 ],
-        [ 'BUBH', 'Hot beef burrito', 1, 4.95, 4.95 ],
-        [ 'ONE', Str, Int, Rat, Rat ],
-        [ 'TAFM', 'Mild fish taco', 1, 4.85, 4.85 ]
+        [ Str, Str, 1 , FatRat, FatRat],
+        [ Str, Str, Int, 4.85.FatRat, FatRat ],
+        [ 'BEOM', 'Medium size orange juice', 2, 1.2.FatRat, 2.4.FatRat ],
+        [ 'BUBH', 'Hot beef burrito', 1, 4.95.FatRat, 4.95.FatRat ],
+        [ 'ONE', Str, Int, FatRat, FatRat ],
+        [ 'TAFM', 'Mild fish taco', 1, 4.85.FatRat, 4.85.FatRat ]
     );
 
     if $.dbd eq 'SQLite' { # Munge types
-        $sth.column-types[$_] = [Str, Str, Int, Rat, Rat][$_] for ^5;
+        $sth.column-types[$_] = [Str, Str, Int, FatRat, FatRat][$_] for ^5;
     }
 
     my @array = $sth.allrows;
@@ -238,10 +238,10 @@ method run-tests {
 
     ok (@columns = $sth.column-types), 'called column-type';
     is @columns.elems, 5, "column-type returns 5 fields in a row";
-    ok @columns eqv [ Str, Str, Int, Rat, Rat ], 'column-types matches test data';
+    ok @columns eqv [ Str, Str, Int, FatRat, FatRat ], 'column-types matches test data';
 
     if $.dbd eq 'SQLite' { # Munge types
-        $sth.column-types[$_] = [Str, Str, Int, Rat, Rat][$_] for ^5;
+        $sth.column-types[$_] = [Str, Str, Int, FatRat, FatRat][$_] for ^5;
     }
 
     # we skip some uninterested rows
@@ -249,13 +249,13 @@ method run-tests {
     my @results = $sth.row();
     ok @results[1] ~~ Str, "Test the type of a Str field";
     ok @results[2] ~~ Int, "Test the type of an Int field";
-    ok @results[3] ~~ Rat, "Test the type of a NUMERIC like field";
+    ok @results[3] ~~ FatRat, "Test the type of a NUMERIC like field";
 
     my %results = $sth.row(:hash);
 
     ok %results<name>     ~~ Str, "HASH: Test the type of a Str field";
     ok %results<quantity> ~~ Int, "HASH: Test the type of a Int field";
-    ok %results<price>    ~~ Rat, "HASH: Test the type of a NUMERIC like field";
+    ok %results<price>    ~~ FatRat, "HASH: Test the type of a NUMERIC like field";
 
     ok $sth.finish, 'No more rows needed';
     ok $sth.Finished,   'Finished indeed';
@@ -286,12 +286,12 @@ method run-tests {
     @results = $sth.allrows(:array-of-hash);
     $sth.finish;
     my @ref-aoh =  (
-        { name => Str, description => Str, quantity => 1, price => Rat, amount => Rat },
-        { name => Str, description => Str, quantity => Int, price => 4.85, amount => Rat },
-        { name => 'BEOM', description => 'Medium size orange juice', quantity => 2, price => 1.2, amount => 2.4 },
-        { name => 'BUBH', description => 'Hot beef burrito', quantity => 1, price => 4.95, amount => 4.95 },
-        { name => 'ONE', description => Str, quantity => Int, price => Rat, amount => Rat },
-        { name => 'TAFM', description => 'Mild fish taco', quantity => 1, price => 4.85, amount => 4.85 },
+        { name => Str, description => Str, quantity => 1, price => FatRat, amount => FatRat },
+        { name => Str, description => Str, quantity => Int, price => 4.85.FatRat, amount => FatRat },
+        { name => 'BEOM', description => 'Medium size orange juice', quantity => 2, price => 1.2.FatRat, amount => 2.4.FatRat },
+        { name => 'BUBH', description => 'Hot beef burrito', quantity => 1, price => 4.95.FatRat, amount => 4.95.FatRat },
+        { name => 'ONE', description => Str, quantity => Int, price => FatRat, amount => FatRat },
+        { name => 'TAFM', description => 'Mild fish taco', quantity => 1, price => 4.85.FatRat, amount => 4.85.FatRat },
     );
 
     is-deeply @results, @ref-aoh, 'types and values match';

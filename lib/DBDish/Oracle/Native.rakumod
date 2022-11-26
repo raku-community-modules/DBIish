@@ -94,7 +94,7 @@ constant SQLT_TIMESTAMP_LTZ     is export = 232;
 
 constant %sqltype-map is export = {
     +(SQLT_CHR)  => Str,
-    +(SQLT_NUM)  => Rat,
+    +(SQLT_NUM)  => FatRat,
     +(SQLT_INT)  => Int,
     +(SQLT_FLT)  => Num,
     +(SQLT_DAT)  => Date,

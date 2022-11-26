@@ -76,7 +76,7 @@ subtest 'Very large integers' => {
     for @values.sort -> $num {
         my ($col1) = $sth.row;
 
-        isa-ok $col1, Rat;
+        isa-ok $col1, FatRat;
         is $col1, $num, 'Value: %d digits'.sprintf($num.chars);
     }
 }

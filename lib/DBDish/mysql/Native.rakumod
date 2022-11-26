@@ -216,7 +216,7 @@ sub mysql_get_client_info(--> Str)       is export is native(LIB) { * }
 
 constant %mysql-type-conv is export = Map.new: map(
         {+mysql-field-type::{.key} => .value}, (
-        MYSQL_TYPE_DECIMAL => Rat,
+        MYSQL_TYPE_DECIMAL => FatRat,
         MYSQL_TYPE_TINY => Int,
         MYSQL_TYPE_SHORT => Int,
         MYSQL_TYPE_LONG => Int,
@@ -234,7 +234,7 @@ constant %mysql-type-conv is export = Map.new: map(
         MYSQL_TYPE_VARCHAR => Str,
         MYSQL_TYPE_BIT => Int,
         MYSQL_TYPE_JSON => Str,
-        MYSQL_TYPE_NEWDECIMAL => Rat,
+        MYSQL_TYPE_NEWDECIMAL => FatRat,
         MYSQL_TYPE_ENUM => Str,
         MYSQL_TYPE_VAR_STRING  => Str,
         MYSQL_TYPE_STRING  => Str,
