@@ -1,100 +1,79 @@
 use v6;
 use Test;
 use DBIish::CommonTesting;
-our &from-json;
-BEGIN {
-    require ::('JSON::Tiny');
-    &from-json = ::("JSON::Tiny::EXPORT::DEFAULT::&from-json");
-    CATCH {
-	plan :skip-all<This test need JSON::Tiny installed>;
-    }
-}
 
-class JSON {
-    # Used only as a marker for converter
-}
-
-plan 25;
+plan 2;
 my %con-parms = :database<dbdishtest>, :user<testuser>, :password<testpass>;
 %con-parms<host> = %*ENV<MYSQL_HOST> if %*ENV<MYSQL_HOST>;
 my $dbh = DBIish::CommonTesting.connect-or-skip('mysql', |%con-parms);
 
-if $dbh.server-version.Str ~~ /"MariaDB"/ {
-    skip-rest 'MariaDB returns the JSON as a BLOB type, not as a String type.';
-    exit;
-}
-
-ok $dbh,    'Connected';
-my $hasjson = $dbh.drv.version after v5.7.8;
-my $field = $hasjson ?? 'JSON' !! 'varchar';
-diag "want test '$field'";
-lives-ok {
-    $dbh.execute(qq|
-    CREATE TEMPORARY TABLE test_types (
-	col1 $field
+subtest 'Very large string' => {
+    lives-ok {
+        $dbh.execute(qq|
+    CREATE TEMPORARY TABLE test_long_string (
+	col1 varchar(16383)
     )|)
-}, 'Table created';
+    }, 'Table created';
 
-my $sth = $dbh.prepare('INSERT INTO test_types (col1) VALUES(?)');
-lives-ok {
-    $sth.execute('{"key1": "value1"}');
-}, 'Insert Perl6 values';
-$sth.dispose;
+    my @string-lengths = 100, 8191, 8192, 8193, 10_000, 16383;
+    my @long-strings;
+    for @string-lengths -> $length {
+        @long-strings.push('x' x $length);
+    }
 
-$sth = $dbh.prepare('SELECT col1 FROM test_types').execute();
-my @coltype = $sth.column-types;
-ok @coltype eqv [Str],			    'prep-exec: Column-types';
+    my $sth = $dbh.prepare('INSERT INTO test_long_string (col1) VALUES(?)');
+    for @long-strings -> $string {
+        lives-ok {
+            $sth.execute($string);
+        }, 'Add value: %d chars'.sprintf($string.chars);
+    }
+    $sth.dispose;
 
-is $sth.rows, 1,			    'prep-exec: 1 row';
-my ($col1) = $sth.row;
-isa-ok $col1, Str;
-is $col1, '{"key1": "value1"}',		    "prep-exec: Value $col1";
+    $sth = $dbh.execute('SELECT col1 FROM test_long_string ORDER BY length(col1)');
 
-# Execute without prepare goes through a different type handler
-# than prepare($qry).execute
-if 0 {
-    $sth = $dbh.execute('SELECT col1 FROM test_types');
-    @coltype = $sth.column-types;
-    ok @coltype eqv [Str], 'exec: Column-types';
+    is $sth.rows, @long-strings.elems, '%d row'.sprintf(@long-strings.elems);
 
-    is $sth.rows, 1, 'exec: 1 row';
-    ($col1) = $sth.row;
-    isa-ok $col1, Str;
-    is $col1, '{"key1": "value1"}', "exec: Value $col1";
-}
-else {
-    skip 'Type converter not yet supported for MySQL queries without prepare', 4;
+    # Compare both source and DB long strings in order by length.
+    for @long-strings -> $string {
+        my ($col1) = $sth.row;
+
+        isa-ok $col1, Str;
+        is $col1, $string, 'Value: %d chars'.sprintf($string.chars);
+    }
 }
 
-# Install new type handler
-nok $dbh.Converter{JSON},		    'No converter';
-$dbh.Converter = :JSON(sub ($json) {
-    ok so $json,			    'In converter';
-    is $json, '{"key1": "value1"}',	    "Got $json";
-    from-json($json);
-});
-ok $dbh.Converter{JSON},		    'Installed';
+# Very large integer test
+subtest 'Very large integers' => {
+    lives-ok {
+        $dbh.execute(qq|
+    CREATE TEMPORARY TABLE test_long_integer (
+	col1 numeric(64)
+    )|)
+    }, 'Table created';
 
-# Change column type for future statements
-# Resetup the statement as column type manipulations are only handled once.
-$sth = $dbh.execute('SELECT col1 FROM test_types');
-$sth.column-types[0] = JSON;
-$col1 = $sth.row;
-ok $col1[0],		                    'Has value';
-isa-ok $col1[0], Hash;
+    my @values = 2 ** 63 - 1, -2 ** 63 + 1,
+                 2 ** 63, -2 ** 63,
+                 2 ** 64 - 1, -2 ** 64 + 1,
+                 2 ** 64, -2 ** 64,
+                 2 ** 80, -2 ** 80;
 
-ok $sth.dispose,			    'Dispose';
+    my $sth = $dbh.prepare('INSERT INTO test_long_integer (col1) VALUES(?)');
+    for @values -> $num {
+        lives-ok {
+            $sth.execute($num);
+        }, 'Add value: %d digits'.sprintf($num.chars);
+    }
+    $sth.dispose;
 
-if $hasjson {
-    # Install type
-    is $dbh.dynamic-types{245}, Str,	    'Is default';
-    $dbh.dynamic-types{245} = JSON;
-    is $dbh.dynamic-types{245}, JSON,	    'Changed';
+    $sth = $dbh.execute('SELECT col1 FROM test_long_integer ORDER BY col1');
 
-    $sth = $dbh.prepare('SELECT col1 FROM test_types');
-    ok $sth.execute,			    'Executed';
-    isa-ok $sth.column-types[0], JSON;
-    isa-ok $sth.row[0], Hash,	            'Converted';
-} else {
-    skip-rest "No suport for JSON type";
+    is $sth.rows, @values.elems, '%d row'.sprintf(@values.elems);
+    # Compare both source and DB long strings in order by value.
+    for @values.sort -> $num {
+        my ($col1) = $sth.row;
+
+        isa-ok $col1, Rat;
+        is $col1, $num, 'Value: %d digits'.sprintf($num.chars);
+    }
 }
+
