@@ -2,7 +2,7 @@ use v6;
 use Test;
 use DBIish::CommonTesting;
 
-plan 4;
+plan 5;
 
 my %con-parms = :database<dbdishtest>, :user<testuser>, :password<testpass>;
 %con-parms<host> = %*ENV<MYSQL_HOST> if %*ENV<MYSQL_HOST>;
@@ -139,4 +139,14 @@ subtest 'Large Rats' => {
         # the value.
         is $col1.FatRat, $num.FatRat, 'Value: %d digits'.sprintf($num.chars);
     }
+}
+
+subtest 'Special DateTime values' => {
+    my $sth = $dbh.execute(q{select cast('0000-00-00T00:00:00' as datetime) as col1});
+    my ($col1) = $sth.row;
+
+    isa-ok $col1, DateTime, 'All-zeros DateTime is expected type';
+
+    my DateTime $expected = Nil;
+    is $col1, $expected, 'All-zeros DateTime is Nil';
 }

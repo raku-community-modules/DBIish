@@ -13,8 +13,14 @@ has %.dynamic-types = %mysql-type-conv;
 submethod BUILD(:$!mysql-client!, :$!parent!) {
     %!Converter =
             method (--> DateTime) {
-                # Mysql don't report offset, and perl assume Z, so…
-                DateTime.new(self.split(' ').join('T')):timezone($*TZ);
+                # This is a common invalid date in older databases. It's effectively
+                # a NULL, so treat it that way.
+                my DateTime $dt = Nil;
+                if self ne '0000-00-00 00:00:00' {
+                    # Mysql don't report offset, and perl assume Z, so…
+                    $dt = DateTime.new(self.split(' ').join('T')):timezone($*TZ);
+                }
+                $dt;
             };
 }
 

@@ -1,6 +1,7 @@
 Revision history for DBIish
 
 {{$NEXT}}
+    - Convert MySQL DateTime 0000-00-00 00:00:00 to a Raku DateTime Nil object
 
 0.6.6  2022-11-28T08:57:47-05:00
     - Remove long deprecated functions such as fetchrow or fetchall-hash.
