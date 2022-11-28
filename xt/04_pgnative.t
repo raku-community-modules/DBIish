@@ -4,8 +4,8 @@ use NativeCall::TypeDiag;
 use NativeCall :TEST;
 use DBDish::Pg::Native;
 
-my @headers = <sqlite3.h>;
-my @libs = <-lsqlite3>;
+my @headers = <postgresql/libpq-fe.h>;
+my @libs = <-lpq>;
 my @fun;
 my %typ;
 

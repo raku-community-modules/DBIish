@@ -61,5 +61,5 @@
   "test-depends": [
     "NativeCall::TypeDiag"
   ],
-  "version": "0.6.5"
+  "version": "0.6.6"
 }

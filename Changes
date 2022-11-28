@@ -2,6 +2,12 @@ Revision history for DBIish
 
 {{$NEXT}}
 
+0.6.6  2022-11-28T08:57:47-05:00
+    - Remove long deprecated functions such as fetchrow or fetchall-hash.
+    - Error messages for LibraryMissing exception now include more detail
+    - Libraries now use rakumod extension
+    - Use protocol level numeric types in MySQL where possible for Raku Int, Num, Rat, and FatRat types.
+
 0.6.5  2022-04-11T08:36:33-04:00
     - Use MySQL 4.1 API when possible. This improves consistency of .execute($sql, @vars) and .execute($sql).
     - Add SQL State to MySQL exceptions
