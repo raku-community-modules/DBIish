@@ -5,7 +5,7 @@ on:
   pull_request:
   schedule:
     # Run at an odd minute to improve odds of dependency installation success
-    - cron: "17 8 * * *"
+    - cron: "19 11 * * *"
 
 jobs:
   test:
