@@ -14,9 +14,9 @@ jobs:
         # Raku versions after 2020.12 (coercion redesign) function best
         raku-version:
           - 'latest'
+          - '2022.12'
           - '2022.04'
           - '2021.04'
-          - '2020.12'
 
         postgres-image:
           - 'postgres:latest'
