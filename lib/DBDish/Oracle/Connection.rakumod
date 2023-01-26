@@ -108,3 +108,11 @@ method ping {
 method _disconnect() {
     $!svch.Logoff($!errh);
 }
+
+method allocate-descriptor(OCIDescriptor $want) {
+    $!envh.DescriptorAlloc($want)
+}
+
+method allocate-handle(OCIHandle $what) {
+    $!envh.HandleAlloc($what)
+}
