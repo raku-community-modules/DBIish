@@ -2,6 +2,8 @@ use v6;
 need DBDish;
 # DBDish::mysql.pm6
 
+use NativeCall;
+
 unit class DBDish::mysql:ver($?DISTRIBUTION.meta<ver>):api($?DISTRIBUTION.meta<api>):auth($?DISTRIBUTION.meta<auth>) does DBDish::Driver;
 use DBDish::mysql::Native;
 need DBDish::mysql::Connection;
