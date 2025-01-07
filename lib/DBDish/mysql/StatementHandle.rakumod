@@ -260,7 +260,7 @@ method _row {
                             $!binds[$col].buffer_length = $!out-lengths[$col];
 
                             # Fetch the specific column of interest.
-                            if $!stmt.mysql_stmt_fetch_column($!binds.typed-pointer, $col, 0) != 0 {
+                            if $!stmt.mysql_stmt_fetch_column($!binds[$col], $col, 0) != 0 {
                                 .fail without self!handle-errors;
                             }
                         }
