@@ -59,6 +59,18 @@ DBIish - a simple database interface for Raku
 
     $dbh.dispose;
 
+### Notes for macOS users
+In order for DBIish to be able to load any of the required libraries, it needs:
+- Know the name of the library file on the local platform.
+- That the library it is in one of the places where the loader looks for it.
+In macOS there can be problems because the rules have changed frequently and Homebrew can use not standard names or places. So some tests can help us:
+
+To get the library file name that will be used for PostgreSQL try the following in the raku REPL:
+```say $*VM.platform-library-name('pq'.IO, :version(Version.new(5))).Str;```
+By default the loader will search for that file in ~/lib, /usr/local/lib, and /usr/lib or in any path in the environment variables PATH, LD_LIBRARY_PATH, DYLD_LIBRARY_PATH or DYLD_FALLBACK_LIBRARY_PATH.
+
+Check that your library has the expected name and it is installed in any of those places or add its path to one of these variables.
+
 # DESCRIPTION
 
 The DBIish project provides a simple database interface for Raku.
