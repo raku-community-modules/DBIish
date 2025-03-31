@@ -2,6 +2,7 @@ use v6;
 need DBDish;
 
 unit class DBDish::Oracle::StatementHandle does DBDish::StatementHandle;
+use NativeCall;
 use NativeHelpers::Blob;
 use DBDish::Oracle::Native;
 
@@ -72,16 +73,34 @@ method !get-meta {
                     when SQLT_INT { $wtype = $_; Buf[int64].new(0); }
                     when SQLT_BIN { $wtype = $_; proceed; }
                     when SQLT_DAT { $wtype = $_; proceed; }
+                    when SQLT_BLOB { 
+                        $wtype = $_; 
+                        $!parent.allocate-descriptor(OCILobLocator)
+                    }
                     when SQLT_TIMESTAMP     { $datalen = 50; proceed; }
                     when SQLT_TIMESTAMP_TZ  { $datalen = 50; proceed; }
                     when SQLT_TIMESTAMP_LTZ { $datalen = 50; proceed; }
                     default { blob-allocate(Buf, $datalen); }
                 }
                 my $bind = OCIDefine.new;
-                $!stmth.DefineByPos($bind, $!errh, $col + 1, |ptr-sized($buff),
-                                    $wtype, $indp + $col*2, $lenp + $col*8,
-                                    NULL, OCI_DEFAULT)
-                    and self!handle-err($!errh.gen-error).fail;
+                my $rc;
+                if $wtype == SQLT_BLOB {
+                    # use lexically because of a name conflict.
+                    use MoarVM::Guts::REPRs;
+                    # Produce a pointer-to-pointer for LOB descriptor. But keep in mind that even though we pass
+                    # that to OCI, we still push $buff into @!out-buffs because it will contain the descriptor needed
+                    # for reading for the BLOB.
+                    my $loblp = nativecast(Pointer[OCILobLocator], OBJECT_BODY($buff));
+                    $rc = $!stmth.DefineByPos($bind, $!errh, $col + 1, $loblp, 0,
+                                        $wtype, $indp + $col*2, $lenp + $col*8,
+                                        NULL, OCI_DEFAULT);
+                }
+                else {
+                    $rc = $!stmth.DefineByPos($bind, $!errh, $col + 1, |ptr-sized($buff),
+                                        $wtype, $indp + $col*2, $lenp + $col*8,
+                                        NULL, OCI_DEFAULT);
+                }
+                self!handle-err($!errh.gen-error).fail if $rc;
                 @!out-binds.push:   $bind;
                 @!out-buffs.push:   $buff;
                 @!column-name.push: $!parent.no-lc-field-name ?? $col_name.decode !! $col_name.decode.lc;
@@ -157,7 +176,55 @@ method _row() {
                         my $res = @!out-buffs[$col];
                         given @!column-type[$col] {
                             when Int | Num { $res[0] }
+
+                            when Supply {
+                                supply {
+                                    # This block could and is likely to be ran in a different thread. Thus we cannot
+                                    # share $!errh.
+                                    my $errh = $!parent.allocate-handle(OCIError);
+                                    my $locp = $!parent.allocate-descriptor(OCILobLocator);
+
+                                    $!svch.LobLocatorAssign($errh, $res, $locp);
+
+                                    LEAVE {
+                                        $locp.DescriptorFree;
+                                        $errh.HandleFree;
+                                    }
+
+                                    my $loblen = self!handle-err: $!svch.LobGetLength($errh, $locp);
+                                    if $loblen ~~ Failure {
+                                        emit $loblen;
+                                        last;
+                                    }
+                                    if $loblen == 0 {
+                                        emit Buf.new;
+                                        last;
+                                    }
+
+                                    my $chunk-size = $*DEFAULT-READ-ELEMS;
+                                    my $amtp = Buf[ub8].new($loblen);
+                                    my $amtpp = pointer-to($amtp);
+                                    my ub8 $remaining = $loblen;
+                                    my ub8 $bs = $remaining min $chunk-size;
+                                    while $remaining > 0 {
+                                        my $buff = blob-allocate(Buf, $bs);
+                                        my $rc = $!svch.LobRead($errh, $locp, $amtpp, NULL, 1, $buff, $bs, 
+                                                            0, 0, 0, SQLCS_IMPLICIT);
+                                        if $rc == OCI_SUCCESS | OCI_NEED_DATA {
+                                            emit $buff;
+                                            $remaining -= $amtp[0];
+                                        }
+                                        else {
+                                            emit self!handle-err($errh.gen-error);
+                                        }
+                                        $bs = $remaining min $chunk-size;
+                                        $amtp[0] = $bs;
+                                    }  
+                                }
+                            }
+
                             $res .= subbuf(0, $!out-lengths[$col]);
+
                             when Blob { $res }
                             when Date {
                                 my $year = ($res[0]-100)*100 + $res[1]-100;
