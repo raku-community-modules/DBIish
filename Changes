@@ -1,6 +1,8 @@
 Revision history for DBIish
 
 {{$NEXT}}
+
+0.6.7  2025-07-01T20:19:22+02:00
     - Convert MySQL DateTime 0000-00-00 00:00:00 to a Raku DateTime Nil object
 
 0.6.6  2022-11-28T08:57:47-05:00
