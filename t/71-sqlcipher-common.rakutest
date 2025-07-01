@@ -1,0 +1,13 @@
+# DBIish/t/40-SQLite-common.t
+use v6;
+need DBIish::CommonTesting;
+
+my $TDB = IO::Path.new('dbdish-sqlcipher-test.sqlite3');
+DBIish::CommonTesting.new(
+    dbd => 'SQLCipher',
+    opts => {
+        :database($TDB)
+    },
+    typed-nulls => False # TODO Is the driver who needs to provide the info
+).run-tests;
+$TDB.unlink;

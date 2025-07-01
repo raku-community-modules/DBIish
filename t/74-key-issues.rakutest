@@ -1,0 +1,100 @@
+use v6;
+use Test;
+use DBIish::CommonTesting;
+
+plan 12;
+
+my $TDB = IO::Path.new('dbdishkeytest.sqlcipher');
+my $KEY = 'CorrectHorseBatteryStaple';
+my $NEW_KEY = 'SomeOtherKeyWithMoreWords';
+my %con-parms;
+%con-parms<database> = ~$TDB;
+
+# ---------- SETUP -------------------------------------------------------------------
+my $dbh = DBIish::CommonTesting.connect-or-skip('SQLCipher', |%con-parms);
+ok $dbh,    'Connected';
+
+# SET THE KEY TO $KEY
+$dbh.key($KEY);
+
+# CREATE AND POPULATE A TABLE
+lives-ok {
+    $dbh.execute(q|
+    CREATE TABLE test_blob (
+	id INT NOT NULL DEFAULT 0, 
+	name bytea)|)
+}, 'Table created';
+my $blob = Buf.new(^256);
+my $query = 'INSERT INTO test_blob VALUES(?, ?)';
+
+$dbh.dispose;
+
+# ---------- NO KEY -------------------------------------------------------------------
+my $dbh2 = DBIish::CommonTesting.connect-or-skip('SQLCipher', |%con-parms);
+
+my $sth2;
+throws-like {
+    $sth2 = $dbh2.prepare('SELECT name FROM test_blob WHERE id = ?');
+}, X::DBDish::DBError, 'No key, can\'t prepare.';
+
+$dbh2.dispose;
+
+# ---------- WRONG KEY -------------------------------------------------------------------
+my $dbh3 = DBIish::CommonTesting.connect-or-skip('SQLCipher', |%con-parms);
+
+lives-ok { 
+    $dbh3.key('WRONG KEY'); 
+}, 'Does not fail immediately on setting wrong key.';
+
+my $sth3;
+throws-like {
+    $sth3 = $dbh3.prepare('SELECT name FROM test_blob WHERE id = ?');
+}, X::DBDish::DBError, 'Wrong key, can\'t prepare.';
+
+$dbh3.dispose;
+
+# ---------- RIGHT KEY -------------------------------------------------------------------
+my $dbh4 = DBIish::CommonTesting.connect-or-skip('SQLCipher', |%con-parms);
+
+lives-ok { 
+    $dbh4.key($KEY); 
+}, 'Setting right key works.';
+
+my $sth4;
+ok $sth4 = $dbh4.prepare('SELECT name FROM test_blob WHERE id = ?'), 
+    'Can prepare a statement with right key';
+
+# CHANGE KEY
+lives-ok {
+    $dbh4.rekey($NEW_KEY);
+}, 'Change key does not die';
+
+$dbh4.dispose;
+
+# ---------- OLD KEY -------------------------------------------------------------------
+my $dbh5 = DBIish::CommonTesting.connect-or-skip('SQLCipher', |%con-parms);
+
+lives-ok { 
+    $dbh5.key($KEY); 
+}, 'Does not fail immediately on setting wrong key.';
+
+my $sth5;
+throws-like {
+    $sth5 = $dbh5.prepare('SELECT name FROM test_blob WHERE id = ?');
+}, X::DBDish::DBError, 'Old key is now wrong, can\'t prepare.';
+
+$dbh5.dispose;
+
+# ---------- NEW KEY -------------------------------------------------------------------
+my $dbh6 = DBIish::CommonTesting.connect-or-skip('SQLCipher', |%con-parms);
+
+lives-ok { 
+    $dbh6.key($NEW_KEY); 
+}, 'Setting right key works.';
+
+my $sth6;
+ok $sth6 = $dbh6.prepare('SELECT name FROM test_blob WHERE id = ?'), 
+    'Can prepare a statement with the new key';
+
+$dbh6.dispose;
+$TDB.unlink;

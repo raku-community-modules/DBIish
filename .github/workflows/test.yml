@@ -91,7 +91,7 @@ jobs:
 
     # Install client libraries
     - name: Install native dependencies
-      run:  sudo apt-get install -y postgresql-client libpq-dev libmysqlclient-dev sqlite3 libsqlite3-dev
+      run:  sudo apt-get install -y postgresql-client libpq-dev libmysqlclient-dev sqlite3 libsqlite3-dev sqlcipher libsqlcipher-dev
 
     # Raku image 2020.12 does not understand the fez module network. App::Prove only installs via fez
     - name: Upgrade Zef

@@ -28,6 +28,10 @@
     "DBDish::SQLite::Connection": "lib/DBDish/SQLite/Connection.rakumod",
     "DBDish::SQLite::Native": "lib/DBDish/SQLite/Native.rakumod",
     "DBDish::SQLite::StatementHandle": "lib/DBDish/SQLite/StatementHandle.rakumod",
+    "DBDish::SQLCipher": "lib/DBDish/SQLCipher.rakumod",
+    "DBDish::SQLCipher::Connection": "lib/DBDish/SQLCipher/Connection.rakumod",
+    "DBDish::SQLCipher::Native": "lib/DBDish/SQLCipher/Native.rakumod",
+    "DBDish::SQLCipher::StatementHandle": "lib/DBDish/SQLCipher/StatementHandle.rakumod",
     "DBDish::StatementHandle": "lib/DBDish/StatementHandle.rakumod",
     "DBDish::TestMock": "lib/DBDish/TestMock.rakumod",
     "DBDish::TestMock::Connection": "lib/DBDish/TestMock/Connection.rakumod",
@@ -56,10 +60,11 @@
     "mysql",
     "oracle",
     "postgres",
-    "sqlite"
+    "sqlite",
+    "sqlcipher"
   ],
   "test-depends": [
     "NativeCall::TypeDiag"
   ],
-  "version": "0.6.6"
+  "version": "0.6.7"
 }

@@ -550,7 +550,7 @@ is any of the following codes:
 
 Returns the file description number of the connection socket to the server.
 
-## SQLite
+## SQLite (and SQLCipher)
 
 Supports basic CRUD operations and prepared statements with placeholders
 
@@ -577,7 +577,8 @@ multiple processes), operations may not be able to happen immediately due to
 the database being locked. DBIish sets a default timeout of 10000 milliseconds;
 this can be changed by passing the `busy-timeout` option to `connect`.
 
-    my $dbh = DBIish.connect('SQLite', :database<thefile>, :60000busy-timeout);
+    my $dbh = DBIish.connect('SQLite',    :database<thefile>, :60000busy-timeout);
+    my $dbh = DBIish.connect('SQLCipher', :database<thefile>, :60000busy-timeout);
 
 Passing a value less than or equal to zero will disable the timeout, resulting
 in any operation that cannot take place immediately producing a database
@@ -609,6 +610,20 @@ For best performance you are recommended to use:
     if my $row = $sth.row {
         # Do something with a single record
     }
+
+### Keys - SQLCipher only
+
+To set the key for the current connection:
+
+```raku
+    $dbh.key('Tr0ub4dor&1');
+```
+
+To change the key for the current connection:
+
+```raku
+    $dbh.rekey('CorrectHorseBatteryStaple');
+```
 
 ## MySQL
 

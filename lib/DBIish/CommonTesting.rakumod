@@ -199,8 +199,8 @@ method run-tests {
 
     # TODO Different drivers returns different values, should implement the
     # capabilities announce.
-    todo 'Will probably fails for the lack of proper capabilities announce'
-    if $.dbd eq 'SQLite' | 'Oracle';
+    todo 'Will probably fail due to lack of capabilities announce'
+        if $.dbd ~~ any <SQLite Oracle SQLCipher>;
     is $rc, 6,          'In an ideal world should returns rows available';
 
     #row and allrows return typed value, when possible
@@ -213,7 +213,7 @@ method run-tests {
         [ 'TAFM', 'Mild fish taco', 1, 4.85, 4.85 ]
     );
 
-    if $.dbd eq 'SQLite' { # Munge types
+    if $.dbd ~~ any <SQLite SQLCipher> { # Munge types
         $sth.column-types[$_] = [Str, Str, Int, Rat, Rat][$_] for ^5;
     }
 
@@ -240,7 +240,7 @@ method run-tests {
     is @columns.elems, 5, "column-type returns 5 fields in a row";
     ok @columns eqv [ Str, Str, Int, Rat, Rat ], 'column-types matches test data';
 
-    if $.dbd eq 'SQLite' { # Munge types
+    if $.dbd ~~ any <SQLite SQLCipher> { # Munge types
         $sth.column-types[$_] = [Str, Str, Int, Rat, Rat][$_] for ^5;
     }
 
