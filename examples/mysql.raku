@@ -1,10 +1,6 @@
-#!/usr/bin/env perl6
+#!/usr/bin/env raku
 
-use v6;
-
-use lib 'lib';
 use DBIish;
-
 
 # Windows support
 %*ENV<DBIISH_MYSQL_LIB> = "C:/Program Files/MySQL/MySQL Server 5.6/lib/libmysql.dll"

@@ -1,4 +1,3 @@
-use v6;
 need DBDish;     # roles for drivers
 
 unit class DBDish::Oracle:ver($?DISTRIBUTION.meta<ver>):api($?DISTRIBUTION.meta<api>):auth($?DISTRIBUTION.meta<auth>) does DBDish::Driver;
@@ -112,4 +111,4 @@ method version {
     libver;
 }
 
-# vim: expandtab ft=perl6
+# vim: expandtab shiftwidth=4

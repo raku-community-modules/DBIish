@@ -1,5 +1,3 @@
-use v6;
-
 # Our exceptions
 package X::DBDish {
     class DBError is Exception {

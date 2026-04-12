@@ -1,5 +1,4 @@
 # DBIish/t/40-SQLite-common.t
-use v6;
 need DBIish::CommonTesting;
 
 DBIish::CommonTesting.new(

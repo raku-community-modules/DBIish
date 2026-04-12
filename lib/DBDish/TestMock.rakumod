@@ -1,4 +1,3 @@
-use v6;
 need DBDish;
 
 unit class DBDish::TestMock:ver($?DISTRIBUTION.meta<ver>):api($?DISTRIBUTION.meta<api>):auth($?DISTRIBUTION.meta<auth>) does DBDish::Driver;

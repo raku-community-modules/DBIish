@@ -1,5 +1,3 @@
-use v6;
-
 need DBDish;
 
 unit class DBDish::SQLite::Connection does DBDish::Connection;

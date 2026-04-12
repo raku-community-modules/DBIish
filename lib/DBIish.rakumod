@@ -1,6 +1,3 @@
-use v6;
-# DBIish.pm6
-
 unit class DBIish:ver($?DISTRIBUTION.meta<ver>):api($?DISTRIBUTION.meta<api>):auth($?DISTRIBUTION.meta<auth>);
 use DBDish;
 
@@ -96,7 +93,6 @@ method !handle-library-exception($ex, $drivername) {
 =begin pod
 =head1 SYNOPSIS
 
-    use v6;
     use DBIish;
 
     my $dbh = DBIish.connect("SQLite", :database<example-db.sqlite3>);
@@ -159,5 +155,5 @@ The C<DBDish> role should only be used with 'does' to provide standard
 members for DBDish classes.
 
 =head1 SEE ALSO
-L<http://dbi.perl.org>
+L<https://dbi.perl.org>
 =end pod

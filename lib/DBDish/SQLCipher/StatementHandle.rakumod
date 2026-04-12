@@ -1,4 +1,3 @@
-use v6;
 need DBDish;
 
 unit class DBDish::SQLCipher::StatementHandle does DBDish::StatementHandle;

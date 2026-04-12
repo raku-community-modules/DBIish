@@ -1,5 +1,3 @@
-use v6;
-
 need DBDish;
 
 unit class DBDish::mysql::Connection does DBDish::Connection;
@@ -17,7 +15,7 @@ submethod BUILD(:$!mysql-client!, :$!parent!) {
                 # a NULL, so treat it that way.
                 my DateTime $dt = Nil;
                 if self ne '0000-00-00 00:00:00' {
-                    # Mysql don't report offset, and perl assume Z, so…
+                    # Mysql don't report offset, and Raku assumes Z, so…
                     $dt = DateTime.new(self.split(' ').join('T')):timezone($*TZ);
                 }
                 $dt;

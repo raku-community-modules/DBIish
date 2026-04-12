@@ -1,5 +1,3 @@
-use v6;
-
 use NativeLibs;
 use NativeCall;
 

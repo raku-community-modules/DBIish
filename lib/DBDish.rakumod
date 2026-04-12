@@ -1,5 +1,3 @@
-use v6;
-
 unit module DBDish;
 need DBIish::Common;
 need DBDish::Connection;
@@ -99,7 +97,6 @@ loaded by DBIish.
 
 The minimal declaration of a driver Foo typically start like:
 
-   use v6;
    need DBDish; # Load all roles
 
    unit class DBDish::Foo does DBDish::Driver;

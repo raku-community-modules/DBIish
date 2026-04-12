@@ -1,6 +1,4 @@
-use v6;
 need DBDish;
-# DBDish::mysql.pm6
 
 use NativeCall;
 

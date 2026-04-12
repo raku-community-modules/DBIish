@@ -1,5 +1,4 @@
 # DBIish/t/35-pg-common.t
-use v6;
 need DBIish::CommonTesting;
 
 my %opts;

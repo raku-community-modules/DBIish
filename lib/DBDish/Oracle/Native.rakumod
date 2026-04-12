@@ -367,4 +367,4 @@ class OCIEnv is OCIHandle is repr('CPointer') is export {
     }
 }
 
-# vim: ft=perl6 expandtab
+# vim: expandtab shiftwidth=4

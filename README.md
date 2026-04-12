@@ -4,7 +4,6 @@ DBIish - a simple database interface for Raku
 
 # SYNOPSIS
 
-    use v6;
     use DBIish;
 
     my $dbh = DBIish.connect("SQLite", :database<example-db.sqlite3>);
@@ -290,7 +289,7 @@ To build a query with a dynamic identifier:
 
 # DBDish CLASSES
 
-Some DBDish drivers install together with DBIish.pm6 and are maintained as a single project.
+Some DBDish drivers install together with DBIish.rakumod and are maintained as a single project.
 
 Search the Raku ecosystem for additional [DBDish](https://modules.raku.org/search/?q=dbdish) drivers such
 as [ODBC](https://github.com/salortiz/DBDish-ODBC).

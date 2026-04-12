@@ -1,5 +1,3 @@
-use v6;
-
 need DBDish;
 
 unit class DBDish::SQLCipher::Connection does DBDish::Connection;

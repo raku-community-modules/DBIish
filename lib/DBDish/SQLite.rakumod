@@ -1,5 +1,3 @@
-use v6;
-
 need DBDish;
 
 unit class DBDish::SQLite:ver($?DISTRIBUTION.meta<ver>):api($?DISTRIBUTION.meta<api>):auth($?DISTRIBUTION.meta<auth>) does DBDish::Driver;
@@ -64,4 +62,4 @@ method threadsafe(--> Bool) {
     so sqlite3_threadsafe()
 }
 
-# vim: ft=perl6
+# vim: expandtab shiftwidth=4

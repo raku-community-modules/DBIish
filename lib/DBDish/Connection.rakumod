@@ -1,5 +1,3 @@
-use v6;
-
 =begin pod
 =head2 role DBDish::Connection
 

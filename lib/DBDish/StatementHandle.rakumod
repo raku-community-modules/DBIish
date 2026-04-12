@@ -1,5 +1,3 @@
-use v6;
-
 =begin pod
 =head2 role DBDish::StatementHandle
 The Connection C<prepare> method returns a StatementHandle object that

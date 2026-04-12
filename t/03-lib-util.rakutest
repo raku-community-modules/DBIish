@@ -1,4 +1,3 @@
-use v6;
 use Test;
 constant is-win = Rakudo::Internals.IS-WIN();
 plan 5;

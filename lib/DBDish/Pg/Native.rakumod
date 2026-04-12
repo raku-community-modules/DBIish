@@ -1,5 +1,3 @@
-use v6;
-
 unit module DBDish::Pg::Native;
 use NativeCall;
 use NativeLibs;
@@ -510,4 +508,4 @@ enum ResultErrorField is export (
     PG_DIAG_SOURCE_FUNCTION       => ord('R'),
 );
 
-# vim: ft=perl6 et
+# vim: expandtab shiftwidth=4

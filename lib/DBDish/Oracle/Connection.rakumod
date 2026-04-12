@@ -1,4 +1,3 @@
-use v6;
 need DBDish;
 
 unit class DBDish::Oracle::Connection does DBDish::Connection;

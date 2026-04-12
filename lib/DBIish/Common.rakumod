@@ -1,5 +1,3 @@
-use v6;
-# DBIish::Common.pm6
 # Common code used by both DBIish and DBDish
 unit package DBIish;
 

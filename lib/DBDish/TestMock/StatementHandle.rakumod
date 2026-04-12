@@ -1,4 +1,3 @@
-use v6;
 need DBDish;
 
 unit class DBDish::TestMock::StatementHandle does DBDish::StatementHandle;

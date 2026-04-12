@@ -1,4 +1,3 @@
-use v6;
 need DBDish;
 
 unit class DBDish::Pg::Connection does DBDish::Connection;
@@ -449,4 +448,4 @@ method table-info(:$catalog, :$schema, :$table, :$type) {
     }
 }
 
-# vim: ft=perl6 et
+# vim: expandtab shiftwidth=4

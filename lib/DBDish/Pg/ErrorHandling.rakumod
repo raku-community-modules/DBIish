@@ -1,4 +1,3 @@
-use v6;
 need DBDish::ErrorHandling;
 use DBDish::Pg::Native;
 

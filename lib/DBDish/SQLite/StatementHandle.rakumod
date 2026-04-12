@@ -1,4 +1,3 @@
-use v6;
 need DBDish;
 
 unit class DBDish::SQLite::StatementHandle does DBDish::StatementHandle;

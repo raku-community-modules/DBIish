@@ -1,4 +1,3 @@
-use v6;
 need DBDish;
 
 unit class DBDish::Oracle::StatementHandle does DBDish::StatementHandle;
@@ -238,4 +237,4 @@ method finish() {
     $!Finished = True;
 }
 
-# vim: ft=perl6 expandtab
+# vim: expandtab shiftwidth=4
