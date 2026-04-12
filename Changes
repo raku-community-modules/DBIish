@@ -2,6 +2,11 @@ Revision history for DBIish
 
 {{$NEXT}}
 
+0.6.8  2026-04-13T00:08:46+02:00
+    - Fix test that was blocking Rakudo Star release
+    - Modernize META
+    - Update copyright year
+
 0.6.7  2025-07-01T20:19:22+02:00
     - Convert MySQL DateTime 0000-00-00 00:00:00 to a Raku DateTime Nil object
 

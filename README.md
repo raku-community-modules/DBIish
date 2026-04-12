@@ -822,7 +822,7 @@ See the [CREDITS](https://github.com/raku-community-modules/DBIish/blob/master/C
 
 # LICENSE
 
-Copyright © 2009-2020, the DBIish contributors
+Copyright © 2009-2026, the DBIish contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without

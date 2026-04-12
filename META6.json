@@ -1,12 +1,25 @@
 {
   "api": 1,
   "auth": "zef:raku-community-modules",
+  "authors": [
+  ],
   "build-depends": [
   ],
-  "depends": [
-    "NativeHelpers::Blob",
-    "NativeLibs:auth<github:salortiz>:ver<0.0.9+>"
-  ],
+  "depends": {
+    "runtime": {
+      "requires": [
+        "NativeHelpers::Blob",
+        "NativeLibs:auth<github:salortiz>:ver<0.0.9+>"
+      ]
+    },
+    "test": {
+      "requires": [
+        [
+          "NativeCall::TypeDiag"
+        ]
+      ]
+    }
+  },
   "description": "Database connectivity for Raku",
   "license": "BSD-2-Clause",
   "meta-version": "1",
@@ -51,6 +64,7 @@
   "source-url": "https://github.com/raku-community-modules/DBIish.git",
   "support": {
     "bugtracker": "https://github.com/raku-community-modules/DBIish/issues",
+    "email": "community@raku.org",
     "source": "https://github.com/raku-community-modules/DBIish.git"
   },
   "tags": [
@@ -64,7 +78,6 @@
     "sqlcipher"
   ],
   "test-depends": [
-    "NativeCall::TypeDiag"
   ],
-  "version": "0.6.7"
+  "version": "0.6.8"
 }
