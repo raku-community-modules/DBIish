@@ -35,7 +35,7 @@ for drvs {
 }
 throws-like {
     DBIish.install-driver('BogusDriver');
-}, ::('X::DBIish::DriverNotFound'), "Detected bogus driver install attempt";
+}, ::X::DBIish::DriverNotFound, "Detected bogus driver install attempt";
 
 my $installed = DBIish.installed-drivers;
 is $installed.elems, drvs.elems, "{ drvs.elems} installed drivers";
