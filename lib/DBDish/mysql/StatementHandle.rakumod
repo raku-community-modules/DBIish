@@ -62,16 +62,16 @@ submethod BUILD(:$!mysql-client!, :$!parent!, :$!stmt = MYSQL_STMT,
     with $!stmt { #Prepared
         if $!param-count = .mysql_stmt_param_count -> $pc {
             $!par-binds = LinearArray[MYSQL_BIND].new($pc);
-            my $lb = BPointer(
+            my $lb = pointer-to(
                 $!in-lengths = blob-allocate(Buf[intptr], $pc)
             ).Int;
             $!par-binds[$_].length = $lb + $_ * ptrsize for ^$pc;
         }
         if ($!field-count = .mysql_stmt_field_count) && .mysql_stmt_result_metadata -> $res {
             $!binds = LinearArray[MYSQL_BIND].new($!field-count);
-            my $lb = BPointer($!out-lengths = self!get-meta($res)).Int;
+            my $lb = pointer-to($!out-lengths = self!get-meta($res)).Int;
             $!isnull = blob-allocate(Buf[intptr], $!field-count);
-            my $nb = BPointer($!isnull).Int;
+            my $nb = pointer-to($!isnull).Int;
             for ^$!field-count -> $col {
                 given $!binds[$col] {
                     if .buffer_length = $!out-lengths[$col] {
@@ -83,7 +83,7 @@ submethod BUILD(:$!mysql-client!, :$!parent!, :$!stmt = MYSQL_STMT,
                             .buffer_length = $!out-lengths[$col];
                         }
                         @!out-bufs[$col] = blob-allocate(Buf, $!out-lengths[$col]);
-                        .buffer = BPointer(@!out-bufs[$col]).Int;
+                        .buffer = pointer-to(@!out-bufs[$col]).Int;
                         .length = $lb + $col * ptrsize;
                         .is_null = $nb + $col * ptrsize;
                         .buffer_type = @!column-type[$col] ~~ Blob
@@ -168,7 +168,7 @@ method execute(*@params --> DBDish::StatementHandle) {
                     };
                     given $!par-binds[$k] {
                         .buffer_length = $!in-lengths[$k] = $@Bufs[$k].bytes;
-                        .buffer = BPointer(@Bufs[$k]).Int;
+                        .buffer = pointer-to(@Bufs[$k]).Int;
                         .buffer_type = $st;
                     }
                 } else { # Null;
@@ -255,7 +255,7 @@ method _row {
                         # the same size.
                         if $!out-lengths[$col] > $!binds[$col].buffer_length {
                             @!out-bufs[$col] = blob-allocate(Buf, $!out-lengths[$col] * 1.1);
-                            $!binds[$col].buffer = BPointer(@!out-bufs[$col]).Int;
+                            $!binds[$col].buffer = pointer-to(@!out-bufs[$col]).Int;
                             $!binds[$col].buffer_length = $!out-lengths[$col];
 
                             # Fetch the specific column of interest.
