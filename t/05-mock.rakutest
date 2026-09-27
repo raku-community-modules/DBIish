@@ -8,7 +8,7 @@ my $sth = $dbh.prepare('mockdata');
 nok $sth.Executed, 'Not executed yet';
 is $sth.statement, 'mockdata',		'Statement';
 is $sth.column-names, <col1 col2 colN>, 'Columns';
-is $sth.column-types.perl, [Str, Str, Int].perl,  'Types';
+is $sth.column-types.raku, [Str, Str, Int].raku,  'Types';
 
 $sth.execute;
 is $sth.rows, 2, 'Results';

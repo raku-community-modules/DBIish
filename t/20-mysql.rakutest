@@ -911,7 +911,7 @@ SKIP: {
 $dbh->dispose();
 #-----------------------------------------------------------------------
 #!perl -w
-# vim: ft=perl
+# vim: expandtab shiftwidth=4
 
 use Test::More;
 use DBI;
@@ -1069,7 +1069,7 @@ ok (!$@);
 cmp_ok $quoted, 'eq', "\'abc\'", "equals 'abc'";
 #-----------------------------------------------------------------------
 #!perl -w
-# vim: ft=perl
+# vim: expandtab shiftwidth=4
 #
 #   $Id: 40nulls.t 11244 2008-05-11 15:13:10Z capttofu $
 #
@@ -1122,7 +1122,7 @@ ok $dbh->do("DROP TABLE $table");
 ok $dbh->disconnect;
 #-----------------------------------------------------------------------
 #!perl -w
-# vim: ft=perl
+# vim: expandtab shiftwidth=4
 #
 #   $Id: 40numrows.t 11244 2008-05-11 15:13:10Z capttofu $
 #
@@ -1214,7 +1214,7 @@ ok $dbh->do("DROP TABLE $table"), "drop table $table";
 ok $dbh->disconnect;
 #-----------------------------------------------------------------------
 #!perl -w
-# vim: ft=perl
+# vim: expandtab shiftwidth=4
 # Test problem in 3.0002_4 and 3.0005 where if a statement is prepared
 # and multiple executes are performed, if any execute fails all subsequent
 # executes report an error but may have worked.
@@ -1261,7 +1261,7 @@ cmp_ok $DBI::errstr, 'ne', '';
 print "errstr $DBI::errstr\n" if $DBI::errstr;
 ok $dbh->disconnect();
 #!perl -w
-# vim: ft=perl
+# vim: expandtab shiftwidth=4
 
 use strict;
 use Test::More;
@@ -1333,7 +1333,7 @@ ok ($dbh->do(qq{DROP TABLE t2}), "cleaning up");
 $dbh->disconnect();
 #-----------------------------------------------------------------------
 #!perl -w
-# vim: ft=perl
+# vim: expandtab shiftwidth=4
 
 use Test::More;
 use DBI;
@@ -1451,7 +1451,7 @@ ok $sth->finish;
 ok $dbh->disconnect;
 #-----------------------------------------------------------------------
 #!perl
-# vim: ft=perl
+# vim: expandtab shiftwidth=4
 #
 #   $Id: 40blobs.t 1103 2008-04-29 02:53:28Z capttofu $
 #
@@ -1558,7 +1558,7 @@ ok $dbh->do("DROP TABLE $table"), "drop $table";
 ok $dbh->disconnect;
 #-----------------------------------------------------------------------
 #!perl -w
-# vim: ft=perl
+# vim: expandtab shiftwidth=4
 
 use strict;
 use vars qw($table $test_dsn $test_user $test_password $mdriver);
@@ -1608,7 +1608,7 @@ ok $sth->finish;
 ok $dbh->disconnect;
 #-----------------------------------------------------------------------
 #!perl -w
-# vim: ft=perl
+# vim: expandtab shiftwidth=4
 #
 #   $Id: 50chopblanks.t 11650 2008-08-15 13:58:29Z capttofu $
 #
@@ -1941,7 +1941,7 @@ $sth3->finish();
 ok $dbh->disconnect;
 #-----------------------------------------------------------------------
 #!perl -w
-# vim: ft=perl
+# vim: expandtab shiftwidth=4
 #
 #   This checks for UTF-8 support.
 #
@@ -2251,7 +2251,7 @@ ok $dbh->do("DROP TABLE $table");
 ok $dbh->disconnect;
 #-----------------------------------------------------------------------
 #!perl -w
-# vim: ft=perl
+# vim: expandtab shiftwidth=4
 
 use strict;
 use vars qw($table $test_dsn $test_user $test_password);
@@ -2320,7 +2320,7 @@ ok $dbh->do("DROP TABLE $table");
 ok $dbh->disconnect;
 #-----------------------------------------------------------------------
 #!perl -w
-# vim: ft=perl
+# vim: expandtab shiftwidth=4
 
 #
 #   $Id: 70takeimp.t 11993 2008-10-22 00:49:10Z capttofu $
@@ -2552,7 +2552,7 @@ ok $dbh->do("DROP TABLE $table"), "drop $table";
 ok $dbh->disconnect;
 #-----------------------------------------------------------------------
 #!perl -w
-# vim: ft=perl
+# vim: expandtab shiftwidth=4
 
 use strict;
 use Test::More;
@@ -2626,7 +2626,7 @@ SKIP: {
 $dbh->disconnect();
 #-----------------------------------------------------------------------
 #!perl -w
-# vim: ft=perl
+# vim: expandtab shiftwidth=4
 
 use strict;
 use lib 't', '.';
@@ -2756,7 +2756,7 @@ ok $sth->finish;
 ok $dbh->disconnect();
 #-----------------------------------------------------------------------
 #!perl -w
-# vim: ft=perl
+# vim: expandtab shiftwidth=4
 
 use Test::More;
 use DBI;
@@ -3167,4 +3167,4 @@ $::test_dsn .= ":$::test_port" if $::test_port;
 } 1;
 
 =end pod
-# vim: ft=perl6 et
+# vim: expandtab shiftwidth=4;

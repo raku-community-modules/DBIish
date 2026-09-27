@@ -175,7 +175,7 @@ is $dbh.execute('SELECT * FROM test_datetime').allrows, (), 'Perfect table is em
  },                                           'Can insert Raku values (strings - containerless)';
 
 note '# See what Oracle is formatting for us...';
-for $dbh.execute('SELECT * FROM test_datetime').allrows -> $row { say '# ', $row.perl; }
+for $dbh.execute('SELECT * FROM test_datetime').allrows -> $row { say '# ', $row.raku; }
 
 # DATE
 is $dbh.execute('SELECT adate FROM test_datetime').allrows, '2021-06-12', 'DATE smells right!';
@@ -217,5 +217,5 @@ note '#+ -------------------------------------------------------- +';
 ok $dbh.execute($dropper), 'Table Cleanup';
 ok $dbh.dispose, 'Say good night!';
 
-# vim: ft=perl6 expandtab
+# vim: expandtab shiftwidth=4
 ## END

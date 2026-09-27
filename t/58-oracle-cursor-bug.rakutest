@@ -150,5 +150,5 @@ ok $dbh.dispose, 'Say good night!';
 
 is $dbh.inspect-statement-count, 0, 'Remaining cached statment handles released';
 
-# vim: ft=perl6 expandtab
+# vim: expandtab shiftwidth=4
 ## END

@@ -2,6 +2,10 @@ Revision history for DBIish
 
 {{$NEXT}}
 
+0.6.9  2026-09-27T20:15:57+02:00
+    - Fixed a few .perl deprecation messages
+    - Tighten up dependencies, Matt Doughty++
+
 0.6.8  2026-04-13T00:08:46+02:00
     - Fix test that was blocking Rakudo Star release
     - Modernize META
