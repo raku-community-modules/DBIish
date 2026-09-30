@@ -13,8 +13,10 @@ constant sb2          is export = int16;
 constant sb4          is export = int32;
 constant sb8          is export = int64;
 constant sword        is export = int32;
+constant ub1          is export = uint8;
 constant ub2          is export = uint16;
 constant ub4          is export = uint32;
+constant ub8          is export = uint64;
 constant OraText      is export = Str;
 constant NULL         is export = Pointer;
 
@@ -28,13 +30,14 @@ constant intptr     is export = ptrsize == 8 ?? uint64 !! uint32;
 constant AL32UTF8               is export = 873;
 
 # Handler Types
-constant OCI_HTYPE_ENV          is export = 1;
-constant OCI_HTYPE_ERROR        is export = 2;
-constant OCI_HTYPE_SVCCTX       is export = 3;
-constant OCI_HTYPE_STMT         is export = 4;
-constant OCI_HTYPE_BIND         is export = 5;
-constant OCI_HTYPE_DEFINE       is export = 6;
-constant OCI_HTYPE_DESCRIBE     is export = 7;
+constant OCI_HTYPE_ENV          is export =  1;
+constant OCI_HTYPE_ERROR        is export =  2;
+constant OCI_HTYPE_SVCCTX       is export =  3;
+constant OCI_HTYPE_STMT         is export =  4;
+constant OCI_HTYPE_BIND         is export =  5;
+constant OCI_HTYPE_DEFINE       is export =  6;
+constant OCI_HTYPE_DESCRIBE     is export =  7;
+constant OCI_DTYPE_LOB          is export = 50;
 constant OCI_DTYPE_PARAM        is export = 53;
 
 constant OCI_DEFAULT            is export = 0;
@@ -48,49 +51,55 @@ constant OCI_SUCCESS            is export =   0;
 constant OCI_SUCCESS_WITH_INFO  is export =   1;
 constant OCI_ERROR              is export =  -1;
 constant OCI_INVALID_HANDLE     is export =  -2;
+constant OCI_NEED_DATA          is export =  99;
 constant OCI_NO_DATA            is export = 100;
 
 constant OCI_LOGON2_STMTCACHE   is export = 4;
 
 constant OCI_NTV_SYNTAX         is export = 1;
 
-constant OCI_ATTR_DATA_SIZE     is export = 1;
-constant OCI_ATTR_DATA_TYPE     is export = 2;
-constant OCI_ATTR_NAME          is export = 4;
-constant OCI_ATTR_PRECISION     is export = 5;
-constant OCI_ATTR_SCALE         is export = 6;
-constant OCI_ATTR_ROW_COUNT     is export = 9;
-constant OCI_ATTR_PARAM_COUNT   is export = 18;
-constant OCI_ATTR_STMT_TYPE     is export = 24;
-constant OCI_ATTR_BIND_COUNT    is export = 190;
-constant OCI_ATTR_HANDLE_POSITION is export = 192;
-constant OCI_ATTR_ROWS_FETCHED  is export = 197;
-constant OCI_ATTR_TYPECODE      is export = 216;
+constant OCI_ATTR_DATA_SIZE             is export =   1;
+constant OCI_ATTR_DATA_TYPE             is export =   2;
+constant OCI_ATTR_NAME                  is export =   4;
+constant OCI_ATTR_PRECISION             is export =   5;
+constant OCI_ATTR_SCALE                 is export =   6;
+constant OCI_ATTR_ROW_COUNT             is export =   9;
+constant OCI_ATTR_PARAM_COUNT           is export =  18;
+constant OCI_ATTR_STMT_TYPE             is export =  24;
+constant OCI_ATTR_BIND_COUNT            is export = 190;
+constant OCI_ATTR_HANDLE_POSITION       is export = 192;
+constant OCI_ATTR_ROWS_FETCHED          is export = 197;
+constant OCI_ATTR_TYPECODE              is export = 216;
 constant OCI_ATTR_IMPLICIT_RESULT_COUNT is export = 463;
 
-constant OCI_STMT_UNKNOWN       is export = 0;
-constant OCI_STMT_SELECT        is export = 1;
-constant OCI_STMT_UPDATE        is export = 2;
-constant OCI_STMT_DELETE        is export = 3;
-constant OCI_STMT_INSERT        is export = 4;
-constant OCI_STMT_CREATE        is export = 5;
-constant OCI_STMT_DROP          is export = 6;
-constant OCI_STMT_ALTER         is export = 7;
-constant OCI_STMT_BEGIN         is export = 8;
-constant OCI_STMT_DECLARE       is export = 9;
+constant OCI_STMT_UNKNOWN       is export =  0;
+constant OCI_STMT_SELECT        is export =  1;
+constant OCI_STMT_UPDATE        is export =  2;
+constant OCI_STMT_DELETE        is export =  3;
+constant OCI_STMT_INSERT        is export =  4;
+constant OCI_STMT_CREATE        is export =  5;
+constant OCI_STMT_DROP          is export =  6;
+constant OCI_STMT_ALTER         is export =  7;
+constant OCI_STMT_BEGIN         is export =  8;
+constant OCI_STMT_DECLARE       is export =  9;
 constant OCI_STMT_CALL          is export = 10;
 
-constant SQLT_CHR               is export = 1;
-constant SQLT_NUM               is export = 2;
-constant SQLT_INT               is export = 3;
-constant SQLT_FLT               is export = 4;
-constant SQLT_STR               is export = 5;
-constant SQLT_DAT               is export = 12;
-constant SQLT_BIN               is export = 23;
+constant SQLT_CHR               is export =   1;
+constant SQLT_NUM               is export =   2;
+constant SQLT_INT               is export =   3;
+constant SQLT_FLT               is export =   4;
+constant SQLT_STR               is export =   5;
+constant SQLT_DAT               is export =  12;
+constant SQLT_BIN               is export =  23;
+constant SQLT_LBI               is export =  24;
 constant SQLT_CLOB              is export = 112;
+constant SQLT_BLOB              is export = 113;
 constant SQLT_TIMESTAMP         is export = 187;
 constant SQLT_TIMESTAMP_TZ      is export = 188;
 constant SQLT_TIMESTAMP_LTZ     is export = 232;
+
+constant SQLCS_IMPLICIT         is export = 1;
+constant SQLCS_NHCAR            is export = 2;
 
 constant %sqltype-map is export = {
     +(SQLT_CHR)  => Str,
@@ -100,6 +109,7 @@ constant %sqltype-map is export = {
     +(SQLT_DAT)  => Date,
     +(SQLT_BIN)  => Buf,
     +(SQLT_CLOB) => Str,
+    +(SQLT_BLOB) => Supply,
     +(SQLT_TIMESTAMP)     => DateTime,
     +(SQLT_TIMESTAMP_TZ)  => DateTime,
     +(SQLT_TIMESTAMP_LTZ) => DateTime,
@@ -110,6 +120,19 @@ constant OCISnapshot  is export = Pointer;
 class OCIErr is Cool is export {
     has $.Str;
     has $.Numeric;
+}
+
+class OCIDescriptor is repr('CPointer') is export {
+    method d-type { ... }
+
+    method OCIDescriptorFree (OCIDescriptor:D: ub4 --> sword) is native(lib) { * }
+    method DescriptorFree(OCIDescriptor:D:) {
+        self.OCIDescriptorFree(self.d-type)
+    }
+}
+
+class OCILobLocator is OCIDescriptor is repr('CPointer') is export {
+    method d-type { OCI_DTYPE_LOB }
 }
 
 class OCIHandle is repr('CPointer') is export {
@@ -140,6 +163,19 @@ class OCIHandle is repr('CPointer') is export {
         self.OCIHandleAlloc($nh, $want.h-type, 0, Pointer)
             ?? self.gen-error
             !! $nh;
+    }
+
+    method OCIDescriptorAlloc (OCIHandle $parenth:
+        OCIDescriptor $desc is rw,
+        ub4           $type,
+        size_t        $xtramem_sz,
+        Pointer       $usrmempp
+        --> sword ) is native(lib) { * }
+    method DescriptorAlloc(OCIHandle:D: OCIDescriptor $want) {
+        my $desc = $want.new;
+        self.OCIDescriptorAlloc($desc, $want.d-type, 0, Pointer)
+            ?? self.gen-error
+            !! $desc
     }
 
     method OCIStmtRelease(OCIHandle: OCIHandle $errh, OraText $key, ub4 $sz, ub4 $mode --> sword ) is native(lib) { * }
@@ -303,6 +339,40 @@ class OCISvcCtx is OCIHandle is repr('CPointer') is export {
         OCIStmtExecute(self, $stmt, $errh, $iters, 0, NULL, NULL,
                        $AutoCommit ?? OCI_COMMIT_ON_SUCCESS !! OCI_DEFAULT);
     }
+
+    my sub OCILobGetLength (
+        OCISvcCtx $svch,
+        OCIError $errh,
+        OCILobLocator $locp,
+        ub4 $lenp is rw
+        --> sword) is symbol('OCILobGetLength2') is native(lib) { * }
+
+    method LobGetLength(OCIError $errh, OCILobLocator $locp) {
+        my ub4 $lenp = 0;
+        OCILobGetLength(self, $errh, $locp, $lenp)
+            ?? $errh.gen-error 
+            !! $lenp
+    }
+
+    method LobRead (OCISvcCtx:D:
+        OCIError $errh,
+        OCILobLocator $locp,
+        Pointer $byte_amtp,
+        Pointer $char_amtp,
+        ub8 $offset,
+        Buf $bufp,
+        ub8 $bufl,
+        intptr $ctxp,
+        intptr $cbfp,
+        ub2 $csid,
+        ub1 $csfrm
+        --> sword) is symbol('OCILobRead2') is native(lib) { * }
+
+    method LobLocatorAssign (OCISvcCtx:D:
+        OCIError $errh,
+        OCILobLocator $src_locp,
+        OCILobLocator $dst_locpp is rw
+        --> sword) is symbol('OCILobLocatorAssign') is native(lib) { * }
 
     method Ping(OCISvcCtx:D: OCIError $errh, ub4 $mode --> sword)
         is symbol('OCIPing') is native(lib) { * }
